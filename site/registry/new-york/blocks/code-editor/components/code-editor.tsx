@@ -1,13 +1,17 @@
 'use client';
-import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+
+import { useMemo } from 'react';
+import CodeMirror, {
+    EditorView,
+    type ReactCodeMirrorProps,
+} from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { json } from '@codemirror/lang-json';
 import { createTheme } from '@uiw/codemirror-themes';
 import { tags as t } from '@lezer/highlight';
-/**
- * Deps for this one is intense: https://uiwjs.github.io/react-codemirror/
- */
-const code = `console.log('TODO: Add syntax highlighting.');`;
+
+const defaultDemoCode = `console.log('TODO: Add syntax highlighting.');`;
 
 /**
  * CodeMirror theme using ONLY CSS variables.
@@ -67,17 +71,30 @@ export const myTheme = createTheme({
     ],
 });
 
-export default function CodeEditor() {
+/**
+ * Thin wrapper around @uiw/react-codemirror, with:
+ * - same default behavior as before (markdown demo)
+ * - ability to override value / extensions / props.
+ */
+export type CodeEditorProps = ReactCodeMirrorProps;
+
+export default function CodeEditor(props: CodeEditorProps) {
+    const { value, extensions, theme, ...rest } = props;
+
+    const finalValue = value ?? defaultDemoCode;
+    const finalExtensions = extensions ?? [
+        markdown({
+            base: markdownLanguage,
+            codeLanguages: languages,
+        }),
+    ];
+
     return (
         <CodeMirror
-            value={code}
-            extensions={[
-                markdown({
-                    base: markdownLanguage,
-                    codeLanguages: languages,
-                }),
-            ]}
-            theme={myTheme}
+            value={finalValue}
+            extensions={finalExtensions}
+            theme={theme ?? myTheme}
+            {...rest}
         />
     );
 }

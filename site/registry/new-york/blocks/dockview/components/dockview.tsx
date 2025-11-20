@@ -112,6 +112,13 @@ export type PanelsState = {
     openCmd: boolean;
     pins: Set<string>;
     dragging: boolean;
+    dragSource?: { panelId?: string; groupId?: string };
+    dragTarget?: {
+        groupId: string;
+        position: 'within' | 'above' | 'below' | 'left' | 'right';
+        index?: number;
+    };
+    dragModifiers?: { shift: boolean; alt: boolean; ctrl: boolean };
 };
 
 export type PanelsIntent =
@@ -130,7 +137,11 @@ export type PanelsIntent =
     | { type: 'restoreLayout' }
     | { type: 'clearLayout' }
     | { type: 'cmd'; open: boolean }
-    | { type: 'setDragging'; value: boolean };
+    | { type: 'setDragging'; value: boolean }
+    | { type: 'dragStart'; source: { panelId?: string; groupId?: string } }
+    | { type: 'dragUpdate'; target: PanelsState['dragTarget'] }
+    | { type: 'dragEnd' }
+    | { type: 'setDragModifiers'; mods: PanelsState['dragModifiers'] };
 
 export type PanelsSelector<T> = (s: PanelsState, api: DockviewApi | null) => T;
 
@@ -232,6 +243,49 @@ type Ctx = {
 
 const PanelsCtx = React.createContext<Ctx | null>(null);
 
+// Handy actions!
+export function usePanelsController() {
+    const { apiRef, state, dispatch, select } = usePanels();
+    const api = apiRef.current;
+
+    const actions = React.useMemo(
+        () => ({
+            open: (opts: {
+                component?: string;
+                title?: string;
+                position?: OpenPosition;
+                id?: string;
+            }) => dispatch({ type: 'open', ...opts }),
+
+            focus: (panelId: string) => dispatch({ type: 'focus', panelId }),
+
+            closeActiveGroup: () => dispatch({ type: 'closeActiveGroup' }),
+
+            toggleLock: () => dispatch({ type: 'toggleLock' }),
+
+            pin: (id: string, value?: boolean) =>
+                dispatch({ type: 'pin', id, value }),
+
+            saveLayout: () => dispatch({ type: 'saveLayout' }),
+
+            restoreLayout: () => dispatch({ type: 'restoreLayout' }),
+
+            clearLayout: () => dispatch({ type: 'clearLayout' }),
+
+            toggleCmd: (forced?: boolean) => {
+                const openCmd = select((s) => s.openCmd);
+                dispatch({
+                    type: 'cmd',
+                    open: forced ?? !openCmd,
+                });
+            },
+        }),
+        [dispatch, select]
+    );
+
+    return { api, state, actions };
+}
+
 export const usePanels = () => {
     const v = React.useContext(PanelsCtx);
     if (!v) throw new Error('Panels context missing');
@@ -281,11 +335,11 @@ export function Panels({
             return {
                 id: g.id,
                 element: g.element as HTMLElement,
-                panels: g.panels.map((p) => ({
-                    id: p.id,
-                    title: p.api.title,
+                panels: g.panels.map((p: IDockviewPanel) => ({
+                    id: p.id!,
+                    title: p.api.title!,
                 })),
-                activePanelId: g.api.activePanel?.id ?? null,
+                activePanelId: g.activePanel?.id ?? null,
             };
         },
         []
@@ -303,21 +357,21 @@ export function Panels({
     const attachGroupWires = React.useCallback(
         (g: DockviewGroupPanel) => {
             // group header is hidden by us; we manage our own overlay
-            const d1 = g.onDidAddPanel(() =>
+            const d1 = g.model.onDidAddPanel(() =>
                 setGroups((prev) => {
                     const next = new Map(prev);
                     next.set(g.id, snapshotGroup(g));
                     return next;
                 })
             );
-            const d2 = g.onDidRemovePanel(() =>
+            const d2 = g.model.onDidRemovePanel(() =>
                 setGroups((prev) => {
                     const next = new Map(prev);
                     next.set(g.id, snapshotGroup(g));
                     return next;
                 })
             );
-            const d3 = g.onDidActivePanelChange(() =>
+            const d3 = g.model.onDidActivePanelChange(() =>
                 setGroups((prev) => {
                     const next = new Map(prev);
                     next.set(g.id, snapshotGroup(g));
@@ -344,7 +398,7 @@ export function Panels({
         // subscribe adds/removes
         const addD = api.onDidAddGroup((g) => {
             // hide native headers
-            g.header.hidden = true;
+            g.header.hidden = false;
             setGroups((prev) => {
                 const next = new Map(prev);
                 next.set(g.id, snapshotGroup(g));
@@ -460,6 +514,42 @@ export function Panels({
 
     const handleReady = (e: DockviewReadyEvent) => {
         apiRef.current = e.api;
+
+        const dDragPanel = e.api.onWillDragPanel((event) => {
+            dispatch({
+                type: 'dragStart',
+                source: {
+                    panelId: event.panel.id,
+                    groupId: event.panel.group.id,
+                },
+            });
+            dispatch({
+                type: 'setDragModifiers',
+                mods: {
+                    shift: event.nativeEvent.shiftKey,
+                    alt: event.nativeEvent.altKey,
+                    ctrl:
+                        event.nativeEvent.ctrlKey || event.nativeEvent.metaKey,
+                },
+            });
+        });
+
+        const dOverlay = e.api.onWillShowOverlay((event) => {
+            // event.group?.id, event.location, event.index, etc.
+            dispatch({
+                type: 'dragUpdate',
+                target: {
+                    groupId: event.group.id,
+                    position: event.location, // map to your union
+                    index: event.index,
+                },
+            });
+        });
+
+        const dDrop = e.api.onDidDrop((event) => {
+            dispatch({ type: 'dragEnd' });
+            // Optionally inspect last state.dragModifiers to decide what to do
+        });
 
         const d1 = e.api.onDidAddGroup((g: DockviewGroupPanel) => {
             g.header.hidden = true;
