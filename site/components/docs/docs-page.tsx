@@ -38,15 +38,55 @@ import {
     ArrowRightIcon,
 } from 'lucide-react';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { ScrollArea } from './ui/scroll-area';
-import { PreviewWithFullscreen } from './ui/preview-with-controls';
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 
-export function PageTitle({ children }: { children: ReactNode }) {
-    return <>{children}</>;
+type DocsPageProps = {
+    children: ReactNode;
+    header?: ReactNode;
+    subtitle?: ReactNode;
+    actions?: ReactNode;
+};
+
+export function DocsPage({ children, header, subtitle, actions }: HeaderProps) {
+    return (
+        <div className='mx-auto h-full max-w-3xl'>
+            <Prose>
+                {/* Header block */}
+                <div className='mb-6 flex flex-col gap-1'>
+                    {/* Row: header left, actions right, vertically centered */}
+                    <div className='flex items-center justify-between gap-4'>
+                        <div className='min-w-0'>{header}</div>
+                        {actions && (
+                            <div className='flex shrink-0 items-center'>
+                                {actions}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Subtitle directly under both */}
+                    {subtitle && (
+                        <div className='text-sm text-muted-foreground'>
+                            {subtitle}
+                        </div>
+                    )}
+                </div>
+
+                {children}
+            </Prose>
+        </div>
+    );
 }
-export function PageDescription({ children }: { children: ReactNode }) {
-    return <>{children}</>;
+
+export function ExamplePreview({ children }: { children?: ReactNode }) {
+    return (
+        <ScrollArea>
+            <AspectRatio ratio={16 / 9} className='bg-card rounded-lg'>
+                {children}
+            </AspectRatio>
+        </ScrollArea>
+    );
 }
+
 export function PageActions({ children }: { children?: ReactNode }) {
     if (!children) {
         return (
@@ -133,75 +173,33 @@ export function PageActions({ children }: { children?: ReactNode }) {
     return <>{children}</>;
 }
 
-export function DocsPageHeader({ children }: { children: ReactNode }) {
-    const kids = React.Children.toArray(children);
-    const title = kids.find(
-        (child) => React.isValidElement(child) && child.type === PageTitle
-    );
-    const description = kids.find(
-        (child) => React.isValidElement(child) && child.type === PageDescription
-    );
-    const actions = kids.find(
-        (child) => React.isValidElement(child) && child.type === PageActions
-    );
+type NormalDocsPageProps = {
+    header: string;
+    subtitle?: string;
+    children: ReactNode;
+};
 
-    // For this, we can detect PageTitle, PageDescription, and PageActions. PageActions go top-right - like shadcn.
+export function NormalDocsPage({
+    header,
+    subtitle,
+    children,
+}: NormalDocsPageProps) {
     return (
-        <>
-            <div className='bg-red flex justify-between items-center'>
-                <div>{title}</div>
-                <div>{actions}</div>
-            </div>
-            <ItemDescription>{description}</ItemDescription>
-        </>
-    );
-}
-
-export function ExamplePreview({ children }: { children?: ReactNode }) {
-    return (
-        <ScrollArea>
-            <AspectRatio ratio={16 / 9} className='bg-card rounded-lg'>
-                {children}
-            </AspectRatio>
-        </ScrollArea>
-    );
-}
-
-// QUESTION: how do you make it so that if the child is a certain comp like <DocsPageHeader> it's treated special?
-export function DocsPage({ children }: { children?: ReactNode }) {
-    // Maybe it's time to screw around with this, never have before:
-    const kids = React.Children.toArray(children);
-
-    const header = kids.find(
-        (child: any) =>
-            React.isValidElement(child) && child.type === DocsPageHeader
-    );
-
-    const rest = kids.filter(
-        (child: any) =>
-            !(React.isValidElement(child) && child.type === DocsPageHeader)
-    );
-    const examples = kids.filter(
-        (child: any) =>
-            (React.isValidElement(child) && child.type === ExamplePreview) ||
-            child.type === PreviewWithFullscreen
-    );
-
-    // Random possibility - allow a prop full-width or something - neat concept. Just like Notion.
-
-    return (
-        <div className='mx-auto h-full w-3xl'>
-            <Prose>
-                {header && (
-                    <div>
-                        <h1>{header}</h1>
-                    </div>
-                )}
-
-                {examples && (
-                    <div className='flex flex-col space-y-16'>{examples}</div>
-                )}
-            </Prose>
-        </div>
+        <DocsPage
+            header={
+                <h1 className='mt-0 mb-0 text-3xl font-semibold leading-tight'>
+                    {header}
+                </h1>
+            }
+            subtitle={
+                subtitle ? (
+                    <p className='mt-0 mb-0 text-sm text-muted-foreground'>
+                        {subtitle}
+                    </p>
+                ) : undefined
+            }
+            actions={<PageActions />}>
+            {children}
+        </DocsPage>
     );
 }

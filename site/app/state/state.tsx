@@ -1,10 +1,14 @@
 'use client';
 
+import { DocsPage, NormalDocsPage } from '@/components/docs/docs-page';
 import { JsonInspector } from '@/registry/new-york/blocks/code-editor/components/json-inspector';
+import { Doc } from 'zod/v4/core';
 
 export default function State() {
     return (
-        <>
+        <NormalDocsPage
+            header='State'
+            subtitle='Playing with state management libraries'>
             <JsonInspector
                 value={{
                     foo: 'bar',
@@ -13,6 +17,6 @@ export default function State() {
                 }}
                 className='h-64 w-full border rounded-md'
             />
-        </>
+        </NormalDocsPage>
     );
 }
