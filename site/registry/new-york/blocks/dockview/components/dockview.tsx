@@ -140,6 +140,8 @@ export type PanelsState = {
     dragModifiers?: { shift: boolean; alt: boolean; ctrl: boolean };
 };
 
+// Intents are important - these are like mutations. Fuck it let's use Tanstack DB!
+
 export type PanelsIntent =
     | {
           type: 'open';
