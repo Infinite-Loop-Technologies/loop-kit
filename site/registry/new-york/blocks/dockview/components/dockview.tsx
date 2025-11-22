@@ -15,6 +15,25 @@ import {
 import 'dockview-react/dist/styles/dockview.css';
 import './dv-theme.css';
 import { Slot } from '@radix-ui/react-slot';
+import { observe, observable } from '@legendapp/state';
+import * as z from 'zod';
+import * as s from 'sury';
+
+const PanelSury = s.schema({
+    id: s.uuid,
+    title: s.optional(s.string),
+});
+
+const Panel = z.object({
+    id: z.string(),
+    title: z.string().optional(),
+});
+
+const state$ = observable({});
+
+// Legend state to store panels.
+// Actions will be thought of like mutations and put up here.
+// Schema up top
 
 type StripProps = {
     groupId: string;
@@ -652,12 +671,12 @@ const useRect = (el: HTMLElement | null) => {
 };
 
 /** Renders one subtree per group, absolutely positioned inside the Panels root */
-export const GroupOverlays: React.FC<{
+export const DragOverlays: React.FC<{
     children: (g: GroupSnapshot) => React.ReactNode;
     zIndex?: number;
 }> = ({ children, zIndex = 20 }) => {
-    const rootRef = React.useRef<HTMLDivElement | null>(null);
     const { groups } = usePanels();
+    const ref = useRef();
 
     // get the root element (Panels outer div) via nearest parent
     React.useEffect(() => {
@@ -667,7 +686,7 @@ export const GroupOverlays: React.FC<{
     return (
         <div
             ref={rootRef}
-            className='pointer-events-none absolute inset-0'
+            className='pointer-events-none inset-0'
             style={{ zIndex }}>
             {Array.from(groups.values()).map((g) => (
                 <GroupOverlayBox key={g.id} root={rootRef.current} group={g}>

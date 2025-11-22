@@ -7,7 +7,7 @@
     },
     "type": "module",
     "scripts": {
-        "dev": "pnpm run build -- -w",
+        "dev": "pnpm run build -- -watch",
         "build": "pnpm dlx tsdown src/index.ts --dts --format esm --out-dir dist"
     },
     "devDependencies": {

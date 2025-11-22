@@ -1,27 +1,12 @@
-import {
-    DocsPage,
-    DocsPageHeader,
-    PageTitle,
-    PageDescription,
-    PageActions,
-    ExamplePreview,
-} from '@/components/docs-page';
+import { NormalDocsPage } from '@/components/docs/docs-page';
 
 export default function GamePage() {
     return (
-        <>
-            <DocsPage>
-                <DocsPageHeader>
-                    <PageTitle>Game</PageTitle>
-                    <PageDescription>
-                        loop-kit is also a badass game engine.
-                    </PageDescription>
-                    <PageActions />
-                </DocsPageHeader>
-                <p>Docs are awesome!!</p>
-                <ExamplePreview />
-                <ExamplePreview />
-            </DocsPage>
-        </>
+        <NormalDocsPage
+            header='Game'
+            children={undefined}
+            style={{
+                fullWidth: true,
+            }}></NormalDocsPage>
     );
 }

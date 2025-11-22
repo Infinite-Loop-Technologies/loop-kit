@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { ScrollArea } from '@radix-ui/react-scroll-area';
+import useToggle, { Actions } from '@/hooks/use-toggle';
 
 type DocsPageProps = {
     children: ReactNode;
@@ -47,31 +48,29 @@ type DocsPageProps = {
     actions?: ReactNode;
 };
 
-export function DocsPage({ children, header, subtitle, actions }: HeaderProps) {
+export function DocsPage({
+    children,
+    header,
+    subtitle,
+    actions,
+}: DocsPageProps) {
     return (
-        <div className='mx-auto h-full max-w-3xl'>
-            <Prose>
-                {/* Header block */}
-                <div className='mb-6 flex flex-col gap-1'>
+        <div className='flex basis-full'>
+            <Prose className='' asChild>
+                <div className='flex flex-col min-w-full  align-center basis-full '>
                     {/* Row: header left, actions right, vertically centered */}
-                    <div className='flex items-center justify-between gap-4'>
-                        <div className='min-w-0'>{header}</div>
-                        {actions && (
-                            <div className='flex shrink-0 items-center'>
-                                {actions}
-                            </div>
-                        )}
+                    <div className='flex w-full basis-full justify-between items-end-safe'>
+                        {header}
+                        {actions}
                     </div>
-
                     {/* Subtitle directly under both */}
                     {subtitle && (
                         <div className='text-sm text-muted-foreground'>
                             {subtitle}
                         </div>
                     )}
+                    {children}
                 </div>
-
-                {children}
             </Prose>
         </div>
     );
@@ -87,7 +86,13 @@ export function ExamplePreview({ children }: { children?: ReactNode }) {
     );
 }
 
-export function PageActions({ children }: { children?: ReactNode }) {
+export function PageActions({
+    children,
+    toggleFullWidth,
+}: {
+    children?: ReactNode;
+    toggleFullWidth: Actions<boolean>;
+}) {
     if (!children) {
         return (
             <ButtonGroup>
@@ -184,22 +189,31 @@ export function NormalDocsPage({
     subtitle,
     children,
 }: NormalDocsPageProps) {
+    const [fullWidth, toggle] = useToggle(false, true);
+
     return (
-        <DocsPage
-            header={
-                <h1 className='mt-0 mb-0 text-3xl font-semibold leading-tight'>
-                    {header}
-                </h1>
-            }
-            subtitle={
-                subtitle ? (
-                    <p className='mt-0 mb-0 text-sm text-muted-foreground'>
-                        {subtitle}
-                    </p>
-                ) : undefined
-            }
-            actions={<PageActions />}>
-            {children}
-        </DocsPage>
+        <div className='flex justify-center content-center items-center'>
+            <div className={cn('p-8', fullWidth ? 'w-full' : 'w-1/2')}>
+                <DocsPage
+                    header={
+                        <h1
+                            className={cn(
+                                'mt-0 mb-0 text-3xl font-semibold leading-tight'
+                            )}>
+                            {header}
+                        </h1>
+                    }
+                    subtitle={
+                        subtitle ? (
+                            <p className='mt-0 mb-0 text-sm text-muted-foreground'>
+                                {subtitle}
+                            </p>
+                        ) : undefined
+                    }
+                    actions={<PageActions toggleFullWidth={toggle} />}>
+                    {children}
+                </DocsPage>
+            </div>
+        </div>
     );
 }

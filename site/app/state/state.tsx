@@ -1,6 +1,7 @@
 'use client';
 
 import { DocsPage, NormalDocsPage } from '@/components/docs/docs-page';
+import useToggle from '@/hooks/use-toggle';
 import { JsonInspector } from '@/registry/new-york/blocks/code-editor/components/json-inspector';
 import { Doc } from 'zod/v4/core';
 

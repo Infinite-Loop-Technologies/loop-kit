@@ -9,6 +9,7 @@ import {
     usePanelsSelect,
 } from './dockview';
 import { JsonInspector } from '../../code-editor/components/json-inspector';
+import { NormalDocsPage } from '@/components/docs/docs-page';
 
 export default function Page() {
     return (
@@ -29,7 +30,7 @@ function MyPanelSystem() {
     }));
 
     return (
-        <>
+        <NormalDocsPage header={'Panel System'}>
             <div className='w-full h-300 relative'>
                 <JsonInspector
                     value={drag}
@@ -60,6 +61,6 @@ function MyPanelSystem() {
                     );
                 }}
             </GroupOverlays>
-        </>
+        </NormalDocsPage>
     );
 }

@@ -7,7 +7,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "dev": "pnpm run build -- -w",
-        "build": "pnpm dlx tsdown src/index.ts --dts --format esm --out-dir dist"
+        "build": "tsdown src/index.ts --dts --format esm --out-dir dist"
     },
     "devDependencies": {
         "@tsconfig/strictest": "^2.0.6",
