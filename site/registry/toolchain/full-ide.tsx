@@ -1,237 +1,437 @@
 'use client';
 
 import * as React from 'react';
-import { PanelBoard, type BoardLayout } from '@/components/panels/panel-board';
-import type { TabItem } from '@/components/panels/animated-tab-strip';
+import type { FC } from 'react';
 import {
-    EphemeralPanelProvider,
-    useEphemeralPanels,
-} from '@/components/panels/ephemeral-provider';
+    WebContainer as WebContainerAPI,
+    type WebContainer,
+    type WebContainerProcess,
+    type FileSystemTree,
+} from '@webcontainer/api';
 
-import {
-    PromptInput,
-    type PromptInputMessage,
-    PromptInputSubmit,
-    PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
-import { Message, MessageContent } from '@/components/ai-elements/message';
-import {
-    Conversation,
-    ConversationContent,
-} from '@/components/ai-elements/conversation';
-import {
-    WebPreview,
-    WebPreviewNavigation,
-    WebPreviewUrl,
-    WebPreviewBody,
-} from '@/components/ai-elements/web-preview';
-import { Loader } from '@/components/ai-elements/loader';
-import { Suggestions, Suggestion } from '@/components/ai-elements/suggestion';
+import type { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { useXTerm } from 'react-xtermjs';
 
-type Chat = { id: string; demo: string };
+// ✅ Your CodeEditor import
+import CodeEditor from '@/registry/new-york/blocks/code-editor/components/code-editor';
 
-type TabData = { kind: 'preview'; url?: string } | { kind: 'chat' };
+// ❗ TODO: fix these imports to wherever your file tree pieces live
+// (names based on your example)
+import type { FileTreeSection } from './webcontainer-filetree';
+import { FileSidebar } from './webcontainer-filetree';
+import { useWebContainerFileTree } from './webcontainer-filetree';
 
-function tab<T>(
-    id: string,
-    title: string,
-    data: T,
-    renderBody: TabItem<T>['renderBody']
-): TabItem<T> {
-    return { id, title, data, renderBody, closable: false };
-}
+// ---------------------------------------------------------------------------
+//  WebContainer SINGLETON (module scope)
+// ---------------------------------------------------------------------------
 
-function useV0Layout() {
-    // two tabs in one slot: Preview + Build
-    const [currentChat, setCurrentChat] = React.useState<Chat | null>(null);
-    const [message, setMessage] = React.useState('');
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [chatHistory, setChatHistory] = React.useState<
-        Array<{ type: 'user' | 'assistant'; content: string }>
-    >([]);
+let webcontainerPromise: Promise<WebContainer> | null = null;
+let webcontainerInstance: WebContainer | null = null;
+let fsMounted = false;
 
-    const PreviewTab = React.useMemo<TabItem<TabData>>(
-        () =>
-            tab<TabData>(
-                'preview',
-                'Preview',
-                { kind: 'preview', url: currentChat?.demo },
-                (it) => (
-                    <div className='h-full w-full'>
-                        <WebPreview>
-                            <WebPreviewNavigation>
-                                <WebPreviewUrl
-                                    readOnly
-                                    placeholder='Your app here...'
-                                    value={(it.data as any)?.url}
-                                />
-                            </WebPreviewNavigation>
-                            <WebPreviewBody src={(it.data as any)?.url} />
-                        </WebPreview>
-                    </div>
-                )
+const INITIAL_CODE = `console.log("Hello from WebContainers!");\n`;
+
+const FILES: FileSystemTree = {
+    'package.json': {
+        file: {
+            contents: JSON.stringify(
+                {
+                    name: 'webcontainer-demo',
+                    type: 'module',
+                    dependencies: {},
+                    scripts: {
+                        dev: 'node index.js',
+                    },
+                },
+                null,
+                2
             ),
-        [currentChat?.demo]
-    );
+        },
+    },
+    'index.js': {
+        file: {
+            contents: INITIAL_CODE,
+        },
+    },
+};
 
-    const BuildTab = React.useMemo<TabItem<TabData>>(
-        () =>
-            tab<TabData>('build', 'Build', { kind: 'chat' }, () => (
-                <div className='h-full w-full flex flex-col'>
-                    <div className='border-b p-3 h-14 flex items-center justify-between'>
-                        <h1 className='text-lg font-semibold'>v0 Clone</h1>
-                    </div>
-                    <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-                        {chatHistory.length === 0 ? (
-                            <div className='text-center font-semibold mt-8'>
-                                <p className='text-3xl mt-4'>
-                                    What can we build together?
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                <Conversation>
-                                    <ConversationContent>
-                                        {chatHistory.map((msg, index) => (
-                                            <Message
-                                                from={msg.type}
-                                                key={index}>
-                                                <MessageContent>
-                                                    {msg.content}
-                                                </MessageContent>
-                                            </Message>
-                                        ))}
-                                    </ConversationContent>
-                                </Conversation>
-                                {isLoading && (
-                                    <Message from='assistant'>
-                                        <MessageContent>
-                                            <div className='flex items-center gap-2'>
-                                                <Loader />
-                                                Creating your app...
-                                            </div>
-                                        </MessageContent>
-                                    </Message>
-                                )}
-                            </>
-                        )}
-                    </div>
-                    <div className='border-t p-4'>
-                        {!currentChat && (
-                            <Suggestions>
-                                <Suggestion
-                                    onClick={() =>
-                                        setMessage(
-                                            'Create a responsive navbar with Tailwind CSS'
-                                        )
-                                    }
-                                    suggestion='Create a responsive navbar with Tailwind CSS'
-                                />
-                                <Suggestion
-                                    onClick={() =>
-                                        setMessage(
-                                            'Build a todo app with React'
-                                        )
-                                    }
-                                    suggestion='Build a todo app with React'
-                                />
-                                <Suggestion
-                                    onClick={() =>
-                                        setMessage(
-                                            'Make a landing page for a coffee shop'
-                                        )
-                                    }
-                                    suggestion='Make a landing page for a coffee shop'
-                                />
-                            </Suggestions>
-                        )}
-                        <div className='flex gap-2'>
-                            <PromptInput
-                                onSubmit={handleSendMessage}
-                                className='mt-4 w-full max-w-2xl mx-auto relative'>
-                                <PromptInputTextarea
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    value={message}
-                                    className='pr-12 min-h-[60px]'
-                                />
-                                <PromptInputSubmit
-                                    className='absolute bottom-1 right-1'
-                                    disabled={!message}
-                                    status={isLoading ? 'streaming' : 'ready'}
-                                />
-                            </PromptInput>
-                        </div>
-                    </div>
-                </div>
-            )),
-        [chatHistory, isLoading, message]
-    );
+async function getWebContainerSingleton(): Promise<WebContainer> {
+    if (webcontainerInstance) return webcontainerInstance;
 
-    async function handleSendMessage(promptMessage: PromptInputMessage) {
-        const hasText = Boolean(promptMessage.text);
-        const hasAttachments = Boolean(promptMessage.files?.length);
-        if (!(hasText || hasAttachments) || isLoading) return;
-
-        const userMessage =
-            promptMessage.text?.trim() || 'Sent with attachments';
-        setMessage('');
-        setIsLoading(true);
-        setChatHistory((prev) => [
-            ...prev,
-            { type: 'user', content: userMessage },
-        ]);
-
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMessage,
-                    chatId: currentChat?.id,
-                }),
-            });
-            if (!res.ok) throw new Error('Failed to create chat');
-            const chat: Chat = await res.json();
-            setCurrentChat(chat);
-            setChatHistory((prev) => [
-                ...prev,
-                {
-                    type: 'assistant',
-                    content:
-                        'Generated new app preview. Check the Preview tab!',
-                },
-            ]);
-        } catch (e) {
-            console.error(e);
-            setChatHistory((prev) => [
-                ...prev,
-                {
-                    type: 'assistant',
-                    content:
-                        'Sorry, there was an error creating your app. Please try again.',
-                },
-            ]);
-        } finally {
-            setIsLoading(false);
-        }
+    if (!webcontainerPromise) {
+        webcontainerPromise = WebContainerAPI.boot().then((instance) => {
+            webcontainerInstance = instance;
+            return instance;
+        });
     }
 
-    const layout: BoardLayout<TabData> = React.useMemo(
-        () => ({
-            v0: {
-                id: 'v0',
-                tabs: [PreviewTab, BuildTab],
-                activeId: 'build', // start in AI tab
-            },
-        }),
-        [PreviewTab, BuildTab]
+    return webcontainerPromise;
+}
+
+async function ensureFilesystemMounted() {
+    const webcontainer = await getWebContainerSingleton();
+    if (!fsMounted) {
+        await webcontainer.mount(FILES);
+        fsMounted = true;
+    }
+    return webcontainer;
+}
+
+// ---------------------------------------------------------------------------
+//  Component
+// ---------------------------------------------------------------------------
+
+type IdeStatus = 'idle' | 'booting' | 'installing' | 'running' | 'error';
+
+const FullIDE: FC = () => {
+    const [code, setCode] = React.useState<string>(INITIAL_CODE);
+    const [status, setStatus] = React.useState<IdeStatus>('idle');
+    const [error, setError] = React.useState<string | null>(null);
+
+    // currently-open file in editor
+    const [activePath, setActivePath] = React.useState<string>('/index.js');
+
+    // actual WebContainer instance in React state (for hooks like file tree)
+    const [webcontainer, setWebcontainer] = React.useState<WebContainer | null>(
+        null
     );
 
-    return { layout };
-}
+    // track process so we can re-wire streams when it changes
+    const processRef = React.useRef<WebContainerProcess | null>(null);
+    const [processGeneration, setProcessGeneration] = React.useState(0);
 
-export default function V0Page() {
-    const { layout } = useV0Layout();
+    // stdin writer for the running process
+    const inputWriterRef =
+        React.useRef<WritableStreamDefaultWriter<string> | null>(null);
 
-    return <h1>todo</h1>;
-}
+    // xterm instance
+    const { instance: terminal, ref: xtermRef } = useXTerm();
+    const fitAddonRef = React.useRef<FitAddon | null>(null);
+
+    // -------------------------------------------------------------------------
+    //  Boot WebContainer + mount FS + start dev process (once)
+    // -------------------------------------------------------------------------
+
+    const startProcess = React.useCallback(async () => {
+        try {
+            setStatus('running');
+            setError(null);
+
+            const wc = await getWebContainerSingleton();
+
+            // kill previous process if any
+            if (processRef.current) {
+                try {
+                    await processRef.current.kill();
+                } catch {
+                    // ignore
+                }
+            }
+
+            const proc = await wc.spawn('npm', ['run', 'dev']);
+            processRef.current = proc;
+            inputWriterRef.current = proc.input.getWriter();
+            setProcessGeneration((g) => g + 1);
+        } catch (err) {
+            console.error(err);
+            setStatus('error');
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to start process in WebContainer'
+            );
+        }
+    }, [setStatus, setError]);
+
+    React.useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            try {
+                setStatus('booting');
+                setError(null);
+
+                await getWebContainerSingleton();
+                if (cancelled) return;
+
+                setStatus('installing');
+                const wc = await ensureFilesystemMounted();
+                if (cancelled) return;
+
+                setWebcontainer(wc);
+                await startProcess();
+            } catch (err) {
+                console.error(err);
+                if (cancelled) return;
+                setStatus('error');
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to initialize WebContainer'
+                );
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+            // kill the dev process on unmount
+            if (processRef.current) {
+                void processRef.current.kill();
+            }
+        };
+    }, [startProcess, setStatus, setError]);
+
+    // -------------------------------------------------------------------------
+    //  XTerm: addons + resize + stdin
+    // -------------------------------------------------------------------------
+
+    // set up FitAddon + welcome text
+    React.useEffect(() => {
+        if (!terminal) return;
+
+        const fitAddon = new FitAddon();
+        fitAddonRef.current = fitAddon;
+        terminal.loadAddon(fitAddon);
+        fitAddon.fit();
+
+        terminal.writeln('WebContainers terminal ready.');
+        terminal.write('$ ');
+
+        const handleResize = () => {
+            try {
+                fitAddon.fit();
+            } catch {
+                // ignore
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [terminal]);
+
+    // hook stdin: terminal -> process.input
+    React.useEffect(() => {
+        if (!terminal) return;
+
+        const disposable = terminal.onData((data: string) => {
+            const writer = inputWriterRef.current;
+            if (!writer) return;
+
+            // Echo locally (xterm already shows the char, but this lets us tweak if needed)
+            // terminal.write(data);
+
+            if (data === '\r') {
+                // Enter
+                terminal.write('\r\n');
+                void writer.write('\n');
+                terminal.write('$ ');
+            } else {
+                void writer.write(data);
+            }
+        });
+
+        return () => {
+            disposable.dispose();
+        };
+    }, [terminal]);
+
+    // -------------------------------------------------------------------------
+    //  Wire process.stdout to xterm (uses getReader, no WritableStream typing)
+    // -------------------------------------------------------------------------
+
+    React.useEffect(() => {
+        if (!terminal) return;
+        const proc = processRef.current;
+        if (!proc) return;
+
+        const reader = proc.output.getReader();
+        let cancelled = false;
+
+        (async () => {
+            try {
+                // WebContainer's output is ReadableStream<string>
+                while (!cancelled) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (value) {
+                        terminal.write(value.replace(/\n/g, '\r\n'));
+                    }
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    console.error('process output error', err);
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [terminal, processGeneration]);
+
+    // -------------------------------------------------------------------------
+    //  File tree integration (WebContainer FS)
+    // -------------------------------------------------------------------------
+
+    const { nodes, loading: fileTreeLoading } = useWebContainerFileTree(
+        webcontainer,
+        '/'
+    );
+
+    const sections = React.useMemo<FileTreeSection[]>(
+        () => [
+            {
+                id: 'root',
+                label: 'Files',
+                nodes: nodes ?? [],
+            },
+        ],
+        [nodes]
+    );
+
+    // loading a file into editor on sidebar select
+    const handleSelectFile = React.useCallback(
+        async (node: { path: string }) => {
+            setActivePath(node.path);
+            if (!webcontainer) return;
+
+            try {
+                const content = await webcontainer.fs.readFile(
+                    node.path,
+                    'utf-8'
+                );
+                setCode(content as string);
+            } catch (err) {
+                console.error('readFile error', err);
+                setError('Failed to read file from WebContainer');
+                setStatus('error');
+            }
+        },
+        [webcontainer, setError, setStatus]
+    );
+
+    // -------------------------------------------------------------------------
+    //  Editor <-> FS sync
+    // -------------------------------------------------------------------------
+
+    const handleCodeChange = React.useCallback(
+        async (next: string) => {
+            setCode(next);
+
+            if (!webcontainer || !activePath) return;
+
+            try {
+                await webcontainer.fs.writeFile(activePath, next);
+            } catch (err) {
+                console.error('writeFile error', err);
+                setError('Failed to sync file into WebContainer');
+                setStatus('error');
+            }
+        },
+        [webcontainer, activePath, setError, setStatus]
+    );
+
+    // -------------------------------------------------------------------------
+    //  Restart process
+    // -------------------------------------------------------------------------
+
+    const handleRestart = React.useCallback(() => {
+        (async () => {
+            if (terminal) {
+                terminal.writeln('\r\n[ restarting dev process... ]');
+            }
+            await startProcess();
+        })();
+    }, [terminal, startProcess]);
+
+    // -------------------------------------------------------------------------
+    //  UI
+    // -------------------------------------------------------------------------
+
+    return (
+        <div className='flex h-full min-h-[600px] flex-col gap-2 p-4'>
+            <div className='flex items-center justify-between border-b pb-2'>
+                <div className='flex items-center gap-3'>
+                    <h1 className='text-lg font-semibold'>Full IDE</h1>
+                    <span className='text-xs text-muted-foreground'>
+                        Status:&nbsp;
+                        <span className='font-mono'>
+                            {status.toUpperCase()}
+                            {fileTreeLoading ? ' · SCANNING FS...' : ''}
+                        </span>
+                    </span>
+                    {error && (
+                        <span className='text-xs text-destructive'>
+                            {error}
+                        </span>
+                    )}
+                </div>
+                <div className='flex items-center gap-2'>
+                    <button
+                        type='button'
+                        className='rounded border px-2 py-1 text-xs hover:bg-accent'
+                        onClick={handleRestart}
+                        disabled={
+                            status === 'booting' || status === 'installing'
+                        }>
+                        Restart process
+                    </button>
+                </div>
+            </div>
+
+            <div className='flex flex-1 gap-4 overflow-hidden'>
+                {/* File tree sidebar */}
+                <div className='w-64 min-w-[220px] border rounded-md overflow-hidden flex flex-col'>
+                    <div className='border-b px-3 py-2 text-xs font-medium bg-muted'>
+                        Files
+                    </div>
+                    <div className='flex-1 min-h-0'>
+                        <FileSidebar
+                            pinned={[{ file: 'index.js', state: 'M' as const }]}
+                            sections={sections}
+                            activePath={activePath}
+                            onSelect={handleSelectFile}
+                            defaultExpandedPaths={['/', '/src', '/app']}
+                        />
+                    </div>
+                </div>
+
+                {/* Editor */}
+                <div className='flex-1 min-w-0 border rounded-md overflow-hidden flex flex-col'>
+                    <div className='border-b px-3 py-2 text-xs font-medium bg-muted flex items-center justify-between'>
+                        <span className='truncate'>
+                            {activePath || 'index.js'}
+                        </span>
+                    </div>
+                    <div className='flex-1 min-h-0'>
+                        <CodeEditor
+                            value={code}
+                            language='javascript'
+                            onChange={handleCodeChange}
+                        />
+                    </div>
+                </div>
+
+                {/* Terminal */}
+                <div className='w-[40%] min-w-[320px] border rounded-md flex flex-col overflow-hidden'>
+                    <div className='border-b px-3 py-2 text-xs font-medium bg-muted'>
+                        Terminal
+                    </div>
+                    <div className='flex-1 min-h-0'>
+                        <div
+                            ref={xtermRef}
+                            className='h-full w-full bg-[#0b0b10]'
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default FullIDE;

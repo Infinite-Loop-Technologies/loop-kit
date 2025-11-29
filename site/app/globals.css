@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '@xterm/xterm/css/xterm.css';
+
 @plugin "@tailwindcss/typography";
 
 /* Path to your installed `@blocknote/shadcn` package. */

@@ -11,6 +11,23 @@ const nextConfig: NextConfig = {
             },
         ],
     },
+    async headers() {
+        return [
+            {
+                source: '/(.*)', // or '/playground/:path*' if you only need it on a subset
+                headers: [
+                    {
+                        key: 'Cross-Origin-Embedder-Policy',
+                        value: 'require-corp',
+                    },
+                    {
+                        key: 'Cross-Origin-Opener-Policy',
+                        value: 'same-origin',
+                    },
+                ],
+            },
+        ];
+    },
 };
 
 export default nextConfig;

@@ -1,10 +1,9 @@
 import { ClientOnly } from './client-only';
-import Page from '@/registry/new-york/blocks/dockview/components/panels';
-
+import FullIDE from '@/registry/toolchain/full-ide';
 export default function PlaygroundPage() {
     return (
         <ClientOnly>
-            <Page />
+            <FullIDE />
         </ClientOnly>
     );
 }

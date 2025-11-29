@@ -202,6 +202,12 @@ importers:
       '@rolldown/browser':
         specifier: 1.0.0-beta.45
         version: 1.0.0-beta.45
+      '@tanstack/db':
+        specifier: ^0.5.5
+        version: 0.5.5(typescript@5.9.3)
+      '@tanstack/react-db':
+        specifier: ^0.1.49
+        version: 0.1.49(react@19.1.0)(typescript@5.9.3)
       '@tiptap/extension-code-block-lowlight':
         specifier: ^3.11.0
         version: 3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))(@tiptap/extension-code-block@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))(@tiptap/pm@3.11.0))(@tiptap/pm@3.11.0)(highlight.js@11.11.1)(lowlight@3.3.0)
@@ -280,6 +286,12 @@ importers:
       '@webcontainer/api':
         specifier: ^1.6.1
         version: 1.6.1
+      '@xterm/addon-fit':
+        specifier: ^0.10.0
+        version: 0.10.0(@xterm/xterm@5.5.0)
+      '@xterm/xterm':
+        specifier: ^5.5.0
+        version: 5.5.0
       '@xyflow/react':
         specifier: ^12.9.2
         version: 12.9.3(@types/react@19.1.2)(immer@10.2.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -391,6 +403,9 @@ importers:
       react-syntax-highlighter:
         specifier: ^16.1.0
         version: 16.1.0(react@19.1.0)
+      react-xtermjs:
+        specifier: ^1.0.10
+        version: 1.0.10(@xterm/xterm@5.5.0)
       react-zoom-pan-pinch:
         specifier: ^3.7.0
         version: 3.7.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -2601,6 +2616,25 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
+  '@tanstack/db-ivm@0.1.13':
+    resolution: {integrity: sha512-sBOWGY4tqMEym2ewjdWrDb5c5c8akvgnEbGVPAtkfFS3QVV0zfVb5RJAkAc8GSxb3ByVfYjyaShVr0kMJhMuow==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/db@0.5.5':
+    resolution: {integrity: sha512-rpZ1125syv7gSvHEyFjD43bPaSxUytO0u2Guq0ClanwkAymIF0qk2WOvmmF6VE4R5TeVNjppnldOpeQ6l1Queg==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/pacer-lite@0.1.0':
+    resolution: {integrity: sha512-a5A0PI0H4npUy7u3VOjOhdynXnRBna+mDvpt8ghDCVzS3Tgn8DlGzHlRqS2rKJP8ZcLuVO2qxlIIblhcoaiv8Q==}
+    engines: {node: '>=18'}
+
+  '@tanstack/react-db@0.1.49':
+    resolution: {integrity: sha512-+Qtu2E3yLDGCJyy27DEVnCGkUlQFpaWyeP3WoAScNHWQM2vIR59cAT+XqPl95lhr9nwI99OZezHV2JZPXAlxyg==}
+    peerDependencies:
+      react: '>=16.8.0'
+
   '@tiptap/core@2.27.1':
     resolution: {integrity: sha512-nkerkl8syHj44ZzAB7oA2GPmmZINKBKCa79FuNvmGJrJ4qyZwlkDzszud23YteFZEytbc87kVd/fP76ROS6sLg==}
     peerDependencies:
@@ -3355,6 +3389,14 @@ packages:
 
   '@webcontainer/api@1.6.1':
     resolution: {integrity: sha512-2RS2KiIw32BY1Icf6M1DvqSmcon9XICZCDgS29QJb2NmF12ZY2V5Ia+949hMKB3Wno+P/Y8W+sPP59PZeXSELg==}
+
+  '@xterm/addon-fit@0.10.0':
+    resolution: {integrity: sha512-UFYkDm4HUahf2lnEyHvio51TNGiLK66mqP2JoATy7hRZeXaGMRDr00JiSF7m63vR5WKATF605yEggJKsw0JpMQ==}
+    peerDependencies:
+      '@xterm/xterm': ^5.0.0
+
+  '@xterm/xterm@5.5.0':
+    resolution: {integrity: sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==}
 
   '@xyflow/react@12.9.3':
     resolution: {integrity: sha512-PSWoJ8vHiEqSIkLIkge+0eiHWiw4C6dyFDA03VKWJkqbU4A13VlDIVwKqf/Znuysn2GQw/zA61zpHE4rGgax7Q==}
@@ -4631,6 +4673,10 @@ packages:
 
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
+
+  fractional-indexing@3.2.0:
+    resolution: {integrity: sha512-PcOxmqwYCW7O2ovKRU8OoQQj2yqTfEB/yeTYk4gPid6dN5ODRfU1hXd9tTVZzax/0NkO7AxpHykvZnT1aYp/BQ==}
+    engines: {node: ^14.13.1 || >=16.0.0}
 
   framer-motion@12.23.24:
     resolution: {integrity: sha512-HMi5HRoRCTou+3fb3h9oTLyJGBxHfW+HnNE25tAXOvVx/IvwMHK0cx7IR4a2ZU6sh3IX1Z+4ts32PcYBOqka8w==}
@@ -6398,6 +6444,11 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
 
+  react-xtermjs@1.0.10:
+    resolution: {integrity: sha512-+xpKEKbmsypWzRKE0FR1LNIGcI8gx+R6VMHe8IQW7iTbgeqp3Qg7SbiVNOzR+Ovb1QK4DPA3KqsIQV+XP0iRUA==}
+    peerDependencies:
+      '@xterm/xterm': ^5.5.0
+
   react-zoom-pan-pinch@3.7.0:
     resolution: {integrity: sha512-UmReVZ0TxlKzxSbYiAj+LeGRW8s8LraAFTXRAxzMYnNRgGPsxCudwZKVkjvGmjtx7SW/hZamt69NUmGf4xrkXA==}
     engines: {node: '>=8', npm: '>=5'}
@@ -6704,6 +6755,9 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+
+  sorted-btree@1.8.1:
+    resolution: {integrity: sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -10002,6 +10056,29 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.17
 
+  '@tanstack/db-ivm@0.1.13(typescript@5.9.3)':
+    dependencies:
+      fractional-indexing: 3.2.0
+      sorted-btree: 1.8.1
+      typescript: 5.9.3
+
+  '@tanstack/db@0.5.5(typescript@5.9.3)':
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      '@tanstack/db-ivm': 0.1.13(typescript@5.9.3)
+      '@tanstack/pacer-lite': 0.1.0
+      typescript: 5.9.3
+
+  '@tanstack/pacer-lite@0.1.0': {}
+
+  '@tanstack/react-db@0.1.49(react@19.1.0)(typescript@5.9.3)':
+    dependencies:
+      '@tanstack/db': 0.5.5(typescript@5.9.3)
+      react: 19.1.0
+      use-sync-external-store: 1.6.0(react@19.1.0)
+    transitivePeerDependencies:
+      - typescript
+
   '@tiptap/core@2.27.1(@tiptap/pm@3.11.0)':
     dependencies:
       '@tiptap/pm': 3.11.0
@@ -10903,6 +10980,12 @@ snapshots:
       tinyrainbow: 2.0.0
 
   '@webcontainer/api@1.6.1': {}
+
+  '@xterm/addon-fit@0.10.0(@xterm/xterm@5.5.0)':
+    dependencies:
+      '@xterm/xterm': 5.5.0
+
+  '@xterm/xterm@5.5.0': {}
 
   '@xyflow/react@12.9.3(@types/react@19.1.2)(immer@10.2.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
@@ -12357,6 +12440,8 @@ snapshots:
   forwarded@0.2.0: {}
 
   fraction.js@5.3.4: {}
+
+  fractional-indexing@3.2.0: {}
 
   framer-motion@12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -14438,6 +14523,10 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
+  react-xtermjs@1.0.10(@xterm/xterm@5.5.0):
+    dependencies:
+      '@xterm/xterm': 5.5.0
+
   react-zoom-pan-pinch@3.7.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -14993,6 +15082,8 @@ snapshots:
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+
+  sorted-btree@1.8.1: {}
 
   source-map-js@1.2.1: {}
 
