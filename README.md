@@ -20,7 +20,7 @@ loop-kit is an experimental full-stack toolkit for composing apps and games from
 
 -   Stand up a host pipeline on wasmCloud (or fork) that runs WASM actors with pluggable providers.
 -   Ship a lean capability standard library (FS, net, IO/logging, UI/DOM, GPU, storage) with both native and WASM providers.
--   Dogfood the site and dev tooling on loop-kit (ser ve/build via loop-kit components, not just Next.js defaults).
+-   Dogfood the site and dev tooling on loop-kit (serve/build via loop-kit components, not just Next.js defaults).
 -   Produce functional examples/kits (e.g., multiplayer optimistic mutators shared client/server) to validate the model.
 -   Keep the CLI simple; encourage bespoke tooling built inside workspaces.
 

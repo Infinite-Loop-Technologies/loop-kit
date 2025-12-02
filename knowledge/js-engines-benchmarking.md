@@ -44,6 +44,6 @@
 
 ## Data-oriented engines (Nova, porffor)
 
--   Track memory layout assumptions and SIMD/SIMT availability.
+-   Track2 memory layout assumptions and SIMD/SIMT availability.
 -   Note whether they favor linear memory patterns that align with component pipelines.
 -   Capture any constraints (e.g., porffor WASM-only, Nova build targets).
