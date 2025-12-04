@@ -1,5 +1,18 @@
 # Capability providers and transports
 
+## Open loops
+
+| Type                  | Description                                                                                                | Next action/owner                                                   |
+| :-------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| important next action | Stand up wasmCloud (or fork) host pipeline to run WASM actors with pluggable providers                     | spike: minimal host config + provider wiring                        |
+| important next action | Define capability standard library (FS, net, IO/logging, UI/DOM, GPU, storage) with native + WASM variants | draft: provider list + packaging targets                            |
+| research question     | How to layer wRPC over multiple transports (nats, quic, unix sockets) for hosts                            | doc: enumerate options + tradeoffs                                  |
+| possible project      | Stdio/IPC sidecar provider template for rapid prototyping                                                  | build: minimal Node/Rust sidecar + spec                             |
+| important next action | Decide default provider set for benchmarks (FS, net, IO/logging)                                           | pick: wasmCloud providers vs sidecars                               |
+| research question     | Can we hot-swap providers without restarting host runtimes?                                                | test: design handshake + reload signal                              |
+| possible project      | Remote provider endpoints for multi-machine benchmarking                                                   | design: auth + latency budget + config                              |
+| possible project      | Dogfood site/dev flows through loop-kit hosts instead of framework defaults                                | design: replace Next dev/build steps with loop-kit host + providers |
+
 ## Loop superset (WIT namespaces to stabilize early)
 
 -   `loop:core`: logging/metrics/tracing, clock/timers, randomness, cancellation.
@@ -14,19 +27,6 @@
 -   `loop:pkg`: binary/artifact fetch via plugin resolvers (Moonrepo-like, better UX).
 -   `loop:sync`: multiplayer state sync, CRDT-ish patches, optimistic apply/rollback.
 -   `loop:devserver`: workspace scan, component/provider loader, watch graph, command registry.
-
-## Open loops
-
-| Type                  | Description                                                                                                | Next action/owner                                                   |
-| :-------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| important next action | Stand up wasmCloud (or fork) host pipeline to run WASM actors with pluggable providers                     | spike: minimal host config + provider wiring                        |
-| important next action | Define capability standard library (FS, net, IO/logging, UI/DOM, GPU, storage) with native + WASM variants | draft: provider list + packaging targets                            |
-| research question     | How to layer wRPC over multiple transports (nats, quic, unix sockets) for hosts                            | doc: enumerate options + tradeoffs                                  |
-| possible project      | Stdio/IPC sidecar provider template for rapid prototyping                                                  | build: minimal Node/Rust sidecar + spec                             |
-| important next action | Decide default provider set for benchmarks (FS, net, IO/logging)                                           | pick: wasmCloud providers vs sidecars                               |
-| research question     | Can we hot-swap providers without restarting host runtimes?                                                | test: design handshake + reload signal                              |
-| possible project      | Remote provider endpoints for multi-machine benchmarking                                                   | design: auth + latency budget + config                              |
-| possible project      | Dogfood site/dev flows through loop-kit hosts instead of framework defaults                                | design: replace Next dev/build steps with loop-kit host + providers |
 
 ## Provider strategies
 
