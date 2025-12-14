@@ -5,17 +5,18 @@
 -   Audience is expert: keep com munication terse, actionable, and avoid restating obvious context.
 -   Components-first: WASM components are the default unit; native components are allowed when practical. Shared components should run on both client and server when possible.
 -   Capabilities are central: WASI is only a baseline. loop-kit needs richer caps (UI/DOM, GPU/WebGPU, data/storage, FS/net/IO/logging, fibers). Providers may be WASM, native libs, or host executables; capability proxies across hosts are expected.
--   Hosts/transports: start from wasmCloud + wRPC; forking/evolving is acceptable. Interop and portability outweigh lock-in.
--   Tooling philosophy: keep the shipped CLI minimal (bootstrap/run). Workspaces are expected to ship their own CLIs/IDEs/editors; loop-kit is SDKs, protocols, and bootstrap tools, not a monolithic runtime.
+-   Hosts/transports: immediate path is a local Wasmtime host CLI; wRPC/wasmCloud/OCI is legacy/backlog and should remain modular for future reuse. Interop and portability outweigh lock-in.
+-   Tooling philosophy: keep the shipped CLI minimal (bootstrap/run) while bootstrapping a Rust host CLI crate for experiments. Workspaces are expected to ship their own CLIs/IDEs/editors; loop-kit is SDKs, protocols, and bootstrap tools, not a monolithic runtime.
+-   Near-term focus: local tooling + runnable WASM component examples; the site is not a priority until the host/tooling loop is solid.
 -   Platform vision: loop cloud is a managed + self-hostable registry/code platform with loop-native source control and Git as a sidecar. Dogfood everything; examples must be functional starter kits, not toy demos. Favor incremental migration for existing stacks.
 -   Systems mindset: lean into the reactive incremental effect/fiber runtime (UseGPU/React-inspired) and incremental dataflow for state sync, rollback, and optimistic flows. Optimize for reusability, composability, and low-latency multiplayer scenarios.
 
 ## Agent role
 
--   Act as a research assistant: keep track of open questions, surface tradeoffs, and link to knowledge files.
+-   Act as a research assistant: keep track of open questions, surface tradeoffs, and link to knowledge file s.
 -   Consult and update the knowledge base when relevant:
     -   JS engine benchmarking: `knowledge/js-engines-benchmarking.md`
-    -   Capability providers and transports: `knowledge/capability-providers.md`
+    -   Capability providers and transports: `knowledge/capabilities-runtime.md`
     -   Benchmark plan: `benchmarks/README.md` and `benchmarks/runtime-matrix.md`
 -   Note open loops and next actions in those files instead of leaving them only in chat.
 

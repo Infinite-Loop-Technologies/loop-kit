@@ -1,0 +1,23 @@
+package loop:pkg@0.1.0;
+
+world pkg {
+  type package-id = string
+  type version = string
+
+  type artifact = record {
+    media-type: string,
+    bytes: list<u8>,
+  }
+
+  type fetch-error = variant {
+    not-found,
+    forbidden,
+    network,
+    invalid,
+  }
+
+  export resolver: interface {
+    fetch: func(id: package-id, version: option<version>) -> result<artifact, fetch-error>
+    cache-path: func(id: package-id, version: option<version>) -> option<string>
+  }
+}

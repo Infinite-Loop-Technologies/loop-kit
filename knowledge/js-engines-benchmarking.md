@@ -33,13 +33,13 @@
 
 -   Compute: Fibonacci/recursive, matrix multiply, JSON encode/decode, small graph search.
 -   Capability-driven: FS read/write batches, HTTP fetch to local stub, logging/printf, IPC round-trips.
--   Component-hosted: WASM components that call capability providers (wRPC/wasmCloud + stdio sidecars).
+-   Component-hosted: WASM components that call capability providers through the local Wasmtime host (stdio/in-process); wRPC/wasmCloud is backlog.
 -   UI/GPU (later): layout IR replay and WebGPU warmups through host provider.
 
 ## Instrumentation ideas
 
 -   Wrap runtimes with adapter interface that records: init time, module load time, execute time, and capability call latency histograms.
--   Optional per-op tracing via stdio or wRPC middleware; keep overhead bounded and measurable.
+-   Optional per-op tracing via stdio middleware; wRPC instrumentation is backlog. Keep overhead bounded and measurable.
 -   Expose per-runtime flag sets in results to keep comparisons transparent.
 
 ## Data-oriented engines (Nova, porffor)

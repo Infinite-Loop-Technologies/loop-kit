@@ -1,0 +1,56 @@
+package loop:window@0.1.0;
+
+world windowing {
+  type window-id = u64
+  type surface-id = u64
+
+  type window-options = record {
+    title: string,
+    width: u32,
+    height: u32,
+    resizable: bool,
+    visible: bool,
+  }
+
+  type key-state = enum { down, up }
+
+  type pointer-button = enum { left, right, middle, x1, x2 }
+
+  type pointer-state = enum { down, up, move, wheel }
+
+  type event = variant {
+    close-requested,
+    resized: record { width: u32, height: u32 },
+    key: record { code: string, state: key-state },
+    pointer: record {
+      x: f32,
+      y: f32,
+      state: pointer-state,
+      button: option<pointer-button>,
+      delta-x: f32,
+      delta-y: f32,
+    },
+  }
+
+  export windows: interface {
+    create-window: func(opts: window-options) -> window-id
+    show: func(window: window-id)
+    close: func(window: window-id)
+    request-frame: func(window: window-id)
+    next-event: func(window: window-id, timeout-ms: option<u32>) -> option<event>
+  }
+
+  export surface: interface {
+    /// Present an RGBA buffer to the window surface. Stride is in bytes.
+    present-rgba: func(
+      surface: surface-id,
+      width: u32,
+      height: u32,
+      stride: u32,
+      pixels: list<u8>,
+    )
+
+    /// Returns a stable surface handle for GPU interop (future: map to loop:gfx).
+    get-surface: func(window: window-id) -> surface-id
+  }
+}

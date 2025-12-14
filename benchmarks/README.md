@@ -10,7 +10,7 @@ Benchmarks cover JS/WASM runtimes and host capability paths to keep loop-kit com
 ## Scope and workloads
 - Compute: numeric kernels, JSON encode/decode, structured cloning, small graph traversals.
 - Capability-heavy: FS read/write, net/HTTP fetch, logging, IPC/stdio round-trips.
-- Component-hosted: run WASM components that exercise capability providers via wRPC/wasmCloud and sidecars.
+- Component-hosted: run WASM components that exercise capability providers via the local Wasmtime host (stdio/in-process); wRPC/wasmCloud is backlog.
 - UI/GPU proxy (later): DOM/layout IR replay, WebGPU shader warmups via host provider.
 
 ## Harness shape
@@ -20,7 +20,7 @@ Benchmarks cover JS/WASM runtimes and host capability paths to keep loop-kit com
 - UI: future site page to visualize runs; optional Ink view for quick compares.
 
 ## Capability strategy
-- Default: wRPC/wasmCloud providers for FS/net/IO and future UI/GPU.
+- Default: local Wasmtime host providers for FS/net/IO and future UI/GPU; remote/wRPC/wasmCloud is a later experiment.
 - Fast-path prototype: stdio/IPC sidecars so adapters can call local runtimes without rebuilding the host.
 - Cross-host: allow remote provider endpoints for multi-machine tests; keep transport pluggable.
 
