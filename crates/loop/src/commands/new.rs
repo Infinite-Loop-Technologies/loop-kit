@@ -1,54 +1,165 @@
+// src/commands/new.rs
 use anyhow::{Context, Result};
+use colored::*;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use crate::templates;
-
-pub fn execute(name: String, path: Option<String>) -> Result<()> {
-    let base_path = path.unwrap_or_else(|| ".".to_string());
-    let project_path = PathBuf::from(base_path).join(&name);
+pub fn execute(name: String, path: Option<PathBuf>) -> Result<()> {
+    let project_path = if let Some(p) = path {
+        p.join(&name)
+    } else {
+        PathBuf::from(&name)
+    };
 
     if project_path.exists() {
-        anyhow::bail!("Directory '{}' already exists", project_path.display());
+        anyhow::bail!("Directory {} already exists", project_path.display());
     }
 
-    println!("Creating new loop component: {}", name);
+    println!(
+        "{} Creating new Loop project: {}",
+        "✨".green(),
+        name.bold()
+    );
 
     // Create project directory structure
     fs::create_dir_all(&project_path)?;
     fs::create_dir_all(project_path.join("src"))?;
     fs::create_dir_all(project_path.join("wit"))?;
 
-    // Write Cargo.toml
-    fs::write(
-        project_path.join("Cargo.toml"),
-        templates::cargo_toml(&name),
-    )?;
+    // Create Cargo.toml
+    let cargo_toml = format!(
+        r#"[package]
+name = "{}"
+version = "0.1.0"
+edition = "2021"
 
-    // Write main.rs
-    fs::write(project_path.join("src").join("lib.rs"), templates::lib_rs())?;
+[dependencies]
+wit-bindgen = "0.16"
 
-    // Write WIT definition
-    fs::write(
-        project_path.join("wit").join("world.wit"),
-        templates::world_wit(&name),
-    )?;
+[lib]
+crate-type = ["cdylib"]
 
-    // Write .cargo/config.toml for wasm target
+[profile.release]
+opt-level = "z"
+lto = true
+"#,
+        name
+    );
+    fs::write(project_path.join("Cargo.toml"), cargo_toml)?;
+
+    // Create .cargo/config.toml for WASM target
     fs::create_dir_all(project_path.join(".cargo"))?;
+    let cargo_config = r#"[build]
+target = "wasm32-wasi"
+
+[target.wasm32-wasi]
+runner = "loop run"
+"#;
+    fs::write(project_path.join(".cargo/config.toml"), cargo_config)?;
+
+    // Create WIT interface
+    let wit_interface = r#"package loop:app;
+
+world app {
+    import loop:host/window;
+    import loop:host/graphics;
+    
+    export run: func();
+}
+"#;
+    fs::write(project_path.join("wit/app.wit"), wit_interface)?;
+
+    // Create host interfaces WIT
+    let window_wit = r#"package loop:host;
+
+interface window {
+    record window-config {
+        title: string,
+        width: u32,
+        height: u32,
+        resizable: bool,
+    }
+    
+    create-window: func(config: window-config) -> result<window-handle, string>;
+    show-window: func(handle: window-handle);
+    close-window: func(handle: window-handle);
+    
+    record window-handle {
+        id: u32,
+    }
+}
+
+interface graphics {
+    clear: func(r: f32, g: f32, b: f32, a: f32);
+    present: func();
+}
+"#;
+    fs::write(project_path.join("wit/host.wit"), window_wit)?;
+
+    // Create main library file
+    let lib_rs = r#"wit_bindgen::generate!({
+    world: "app",
+    path: "./wit",
+});
+
+use crate::loop::host::window::{WindowConfig, WindowHandle};
+
+struct Component;
+
+impl Guest for Component {
+    fn run() {
+        // Create a window
+        let config = WindowConfig {
+            title: "Loop App".to_string(),
+            width: 800,
+            height: 600,
+            resizable: true,
+        };
+        
+        match loop::host::window::create_window(&config) {
+            Ok(handle) => {
+                loop::host::window::show_window(&handle);
+                
+                // Simple render loop
+                loop {
+                    loop::host::graphics::clear(0.2, 0.3, 0.3, 1.0);
+                    loop::host::graphics::present();
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to create window: {}", e);
+            }
+        }
+    }
+}
+
+export!(Component);
+"#;
+    fs::write(project_path.join("src/lib.rs"), lib_rs)?;
+
+    // Create loop.toml configuration
+    let loop_toml = r#"[project]
+name = "{}"
+version = "0.1.0"
+
+[build]
+target = "wasm32-wasi"
+
+[runtime]
+memory_limit = "100MB"
+"#;
     fs::write(
-        project_path.join(".cargo").join("config.toml"),
-        templates::cargo_config(),
+        project_path.join("loop.toml"),
+        loop_toml.replace("{}", &name),
     )?;
 
-    // Write README
-    fs::write(project_path.join("README.md"), templates::readme(&name))?;
-
-    println!("✓ Created project at {}", project_path.display());
-    println!("\nNext steps:");
-    println!("  cd {}", name);
+    println!("{} Project created successfully!", "✅".green());
+    println!("\n{}", "To get started:".bold());
+    println!("  cd {}", project_path.display());
     println!("  loop build");
     println!("  loop run");
+    println!("\n{}", "Or start development mode:".bold());
+    println!("  loop dev");
 
     Ok(())
 }

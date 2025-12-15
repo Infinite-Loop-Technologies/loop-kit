@@ -1,78 +1,33 @@
-use clap::{Parser, Subcommand};
-use anyhow::Result;
-
+// src/main.rs
+mod cli;
 mod commands;
+mod host;
+mod project;
 mod runtime;
-mod templates;
+mod watcher;
 
-#[derive(Parser)]
-#[command(name = "loop")]
-#[command(about = "A WASM-based software building toolkit", long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Create a new loop component project
-    New {
-        /// Name of the project
-        name: String,
-        
-        /// Directory to create the project in (defaults to current directory)
-        #[arg(short, long)]
-        path: Option<String>,
-    },
-    
-    /// Build the component
-    Build {
-        /// Build in release mode
-        #[arg(short, long)]
-        release: bool,
-        
-        /// Project directory
-        #[arg(short, long, default_value = ".")]
-        path: String,
-    },
-    
-    /// Run the component
-    Run {
-        /// Build in release mode
-        #[arg(short, long)]
-        release: bool,
-        
-        /// Project directory
-        #[arg(short, long, default_value = ".")]
-        path: String,
-    },
-    
-    /// Watch and rebuild on changes (dev mode)
-    Dev {
-        /// Project directory
-        #[arg(short, long, default_value = ".")]
-        path: String,
-    },
-}
+use anyhow::Result;
+use clap::Parser;
+use cli::{Cli, Commands};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-
+    
     match cli.command {
         Commands::New { name, path } => {
             commands::new::execute(name, path)?;
         }
-        Commands::Build { release, path } => {
-            commands::build::execute(&path, release)?;
+        Commands::Build { path, release } => {
+            commands::build::execute(path, release).await?;
         }
-        Commands::Run { release, path } => {
-            commands::run::execute(&path, release).await?;
+        Commands::Run { path, release } => {
+            commands::run::execute(path, release).await?;
         }
         Commands::Dev { path } => {
-            commands::dev::execute(&path).await?;
+            commands::dev::execute(path).await?;
         }
     }
-
+    
     Ok(())
 }
