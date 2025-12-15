@@ -1,0 +1,17 @@
+# crates/loop-runtime/Cargo.toml
+[package]
+name = "loop-runtime"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+wasmtime.workspace = true
+winit.workspace = true
+softbuffer.workspace = true
+raw-window-handle.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[build-dependencies]
+anyhow.workspace = true

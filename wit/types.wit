@@ -1,0 +1,107 @@
+package loop:kit@0.1.0;
+
+/// Core types used across all loop-kit interfaces
+interface types {
+    /// Keyboard key codes
+    enum key-code {
+        unknown,
+        // Letters
+        a, b, c, d, e, f, g, h, i, j, k, l, m,
+        n, o, p, q, r, s, t, u, v, w, x, y, z,
+        // Numbers
+        num0, num1, num2, num3, num4, num5, num6, num7, num8, num9,
+        // Function keys
+        f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
+        // Control keys
+        escape, enter, space, tab, backspace, delete,
+        left, right, up, down,
+        home, end, page-up, page-down,
+        // Modifiers
+        shift, ctrl, alt, super,
+    }
+
+    /// Mouse buttons
+    enum mouse-button {
+        left,
+        right,
+        middle,
+        back,
+        forward,
+    }
+
+    /// Window configuration options
+    record window-config {
+        title: string,
+        width: u32,
+        height: u32,
+        resizable: bool,
+        decorated: bool,
+        transparent: bool,
+    }
+
+    /// Color represented as RGBA (0.0-1.0)
+    record color {
+        r: f32,
+        g: f32,
+        b: f32,
+        a: f32,
+    }
+
+    /// 2D point
+    record point {
+        x: f64,
+        y: f64,
+    }
+
+    /// 2D size
+    record size {
+        width: u32,
+        height: u32,
+    }
+
+    /// Rectangle
+    record rect {
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    }
+
+    /// Input event variants
+    variant event {
+        /// Window close requested
+        close-requested,
+        /// Window resized
+        resized(size),
+        /// Window focused/unfocused
+        focused(bool),
+        /// Key pressed
+        key-pressed(key-code),
+        /// Key released
+        key-released(key-code),
+        /// Character input (for text)
+        char-input(char),
+        /// Mouse moved
+        mouse-moved(point),
+        /// Mouse button pressed
+        mouse-pressed(mouse-button),
+        /// Mouse button released
+        mouse-released(mouse-button),
+        /// Mouse scroll (delta x, delta y)
+        mouse-scroll(tuple<f64, f64>),
+        /// Mouse entered window
+        mouse-entered,
+        /// Mouse left window
+        mouse-left,
+    }
+
+    /// Result of event handling
+    enum event-result {
+        /// Event was handled, stop propagation
+        handled,
+        /// Event was not handled, continue propagation
+        ignored,
+        /// Request application exit
+        exit,
+    }
+}
