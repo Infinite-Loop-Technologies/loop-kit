@@ -12,7 +12,6 @@ edition = "2024"
 [workspace.dependencies]
 
 # Core WASM
-wasmtime = { version = "29", features = ["component-model", "cranelift"] }
 wit-bindgen = "0.36"
 wit-deps = "0.4"
 
@@ -20,14 +19,15 @@ wit-deps = "0.4"
 wasi-webgpu-wasmtime = { git = "https://github.com/WebAssembly/wasi-gfx-runtime", branch = "main" }
 wasi-frame-buffer-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
 wasi-graphics-context-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
-wasi-surface-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
+wasi-surface-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main", features = ["winit"]}
 
 
 
 
 # Wasmtime WASI
-wasmtime-wasi = "29"
-wasmtime-wasi-io = "39"
+wasmtime = "=38.0.4"
+wasmtime-wasi = "=38.0.4"
+wasmtime-wasi-io = "=38.0.4"
 
 # CLI
 clap = { version = "4", features = ["derive"] }
