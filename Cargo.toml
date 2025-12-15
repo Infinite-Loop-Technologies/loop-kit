@@ -2,7 +2,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/*"
+    "crates/*",
+    "examples/*",
 ]
 
 [workspace.package]
@@ -11,14 +12,14 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+
+wasi-frame-buffer-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
+wasi-graphics-context-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
+wasi-surface-wasmtime = { git = "https://github.com/wasi-gfx/wasi-gfx-runtime", branch = "main" }
+
 wasmtime = { version = "29", features = ["component-model", "cranelift", "async"] }
 wasmtime-wasi = "29"
 wasmtime-wasi-io = "29"
-
-# WASI GFX - these provide the host implementations
-wasi-surface-wasmtime = { git = "https://github.com/aspect-build/aspect", branch = "main" }
-wasi-graphics-context-wasmtime = { git = "https://github.com/aspect-build/aspect", branch = "main" }
-wasi-frame-buffer-wasmtime = { git = "https://github.com/aspect-build/aspect", branch = "main" }
 
 # Guest bindings
 wit-bindgen = "0.36"
@@ -32,7 +33,7 @@ indicatif = "0.17"
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 
-# Utilities
+# Utilities  
 anyhow = "1"
 thiserror = "2"
 tracing = "0.1"
@@ -42,3 +43,6 @@ serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 which = "7"
 walkdir = "2"
+raw-window-handle = "0.6.2"
+softbuffer = "0.4.8"
+winit = "0.30.12"

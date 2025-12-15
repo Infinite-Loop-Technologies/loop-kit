@@ -1,26 +1,16 @@
+// wit/world.wit
 package loop:kit@0.1.0;
 
-/// The main world that loop-kit applications implement
+/// The world that loop-kit applications implement
 world app {
-    // Import host capabilities
-    import window;
-    import canvas;
-    import logging;
+    // Import WASI GFX capabilities
+    include wasi:surface/imports@0.0.1;
+    include wasi:graphics-context/imports@0.0.1;
+    include wasi:frame-buffer/imports@0.0.1;
 
-    // Re-export types for convenience
-    use types.{event, event-result};
+    /// Main entrypoint - called once to start the app
+    export start: func();
 
-    /// Called once when the application starts
-    /// Return the desired window configuration
-    export init: func();
-
-    /// Called every frame with delta time in microseconds
-    export update: func(delta-us: u64);
-
-    /// Called when an event occurs
-    /// Return event-result to indicate how it was handled
-    export on-event: func(event: event) -> event-result;
-
-    /// Called when a frame should be rendered
-    export render: func();
+    /// Print to host stdout (for debugging)
+    import print: func(s: string);
 }

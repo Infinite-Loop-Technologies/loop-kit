@@ -1,6 +1,4 @@
 // crates/loop-cli/src/commands/build.rs
-//! Build a loop-kit project
-
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -9,7 +7,9 @@ use clap::Args;
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 
-use super::{command_exists, find_project_root, print_error, print_info, print_success};
+use super::{
+    command_exists, find_project_root, get_package_name, print_error, print_info, print_success,
+};
 
 #[derive(Args)]
 pub struct BuildArgs {
@@ -20,31 +20,45 @@ pub struct BuildArgs {
     /// Project directory
     #[arg(short, long)]
     path: Option<PathBuf>,
-
-    /// Additional arguments to pass to cargo
-    #[arg(last = true)]
-    cargo_args: Vec<String>,
 }
 
 pub fn execute(args: BuildArgs) -> Result<()> {
-    // Check for required tools
     if !command_exists("cargo") {
         bail!("cargo not found. Please install Rust: https://rustup.rs");
     }
 
-    // Find project root
-    let project_root = if let Some(path) = args.path {
-        path
-    } else {
-        find_project_root(&std::env::current_dir()?)?
-    };
+    let project_root = args
+        .path
+        .map(Ok)
+        .unwrap_or_else(|| find_project_root(&std::env::current_dir()?))?;
 
     print_info(&format!(
-        "Building project at {}",
+        "Building {}",
         style(project_root.display()).cyan()
     ));
 
-    // Create progress bar
+    // Check if wit/deps exists, suggest running wit-deps if not
+    let wit_deps_dir = project_root.join("wit/deps");
+    if !wit_deps_dir.exists() {
+        print_info("WIT dependencies not found, running wit-deps update...");
+
+        if command_exists("wit-deps") {
+            let status = Command::new("wit-deps")
+                .arg("update")
+                .current_dir(&project_root)
+                .status()
+                .context("Failed to run wit-deps")?;
+
+            if !status.success() {
+                bail!("wit-deps update failed");
+            }
+        } else {
+            print_error("wit-deps not installed. Install with: cargo install wit-deps-cli");
+            print_info("Then run: wit-deps update");
+            bail!("Missing WIT dependencies");
+        }
+    }
+
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -54,7 +68,6 @@ pub fn execute(args: BuildArgs) -> Result<()> {
     pb.set_message("Compiling...");
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    // Build command
     let mut cmd = Command::new("cargo");
     cmd.current_dir(&project_root);
     cmd.arg("build");
@@ -64,13 +77,7 @@ pub fn execute(args: BuildArgs) -> Result<()> {
         cmd.arg("--release");
     }
 
-    for arg in &args.cargo_args {
-        cmd.arg(arg);
-    }
-
-    // Run cargo build
     let output = cmd.output().context("Failed to run cargo build")?;
-
     pb.finish_and_clear();
 
     if !output.status.success() {
@@ -79,38 +86,26 @@ pub fn execute(args: BuildArgs) -> Result<()> {
         bail!("Build failed");
     }
 
-    // Find the output wasm file
     let profile = if args.release { "release" } else { "debug" };
-    let target_dir = project_root.join("target/wasm32-wasip2").join(profile);
+    let package_name = get_package_name(&project_root)?.replace('-', "_");
+    let wasm_path = project_root
+        .join("target/wasm32-wasip2")
+        .join(profile)
+        .join(format!("{}.wasm", package_name));
 
-    // Get package name from Cargo.toml
-    let cargo_toml_path = project_root.join("Cargo.toml");
-    let cargo_toml: toml::Value = toml::from_str(&std::fs::read_to_string(&cargo_toml_path)?)?;
-    let package_name = cargo_toml["package"]["name"]
-        .as_str()
-        .context("Could not find package name")?
-        .replace('-', "_");
-
-    let wasm_file = target_dir.join(format!("{}.wasm", package_name));
-
-    if !wasm_file.exists() {
-        bail!("Expected wasm file not found: {}", wasm_file.display());
+    if wasm_path.exists() {
+        let size = std::fs::metadata(&wasm_path)?.len();
+        let size_str = if size > 1024 * 1024 {
+            format!("{:.2} MB", size as f64 / (1024.0 * 1024.0))
+        } else {
+            format!("{:.2} KB", size as f64 / 1024.0)
+        };
+        print_success(&format!(
+            "Built {} ({})",
+            style(wasm_path.display()).cyan(),
+            size_str
+        ));
     }
-
-    let file_size = std::fs::metadata(&wasm_file)?.len();
-    let size_str = if file_size > 1024 * 1024 {
-        format!("{:.2} MB", file_size as f64 / (1024.0 * 1024.0))
-    } else if file_size > 1024 {
-        format!("{:.2} KB", file_size as f64 / 1024.0)
-    } else {
-        format!("{} bytes", file_size)
-    };
-
-    print_success(&format!(
-        "Built {} ({})",
-        style(wasm_file.display()).cyan(),
-        size_str
-    ));
 
     Ok(())
 }
