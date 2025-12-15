@@ -43,6 +43,9 @@ pub fn execute(args: BuildArgs) -> Result<()> {
         .join(profile)
         .join(format!("{}.wasm", name));
 
+    // I feel like a big step is missing here - verification I mean
+    // TODO
+
     print_success(&format!("Built {}", style(wasm.display()).cyan()));
 
     Ok(())

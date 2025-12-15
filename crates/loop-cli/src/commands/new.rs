@@ -1,7 +1,7 @@
+// crates/loop-cli/src/commands/new.rs
 use anyhow::{Result, bail};
 use clap::Args;
 use console::style;
-use dialoguer::{Input, theme::ColorfulTheme};
 use std::{fs, path::PathBuf};
 
 use super::{print_info, print_success};
@@ -40,6 +40,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wit-bindgen = "0.36"
+bytemuck = "1.14"
 
 [profile.release]
 opt-level = "s"
@@ -59,20 +60,28 @@ target = "wasm32-wasip2"
 "#,
     )?;
 
-    // wit/deps.toml
+    // wit/deps.toml - Updated with correct prefix!
     fs::write(
         path.join("wit/deps.toml"),
-        r#"[surface]
+        r#"[webgpu]
 url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
-subdir = "surface"
+prefix = "wasi-gfx-0.0.1/webgpu"
+
+[surface]
+url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
+prefix = "wasi-gfx-0.0.1/surface"
 
 [graphics-context]
 url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
-subdir = "graphics-context"
+prefix = "wasi-gfx-0.0.1/graphics-context"
 
 [frame-buffer]
 url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
-subdir = "frame-buffer"
+prefix = "wasi-gfx-0.0.1/frame-buffer"
+
+[io]
+url = "https://github.com/WebAssembly/wasi-io/archive/refs/heads/main.tar.gz"
+prefix = "wasi-io-main/wit"
 "#,
     )?;
 
@@ -197,6 +206,7 @@ fn draw_window() {{
         r#"target/
 *.wasm
 wit/deps/
+wit/deps.lock
 "#,
     )?;
 
