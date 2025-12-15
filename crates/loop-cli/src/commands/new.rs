@@ -1,10 +1,8 @@
-// crates/loop-cli/src/commands/new.rs
-use std::fs;
-use std::path::PathBuf;
-
 use anyhow::{Result, bail};
 use clap::Args;
 use console::style;
+use dialoguer::{Input, theme::ColorfulTheme};
+use std::{fs, path::PathBuf};
 
 use super::{print_info, print_success};
 
@@ -12,33 +10,28 @@ use super::{print_info, print_success};
 pub struct NewArgs {
     /// Project name
     name: String,
-
-    /// Project directory (defaults to project name)
-    #[arg(short, long)]
-    path: Option<PathBuf>,
 }
 
 pub fn execute(args: NewArgs) -> Result<()> {
-    let project_path = args.path.unwrap_or_else(|| PathBuf::from(&args.name));
+    let name = &args.name;
+    let path = PathBuf::from(name);
 
-    if project_path.exists() {
-        bail!("Directory already exists: {}", project_path.display());
+    if path.exists() {
+        bail!("Directory already exists: {}", path.display());
     }
 
-    print_info(&format!(
-        "Creating project '{}'...",
-        style(&args.name).cyan()
-    ));
+    print_info(&format!("Creating project '{}'...", style(name).cyan()));
 
     // Create directories
-    fs::create_dir_all(project_path.join("src"))?;
-    fs::create_dir_all(project_path.join("wit"))?;
-    fs::create_dir_all(project_path.join(".cargo"))?;
+    fs::create_dir_all(path.join("src"))?;
+    fs::create_dir_all(path.join("wit"))?;
 
     // Cargo.toml
-    let cargo_toml = format!(
-        r#"[package]
-name = "{name}"
+    fs::write(
+        path.join("Cargo.toml"),
+        format!(
+            r#"[package]
+name = "{}"
 version = "0.1.0"
 edition = "2024"
 
@@ -51,43 +44,43 @@ wit-bindgen = "0.36"
 [profile.release]
 opt-level = "s"
 lto = true
+strip = true
 "#,
-        name = args.name
-    );
-    fs::write(project_path.join("Cargo.toml"), cargo_toml)?;
+            name
+        ),
+    )?;
 
     // .cargo/config.toml
-    let cargo_config = r#"[build]
+    fs::create_dir_all(path.join(".cargo"))?;
+    fs::write(
+        path.join(".cargo/config.toml"),
+        r#"[build]
 target = "wasm32-wasip2"
-
-[target.wasm32-wasip2]
-runner = "loop run"
-"#;
-    fs::write(project_path.join(".cargo/config.toml"), cargo_config)?;
+"#,
+    )?;
 
     // wit/deps.toml
-    let wit_deps = r#"# WASI GFX dependencies - run `wit-deps update` to fetch
-[surface]
-url = "https://github.com/aspect-build/aspect/archive/refs/heads/main.tar.gz"
-subdir = "crates/wasi-surface/wit"
+    fs::write(
+        path.join("wit/deps.toml"),
+        r#"[surface]
+url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
+subdir = "surface"
 
 [graphics-context]
-url = "https://github.com/aspect-build/aspect/archive/refs/heads/main.tar.gz"
-subdir = "crates/wasi-graphics-context/wit"
+url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
+subdir = "graphics-context"
 
 [frame-buffer]
-url = "https://github.com/aspect-build/aspect/archive/refs/heads/main.tar.gz"
-subdir = "crates/wasi-frame-buffer/wit"
-
-[io]
-url = "https://github.com/aspect-build/aspect/archive/refs/heads/main.tar.gz"
-subdir = "crates/wasi-surface/wit/deps/io"
-"#;
-    fs::write(project_path.join("wit/deps.toml"), wit_deps)?;
+url = "https://github.com/WebAssembly/wasi-gfx/archive/refs/heads/v0.0.1.tar.gz"
+subdir = "frame-buffer"
+"#,
+    )?;
 
     // wit/world.wit
-    let world_wit = format!(
-        r#"package {name}:{name}@0.1.0;
+    fs::write(
+        path.join("wit/world.wit"),
+        format!(
+            r#"package {}:app;
 
 world app {{
     include wasi:surface/imports@0.0.1;
@@ -95,31 +88,31 @@ world app {{
     include wasi:frame-buffer/imports@0.0.1;
 
     export start: func();
-    import print: func(s: string);
+    import log: func(message: string);
 }}
 "#,
-        name = args.name.replace('-', "_")
-    );
-    fs::write(project_path.join("wit/world.wit"), world_wit)?;
+            name
+        ),
+    )?;
 
     // src/lib.rs
-    let lib_rs = format!(
-        r#"//! {name} - A loop-kit application
-
-wit_bindgen::generate!({{
+    let struct_name = to_pascal_case(name);
+    fs::write(
+        path.join("src/lib.rs"),
+        format!(
+            r#"wit_bindgen::generate!({{
     path: "wit",
     world: "app",
-    generate_all,
 }});
 
-export!(App);
+export!({});
 
-struct App;
+struct {};
 
-impl Guest for App {{
+impl Guest for {} {{
     fn start() {{
-        print("Hello from {name}!");
-        run_app();
+        log(&"Hello from loop-kit!".to_string());
+        draw_window();
     }}
 }}
 
@@ -129,156 +122,103 @@ use wasi::{{
     surface::surface,
 }};
 
-fn run_app() {{
-    // Create a window/surface
+fn draw_window() {{
+    // Create a window
     let canvas = surface::Surface::new(surface::CreateDesc {{
         height: Some(600),
         width: Some(800),
     }});
 
-    // Create graphics context and connect it
-    let gfx_ctx = graphics_context::Context::new();
-    canvas.connect_graphics_context(&gfx_ctx);
+    // Create graphics context
+    let ctx = graphics_context::Context::new();
+    canvas.connect_graphics_context(&ctx);
 
-    // Create frame buffer device
-    let fb_device = frame_buffer::Device::new();
-    fb_device.connect_graphics_context(&gfx_ctx);
+    // Create frame buffer
+    let fb = frame_buffer::Device::new();
+    fb.connect_graphics_context(&ctx);
 
     // Subscribe to events
     let frame_pollable = canvas.subscribe_frame();
     let resize_pollable = canvas.subscribe_resize();
-    let pointer_down_pollable = canvas.subscribe_pointer_down();
+    let pointer_up_pollable = canvas.subscribe_pointer_up();
 
-    let pollables = vec![&frame_pollable, &resize_pollable, &pointer_down_pollable];
+    let pollables = vec![&frame_pollable, &resize_pollable, &pointer_up_pollable];
 
     let mut width = canvas.width();
     let mut height = canvas.height();
-    let mut frame_count: u64 = 0;
 
-    print(&format!("Window created: {{}}x{{}}", width, height));
+    log(&format!("Window created: {{}}x{{}}", width, height));
 
-    // Main loop
     loop {{
         let ready = wasi::io::poll::poll(&pollables);
 
-        // Handle resize
         if ready.contains(&1) {{
-            if let Some(event) = canvas.get_resize() {{
-                width = event.width;
-                height = event.height;
-                print(&format!("Resized to: {{}}x{{}}", width, height));
-            }}
+            let event = canvas.get_resize().unwrap();
+            width = event.width;
+            height = event.height;
+            log(&format!("Resized: {{}}x{{}}", width, height));
         }}
 
-        // Handle pointer/mouse
         if ready.contains(&2) {{
-            if let Some(event) = canvas.get_pointer_down() {{
-                print(&format!("Click at: ({{}}, {{}})", event.x, event.y));
-            }}
+            let event = canvas.get_pointer_up();
+            log(&format!("Click at: {{:?}}", event));
         }}
 
-        // Handle frame
         if ready.contains(&0) {{
             canvas.get_frame();
-            frame_count += 1;
 
-            // Get the current buffer
-            let gfx_buffer = gfx_ctx.get_current_buffer();
-            let buffer = frame_buffer::Buffer::from_graphics_buffer(gfx_buffer);
+            let graphics_buffer = ctx.get_current_buffer();
+            let buffer = frame_buffer::Buffer::from_graphics_buffer(graphics_buffer);
 
-            // Create pixel data
+            // Fill with a gradient
             let mut pixels = vec![0u32; (width * height) as usize];
-            
-            // Draw a simple pattern
             for y in 0..height {{
                 for x in 0..width {{
-                    let idx = (y * width + x) as usize;
-                    
-                    // Animated gradient background
-                    let t = (frame_count as f32 * 0.02).sin() * 0.5 + 0.5;
-                    let r = ((x as f32 / width as f32) * 255.0 * t) as u32;
-                    let g = ((y as f32 / height as f32) * 255.0) as u32;
-                    let b = (128.0 + t * 127.0) as u32;
-                    
-                    pixels[idx] = (r << 16) | (g << 8) | b;
+                    let r = (x * 255 / width.max(1)) as u32;
+                    let g = (y * 255 / height.max(1)) as u32;
+                    let b = 128u32;
+                    pixels[(y * width + x) as usize] = (r << 16) | (g << 8) | b;
                 }}
             }}
 
-            // Draw a rectangle in the center
-            let rect_size = 100u32;
-            let rx = width / 2 - rect_size / 2;
-            let ry = height / 2 - rect_size / 2;
-            
-            for y in ry..(ry + rect_size).min(height) {{
-                for x in rx..(rx + rect_size).min(width) {{
-                    let idx = (y * width + x) as usize;
-                    pixels[idx] = 0xFFFFFF; // White
-                }}
-            }}
-
-            // Send to buffer
             buffer.set(bytemuck::cast_slice(&pixels));
-            
-            // Present
-            gfx_ctx.present();
+            ctx.present();
         }}
     }}
 }}
 "#,
-        name = args.name
-    );
-    fs::write(project_path.join("src/lib.rs"), lib_rs)?;
+            struct_name, struct_name, struct_name
+        ),
+    )?;
 
     // .gitignore
-    let gitignore = r#"target/
+    fs::write(
+        path.join(".gitignore"),
+        r#"target/
+*.wasm
 wit/deps/
-wit/deps.lock
-"#;
-    fs::write(project_path.join(".gitignore"), gitignore)?;
-
-    // README
-    let readme = format!(
-        r#"# {name}
-
-    A loop-kit application.
-    ```bash
-    loop run
-    ```
-
-    ## Setup
-
-    First, fetch WIT dependencies:
-
-    ```bash
-    wit-deps update
-    ```
-
-    ## Building
-
-    ```bash
-    loop build
-    # or
-    cargo build --target wasm32-wasip2
-    ```
-
-    ## Running
-
-    ```bash
-    loop run
-    ```
 "#,
-        name = args.name
-    );
+    )?;
 
-    fs::write(project_path.join("README.md"), readme)?;
-
-    print_success(&format!("Created project '{}'", args.name));
-    println!();
-    println!("  Next steps:");
-    println!("    {} {}", style("cd").cyan(), project_path.display());
-    println!("    {} update", style("wit-deps").cyan());
-    println!("    {} build", style("loop").cyan());
-    println!("    {} run", style("loop").cyan());
+    print_success(&format!("Created project '{}'", name));
+    println!("\n  Next steps:");
+    println!("    cd {}", name);
+    println!("    wit-deps  # Fetch WIT dependencies");
+    println!("    loop build");
+    println!("    loop run\n");
 
     Ok(())
+}
+
+fn to_pascal_case(s: &str) -> String {
+    s.split(|c: char| !c.is_alphanumeric())
+        .filter(|s| !s.is_empty())
+        .map(|s| {
+            let mut c = s.chars();
+            match c.next() {
+                None => String::new(),
+                Some(f) => f.to_uppercase().chain(c).collect(),
+            }
+        })
+        .collect()
 }

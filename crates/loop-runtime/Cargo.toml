@@ -1,4 +1,3 @@
-# crates/loop-runtime/Cargo.toml
 [package]
 name = "loop-runtime"
 version.workspace = true
@@ -6,15 +5,17 @@ edition.workspace = true
 
 [dependencies]
 wasmtime.workspace = true
-winit.workspace = true
-softbuffer.workspace = true
-raw-window-handle.workspace = true
-anyhow.workspace = true
-thiserror.workspace = true
-tracing.workspace = true
-wasi-frame-buffer-wasmtime = { workspace = true }
-wasi-graphics-context-wasmtime = { workspace = true }
-wasi-surface-wasmtime = { workspace = true }
+wasmtime-wasi.workspace = true
+wasmtime-wasi-io.workspace = true
 
-[build-dependencies]
+wasi-surface-wasmtime.workspace = true
+wasi-graphics-context-wasmtime.workspace = true
+wasi-frame-buffer-wasmtime.workspace = true
+
 anyhow.workspace = true
+tokio.workspace = true
+futures.workspace = true
+
+# Supposedly we don't even need a build script (so build deps don't matter)
+# [build-dependencies]
+# wit-deps.workspace = true

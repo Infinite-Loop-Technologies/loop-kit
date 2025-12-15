@@ -1,16 +1,15 @@
-// wit/world.wit
-package loop:kit@0.0.1;
+package loop:kit@0.1.0;
 
-/// The world that loop-kit applications implement
+/// Simple world for loop-kit apps - just a window for now
 world app {
+    // Import wasi-gfx surface capabilities
     include wasi:surface/imports@0.0.1;
     include wasi:graphics-context/imports@0.0.1;
     include wasi:frame-buffer/imports@0.0.1;
 
-
-    /// Main entrypoint - called once to start the app
+    /// Main entrypoint
     export start: func();
 
-    /// Print to host stdout (for debugging)
-    import print: func(s: string);
+    /// Simple logging (we can remove this later if wasi:logging gets imported)
+    import log: func(message: string);
 }
