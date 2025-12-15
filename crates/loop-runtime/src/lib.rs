@@ -1,5 +1,3 @@
-// crates/loop-runtime/src/lib.rs
-
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
@@ -26,7 +24,6 @@ impl Default for RuntimeConfig {
     }
 }
 
-/// Long-lived host resources (shared)
 struct HostState {
     main_thread_proxy: Arc<wasi_surface_wasmtime::WasiWinitEventLoopProxy>,
 }
@@ -46,7 +43,6 @@ impl HostState {
     }
 }
 
-/// Per-component Store state
 struct WorkloadState {
     table: ResourceTable,
     main_thread_proxy: Arc<wasi_surface_wasmtime::WasiWinitEventLoopProxy>,
@@ -101,7 +97,7 @@ impl Runtime {
             .await
             .context("instantiate failed")?;
 
-        // optional: call a known entrypoint here if you bindgen it
+        // TODO - maybe call an entry point or something?
 
         event_loop.run();
         Ok(())
