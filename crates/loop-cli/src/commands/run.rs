@@ -8,10 +8,10 @@ use super::{build, find_project_root, print_info};
 #[derive(Args)]
 pub struct RunArgs {
     #[arg(short, long)]
-    release: bool,
+    pub release: bool,
 
     #[arg(short, long)]
-    debug: bool,
+    pub debug: bool,
 }
 
 pub fn execute(args: RunArgs) -> Result<()> {
@@ -25,6 +25,7 @@ pub fn execute(args: RunArgs) -> Result<()> {
     let profile = if args.release { "release" } else { "debug" };
     let cargo_toml: toml::Value =
         toml::from_str(&std::fs::read_to_string(root.join("Cargo.toml"))?)?;
+
     let name = cargo_toml["package"]["name"]
         .as_str()
         .unwrap()

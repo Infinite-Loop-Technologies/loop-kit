@@ -1,3 +1,4 @@
+// crates/loop-runtime/src/lib.rs
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
@@ -24,6 +25,7 @@ impl Default for RuntimeConfig {
     }
 }
 
+/// Long-lived host resources (shared)
 struct HostState {
     main_thread_proxy: Arc<wasi_surface_wasmtime::WasiWinitEventLoopProxy>,
 }
@@ -43,6 +45,7 @@ impl HostState {
     }
 }
 
+/// Per-component Store state
 struct WorkloadState {
     table: ResourceTable,
     main_thread_proxy: Arc<wasi_surface_wasmtime::WasiWinitEventLoopProxy>,
@@ -72,7 +75,7 @@ impl Runtime {
         Ok(Self { config })
     }
 
-    pub async fn run(&self, component_path: &std::path::Path) -> Result<()> {
+    pub fn run(&self, component_path: &std::path::Path) -> Result<()> {
         let (event_loop, proxy) = wasi_surface_wasmtime::create_wasi_winit_event_loop();
         let host = HostState::new(proxy);
 
@@ -87,19 +90,69 @@ impl Runtime {
         wasi_graphics_context_wasmtime::add_to_linker(&mut linker)?;
         wasi_surface_wasmtime::add_to_linker(&mut linker)?;
 
+        // Add our custom `log` import
+        linker.root().func_wrap(
+            "log",
+            |_caller: wasmtime::StoreContextMut<'_, WorkloadState>, (message,): (String,)| {
+                println!("[guest] {}", message);
+                Ok(())
+            },
+        )?;
+
         let component = Component::from_file(&engine, component_path)
             .with_context(|| format!("Failed to load {}", component_path.display()))?;
 
-        let mut store = Store::new(&engine, host.new_workload());
+        // let mut store = Store::new(&engine, host.new_workload());
 
-        let instance = linker
-            .instantiate_async(&mut store, &component)
-            .await
-            .context("instantiate failed")?;
+        // Spawn the component execution in a background thread
+        // because the event loop must run on the main thread
+        let engine_clone = engine.clone();
+        let component_clone = component.clone();
+        let linker_clone = linker.clone();
+        let workload = host.new_workload();
 
-        // TODO - maybe call an entry point or something?
+        // let instance = linker
+        //     .instantiate_async(&mut store, &component)
+        //     .await
+        //     .context("instantiate failed")?;
 
+        // // TODO - maybe call an entry point or something?
+
+        // event_loop.run();
+        // Ok(())
+
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
+            rt.block_on(async {
+                let mut store = Store::new(&engine_clone, workload);
+
+                match linker_clone
+                    .instantiate_async(&mut store, &component_clone)
+                    .await
+                {
+                    Ok(instance) => {
+                        // Get the `start` export and call it
+                        match instance.get_typed_func::<(), ()>(&mut store, "start") {
+                            Ok(start_func) => {
+                                if let Err(e) = start_func.call_async(&mut store, ()).await {
+                                    eprintln!("[runtime] Component start() error: {}", e);
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("[runtime] Failed to get start function: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("[runtime] Failed to instantiate component: {}", e);
+                    }
+                }
+            });
+        });
+
+        // Run the event loop on the main thread (blocks until window closes)
         event_loop.run();
+
         Ok(())
     }
 }
