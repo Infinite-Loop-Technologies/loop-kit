@@ -25,7 +25,3 @@ pub fn print_success(msg: &str) {
 pub fn print_info(msg: &str) {
     println!("{} {}", style("ℹ").cyan(), msg);
 }
-
-pub fn print_error(msg: &str) {
-    eprintln!("{} {}", style("✗").red().bold(), msg);
-}

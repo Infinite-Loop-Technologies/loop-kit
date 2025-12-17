@@ -76,7 +76,7 @@ fn create_project_from_template(
     project_path: &PathBuf,
     tera: &Tera,
     context: &TeraContext,
-    template_dir: &PathBuf,
+    _template_dir: &PathBuf,
 ) -> Result<()> {
     // Create base directories
     fs::create_dir_all(project_path.join("src"))?;
