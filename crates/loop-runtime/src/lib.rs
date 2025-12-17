@@ -83,6 +83,12 @@ impl Runtime {
         config.wasm_component_model(true);
         config.async_support(true);
 
+        if self.config.debug {
+            config.debug_info(true);
+            // maybe: config.wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable);
+            // maybe: enable logging / profiling
+        }
+
         let engine = Engine::new(&config)?;
         let mut linker: Linker<WorkloadState> = Linker::new(&engine);
 
