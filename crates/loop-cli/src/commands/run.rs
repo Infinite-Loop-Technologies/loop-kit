@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use console::style;
 use loop_runtime::{Runtime, RuntimeConfig};

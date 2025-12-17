@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, bail};
 use clap::Args;
 use console::style;
-use std::{path::PathBuf, process::Command};
+use std::process::Command;
 
-use super::{find_project_root, print_error, print_info, print_success};
+use super::{find_project_root, print_info, print_success};
 
 #[derive(Args)]
 pub struct BuildArgs {
