@@ -3,7 +3,7 @@ use anyhow::{Context, Result, bail};
 use clap::Args;
 use console::style;
 use std::{fs, path::PathBuf};
-use tera::{Context as TeraContext, Tera};
+use tera::Tera;
 
 use super::{print_info, print_success};
 
@@ -15,109 +15,116 @@ pub struct NewArgs {
     /// Template to use
     #[arg(short, long, default_value = "rust")]
     template: String,
-
-    /// Custom template delimiters (e.g., "<<,>>")
-    #[arg(long)]
-    delimiters: Option<String>,
 }
 
 pub fn execute(args: NewArgs) -> Result<()> {
     let name = &args.name;
     let path = PathBuf::from(name);
 
+    // Validate project doesn't exist
     if path.exists() {
         bail!("Directory already exists: {}", path.display());
     }
 
     print_info(&format!("Creating project '{}'...", style(name).cyan()));
 
-    // Load templates
+    // Get template directory
+    let template_dir = get_template_dir(&args.template)?;
+
+    // Create the project
+    create_project(&path, &template_dir, name)?;
+
+    print_success(&format!("Created project '{}'", name));
+    print_next_steps(name);
+
+    Ok(())
+}
+
+fn get_template_dir(template_name: &str) -> Result<PathBuf> {
+    // For now, use local templates. In future, this can dispatch to
+    // different template loaders (git, URL, OCI, etc.)
     let template_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("templates")
-        .join(&args.template);
+        .join(template_name);
 
     if !template_dir.exists() {
-        bail!("Template '{}' not found", args.template);
+        bail!(
+            "Template '{}' not found at {:?}",
+            template_name,
+            template_dir
+        );
     }
 
-    // Setup Tera
-    let mut tera = Tera::new(template_dir.join("**/*").to_str().unwrap())
-        .context("Failed to load templates")?;
+    Ok(template_dir)
+}
 
-    // Override delimiters if specified
-    if let Some(delims) = &args.delimiters {
-        let parts: Vec<&str> = delims.split(',').collect();
-        if parts.len() == 2 {
-            tera.autoescape_on(vec![]);
-            // Note: Tera doesn't support custom delimiters easily,
-            // but we can use raw blocks to avoid conflicts
-        }
-    }
+fn create_project(project_path: &PathBuf, template_dir: &PathBuf, name: &str) -> Result<()> {
+    // Setup Tera with the template directory
+    let pattern = format!("{}/**/*.tera", template_dir.display());
+    let mut tera = Tera::new(&pattern).context("Failed to load templates")?;
 
-    // Create context
-    let mut context = TeraContext::new();
+    // Disable auto-escaping since we're generating code
+    tera.autoescape_on(vec![]);
+
+    // Create template context
+    let mut context = tera::Context::new();
     context.insert("project_name", name);
     context.insert("struct_name", &to_pascal_case(name));
 
-    // Create project structure
-    create_project_from_template(&path, &tera, &context, &template_dir)?;
+    // Create project directories
+    fs::create_dir_all(project_path)?;
 
-    print_success(&format!("Created project '{}'", name));
+    // Process all template files
+    render_templates(project_path, &tera, &context)?;
+
+    Ok(())
+}
+
+fn render_templates(project_path: &PathBuf, tera: &Tera, context: &tera::Context) -> Result<()> {
+    // Template files and their output locations
+    let templates = [
+        ("Cargo.toml.tera", "Cargo.toml"),
+        ("config.toml.tera", ".cargo/config.toml"),
+        ("deps.toml.tera", "wit/deps.toml"),
+        ("world.wit.tera", "wit/world.wit"),
+        ("lib.rs.tera", "src/lib.rs"),
+        ("gitignore.tera", ".gitignore"),
+    ];
+
+    for (template_name, output_path) in &templates {
+        // Render template
+        let content = tera
+            .render(template_name, context)
+            .with_context(|| format!("Failed to render template: {}", template_name))?;
+
+        // Create output file with directories
+        let full_path = project_path.join(output_path);
+        if let Some(parent) = full_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&full_path, content)
+            .with_context(|| format!("Failed to write file: {}", output_path))?;
+    }
+
+    Ok(())
+}
+
+fn print_next_steps(name: &str) {
     println!("\n  Next steps:");
     println!("    cd {}", name);
     println!("    wit-deps  # Fetch WIT dependencies");
     println!("    loop build");
     println!("    loop run\n");
-
-    Ok(())
-}
-
-fn create_project_from_template(
-    project_path: &PathBuf,
-    tera: &Tera,
-    context: &TeraContext,
-    _template_dir: &PathBuf,
-) -> Result<()> {
-    // Create base directories
-    fs::create_dir_all(project_path.join("src"))?;
-    fs::create_dir_all(project_path.join("wit"))?;
-    fs::create_dir_all(project_path.join(".cargo"))?;
-
-    // Define template files and their destinations
-    let templates = vec![
-        ("Cargo.toml.tera", "Cargo.toml"),
-        (".cargo/config.toml.tera", ".cargo/config.toml"),
-        ("wit/deps.toml.tera", "wit/deps.toml"),
-        ("wit/world.wit.tera", "wit/world.wit"),
-        ("src/lib.rs.tera", "src/lib.rs"),
-        (".gitignore.tera", ".gitignore"),
-    ];
-
-    for (template_name, dest_path) in templates {
-        let content = tera
-            .render(template_name, context)
-            .context(format!("Failed to render template: {}", template_name))?;
-
-        let dest_full_path = project_path.join(dest_path);
-        if let Some(parent) = dest_full_path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-
-        fs::write(&dest_full_path, content)
-            .context(format!("Failed to write file: {}", dest_path))?;
-    }
-
-    Ok(())
 }
 
 fn to_pascal_case(s: &str) -> String {
     s.split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
-        .map(|s| {
-            let mut c = s.chars();
-            match c.next() {
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
                 None => String::new(),
-                Some(f) => f.to_uppercase().chain(c).collect(),
+                Some(first) => first.to_uppercase().chain(chars).collect(),
             }
         })
         .collect()
