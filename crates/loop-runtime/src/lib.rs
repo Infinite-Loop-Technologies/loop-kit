@@ -8,12 +8,14 @@ use wasmtime::{
     component::{Component, Linker},
 };
 
+use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
+
 use wasmtime_wasi::ResourceTable;
-use wasmtime_wasi_io::IoView;
 
 use wasi_frame_buffer_wasmtime::WasiFrameBufferView;
 use wasi_graphics_context_wasmtime::WasiGraphicsContextView;
 use wasi_surface_wasmtime::{Surface, SurfaceDesc, WasiSurfaceView};
+use wasmtime_wasi_io::IoView;
 
 pub struct RuntimeConfig {
     pub debug: bool,
@@ -38,7 +40,13 @@ impl HostState {
     }
 
     fn new_workload(&self) -> WorkloadState {
+        let mut builder = WasiCtx::builder();
+
+        // Optional but handy; doesn’t hurt window apps.
+        builder.inherit_stdio();
+
         WorkloadState {
+            ctx: builder.build(),
             table: ResourceTable::new(),
             main_thread_proxy: Arc::clone(&self.main_thread_proxy),
         }
@@ -47,6 +55,7 @@ impl HostState {
 
 /// Per-component Store state
 struct WorkloadState {
+    ctx: WasiCtx,
     table: ResourceTable,
     main_thread_proxy: Arc<wasi_surface_wasmtime::WasiWinitEventLoopProxy>,
 }
@@ -54,6 +63,15 @@ struct WorkloadState {
 impl IoView for WorkloadState {
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
+    }
+}
+
+impl WasiView for WorkloadState {
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.ctx,
+            table: &mut self.table,
+        }
     }
 }
 
@@ -92,6 +110,13 @@ impl Runtime {
         let engine = Engine::new(&config)?;
         let mut linker: Linker<WorkloadState> = Linker::new(&engine);
 
+        // ✅ THIS is what prevents: "map entry `wasi:io/error@...` defined twice"
+        linker.allow_shadowing(true);
+
+        // keep this (it’s what fixes missing wasi:cli/environment)
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
+
+        // keep wasi-gfx linkers
         wasi_frame_buffer_wasmtime::add_to_linker(&mut linker)?;
         wasi_graphics_context_wasmtime::add_to_linker(&mut linker)?;
         wasi_surface_wasmtime::add_to_linker(&mut linker)?;
