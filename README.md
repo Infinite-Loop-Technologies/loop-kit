@@ -1,43 +1,68 @@
 # loop-kit
 
-loop-kit is an experimental full-stack toolkit for composing apps and games from WASM-centric components, incremental effect systems, and capability-driven hosts. It treats the workspace itself as the product: you write the tools that build and operate your software.
+Experimental full-stack toolkit for composing apps and games from WASM components, incremental effect systems, and capability-driven hosts.
 
-## Current State
+## Quick Start
 
--   pnpm workspace with three packages: CLI (`packages/cli`), registry library (`packages/registry`), and Next.js site (`packages/site`).
--   Prototype/scaffolding phase; TypeScript-first, multi-language via WASM components planned.
--   CLI is intentionally minimal: bootstrap, run, and get out of the way.
+```bash
+# Install dependencies
+pnpm install
 
-## Core Ideas
+# Build all packages
+pnpm build
 
--   Components-first: reusable WASM components (plus native when needed) packaged with declared capabilities and composable across client/server.
--   Capabilities over runtime lock-in: WASI is a baseline; richer caps (UI, GPU/WebGPU, data, IO, FS, net, fibers) come from providers that can be WASM, native libs, or host executables.
--   Incremental systems: reactive fiber/effect runtime inspired by UseGPU + incremental dataflow (timely/differential) for state sync, rollback, and optimistic flows.
--   Tooling as code: workspaces bundle their own CLIs/IDEs/editors; loop cloud offers managed/self-hosted registries, realtime sync, and loop-kit native source control with Git as a sidecar.
--   Interop-first: keep hosts portable; wRPC/wasmCloud/OCI is now a legacy track to revisit later, with the immediate focus on a local Wasmtime host.
+# Run Rust CLI
+cargo run -p loop-cli -- --help
 
-## Near-Term Focus
+# Dev mode (pick one)
+pnpm --filter @loop/cli dev            # TypeScript CLI
+pnpm --filter @loop-kit/registry dev   # Registry library
+pnpm --filter registry dev             # Next.js site
+```
 
--   Bootstrap a Rust Wasmtime host CLI crate that runs local WASM components from disk; keep it simple but ready to evolve into a componentized host.
--   Add runnable example components in `examples/` (start with Rust) that exercise logging/FS/HTTP and eventually window/input/drawing via `loop:ui`/`loop:window` providers.
--   Grow CLI scaffolding for components/hosts (`loop component new`, `loop host new`) and basic packaging/build flows; defer OCI registry/wRPC integration until the local loop is solid.
--   Treat the site as out-of-scope for now; focus on local tooling and component experimentation.
+## Core Concepts
 
-## Benchmarks
+- **WASM-first**: Components as the default unit of composition
+- **Capability-driven**: Pluggable providers for UI, GPU, storage, networking
+- **Incremental effects**: React-like reconciliation via `loop:fx`
+- **Tooling as code**: Workspaces ship their own CLIs and editors
 
--   Benchmark plan and harness notes: `benchmarks/README.md`
--   Runtime setup matrix: `benchmarks/runtime-matrix.md`
+## Project Structure
 
-## Knowledge
+```
+loop-kit/
+├── crates/          # Rust: Wasmtime host, CLI tools
+├── packages/        # TypeScript: CLI, registry, site
+├── wit/             # Component interface definitions (WIT)
+├── knowledge/       # Design docs and research notes
+└── .claude/         # Claude Code rules and guidelines
+```
 
--   JS engine benchmarking research: `knowledge/js-engines-benchmarking.md`
--   Capability providers and transports: `knowledge/capabilities-runtime.md`
--   WIT usage and composition notes: `knowledge/wit-notes.md`
--   Incremental effect system research: `knowledge/effect-system.md`
--   WASM/WIT tooling cheatsheet: `knowledge/wasm-tooling.md`
+## Documentation
 
-## Quick Commands
+- **CLAUDE.md** - Comprehensive guide for AI assistants
+- **.claude/rules/** - Detailed development rules
+  - `architecture.md` - Core design principles
+  - `wit-syntax.md` - WIT syntax and validation
+  - `capabilities.md` - Capability system details
+  - `development.md` - Workflow and conventions
+  - `testing.md` - Testing guidelines
+- **knowledge/** - Research and design notes
+  - `capabilities-runtime.md` - Capability providers and transports
+  - `effect-system.md` - Incremental effect system (loop:fx)
+  - `wit-notes.md` - WIT usage and composition
+  - `wasm-tooling.md` - WASM/WIT toolchain cheatsheet
 
--   Install deps: `pnpm install`
--   Build all packages: `pnpm build`
--   Dev: `pnpm --filter @loop/cli dev`, `pnpm --filter @loop-kit/registry dev`, `pnpm --filter registry dev`
+## Current Focus
+
+Building a local Rust Wasmtime host for running WASM components with:
+- Logging, filesystem, HTTP providers
+- UI/window capabilities via `loop:ui` and `loop:window`
+- CLI scaffolding for creating components and hosts
+- Example components demonstrating capabilities
+
+Remote capabilities (wRPC, wasmCloud, OCI) are backlogged until the local host loop is stable.
+
+## License
+
+MIT

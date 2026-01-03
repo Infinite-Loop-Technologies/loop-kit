@@ -111,7 +111,8 @@ impl Runtime {
         let mut linker: Linker<WorkloadState> = Linker::new(&engine);
 
         // ✅ THIS is what prevents: "map entry `wasi:io/error@...` defined twice"
-        linker.allow_shadowing(true);
+        // Code smell
+        // linker.allow_shadowing(true);
 
         // keep this (it’s what fixes missing wasi:cli/environment)
         wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;

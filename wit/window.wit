@@ -1,36 +1,16 @@
 package loop:kit@0.1.0;
 
-/// Window management interface
 interface window {
-    use types.{window-config, size, point};
+    type window-id = u32;
 
-    /// Configure the window (call during init)
-    configure: func(config: window-config);
+    record window-config {
+        title: string;
+        width: u32;
+        height: u32;
+    }
 
-    /// Get current window size
-    get-size: func() -> size;
-
-    /// Request a specific window size
-    set-size: func(width: u32, height: u32);
-
-    /// Get window title
-    get-title: func() -> string;
-
-    /// Set window title
-    set-title: func(title: string);
-
-    /// Check if window is focused
-    is-focused: func() -> bool;
-
-    /// Request window close
-    request-close: func();
-
-    /// Set cursor visibility
-    set-cursor-visible: func(visible: bool);
-
-    /// Get cursor position (relative to window)
-    cursor-position: func() -> option<point>;
-
-    /// Request a redraw
-    request-redraw: func();
+    create: func(config: window-config) -> window-id;
+    show: func(id: window-id);
+    close: func(id: window-id);
+    resize: func(id: window-id, width: u32, height: u32);
 }
