@@ -1,21 +1,26 @@
 {
-  "name": "loop-kit-bun",
-  "module": "src/index.tsx",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "dev": "bun run --watch src/index.tsx"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@opentui-ui/toast": "^0.0.3",
-    "@opentui/core": "^0.1.63",
-    "@opentui/react": "^0.1.63",
-    "react": "^19.2.3"
-  }
+    "name": "loop-kit-bun",
+    "module": "src/index.tsx",
+    "type": "module",
+    "private": true,
+    "bin": {
+        "loop": "src/cli/loop.ts"
+    },
+    "scripts": {
+        "dev:loop": "bun run ./src/cli/loop.ts",
+        "build:loop": "bun build ./src/cli/loop.ts --compile --bytecode --outfile=./dist/loop.exe",
+        "test": "bun test"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@opentui-ui/toast": "^0.0.3",
+        "@opentui/core": "^0.1.63",
+        "@opentui/react": "^0.1.63",
+        "react": "^19.2.3"
+    }
 }

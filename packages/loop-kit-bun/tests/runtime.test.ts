@@ -28,15 +28,6 @@ function expectSameBytes(a: Uint8Array, b: Uint8Array) {
     }
 }
 
-function fnv1a32(bytes: Uint8Array): number {
-    let h = 0x811c9dc5;
-    for (const b of bytes) {
-        h ^= b;
-        h = Math.imul(h, 0x01000193);
-    }
-    return h >>> 0;
-}
-
 describe('loop runtime + native zig dll provider', () => {
     test('Native log provider works (smoke)', async () => {
         const rt = new LoopRuntime();
@@ -95,9 +86,14 @@ describe('loop runtime + native zig dll provider', () => {
 
             // A little extra santiy
             console.log(
-                `[echo-hash] len=${input.length} in=${fnv1a32(input).toString(
-                    16
-                )} out=${fnv1a32(out).toString(16)}`
+                `[echo-hash] len=${input.length} in=${Bun.CryptoHasher.hash(
+                    'sha512',
+                    input
+                )
+                    .toString()
+                    .slice(0, 8)} out=${Bun.CryptoHasher.hash('sha512', out)
+                    .toString()
+                    .slice(0, 8)}`
             );
         }
 
