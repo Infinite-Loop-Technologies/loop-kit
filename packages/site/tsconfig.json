@@ -26,8 +26,22 @@
         "next-env.d.ts",
         "**/*.ts",
         "**/*.tsx",
-        ".next/types/**/*.ts",
-        "registry/new-york/blocks/drag-and-drop"
+        ".next/types/**/*.ts"
     ],
-    "exclude": ["node_modules"]
+    "exclude": [
+        "node_modules",
+        "app/playground/**/*",
+        "app/skraps/**/*",
+        "app/state/**/*",
+        "components/ai-elements/**/*",
+        "components/ui/auto-form/**/*",
+        "components/docs/docs-page.tsx",
+        "components/ui/preview-with-controls.tsx",
+        "hooks/use-frame.ts",
+        "hooks/use-panel-board.ts",
+        "lib/layout/leftdock/**/*",
+        "lib/layout/leftdock.ts",
+        "registry/toolchain/**/*",
+        "registry/new-york/blocks/settings-dialog/**/*"
+    ]
 }

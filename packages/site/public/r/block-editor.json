@@ -4,9 +4,13 @@
   "type": "registry:block",
   "title": "Block Editor",
   "description": "Workflowy-style outline editor with zoom and synced references.",
+  "registryDependencies": [
+    "card"
+  ],
   "files": [
     {
       "path": "registry/new-york/blocks/block-editor/page.tsx",
+      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/outline-editor'), {\n    ssr: false,\n    loading: () => <div className='skeleton'>Loading editor...</div>,\n});\n\nexport default Page;\n",
       "type": "registry:page",
       "target": "app/block-editor/page.tsx"
     }

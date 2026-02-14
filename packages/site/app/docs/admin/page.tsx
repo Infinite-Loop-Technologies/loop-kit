@@ -96,6 +96,7 @@ export default async function DocsAdminPage({
     const selectedSlug = pickString(params, 'slug', '');
     const selected = pages.find((page) => page.slug === selectedSlug) ?? null;
     const selectedRegistry = selected?.registryItem ?? '';
+    const selectedDemoSize = selected?.demoSize ?? 'default';
 
     return (
         <div className='grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]'>
@@ -203,7 +204,7 @@ export default async function DocsAdminPage({
                             />
                         </div>
 
-                        <div className='grid gap-4 md:grid-cols-3'>
+                        <div className='grid gap-4 md:grid-cols-4'>
                             <div className='space-y-2'>
                                 <Label htmlFor='section'>Section</Label>
                                 <Input
@@ -236,6 +237,17 @@ export default async function DocsAdminPage({
                                             {item.title ?? item.name}
                                         </option>
                                     ))}
+                                </select>
+                            </div>
+                            <div className='space-y-2'>
+                                <Label htmlFor='demoSize'>Demo size</Label>
+                                <select
+                                    id='demoSize'
+                                    name='demoSize'
+                                    defaultValue={selectedDemoSize}
+                                    className='border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden'>
+                                    <option value='default'>Default</option>
+                                    <option value='large'>Large</option>
                                 </select>
                             </div>
                         </div>

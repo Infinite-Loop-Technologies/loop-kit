@@ -1,0 +1,81 @@
+name: Deploy site to Vercel
+
+on:
+    pull_request:
+        paths:
+            - 'packages/site/**'
+            - '.github/workflows/vercel-site.yml'
+    push:
+        branches:
+            - main
+        paths:
+            - 'packages/site/**'
+            - '.github/workflows/vercel-site.yml'
+
+permissions:
+    contents: read
+
+jobs:
+    preview:
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: packages/site
+        env:
+            VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                version: 10
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: pnpm
+                cache-dependency-path: packages/site/pnpm-lock.yaml
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Deploy preview
+              run: pnpm run deploy:vercel:preview
+
+    production:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: packages/site
+        env:
+            VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                version: 10
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: pnpm
+                cache-dependency-path: packages/site/pnpm-lock.yaml
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Deploy production
+              run: pnpm run deploy:vercel:prod

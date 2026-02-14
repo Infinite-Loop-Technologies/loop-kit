@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import type { DocDemoSize } from '@/lib/docs/types';
 import {
     clearAdminSession,
     requireAdmin,
@@ -22,6 +23,10 @@ function toInt(value: FormDataEntryValue | null) {
 
 function boolFromCheckbox(value: FormDataEntryValue | null) {
     return toString(value) === 'on';
+}
+
+function toDemoSize(value: FormDataEntryValue | null): DocDemoSize {
+    return toString(value) === 'large' ? 'large' : 'default';
 }
 
 function goToError(message: string) {
@@ -61,6 +66,7 @@ export async function saveDocPageAction(formData: FormData) {
         const body = toString(formData.get('body'));
         const order = toInt(formData.get('order'));
         const registryItem = toString(formData.get('registryItem'));
+        const demoSize = toDemoSize(formData.get('demoSize'));
         const published = boolFromCheckbox(formData.get('published'));
 
         const saved = await upsertDocPage({
@@ -73,6 +79,7 @@ export async function saveDocPageAction(formData: FormData) {
             order,
             published,
             registryItem,
+            demoSize,
         });
 
         revalidatePath('/docs');

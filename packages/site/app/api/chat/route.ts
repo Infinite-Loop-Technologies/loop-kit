@@ -27,9 +27,16 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        if ('id' in chat) {
+            return NextResponse.json({
+                id: chat.id,
+                demo: 'demo' in chat ? chat.demo : null,
+            });
+        }
+
         return NextResponse.json({
-            id: chat.id,
-            demo: chat.demo,
+            id: chatId ?? null,
+            demo: null,
         });
     } catch (error) {
         console.error('V0 API Error:', error);

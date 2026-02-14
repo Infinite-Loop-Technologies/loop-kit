@@ -5,10 +5,11 @@ import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Markdown } from '@/components/docs/markdown';
-import { RegistryDemo } from '@/components/docs/registry-demo';
 import { isAdminAuthenticated } from '@/lib/docs/auth';
 import { getRegistryItemByName } from '@/lib/docs/registry';
 import { getDocPageBySlug } from '@/lib/docs/store';
+import { cn } from '@/lib/utils';
+import { RegistryLiveDemo } from './registry-live-demo';
 
 type PageProps = {
     params: Promise<{ slug: string }>;
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!page) return {};
 
     return {
-        title: `${page.title} | loop-kit docs`,
+        title: `${page.title} | loop/cn docs`,
         description: page.description || undefined,
     };
 }
@@ -36,6 +37,7 @@ export default async function DocPage({ params }: PageProps) {
     }
 
     const registryItem = await getRegistryItemByName(page.registryItem);
+    const isLargeDemo = page.demoSize === 'large';
 
     return (
         <article className='mx-auto w-full max-w-4xl space-y-6'>
@@ -76,7 +78,7 @@ export default async function DocPage({ params }: PageProps) {
                 {registryItem ? (
                     <pre className='w-fit rounded-md border bg-muted px-3 py-2 text-xs'>
                         <code>
-                            pnpm dlx shadcn@latest add @loop-kit/
+                            pnpm dlx shadcn@latest add @loop-cn/
                             {registryItem.name}
                         </code>
                     </pre>
@@ -86,9 +88,17 @@ export default async function DocPage({ params }: PageProps) {
             <Markdown content={page.body} />
 
             {registryItem ? (
-                <section className='space-y-2'>
+                <section
+                    className={cn(
+                        'space-y-2',
+                        isLargeDemo &&
+                            'relative left-1/2 w-[min(96vw,1200px)] -translate-x-1/2'
+                    )}>
                     <h2 className='text-lg font-medium'>Live Demo</h2>
-                    <RegistryDemo itemName={registryItem.name} />
+                    <RegistryLiveDemo
+                        itemName={registryItem.name}
+                        size={page.demoSize}
+                    />
                 </section>
             ) : null}
         </article>

@@ -1,18 +1,6 @@
 {
   "pages": [
     {
-      "slug": "dockview-panels",
-      "title": "Dockview Panel System",
-      "description": "Composable panel layout experiment built with Dockview.",
-      "section": "Blocks",
-      "order": 20,
-      "body": "# Dockview Panel System\n\nThis page links to a working Dockview panel playground.\n\n## What is included\n\n- Add/split panel actions\n- Persist/restore layout in local storage\n- Simple panel component registry\n\nUse this as the baseline to iterate on your full panel engine.",
-      "published": true,
-      "registryItem": "dockview",
-      "createdAt": "2026-02-13T00:00:00.000Z",
-      "updatedAt": "2026-02-13T00:00:00.000Z"
-    },
-    {
       "slug": "code-editor",
       "title": "Code Editor",
       "description": "",
@@ -21,6 +9,7 @@
       "body": "",
       "published": true,
       "registryItem": "code-editor",
+      "demoSize": "default",
       "createdAt": "2026-02-13T03:56:00.109Z",
       "updatedAt": "2026-02-13T06:03:15.539Z"
     },
@@ -30,11 +19,12 @@
       "description": "",
       "section": "Editors",
       "order": 0,
-      "body": "",
+      "body": "### Future Improvements\r\n- Drag and drop, selection including multi-select + selection box\r\n- Keyboard shortcuts (better ones)\r\n- ^^ both of these wired up with the intent bus system, which will provide super handy hooks that can do things like automatically wire up wasd or arrow keys or whatever you want to some conventions for up/down/left/right intents and other stuff - this will be a fantastic pattern I think. ",
       "published": true,
       "registryItem": "block-editor",
+      "demoSize": "default",
       "createdAt": "2026-02-13T06:00:13.858Z",
-      "updatedAt": "2026-02-13T06:00:13.858Z"
+      "updatedAt": "2026-02-13T23:45:54.725Z"
     },
     {
       "slug": "getting-started",
@@ -44,6 +34,7 @@
       "order": 1,
       "body": "# Getting Started\r\n\r\nThis docs site is now content-driven.\r\n\r\n- Docs pages are stored in `content/docs/pages.json`.\r\n- Admin editing is available at `/docs/admin`.\r\n- You can link a docs page to a registry item for traceability.\r\n\r\n## Admin workflow\r\n\r\n1. Sign in at `/docs/admin`.\r\n2. Create or edit a page.\r\n3. Publish it and it immediately appears in the sidebar.\r\n",
       "published": true,
+      "demoSize": "default",
       "createdAt": "2026-02-13T00:00:00.000Z",
       "updatedAt": "2026-02-13T06:03:30.872Z"
     },
@@ -55,6 +46,7 @@
       "order": 2,
       "body": "# Registry Overview\r\n\r\nEach docs page can include a `registryItem` value.\r\n\r\nWhen present, docs pages show:\r\n\r\n- The linked registry item badge.\r\n- A CTA to install from your registry endpoint.\r\n- Optional interactive demo for mapped items.\r\n\r\nThis lets docs and shadcn registry metadata stay aligned.",
       "published": true,
+      "demoSize": "default",
       "createdAt": "2026-02-13T00:00:00.000Z",
       "updatedAt": "2026-02-13T06:03:35.800Z"
     },
@@ -64,10 +56,24 @@
       "description": "",
       "section": "General",
       "order": 10,
-      "body": "- DAW and music related components. Could be a whole category! Definitely midi editor, curve editors. A lot of DAW components also work for video editors, animation editors, and more - timelines, layer systems, pause/play/record.\r\n- A whole section for code related blocks/components. CodeMirror editor is neat. But then terminal. Make a whole IDE block. Powering it is beyond the scope of just a UI component library - but so be it. Demo WebVM, Rolldown, webcontainers, remote VMs, etc. Then have a demo for plugin systems. Another idea is a bytecode interpreter for capability handles like the spell game.\r\n- Definitely a shadertoy clone!\r\n- React flow database schema thingy, perhaps.\r\n- Definitely fancy table! I mean really fancy though - like with user scripting, permissions. Coda level tables. More than just tables - have a whole section that's like this. It's UIs for a data +auth system, maybe? Along these same lines: inspectors and serializers for arbitrary data types like objects, numbers, strings. This goes with on-the-fly generated UIs it's important. Auto validation and stuff. Actually key section here - smart views. Think Coda/Notion tables->list->cards->calendar->whatever. This is super important.\r\n- Definitely a keyboard shortcut system that lets you record and remap them and stuff.\r\n- Non-UI stuff that can plug in as data sources or arbitrary \"connectors\" or sync thingies: PipeDream, for example.\r\n- SVG editor, pixel art editor, keyframe editor.",
+      "body": "- DAW and music related components. Could be a whole category! Definitely midi editor, curve editors. A lot of DAW components also work for video editors, animation editors, and more - timelines, layer systems, pause/play/record.\r\n- A whole section for code related blocks/components. CodeMirror editor is neat. But then terminal. Make a whole IDE bMlock. Powering it is beyond the scope of just a UI component library - but so be it. Demo WebVM, Rolldown, webcontainers, remote VMs, etc. Then have a demo for plugin systems. Another idea is a bytecode interpreter for capability handles like the spell game.\r\n- Definitely a shadertoy clone!\r\n- React flow database schema thingy, perhaps.\r\n- Definitely fancy table! I mean really fancy though - like with user scripting, permissions. Coda level tables. More than just tables - have a whole section that's like this. It's UIs for a data +auth system, maybe? Along these same lines: inspectors and serializers for arbitrary data types like objects, numbers, strings. This goes with on-the-fly generated UIs it's important. Auto validation and stuff. Actually key section here - smart views. Think Coda/Notion tables->list->cards->calendar->whatever. This is super important.\r\n- Definitely a keyboard shortcut system that lets you record and remap them and stuff. Maybe structure this with an intent/command bus to make it awesome.\r\n- A selection box + selectable system to go with drag and drop and more - again, with an intent/command bus to make it clean and sexy\r\n- Non-UI stuff that can plug in as data sources or arbitrary \"connectors\" or sync thingies: PipeDream, for example.\r\n- SVG editor, pixel art editor, keyframe editor.\r\n- Huge: a theming system, ideally one that goes beyond boring old shadcn color reskinning - then have some premade themes. But really cool ones like pixel/8-bit,, liquid glass, etc. \r\n- Maybe set up some awesome animations, art, and more, in different styles. Before when I mentioned themes - perhaps these could go with some of the themes and each theme gets its own page, or something.\r\n- Rive integration! It's pretty trivial, but perhaps I could attempt to do something cool like literally pulling straight from your Rive file to make it easy, or something.\r\n- Monetization of this site in a non-evil way so that I can survive and work more on this without starving to death\r\n- Maybe a bunch of game-related cool stuff, such as an inventory system example. And then going further along these lines; a Unity asset for embedded browser UIs, but performant optimized ones.\r\n- A system for UI adapters so a lot of stuff here can run in a TUI and more - this is maybe a bit far-fetched.\r\n- More WYSIWYG editors, including ones for the content on this docs page itself. Goal: admin & viewer workflows dynamically load based on roles, so no extra bundle size for just non-auth viewers who shouldn't get a whole fancy UI.",
       "published": true,
+      "demoSize": "default",
       "createdAt": "2026-02-13T04:21:29.783Z",
-      "updatedAt": "2026-02-13T06:03:58.638Z"
+      "updatedAt": "2026-02-14T05:11:32.309Z"
+    },
+    {
+      "slug": "panel-system",
+      "title": "Dynamic Panel System",
+      "description": "",
+      "section": "Systems",
+      "order": 0,
+      "body": "### Future Improvements\r\n- Fix the external drag-and-drop bug (noticeable in the sidebar demo)0\r\n- Improve the styling: the non-compact version should be more spacious, mimic Notion/VSCode tabs. And improve the look of selected tabs.\r\n- Add gestures for better scrolling, dnd, and more.\r\n- Fix the issue where you can't drag panel groups around (but keep it as an option)\r\n- Fix the vertical tabs system, it is completely bugged\r\n- Fix free floating panels (shift-drag) - you can't drag them, I think similar issue to not being able to grab panel groups\r\n- Improve the drag hover system and the spacing of the boundaries for how a panel snaps around.\r\n- Add auto-layout and perhaps even fancier auto-tiling modes like leftwm-layouts\r\n- Make sure it's easier to use from the outside, e.g. keyboard shortcuts, undo/redo, persistence. Perhaps a command/intent bus system so you can easily map to keyboard shortcuts externally. ",
+      "published": true,
+      "registryItem": "dockview",
+      "demoSize": "large",
+      "createdAt": "2026-02-13T23:20:34.319Z",
+      "updatedAt": "2026-02-13T23:31:49.072Z"
     }
   ]
 }

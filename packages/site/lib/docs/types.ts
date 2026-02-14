@@ -5,6 +5,8 @@ export type RegistryItemMeta = {
     description?: string;
 };
 
+export type DocDemoSize = 'default' | 'large';
+
 export type DocPage = {
     slug: string;
     title: string;
@@ -14,6 +16,7 @@ export type DocPage = {
     body: string;
     published: boolean;
     registryItem?: string;
+    demoSize: DocDemoSize;
     createdAt: string;
     updatedAt: string;
 };
@@ -32,6 +35,7 @@ export type UpsertDocPageInput = {
     body?: string;
     published?: boolean;
     registryItem?: string;
+    demoSize?: DocDemoSize;
 };
 
 export type DocNavPage = Pick<

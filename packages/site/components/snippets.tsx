@@ -1,8 +1,11 @@
 'use client';
 
+import * as React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Check, Copy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function FeatureCard({
     icon,
@@ -30,13 +33,21 @@ export function FeatureCard({
 
 export function InstallSnippet() {
     const map = {
-        pnpm: 'pnpm dlx @loop-kit/cli new my-app',
-        npm: 'npx @loop-kit/cli new my-app',
-        bun: 'bunx @loop-kit/cli new my-app',
+        pnpm: 'pnpm dlx shadcn@latest add @loop-cn/dockview',
+        npm: 'npx shadcn@latest add @loop-cn/dockview',
+        bun: 'bunx shadcn@latest add @loop-cn/dockview',
     } as const;
+    const [manager, setManager] = React.useState<keyof typeof map>('pnpm');
 
     return (
-        <Tabs defaultValue='pnpm' className='w-full'>
+        <Tabs
+            value={manager}
+            onValueChange={(value) => {
+                if (value in map) {
+                    setManager(value as keyof typeof map);
+                }
+            }}
+            className='w-full'>
             <TabsList className='mb-3'>
                 <TabsTrigger value='pnpm'>pnpm</TabsTrigger>
                 <TabsTrigger value='npm'>npm</TabsTrigger>
@@ -60,13 +71,39 @@ export function InstallSnippet() {
 }
 
 export function CopyButton({ text }: { text: string }) {
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = React.useCallback(async () => {
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', 'true');
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1200);
+        } catch {
+            setCopied(false);
+        }
+    }, [text]);
+
     return (
         <Button
             variant='secondary'
             size='sm'
-            onClick={() => navigator.clipboard.writeText(text)}
-            className='cursor-copy'>
-            Copy
+            onClick={handleCopy}
+            className={cn('cursor-copy gap-1.5', copied && 'text-emerald-600')}>
+            {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
+            {copied ? 'Copied' : 'Copy'}
         </Button>
     );
 }

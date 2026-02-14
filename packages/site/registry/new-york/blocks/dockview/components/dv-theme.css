@@ -103,10 +103,15 @@
 }
 
 .dockview-theme-shadcn .dv-right-actions-container {
-    margin-left: auto;
-    min-width: 2rem;
-    justify-content: center;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 0.15rem;
+    padding-inline: 0.3rem;
     border-left: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
+}
+
+.dockview-theme-shadcn .dv-tabs-and-actions-container .dv-void-container {
+    min-width: 0.75rem;
 }
 
 .dockview-theme-shadcn .loop-tab {
@@ -169,7 +174,9 @@
     align-items: center;
     gap: 0.25rem;
     height: 100%;
-    padding-inline: 0.2rem;
+    padding-inline: 0.1rem;
+    flex-shrink: 0;
+    z-index: 2;
 }
 
 .dockview-theme-shadcn .loop-group-action-button {
@@ -178,9 +185,15 @@
     justify-content: center;
     width: 1.5rem;
     height: 1.5rem;
+    padding: 0;
     border-radius: calc(var(--radius) - 0.15rem);
     color: var(--muted-foreground);
     transition: background-color 140ms ease, color 140ms ease;
+}
+
+.dockview-theme-shadcn .loop-group-action-button[data-state='open'] {
+    color: var(--foreground);
+    background: color-mix(in oklab, var(--accent) 52%, transparent);
 }
 
 .dockview-theme-shadcn .loop-group-action-button:hover {

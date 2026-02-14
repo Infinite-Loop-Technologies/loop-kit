@@ -9,7 +9,6 @@ import type { DocNavSection } from '@/lib/docs/types';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
@@ -40,16 +39,18 @@ export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={pathname === '/docs/admin'}>
-                            <Link href='/docs/admin'>
-                                <ShieldCheck />
-                                {isAdmin ? 'Admin Panel' : 'Admin Login'}
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {isAdmin ? (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={pathname === '/docs/admin'}>
+                                <Link href='/docs/admin'>
+                                    <ShieldCheck />
+                                    Admin Panel
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ) : null}
                 </SidebarMenu>
             </SidebarHeader>
 
@@ -81,11 +82,6 @@ export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
                 ))}
             </SidebarContent>
 
-            <SidebarFooter>
-                <p className='px-2 py-1 text-xs text-muted-foreground'>
-                    Content-driven docs
-                </p>
-            </SidebarFooter>
             <SidebarRail />
         </Sidebar>
     );

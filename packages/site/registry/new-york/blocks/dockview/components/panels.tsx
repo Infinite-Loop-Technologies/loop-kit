@@ -30,19 +30,39 @@ import {
 } from 'dockview-react';
 import { useDrag } from '@use-gesture/react';
 import {
+    Check,
     GripVertical,
+    MoreHorizontal,
     PanelLeft,
     PanelLeftClose,
     PanelLeftOpen,
     PanelTop,
     Plus,
+    Redo2,
     SplitSquareHorizontal,
     SplitSquareVertical,
+    Undo2,
     X,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuLabel,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
@@ -82,10 +102,14 @@ type AddPanelIntent = {
     forceWithin?: boolean;
 };
 
+type LayoutSnapshot = ReturnType<DockviewApi['toJSON']>;
+
 type DockviewWorkspaceState = {
     panelCount: number;
     guide: DropGuide | null;
     nativeOverlayKind: OverlayEventLike['kind'] | null;
+    canUndo: boolean;
+    canRedo: boolean;
 };
 
 type OverlayEventLike = {
@@ -99,6 +123,7 @@ type TabListMode = 'horizontal' | 'compact' | 'vertical';
 
 type DockviewUiContextValue = {
     createTabInGroup: (groupId?: string) => void;
+    closeGroup: (groupId: string) => void;
     cycleGroupMode: (groupId: string) => void;
     getGroupMode: (groupId: string) => TabListMode;
 };
@@ -259,6 +284,12 @@ function addPanelFromTemplate(
 
     panel.api.setActive();
     return panel;
+}
+
+function closeGroupById(api: DockviewApi, groupId: string) {
+    const group = api.getGroup(groupId);
+    if (!group) return;
+    api.removeGroup(group);
 }
 
 function getContentRectForGroup(groupRect: DOMRect, headerRect?: DOMRect | null) {
@@ -610,7 +641,7 @@ function DockTab({ api, containerApi }: IDockviewPanelHeaderProps<PanelParams>) 
 
     const isActive = api.group.activePanel?.id === api.id;
 
-    return (
+    const tab = (
         <div
             className={cn(
                 'loop-tab',
@@ -631,51 +662,211 @@ function DockTab({ api, containerApi }: IDockviewPanelHeaderProps<PanelParams>) 
             </button>
         </div>
     );
+
+    return (
+        <ContextMenu>
+            <ContextMenuTrigger asChild>{tab}</ContextMenuTrigger>
+            <ContextMenuContent className='min-w-48'>
+                <ContextMenuLabel>{api.title ?? 'Panel'}</ContextMenuLabel>
+                <ContextMenuItem onSelect={() => api.setActive()}>
+                    Activate tab
+                </ContextMenuItem>
+                <ContextMenuItem
+                    onSelect={() => {
+                        if (ui) {
+                            ui.createTabInGroup(api.group.id);
+                            return;
+                        }
+
+                        const referencePanel = containerApi.getPanel(api.id);
+
+                        addPanelFromTemplate(containerApi, undefined, {
+                            forceWithin: true,
+                            referencePanel: referencePanel ?? undefined,
+                        });
+                    }}>
+                    New tab in group
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onSelect={() => api.close()}>
+                    Close tab
+                </ContextMenuItem>
+                <ContextMenuItem
+                    variant='destructive'
+                    onSelect={() => {
+                        if (ui) {
+                            ui.closeGroup(api.group.id);
+                            return;
+                        }
+
+                        containerApi.removeGroup(api.group);
+                    }}>
+                    Close group
+                </ContextMenuItem>
+            </ContextMenuContent>
+        </ContextMenu>
+    );
 }
 
 function DockHeaderActions({
     containerApi,
     activePanel,
+    panels,
     group,
 }: IDockviewHeaderActionsProps) {
     const ui = React.useContext(DockviewUiContext);
     const mode = ui?.getGroupMode(group.id) ?? DEFAULT_TAB_MODE;
+    const [hasOverflow, setHasOverflow] = React.useState(false);
+
+    React.useEffect(() => {
+        const tabsElement = group.element.querySelector(
+            ':scope > .dv-tabs-and-actions-container .dv-tabs-container'
+        ) as HTMLElement | null;
+
+        if (!tabsElement) {
+            setHasOverflow(false);
+            return;
+        }
+
+        const measureOverflow = () => {
+            if (mode === 'vertical') {
+                setHasOverflow(tabsElement.scrollHeight > tabsElement.clientHeight + 1);
+                return;
+            }
+
+            setHasOverflow(tabsElement.scrollWidth > tabsElement.clientWidth + 1);
+        };
+
+        measureOverflow();
+
+        if (typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        const observer = new ResizeObserver(measureOverflow);
+        observer.observe(tabsElement);
+        observer.observe(group.element);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [group, mode, panels.length]);
+
+    const closeGroup = React.useCallback(() => {
+        if (ui) {
+            ui.closeGroup(group.id);
+            return;
+        }
+
+        containerApi.removeGroup(group);
+    }, [containerApi, group, ui]);
 
     return (
-        <div className='loop-group-actions'>
-            <button
-                className='loop-group-action-button'
-                onClick={(event) => {
-                    event.stopPropagation();
+        <ContextMenu>
+            <ContextMenuTrigger asChild>
+                <div className='loop-group-actions'>
+                    {hasOverflow ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className='loop-group-action-button'
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                    }}
+                                    aria-label='Open tabs list'>
+                                    <MoreHorizontal className='size-3.5' />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align='end'
+                                className='min-w-52 max-w-80'>
+                                <DropdownMenuLabel>Tabs</DropdownMenuLabel>
+                                {panels.map((panel) => {
+                                    const title = panel.title ?? panel.id;
+                                    return (
+                                        <DropdownMenuItem
+                                            key={panel.id}
+                                            onSelect={() => panel.api.setActive()}>
+                                            <span className='max-w-[14rem] truncate'>
+                                                {title}
+                                            </span>
+                                            {activePanel?.id === panel.id ? (
+                                                <Check className='ml-auto size-3.5' />
+                                            ) : null}
+                                        </DropdownMenuItem>
+                                    );
+                                })}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    variant='destructive'
+                                    onSelect={closeGroup}>
+                                    Close group
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : null}
+                    <button
+                        className='loop-group-action-button'
+                        onClick={(event) => {
+                            event.stopPropagation();
 
-                    if (ui) {
-                        ui.createTabInGroup(group.id);
-                        return;
-                    }
+                            if (ui) {
+                                ui.createTabInGroup(group.id);
+                                return;
+                            }
 
-                    const referencePanel = activePanel ?? group.activePanel;
-                    addPanelFromTemplate(containerApi, undefined, {
-                        forceWithin: true,
-                        referencePanel: referencePanel ?? undefined,
-                    });
-                }}
-                aria-label='Create tab'>
-                <Plus className='size-3.5' />
-            </button>
-            <button
-                className='loop-group-action-button'
-                onClick={(event) => {
-                    event.stopPropagation();
-                    ui?.cycleGroupMode(group.id);
-                }}
-                aria-label={`Tab list mode: ${mode}. Click to cycle.`}>
-                {mode === 'vertical' ? (
-                    <PanelLeft className='size-3.5' />
-                ) : (
-                    <PanelTop className='size-3.5' />
-                )}
-            </button>
-        </div>
+                            const referencePanel = activePanel ?? group.activePanel;
+                            addPanelFromTemplate(containerApi, undefined, {
+                                forceWithin: true,
+                                referencePanel: referencePanel ?? undefined,
+                            });
+                        }}
+                        aria-label='Create tab'>
+                        <Plus className='size-3.5' />
+                    </button>
+                    <button
+                        className='loop-group-action-button'
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            ui?.cycleGroupMode(group.id);
+                        }}
+                        aria-label={`Tab list mode: ${mode}. Click to cycle.`}>
+                        {mode === 'vertical' ? (
+                            <PanelLeft className='size-3.5' />
+                        ) : (
+                            <PanelTop className='size-3.5' />
+                        )}
+                    </button>
+                </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent className='min-w-44'>
+                <ContextMenuItem
+                    onSelect={() => {
+                        if (ui) {
+                            ui.createTabInGroup(group.id);
+                            return;
+                        }
+
+                        const referencePanel = activePanel ?? group.activePanel;
+                        addPanelFromTemplate(containerApi, undefined, {
+                            forceWithin: true,
+                            referencePanel: referencePanel ?? undefined,
+                        });
+                    }}>
+                    New tab
+                </ContextMenuItem>
+                <ContextMenuItem
+                    onSelect={() => {
+                        ui?.cycleGroupMode(group.id);
+                    }}>
+                    Cycle tab mode
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem variant='destructive' onSelect={closeGroup}>
+                    Close group
+                </ContextMenuItem>
+            </ContextMenuContent>
+        </ContextMenu>
     );
 }
 
@@ -683,14 +874,27 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
     const apiRef = React.useRef<DockviewApi | null>(null);
     const surfaceRef = React.useRef<HTMLDivElement | null>(null);
     const disposablesRef = React.useRef<Array<{ dispose: () => void }>>([]);
+    const historyRef = React.useRef<LayoutSnapshot[]>([]);
+    const historyKeysRef = React.useRef<string[]>([]);
+    const historyIndexRef = React.useRef(-1);
+    const historyTimerRef = React.useRef<number | null>(null);
+    const applyingHistoryRef = React.useRef(false);
     const [state, setState] = React.useState<DockviewWorkspaceState>({
         panelCount: 0,
         guide: null,
         nativeOverlayKind: null,
+        canUndo: false,
+        canRedo: false,
     });
 
     const setSurfaceNode = React.useCallback((node: HTMLDivElement | null) => {
         surfaceRef.current = node;
+    }, []);
+
+    const clearHistoryTimer = React.useCallback(() => {
+        if (historyTimerRef.current === null) return;
+        window.clearTimeout(historyTimerRef.current);
+        historyTimerRef.current = null;
     }, []);
 
     const clearDisposables = React.useCallback(() => {
@@ -698,7 +902,8 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             disposable.dispose();
         }
         disposablesRef.current = [];
-    }, []);
+        clearHistoryTimer();
+    }, [clearHistoryTimer]);
 
     React.useEffect(() => {
         return () => {
@@ -730,6 +935,104 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
         setNativeOverlayKind(null);
     }, [setGuide, setNativeOverlayKind]);
 
+    const updateHistoryState = React.useCallback(() => {
+        const canUndo = historyIndexRef.current > 0;
+        const canRedo =
+            historyIndexRef.current >= 0 &&
+            historyIndexRef.current < historyRef.current.length - 1;
+
+        setState((previous) => {
+            if (previous.canUndo === canUndo && previous.canRedo === canRedo) {
+                return previous;
+            }
+
+            return {
+                ...previous,
+                canUndo,
+                canRedo,
+            };
+        });
+    }, []);
+
+    const captureHistorySnapshot = React.useCallback(() => {
+        const api = apiRef.current;
+        if (!api || applyingHistoryRef.current) return;
+
+        const snapshot = api.toJSON();
+        const key = JSON.stringify(snapshot);
+        const currentKey = historyKeysRef.current[historyIndexRef.current];
+
+        if (currentKey === key) {
+            return;
+        }
+
+        const nextSnapshots = historyRef.current.slice(0, historyIndexRef.current + 1);
+        const nextKeys = historyKeysRef.current.slice(0, historyIndexRef.current + 1);
+
+        nextSnapshots.push(snapshot);
+        nextKeys.push(key);
+
+        if (nextSnapshots.length > 120) {
+            nextSnapshots.shift();
+            nextKeys.shift();
+        }
+
+        historyRef.current = nextSnapshots;
+        historyKeysRef.current = nextKeys;
+        historyIndexRef.current = nextSnapshots.length - 1;
+        updateHistoryState();
+    }, [updateHistoryState]);
+
+    const scheduleHistoryCapture = React.useCallback(() => {
+        clearHistoryTimer();
+        historyTimerRef.current = window.setTimeout(() => {
+            historyTimerRef.current = null;
+            captureHistorySnapshot();
+        }, 0);
+    }, [captureHistorySnapshot, clearHistoryTimer]);
+
+    const resetHistory = React.useCallback(() => {
+        historyRef.current = [];
+        historyKeysRef.current = [];
+        historyIndexRef.current = -1;
+        updateHistoryState();
+    }, [updateHistoryState]);
+
+    const applyHistorySnapshot = React.useCallback(
+        (snapshot: LayoutSnapshot | undefined) => {
+            const api = apiRef.current;
+            if (!api || !snapshot) return;
+
+            applyingHistoryRef.current = true;
+            try {
+                api.fromJSON(snapshot);
+                refreshPanelCount();
+                clearGuide();
+            } finally {
+                applyingHistoryRef.current = false;
+            }
+        },
+        [clearGuide, refreshPanelCount]
+    );
+
+    const undoLayout = React.useCallback(() => {
+        const nextIndex = historyIndexRef.current - 1;
+        if (nextIndex < 0) return;
+
+        historyIndexRef.current = nextIndex;
+        applyHistorySnapshot(historyRef.current[nextIndex]);
+        updateHistoryState();
+    }, [applyHistorySnapshot, updateHistoryState]);
+
+    const redoLayout = React.useCallback(() => {
+        const nextIndex = historyIndexRef.current + 1;
+        if (nextIndex >= historyRef.current.length) return;
+
+        historyIndexRef.current = nextIndex;
+        applyHistorySnapshot(historyRef.current[nextIndex]);
+        updateHistoryState();
+    }, [applyHistorySnapshot, updateHistoryState]);
+
     const saveLayout = React.useCallback(() => {
         const api = apiRef.current;
         if (!api) return;
@@ -746,10 +1049,11 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
         try {
             api.fromJSON(JSON.parse(raw));
             refreshPanelCount();
+            scheduleHistoryCapture();
         } catch {
             // Ignore malformed saved layouts.
         }
-    }, [refreshPanelCount, storageKey]);
+    }, [refreshPanelCount, scheduleHistoryCapture, storageKey]);
 
     const clearLayout = React.useCallback(() => {
         localStorage.removeItem(storageKey);
@@ -761,8 +1065,9 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             if (!api) return;
             addPanelFromTemplate(api, template, intent);
             refreshPanelCount();
+            scheduleHistoryCapture();
         },
-        [refreshPanelCount]
+        [refreshPanelCount, scheduleHistoryCapture]
     );
 
     const splitPanel = React.useCallback(
@@ -771,8 +1076,21 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             if (!api) return;
             addPanelFromTemplate(api, undefined, { dropPosition: position });
             refreshPanelCount();
+            scheduleHistoryCapture();
         },
-        [refreshPanelCount]
+        [refreshPanelCount, scheduleHistoryCapture]
+    );
+
+    const closeGroup = React.useCallback(
+        (groupId: string) => {
+            const api = apiRef.current;
+            if (!api) return;
+
+            closeGroupById(api, groupId);
+            refreshPanelCount();
+            scheduleHistoryCapture();
+        },
+        [refreshPanelCount, scheduleHistoryCapture]
     );
 
     const handleReady = React.useCallback(
@@ -792,13 +1110,29 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             }
 
             refreshPanelCount();
+            resetHistory();
+            captureHistorySnapshot();
 
             const addDisposable = (disposable: { dispose: () => void }) => {
                 disposablesRef.current.push(disposable);
             };
 
-            addDisposable(event.api.onDidAddPanel(refreshPanelCount));
-            addDisposable(event.api.onDidRemovePanel(refreshPanelCount));
+            addDisposable(
+                event.api.onDidAddPanel(() => {
+                    refreshPanelCount();
+                    scheduleHistoryCapture();
+                })
+            );
+            addDisposable(
+                event.api.onDidRemovePanel(() => {
+                    refreshPanelCount();
+                    scheduleHistoryCapture();
+                })
+            );
+            addDisposable(event.api.onDidMovePanel(scheduleHistoryCapture));
+            addDisposable(event.api.onDidAddGroup(scheduleHistoryCapture));
+            addDisposable(event.api.onDidRemoveGroup(scheduleHistoryCapture));
+            addDisposable(event.api.onDidLayoutFromJSON(scheduleHistoryCapture));
             addDisposable(
                 event.api.onWillShowOverlay((overlayEvent) => {
                     const root = surfaceRef.current;
@@ -815,14 +1149,22 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
                     );
                 })
             );
-            addDisposable(event.api.onDidDrop(clearGuide));
+            addDisposable(
+                event.api.onDidDrop(() => {
+                    clearGuide();
+                    scheduleHistoryCapture();
+                })
+            );
             addDisposable(event.api.onWillDrop(clearGuide));
             addDisposable(event.api.onDidActiveGroupChange(clearGuide));
         },
         [
+            captureHistorySnapshot,
             clearDisposables,
             clearGuide,
             refreshPanelCount,
+            resetHistory,
+            scheduleHistoryCapture,
             seedTemplates,
             setGuide,
             setNativeOverlayKind,
@@ -836,13 +1178,18 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
         panelCount: state.panelCount,
         guide: state.guide,
         nativeOverlayKind: state.nativeOverlayKind,
+        canUndo: state.canUndo,
+        canRedo: state.canRedo,
         clearGuide,
         handleReady,
         saveLayout,
         restoreLayout,
         clearLayout,
+        undoLayout,
+        redoLayout,
         addTemplatePanel,
         splitPanel,
+        closeGroup,
     };
 }
 
@@ -908,8 +1255,12 @@ function useGroupTabModes(apiRef: React.RefObject<DockviewApi | null>) {
 
 function PanelToolbar({
     panelCount,
+    canUndo,
+    canRedo,
     tabMode,
     onTabModeChange,
+    onUndo,
+    onRedo,
     onAdd,
     onSplitRight,
     onSplitDown,
@@ -917,8 +1268,12 @@ function PanelToolbar({
     onRestore,
 }: {
     panelCount: number;
+    canUndo: boolean;
+    canRedo: boolean;
     tabMode: TabListMode;
     onTabModeChange: (mode: TabListMode) => void;
+    onUndo: () => void;
+    onRedo: () => void;
     onAdd: () => void;
     onSplitRight: () => void;
     onSplitDown: () => void;
@@ -928,6 +1283,22 @@ function PanelToolbar({
     return (
         <div className='flex flex-wrap items-center gap-2'>
             <Badge variant='secondary'>{panelCount} panels</Badge>
+            <Button
+                size='sm'
+                variant='outline'
+                onClick={onUndo}
+                disabled={!canUndo}>
+                <Undo2 className='mr-1 size-4' />
+                Undo
+            </Button>
+            <Button
+                size='sm'
+                variant='outline'
+                onClick={onRedo}
+                disabled={!canRedo}>
+                <Redo2 className='mr-1 size-4' />
+                Redo
+            </Button>
             <Button size='sm' onClick={onAdd}>
                 <Plus className='mr-1 size-4' />
                 New Tab
@@ -1035,10 +1406,16 @@ function CoreDockviewDemo() {
     const uiContext = React.useMemo<DockviewUiContextValue>(
         () => ({
             createTabInGroup,
+            closeGroup: runtime.closeGroup,
             cycleGroupMode: groupModes.cycleGroupMode,
             getGroupMode: groupModes.getGroupMode,
         }),
-        [createTabInGroup, groupModes.cycleGroupMode, groupModes.getGroupMode]
+        [
+            createTabInGroup,
+            groupModes.cycleGroupMode,
+            groupModes.getGroupMode,
+            runtime.closeGroup,
+        ]
     );
 
     const hideNativeOverlay =
@@ -1049,8 +1426,12 @@ function CoreDockviewDemo() {
         <div className='space-y-3'>
             <PanelToolbar
                 panelCount={runtime.panelCount}
+                canUndo={runtime.canUndo}
+                canRedo={runtime.canRedo}
                 tabMode={groupModes.defaultMode}
                 onTabModeChange={groupModes.setDefaultMode}
+                onUndo={runtime.undoLayout}
+                onRedo={runtime.redoLayout}
                 onAdd={() => runtime.addTemplatePanel()}
                 onSplitRight={() => runtime.splitPanel('right')}
                 onSplitDown={() => runtime.splitPanel('bottom')}
@@ -1077,7 +1458,7 @@ function CoreDockviewDemo() {
                                 activationSize: { value: 12, type: 'pixels' },
                             }}
                             hideBorders
-                            disableTabsOverflowList={false}
+                            disableTabsOverflowList
                             scrollbars='custom'
                         />
                     </DockviewUiContext.Provider>
@@ -1125,10 +1506,16 @@ function SidebarDockviewDemo() {
     const uiContext = React.useMemo<DockviewUiContextValue>(
         () => ({
             createTabInGroup,
+            closeGroup: runtime.closeGroup,
             cycleGroupMode: groupModes.cycleGroupMode,
             getGroupMode: groupModes.getGroupMode,
         }),
-        [createTabInGroup, groupModes.cycleGroupMode, groupModes.getGroupMode]
+        [
+            createTabInGroup,
+            groupModes.cycleGroupMode,
+            groupModes.getGroupMode,
+            runtime.closeGroup,
+        ]
     );
 
     const bindResize = useDrag(
@@ -1255,8 +1642,12 @@ function SidebarDockviewDemo() {
             <div className='space-y-3'>
                 <PanelToolbar
                     panelCount={runtime.panelCount}
+                    canUndo={runtime.canUndo}
+                    canRedo={runtime.canRedo}
                     tabMode={groupModes.defaultMode}
                     onTabModeChange={groupModes.setDefaultMode}
+                    onUndo={runtime.undoLayout}
+                    onRedo={runtime.redoLayout}
                     onAdd={() => runtime.addTemplatePanel()}
                     onSplitRight={() => runtime.splitPanel('right')}
                     onSplitDown={() => runtime.splitPanel('bottom')}
@@ -1344,7 +1735,7 @@ function SidebarDockviewDemo() {
                                         },
                                     }}
                                     hideBorders
-                                    disableTabsOverflowList={false}
+                                    disableTabsOverflowList
                                     scrollbars='custom'
                                 />
                             </DockviewUiContext.Provider>

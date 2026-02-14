@@ -7,6 +7,7 @@
   "files": [
     {
       "path": "registry/new-york/blocks/dockview/dockview.tsx",
+      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/panels'), {\n    ssr: false,\n    loading: () => <div className='skeleton'>Loading editor...</div>,\n});\n\nexport default Page;\n",
       "type": "registry:page",
       "target": "app/dockview/page.tsx"
     }

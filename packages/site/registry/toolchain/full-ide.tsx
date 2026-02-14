@@ -411,7 +411,6 @@ const FullIDE: FC = () => {
                     <div className='flex-1 min-h-0'>
                         <CodeEditor
                             value={code}
-                            language='javascript'
                             onChange={handleCodeChange}
                         />
                     </div>

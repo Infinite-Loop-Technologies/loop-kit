@@ -12,14 +12,15 @@ import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { getDocsNavigation } from '@/lib/docs/store';
 import { isAdminAuthenticated } from '@/lib/docs/auth';
+import { LoopCnLogo } from '@/components/loopcn-logo';
 
 type ChildrenProps = {
     children: ReactNode;
 };
 
 export const metadata: Metadata = {
-    title: 'loop-kit docs',
-    description: 'The awesomest way to build stuff.',
+    title: 'loop/cn docs',
+    description: 'Documentation and demos for the loop/cn registry.',
 };
 
 export default async function DocsLayout({ children }: ChildrenProps) {
@@ -36,8 +37,8 @@ export default async function DocsLayout({ children }: ChildrenProps) {
                     <div className='flex h-16 shrink-0 items-center gap-2'>
                         <SidebarTrigger className='-ml-1' />
                         <Separator orientation='vertical' className='mr-2 h-4' />
-                        <Link href='/docs' className='text-sm font-medium'>
-                            loop-kit docs
+                        <Link href='/' className='inline-flex items-center'>
+                            <LoopCnLogo showDocsTag />
                         </Link>
                     </div>
                     <div className='flex items-center gap-2'>

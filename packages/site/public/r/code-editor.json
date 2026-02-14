@@ -7,6 +7,7 @@
   "files": [
     {
       "path": "registry/new-york/blocks/code-editor/page.tsx",
+      "content": "'use client';\r\nimport dynamic from 'next/dynamic';\r\n\r\nconst Page = dynamic(() => import('./components/code-editor'), {\r\n    ssr: false,\r\n    loading: () => <div className='skeleton'>Loading editor…</div>,\r\n});\r\nexport default Page;\r\n",
       "type": "registry:page",
       "target": "app/code-editor/page.tsx"
     }

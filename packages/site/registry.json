@@ -1,114 +1,91 @@
 {
-  "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "name": "@loop-kit",
-  "homepage": "https://loop-kit.dev",
-  "items": [
-    {
-      "name": "prose",
-      "type": "registry:component",
-      "title": "Prose",
-      "description": "Typography wrapper for docs content.",
-      "files": [
+    "$schema": "https://ui.shadcn.com/schema/registry.json",
+    "name": "@loop-cn",
+    "homepage": "https://loop-cn.vercel.app",
+    "items": [
         {
-          "path": "registry/new-york/ui/prose/prose.tsx",
-          "type": "registry:component"
+            "name": "prose",
+            "type": "registry:component",
+            "title": "Prose",
+            "description": "Typography wrapper for docs content.",
+            "files": [
+                {
+                    "path": "registry/new-york/ui/prose/prose.tsx",
+                    "type": "registry:component"
+                },
+                {
+                    "path": "registry/new-york/ui/prose/prose.css",
+                    "type": "registry:component"
+                }
+            ]
         },
         {
-          "path": "registry/new-york/ui/prose/prose.css",
-          "type": "registry:component"
-        }
-      ]
-    },
-    {
-      "name": "block-editor",
-      "type": "registry:block",
-      "title": "Block Editor",
-      "description": "Workflowy-style outline editor with zoom and synced references.",
-      "registryDependencies": ["card"],
-      "files": [
+            "name": "block-editor",
+            "type": "registry:block",
+            "title": "Block Editor",
+            "description": "Workflowy-style outline editor with zoom and synced references.",
+            "registryDependencies": [
+                "card"
+            ],
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/block-editor/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/block-editor/page.tsx"
+                }
+            ]
+        },
         {
-          "path": "registry/new-york/blocks/block-editor/page.tsx",
-          "type": "registry:page",
-          "target": "app/block-editor/page.tsx"
-        }
-      ]
-    },
-    {
-      "name": "code-editor",
-      "type": "registry:block",
-      "title": "Code Editor",
-      "description": "JSON/code editing block using CodeMirror.",
-      "files": [
+            "name": "code-editor",
+            "type": "registry:block",
+            "title": "Code Editor",
+            "description": "JSON/code editing block using CodeMirror.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/code-editor/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/code-editor/page.tsx"
+                }
+            ]
+        },
         {
-          "path": "registry/new-york/blocks/code-editor/page.tsx",
-          "type": "registry:page",
-          "target": "app/code-editor/page.tsx"
-        }
-      ]
-    },
-    {
-      "name": "dockview",
-      "type": "registry:block",
-      "title": "Dockview Panels",
-      "description": "Composable panel system built with Dockview.",
-      "files": [
+            "name": "dockview",
+            "type": "registry:block",
+            "title": "Dockview Panels",
+            "description": "Composable panel system built with Dockview.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/dockview/dockview.tsx",
+                    "type": "registry:page",
+                    "target": "app/dockview/page.tsx"
+                }
+            ]
+        },
         {
-          "path": "registry/new-york/blocks/dockview/dockview.tsx",
-          "type": "registry:page",
-          "target": "app/dockview/page.tsx"
-        }
-      ]
-    },
-    {
-      "name": "drag-and-drop",
-      "type": "registry:block",
-      "title": "Drag And Drop",
-      "description": "Sortable drag-and-drop playground.",
-      "files": [
+            "name": "physics",
+            "type": "registry:block",
+            "title": "Physics",
+            "description": "Physics simulation demo block.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/physics/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/physics/page.tsx"
+                }
+            ]
+        },
         {
-          "path": "registry/new-york/blocks/drag-and-drop/page.tsx",
-          "type": "registry:page",
-          "target": "app/drag-and-drop/page.tsx"
+            "name": "game",
+            "type": "registry:block",
+            "title": "Game",
+            "description": "Game demo block.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/game/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/game/page.tsx"
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "physics",
-      "type": "registry:block",
-      "title": "Physics",
-      "description": "Physics simulation demo block.",
-      "files": [
-        {
-          "path": "registry/new-york/blocks/physics/page.tsx",
-          "type": "registry:page",
-          "target": "app/physics/page.tsx"
-        }
-      ]
-    },
-    {
-      "name": "game",
-      "type": "registry:block",
-      "title": "Game",
-      "description": "Game demo block.",
-      "files": [
-        {
-          "path": "registry/new-york/blocks/game/page.tsx",
-          "type": "registry:page",
-          "target": "app/game/page.tsx"
-        }
-      ]
-    },
-    {
-      "name": "jazz-demo-1",
-      "type": "registry:component",
-      "title": "Jazz Demo 1",
-      "description": "State management experiment using Jazz.",
-      "files": [
-        {
-          "path": "registry/jazz/jazz-demo-1.tsx",
-          "type": "registry:component"
-        }
-      ]
-    }
-  ]
+    ]
 }

@@ -1,96 +1,85 @@
-// app/page.tsx (Next.js App Router)
 import Link from 'next/link';
 import {
-    Github,
     ArrowRight,
+    Blocks,
+    BookOpen,
+    Braces,
+    Github,
+    PanelsTopLeft,
     Sparkles,
-    Rocket,
-    Boxes,
-    Shield,
-    Zap,
-    Terminal,
-    Stars,
+    Workflow,
 } from 'lucide-react';
+
 import PixelBlast from '@/components/PixelBlast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-    Card,
-    CardHeader,
-    CardContent,
-    CardFooter,
-    CardTitle,
-    CardDescription,
-} from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import {
-    Accordion,
-    AccordionItem,
-    AccordionTrigger,
-    AccordionContent,
-} from '@/components/ui/accordion';
-import {
-    Tooltip,
-    TooltipProvider,
-    TooltipTrigger,
-    TooltipContent,
-} from '@/components/ui/tooltip';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Prose } from '@/registry/new-york/ui/prose/prose';
+import { LoopCnLogo } from '@/components/loopcn-logo';
 import { FeatureCard, InstallSnippet } from '@/components/snippets';
-import GlassSurface from '@/registry/new-york/ui/glass-surface';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+
+const BLOCKS = [
+    {
+        title: 'Dockview Workbench',
+        description: 'Multi-panel workspace with shadcn-native controls and custom drop guides.',
+        href: '/docs/dockview-panels',
+        icon: PanelsTopLeft,
+    },
+    {
+        title: 'Outline Editor',
+        description: 'Workflowy-style nested blocks with zoom and reference-friendly structure.',
+        href: '/docs/outline-editor',
+        icon: Workflow,
+    },
+    {
+        title: 'Code Editor',
+        description: 'Shadcn-themed editor surface for code-focused docs and demos.',
+        href: '/docs/code-editor',
+        icon: Braces,
+    },
+];
+
 export default function Home() {
     return (
         <div className='relative min-h-screen overflow-clip'>
-            {/* Background */}
             <div className='fixed inset-0 z-0'>
                 <PixelBlast
                     variant='circle'
                     pixelSize={6}
-                    color='#B19EEF'
+                    color='#74c7ff'
                     patternScale={3}
                     patternDensity={1.2}
-                    pixelSizeJitter={0.5}
+                    pixelSizeJitter={0.45}
                     enableRipples
-                    rippleSpeed={0.4}
+                    rippleSpeed={0.35}
                     rippleThickness={0.12}
-                    rippleIntensityScale={1.5}
+                    rippleIntensityScale={1.35}
                     liquid={false}
-                    liquidStrength={0.12}
-                    liquidRadius={1.2}
-                    liquidWobbleSpeed={5}
-                    speed={0.6}
+                    speed={0.55}
                     edgeFade={0.05}
                     transparent
                 />
-                <div className='absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(10,10,15,0.35),transparent_55%),linear-gradient(to_bottom,rgba(10,10,15,0.25),rgba(10,10,15,0.6))]' />
+                <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(9,10,14,0.34),transparent_54%),linear-gradient(to_bottom,rgba(8,10,13,0.22),rgba(8,10,13,0.62))]' />
             </div>
 
-            {/* NAV */}
             <div className='relative z-10 pointer-events-none'>
                 <header className='pointer-events-auto sticky top-0 z-40 w-full'>
                     <div className='mx-auto max-w-7xl px-6'>
                         <div className='mt-5 flex items-center justify-between rounded-2xl border bg-background/60 px-4 py-2 backdrop-blur-md'>
-                            <Link
-                                href='/'
-                                className='inline-flex items-center gap-2 font-semibold tracking-tight'>
-                                <span className='inline-flex h-6 w-6 items-center justify-center rounded bg-primary/15 text-primary'>
-                                    <Stars className='h-3.5 w-3.5' />
-                                </span>
-                                loop-kit
+                            <Link href='/' className='inline-flex items-center'>
+                                <LoopCnLogo />
                             </Link>
                             <nav className='hidden gap-6 md:flex'>
                                 <Link
-                                    href='#features'
+                                    href='#getting-started'
                                     className='text-sm text-muted-foreground hover:text-foreground'>
-                                    Features
+                                    Getting Started
                                 </Link>
                                 <Link
-                                    href='#install'
+                                    href='#blocks'
                                     className='text-sm text-muted-foreground hover:text-foreground'>
-                                    Install
+                                    Blocks
                                 </Link>
                                 <Link
                                     href='#faq'
@@ -99,26 +88,15 @@ export default function Home() {
                                 </Link>
                             </nav>
                             <div className='flex items-center gap-2'>
-                                <TooltipProvider delayDuration={200}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant='ghost'
-                                                size='icon'
-                                                asChild
-                                                aria-label='GitHub'>
-                                                <Link href='https://github.com/your-org/loop-kit'>
-                                                    <Github className='h-5 w-5' />
-                                                </Link>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>GitHub</TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <Button className='group' asChild>
-                                    <Link href='#install'>
-                                        Get Started
-                                        <ArrowRight className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5' />
+                                <Button variant='ghost' size='icon' asChild aria-label='GitHub'>
+                                    <Link href='https://github.com/your-org/loop-cn'>
+                                        <Github className='h-5 w-5' />
+                                    </Link>
+                                </Button>
+                                <Button asChild>
+                                    <Link href='/docs'>
+                                        Docs
+                                        <ArrowRight className='ml-2 h-4 w-4' />
                                     </Link>
                                 </Button>
                             </div>
@@ -126,246 +104,202 @@ export default function Home() {
                     </div>
                 </header>
 
-                {/* HERO */}
                 <section className='relative'>
                     <div className='mx-auto max-w-7xl px-6'>
                         <div className='mx-auto grid max-w-4xl gap-6 py-20 text-center sm:py-28'>
-                            <Badge
-                                className='mx-auto w-fit'
-                                variant='secondary'>
-                                WASM-native • Live-powered
+                            <Badge className='mx-auto w-fit' variant='secondary'>
+                                Advanced shadcn ecosystem blocks
                             </Badge>
-                            <Prose className='mx-auto'>
-                                <h1>
-                                    Build composable software like it’s{' '}
-                                    <em>2026</em>
+                            <div className='space-y-4'>
+                                <h1 className='text-balance text-4xl font-semibold tracking-tight sm:text-6xl'>
+                                    loop/cn
                                 </h1>
-                                <p>
-                                    Loop-Kit is a ruthless toolkit for
-                                    effect-driven apps and engines. JS/TS-first,
-                                    WASM-ready, Live-friendly. Components,
-                                    pipelines, and infra that actually
-                                    compose—across browser, desktop, and
-                                    servers.
+                                <p className='mx-auto max-w-2xl text-balance text-base text-muted-foreground sm:text-lg'>
+                                    A component registry for complex product surfaces in the shadcn ecosystem. Build docs,
+                                    editors, and workbench-style UIs with production-minded blocks.
                                 </p>
-                            </Prose>
+                            </div>
                             <div className='pointer-events-auto mx-auto flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
                                 <Button size='lg' asChild>
-                                    <Link href='#install'>Install the CLI</Link>
+                                    <Link href='#getting-started'>Get Started</Link>
                                 </Button>
                                 <Button size='lg' variant='outline' asChild>
-                                    <Link href='/docs'>Read the docs</Link>
+                                    <Link href='/docs'>Explore docs</Link>
                                 </Button>
                             </div>
-                            <Card className='pointer-events-auto mx-auto mt-6 w-full max-w-3xl border-primary/20 bg-background/60 backdrop-blur'>
-                                <Tabs
-                                    defaultValue='pnpm'
-                                    className='w-full'
-                                    id='install'>
-                                    <CardHeader>
-                                        <div className='flex items-center justify-between'>
-                                            <CardTitle className='flex items-center gap-2 text-base'>
-                                                <Terminal className='h-4 w-4' />{' '}
-                                                Install
-                                            </CardTitle>
-                                            <TabsList>
-                                                <TabsTrigger value='pnpm'>
-                                                    pnpm
-                                                </TabsTrigger>
-                                                <TabsTrigger value='npm'>
-                                                    npm
-                                                </TabsTrigger>
-                                                <TabsTrigger value='bun'>
-                                                    bun
-                                                </TabsTrigger>
-                                            </TabsList>
-                                        </div>
-                                        <CardDescription>
-                                            Pick your poison and go.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <InstallSnippet />
-                                    </CardContent>
-                                    <CardFooter className='justify-between'>
-                                        <div className='text-xs text-muted-foreground'>
-                                            CLI ships with type-safe generators
-                                            and WASM runtime helpers.
-                                        </div>
-                                        <Badge variant='outline'>
-                                            v0.1.0-alpha
-                                        </Badge>
-                                    </CardFooter>
-                                    <TabsContent
-                                        value='pnpm'
-                                        className='hidden'
-                                    />
-                                    <TabsContent
-                                        value='npm'
-                                        className='hidden'
-                                    />
-                                    <TabsContent
-                                        value='bun'
-                                        className='hidden'
-                                    />
-                                </Tabs>
+
+                            <Card
+                                id='getting-started'
+                                className='pointer-events-auto mx-auto mt-6 w-full max-w-3xl border-primary/20 bg-background/65 backdrop-blur'>
+                                <CardHeader>
+                                    <div className='flex items-center justify-between gap-3'>
+                                        <CardTitle className='flex items-center gap-2 text-base'>
+                                            <Sparkles className='h-4 w-4' />
+                                            Install from registry
+                                        </CardTitle>
+                                        <Badge variant='outline'>shadcn registry</Badge>
+                                    </div>
+                                    <CardDescription>
+                                        Start by pulling a real block into your app, then customize freely.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <InstallSnippet />
+                                </CardContent>
+                                <CardFooter className='justify-between gap-2'>
+                                    <p className='text-left text-xs text-muted-foreground'>
+                                        Tip: swap `@loop-cn/dockview` for the block package you want.
+                                    </p>
+                                    <Button size='sm' variant='ghost' asChild>
+                                        <Link href='/docs'>
+                                            Read docs
+                                            <ArrowRight className='ml-1.5 h-3.5 w-3.5' />
+                                        </Link>
+                                    </Button>
+                                </CardFooter>
                             </Card>
                         </div>
                     </div>
                 </section>
 
-                {/* FEATURE GRID */}
-                <section id='features' className='pb-10 sm:pb-20'>
+                <section id='blocks' className='pb-14 sm:pb-20'>
                     <div className='mx-auto max-w-7xl px-6'>
-                        <Prose>
-                            <h2>Why teams pick Loop-Kit</h2>
-                        </Prose>
-                        <div className='mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                            <FeatureCard
-                                icon={<Rocket className='h-5 w-5' />}
-                                title='WASM-native toolchain'
-                                blurb='Ship components as portable capsules with zero-drama builds. Fallback to native when you must.'
-                            />
-                            <FeatureCard
-                                icon={<Boxes className='h-5 w-5' />}
-                                title='Effect-driven runtime'
-                                blurb='Live/UseGPU-aligned APIs: yeet/capture/reconcile without the DOM brain damage.'
-                            />
-                            <FeatureCard
-                                icon={<Zap className='h-5 w-5' />}
-                                title='Hot reload pipelines'
-                                blurb='Incremental steps compile to reusable units; swap at runtime with state intact.'
-                            />
-                            <FeatureCard
-                                icon={<Shield className='h-5 w-5' />}
-                                title='Schema-first safety'
-                                blurb='Type/Result everywhere. Zero exceptions in normal flow. Strong branded types.'
-                            />
-                            <FeatureCard
-                                icon={<Sparkles className='h-5 w-5' />}
-                                title='Design-system friendly'
-                                blurb='ShadCN tokens + Tailwind v4 + your renderer of choice. UI stays portable.'
-                            />
-                            <FeatureCard
-                                icon={<Terminal className='h-5 w-5' />}
-                                title='CLI that respects you'
-                                blurb='Generators, DX utilities, and infra hooks—no mystery scaffolds, no lock-in.'
-                            />
+                        <div className='mb-8 space-y-2'>
+                            <h2 className='text-2xl font-semibold tracking-tight sm:text-3xl'>Block Display</h2>
+                            <p className='max-w-2xl text-sm text-muted-foreground sm:text-base'>
+                                A small map of where loop/cn is headed: practical blocks for editor-heavy and tool-heavy
+                                web apps.
+                            </p>
                         </div>
-                    </div>
-                </section>
-
-                {/* STRIP / SOCIAL PROOF */}
-                <section className='pointer-events-auto  pb-16'>
-                    <div className='mx-auto max-w-7xl px-6'>
-                        <Separator className='mb-8 opacity-50' />
-                        <div className='flex flex-wrap items-center justify-center gap-8 opacity-70'>
-                            {[
-                                'Vercelish',
-                                'Cloudflary',
-                                'Nitric-ish',
-                                'Rolldown',
-                                'Use-GPU',
-                            ].map((n) => (
-                                <div
-                                    key={n}
-                                    className='text-sm font-medium text-muted-foreground'>
-                                    {n}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* TESTIMONIAL */}
-                <section className='pb-20'>
-                    <div className='mx-auto max-w-7xl px-6'>
-                        <Card className='mx-auto max-w-3xl bg-background/60 backdrop-blur'>
-                            <CardContent className='pt-6'>
-                                <blockquote className='text-balance text-lg leading-relaxed'>
-                                    “Loop-Kit let us ship a complex GPU app with
-                                    hot-swappable WASM components. The effect
-                                    runtime meant multiplayer logic didn’t fork
-                                    into a nightmare.”
-                                </blockquote>
-                                <div className='mt-4 flex items-center gap-3'>
-                                    <Avatar className='h-8 w-8'>
-                                        <AvatarFallback>NP</AvatarFallback>
-                                    </Avatar>
-                                    <div className='text-sm'>
-                                        <div className='font-medium'>
-                                            Nova P.
-                                        </div>
-                                        <div className='text-muted-foreground'>
-                                            Founder, Quantum Garden
-                                        </div>
+                        <div className='pointer-events-auto grid gap-4 md:grid-cols-12'>
+                            <Card className='md:col-span-7 bg-background/65 backdrop-blur'>
+                                <CardHeader>
+                                    <CardTitle className='flex items-center gap-2'>
+                                        <Blocks className='h-4 w-4 text-primary' />
+                                        Workspace Surface
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Panel orchestration, saved layouts, group controls, and drag/drop behavior tuned for real tools.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className='grid h-32 grid-cols-12 gap-2 rounded-xl border p-2'>
+                                        <div className='col-span-4 rounded-md border bg-card/80' />
+                                        <div className='col-span-5 rounded-md border bg-card/80' />
+                                        <div className='col-span-3 rounded-md border bg-card/80' />
+                                        <div className='col-span-6 rounded-md border bg-muted/50' />
+                                        <div className='col-span-3 rounded-md border bg-muted/50' />
+                                        <div className='col-span-3 rounded-md border bg-muted/50' />
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+
+                            <div className='grid gap-4 md:col-span-5'>
+                                {BLOCKS.map((block) => (
+                                    <Card key={block.title} className='bg-background/65 backdrop-blur'>
+                                        <CardHeader className='pb-4'>
+                                            <CardTitle className='flex items-center gap-2 text-base'>
+                                                <block.icon className='h-4 w-4 text-primary' />
+                                                {block.title}
+                                            </CardTitle>
+                                            <CardDescription>{block.description}</CardDescription>
+                                        </CardHeader>
+                                        <CardFooter className='pt-0'>
+                                            <Button variant='outline' size='sm' asChild>
+                                                <Link href={block.href}>
+                                                    Open docs
+                                                    <ArrowRight className='ml-1.5 h-3.5 w-3.5' />
+                                                </Link>
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                {/* FAQ */}
+                <section className='pb-14 sm:pb-20'>
+                    <div className='mx-auto max-w-7xl px-6'>
+                        <Separator className='mb-8 opacity-55' />
+                        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                            <FeatureCard
+                                icon={<PanelsTopLeft className='h-5 w-5' />}
+                                title='Workbench-first components'
+                                blurb='Multi-panel and multi-view components designed for desktop-grade web UIs.'
+                            />
+                            <FeatureCard
+                                icon={<Workflow className='h-5 w-5' />}
+                                title='Editor-centric building blocks'
+                                blurb='Outline editing, rich editing, and state-heavy interactions with practical defaults.'
+                            />
+                            <FeatureCard
+                                icon={<BookOpen className='h-5 w-5' />}
+                                title='Docs + demos in one loop'
+                                blurb='Content-driven docs with live demos so each block is documented where it runs.'
+                            />
+                        </div>
+                    </div>
+                </section>
+
                 <section id='faq' className='pb-24'>
                     <div className='mx-auto max-w-4xl px-6'>
-                        <Prose>
-                            <h2>FAQ</h2>
-                        </Prose>
-                        <Accordion
-                            type='single'
-                            collapsible
-                            className='pointer-events-auto mt-4'>
-                            <AccordionItem value='1'>
+                        <h2 className='text-2xl font-semibold tracking-tight sm:text-3xl'>FAQ</h2>
+                        <Accordion type='single' collapsible className='pointer-events-auto mt-4'>
+                            <AccordionItem value='q1'>
                                 <AccordionTrigger>
-                                    Is Loop-Kit tied to a UI framework?
+                                    Is loop/cn a replacement for shadcn/ui?
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    No. It’s renderer-agnostic and plays best
-                                    with Live/UseGPU; React can sit at the
-                                    edges.
+                                    No. loop/cn extends the ecosystem with higher-level and app-like blocks. Keep shadcn/ui as your
+                                    base primitives and use loop/cn for heavier interfaces.
                                 </AccordionContent>
                             </AccordionItem>
-                            <AccordionItem value='2'>
+                            <AccordionItem value='q2'>
                                 <AccordionTrigger>
-                                    Can I use it without WASM?
+                                    Are these blocks theme-safe?
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    Yep. WASM is a first-class target, not a
-                                    requirement. Run native where it makes
-                                    sense.
+                                    Yes. Components are styled against shadcn CSS variables so they adapt across light/dark and custom
+                                    themes without hardcoded palettes.
                                 </AccordionContent>
                             </AccordionItem>
-                            <AccordionItem value='3'>
+                            <AccordionItem value='q3'>
                                 <AccordionTrigger>
-                                    What’s the stability story?
+                                    How should I evaluate a block before adopting it?
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    APIs are pre-1.0 but guarded by schemas and
-                                    typed Results. Breaking changes come with
-                                    codemods.
+                                    Use the docs demos first, then add one block in a sandbox route. Validate keyboard behavior,
+                                    persistence, and layout flow in your own design system before broad rollout.
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value='q4'>
+                                <AccordionTrigger>
+                                    Can I contribute custom blocks to this registry?
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    Yes. The project is organized around registry items, docs metadata, and live demos. Add a block,
+                                    link it to docs, and keep both behavior and documentation in the same loop.
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
                     </div>
                 </section>
 
-                {/* FOOTER */}
                 <footer className='pointer-events-auto pb-10'>
                     <div className='mx-auto max-w-7xl px-6'>
-                        <div className='rounded-2xl border bg-background/60 p-6 backdrop-blur'>
-                            <div className='flex flex-col items-center justify-between gap-4 sm:flex-row'>
-                                <div className='text-sm text-muted-foreground'>
-                                    © {new Date().getFullYear()} Infinite Loop
-                                    Technologies
-                                </div>
-                                <div className='flex items-center gap-2'>
-                                    <Input
-                                        placeholder='Email for updates'
-                                        className='w-56'
-                                    />
-                                    <Button>Subscribe</Button>
-                                </div>
+                        <div className='flex flex-col items-center justify-between gap-4 rounded-2xl border bg-background/65 p-6 backdrop-blur sm:flex-row'>
+                            <div className='inline-flex items-center gap-3'>
+                                <LoopCnLogo />
+                                <span className='text-sm text-muted-foreground'>Serious blocks for serious app surfaces.</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                                <Button variant='outline' size='sm' asChild>
+                                    <Link href='/docs'>Docs</Link>
+                                </Button>
+                                <Button size='sm' asChild>
+                                    <Link href='#getting-started'>Get Started</Link>
+                                </Button>
                             </div>
                         </div>
                     </div>

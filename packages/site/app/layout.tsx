@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'loop-kit',
-    description: 'The awesomest way to build stuff.',
+    title: 'loop/cn',
+    description: 'Shadcn ecosystem component registry for advanced app surfaces.',
 };
 
 export default function RootLayout({

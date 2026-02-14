@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import type {
+    DocDemoSize,
     DocNavPage,
     DocNavSection,
     DocPage,
@@ -18,6 +19,10 @@ function nowIso() {
 
 function toSafeString(value: unknown) {
     return typeof value === 'string' ? value : '';
+}
+
+function toDemoSize(value: unknown): DocDemoSize {
+    return value === 'large' ? 'large' : 'default';
 }
 
 export function toSlug(value: string) {
@@ -40,6 +45,7 @@ function normalizePage(raw: Partial<DocPage>, index: number): DocPage {
     const body = toSafeString(raw.body);
     const published = raw.published !== false;
     const registryItem = toSafeString(raw.registryItem).trim() || undefined;
+    const demoSize = toDemoSize(raw.demoSize);
     const createdAt = toSafeString(raw.createdAt) || nowIso();
     const updatedAt = toSafeString(raw.updatedAt) || createdAt;
 
@@ -56,6 +62,7 @@ function normalizePage(raw: Partial<DocPage>, index: number): DocPage {
         body,
         published,
         registryItem,
+        demoSize,
         createdAt,
         updatedAt,
     };
@@ -185,6 +192,7 @@ export async function upsertDocPage(input: UpsertDocPageInput) {
         body: input.body ?? '',
         published: input.published ?? false,
         registryItem: input.registryItem?.trim() || undefined,
+        demoSize: toDemoSize(input.demoSize),
         createdAt:
             existingIndex >= 0 ? store.pages[existingIndex].createdAt : now,
         updatedAt: now,
