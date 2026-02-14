@@ -24,7 +24,9 @@
             "type": "registry:block",
             "title": "Block Editor",
             "description": "Workflowy-style outline editor with zoom and synced references.",
-            "registryDependencies": ["card"],
+            "registryDependencies": [
+                "card"
+            ],
             "files": [
                 {
                     "path": "registry/new-york/blocks/block-editor/page.tsx",

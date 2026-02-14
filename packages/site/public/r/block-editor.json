@@ -10,7 +10,7 @@
   "files": [
     {
       "path": "registry/new-york/blocks/block-editor/page.tsx",
-      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/outline-editor'), {\n    ssr: false,\n    loading: () => <div className='skeleton'>Loading editor...</div>,\n});\n\nexport default Page;\n",
+      "content": "'use client';\r\n\r\nimport dynamic from 'next/dynamic';\r\n\r\nconst Page = dynamic(() => import('./components/outline-editor'), {\r\n    ssr: false,\r\n    loading: () => <div className='skeleton'>Loading editor...</div>,\r\n});\r\n\r\nexport default Page;\r\n",
       "type": "registry:page",
       "target": "app/block-editor/page.tsx"
     }
