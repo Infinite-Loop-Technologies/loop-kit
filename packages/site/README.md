@@ -1,21 +1,37 @@
-# ILT Design System
+# loop-kit site
 
-This is based on shadcn, using the registry system.
+This package is a Next.js app that hosts:
 
-To use in a shadcn project, add it as a registry namespace. E.g. components.json:
+- A shadcn registry manifest (`registry.json`)
+- A docs site under `/docs`
+- A lightweight docs CMS admin under `/docs/admin`
+
+## Registry usage
+
+Add the registry namespace in `components.json`:
 
 ```json
 {
     "registries": {
-        "@infinite": "https://infinite-design-system.netlify.app/r/{name}"
+        "@loop-kit": "https://your-domain/r/{name}"
     }
 }
 ```
 
 ```bash
-pnpm dlx shadcn@latest add @infinite/sidebar
+pnpm dlx shadcn@latest add @loop-kit/block-editor
 ```
 
-# Docs
+## Docs CMS
 
-Shadcn stuff: [components.json - shadcn/ui](https://ui.shadcn.com/docs/components-json)
+Docs pages are stored in `content/docs/pages.json`.
+
+Configure admin credentials with environment variables:
+
+```bash
+DOCS_ADMIN_USERNAME=admin
+DOCS_ADMIN_PASSWORD=change-me
+DOCS_ADMIN_SECRET=replace-me-with-a-long-random-value
+```
+
+Then sign in at `/docs/admin` to create and edit docs pages.

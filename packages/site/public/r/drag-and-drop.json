@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "drag-and-drop",
+  "type": "registry:block",
+  "title": "Drag And Drop",
+  "description": "Sortable drag-and-drop playground.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/drag-and-drop/page.tsx",
+      "type": "registry:page",
+      "target": "app/drag-and-drop/page.tsx"
+    }
+  ]
+}

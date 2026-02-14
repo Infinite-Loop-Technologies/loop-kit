@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "dockview",
+  "type": "registry:block",
+  "title": "Dockview Panels",
+  "description": "Composable panel system built with Dockview.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/dockview/dockview.tsx",
+      "type": "registry:page",
+      "target": "app/dockview/page.tsx"
+    }
+  ]
+}

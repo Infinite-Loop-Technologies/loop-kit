@@ -1,10 +1,11 @@
 packages:
-    - packages/*
-    - site
+  - packages/*
+  - site
 
 onlyBuiltDependencies:
-    - '@rolldown/browser'
-    - '@tailwindcss/oxide'
-    - msw
-    - sharp
-    - unrs-resolver
+  - '@rolldown/browser'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - msw
+  - sharp
+  - unrs-resolver

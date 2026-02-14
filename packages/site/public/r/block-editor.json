@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "block-editor",
+  "type": "registry:block",
+  "title": "Block Editor",
+  "description": "Workflowy-style outline editor with zoom and synced references.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/block-editor/page.tsx",
+      "type": "registry:page",
+      "target": "app/block-editor/page.tsx"
+    }
+  ]
+}

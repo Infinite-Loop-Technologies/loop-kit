@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-editor",
+  "type": "registry:block",
+  "title": "Code Editor",
+  "description": "JSON/code editing block using CodeMirror.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/code-editor/page.tsx",
+      "type": "registry:page",
+      "target": "app/code-editor/page.tsx"
+    }
+  ]
+}

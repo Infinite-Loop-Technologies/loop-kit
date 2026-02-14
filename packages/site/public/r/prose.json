@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "prose",
+  "type": "registry:component",
+  "title": "Prose",
+  "description": "Typography wrapper for docs content.",
+  "files": [
+    {
+      "path": "registry/new-york/ui/prose/prose.tsx",
+      "type": "registry:component"
+    },
+    {
+      "path": "registry/new-york/ui/prose/prose.css",
+      "type": "registry:component"
+    }
+  ]
+}

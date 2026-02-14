@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "jazz-demo-1",
+  "type": "registry:component",
+  "title": "Jazz Demo 1",
+  "description": "State management experiment using Jazz.",
+  "files": [
+    {
+      "path": "registry/jazz/jazz-demo-1.tsx",
+      "type": "registry:component"
+    }
+  ]
+}

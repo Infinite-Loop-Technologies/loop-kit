@@ -1,0 +1,73 @@
+{
+  "pages": [
+    {
+      "slug": "dockview-panels",
+      "title": "Dockview Panel System",
+      "description": "Composable panel layout experiment built with Dockview.",
+      "section": "Blocks",
+      "order": 20,
+      "body": "# Dockview Panel System\n\nThis page links to a working Dockview panel playground.\n\n## What is included\n\n- Add/split panel actions\n- Persist/restore layout in local storage\n- Simple panel component registry\n\nUse this as the baseline to iterate on your full panel engine.",
+      "published": true,
+      "registryItem": "dockview",
+      "createdAt": "2026-02-13T00:00:00.000Z",
+      "updatedAt": "2026-02-13T00:00:00.000Z"
+    },
+    {
+      "slug": "code-editor",
+      "title": "Code Editor",
+      "description": "",
+      "section": "Code",
+      "order": 0,
+      "body": "",
+      "published": true,
+      "registryItem": "code-editor",
+      "createdAt": "2026-02-13T03:56:00.109Z",
+      "updatedAt": "2026-02-13T06:03:15.539Z"
+    },
+    {
+      "slug": "outline-editor",
+      "title": "Outline Editor",
+      "description": "",
+      "section": "Editors",
+      "order": 0,
+      "body": "",
+      "published": true,
+      "registryItem": "block-editor",
+      "createdAt": "2026-02-13T06:00:13.858Z",
+      "updatedAt": "2026-02-13T06:00:13.858Z"
+    },
+    {
+      "slug": "getting-started",
+      "title": "Getting Started",
+      "description": "Overview of loop-kit docs and how to use this site.",
+      "section": "General",
+      "order": 1,
+      "body": "# Getting Started\r\n\r\nThis docs site is now content-driven.\r\n\r\n- Docs pages are stored in `content/docs/pages.json`.\r\n- Admin editing is available at `/docs/admin`.\r\n- You can link a docs page to a registry item for traceability.\r\n\r\n## Admin workflow\r\n\r\n1. Sign in at `/docs/admin`.\r\n2. Create or edit a page.\r\n3. Publish it and it immediately appears in the sidebar.\r\n",
+      "published": true,
+      "createdAt": "2026-02-13T00:00:00.000Z",
+      "updatedAt": "2026-02-13T06:03:30.872Z"
+    },
+    {
+      "slug": "registry-overview",
+      "title": "Registry Overview",
+      "description": "How docs pages can map to shadcn registry items.",
+      "section": "General",
+      "order": 2,
+      "body": "# Registry Overview\r\n\r\nEach docs page can include a `registryItem` value.\r\n\r\nWhen present, docs pages show:\r\n\r\n- The linked registry item badge.\r\n- A CTA to install from your registry endpoint.\r\n- Optional interactive demo for mapped items.\r\n\r\nThis lets docs and shadcn registry metadata stay aligned.",
+      "published": true,
+      "createdAt": "2026-02-13T00:00:00.000Z",
+      "updatedAt": "2026-02-13T06:03:35.800Z"
+    },
+    {
+      "slug": "roadmap",
+      "title": "Roadmap",
+      "description": "",
+      "section": "General",
+      "order": 10,
+      "body": "- DAW and music related components. Could be a whole category! Definitely midi editor, curve editors. A lot of DAW components also work for video editors, animation editors, and more - timelines, layer systems, pause/play/record.\r\n- A whole section for code related blocks/components. CodeMirror editor is neat. But then terminal. Make a whole IDE block. Powering it is beyond the scope of just a UI component library - but so be it. Demo WebVM, Rolldown, webcontainers, remote VMs, etc. Then have a demo for plugin systems. Another idea is a bytecode interpreter for capability handles like the spell game.\r\n- Definitely a shadertoy clone!\r\n- React flow database schema thingy, perhaps.\r\n- Definitely fancy table! I mean really fancy though - like with user scripting, permissions. Coda level tables. More than just tables - have a whole section that's like this. It's UIs for a data +auth system, maybe? Along these same lines: inspectors and serializers for arbitrary data types like objects, numbers, strings. This goes with on-the-fly generated UIs it's important. Auto validation and stuff. Actually key section here - smart views. Think Coda/Notion tables->list->cards->calendar->whatever. This is super important.\r\n- Definitely a keyboard shortcut system that lets you record and remap them and stuff.\r\n- Non-UI stuff that can plug in as data sources or arbitrary \"connectors\" or sync thingies: PipeDream, for example.\r\n- SVG editor, pixel art editor, keyframe editor.",
+      "published": true,
+      "createdAt": "2026-02-13T04:21:29.783Z",
+      "updatedAt": "2026-02-13T06:03:58.638Z"
+    }
+  ]
+}

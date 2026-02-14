@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "physics",
+  "type": "registry:block",
+  "title": "Physics",
+  "description": "Physics simulation demo block.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/physics/page.tsx",
+      "type": "registry:page",
+      "target": "app/physics/page.tsx"
+    }
+  ]
+}

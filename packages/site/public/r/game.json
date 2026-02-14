@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "game",
+  "type": "registry:block",
+  "title": "Game",
+  "description": "Game demo block.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/game/page.tsx",
+      "type": "registry:page",
+      "target": "app/game/page.tsx"
+    }
+  ]
+}

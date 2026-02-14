@@ -4,11 +4,12 @@
     "type": "module",
     "private": true,
     "bin": {
-        "loop": "src/cli/loop.ts"
+        "loop": "src/cli/loop.tsx"
     },
     "scripts": {
-        "dev:loop": "bun run ./src/cli/loop.ts",
-        "build:loop": "bun build ./src/cli/loop.ts --compile --bytecode --outfile=./dist/loop.exe",
+        "dev:loop": "bun run ./src/cli/loop.tsx",
+        "build": "bun build ./src/cli/loop.tsx --compile --outfile=./dist/loop.exe",
+        "build:watch": "bun --watch build ./src/cli/loop.tsx --compile --outfile=./dist/loop.exe",
         "test": "bun test"
     },
     "devDependencies": {

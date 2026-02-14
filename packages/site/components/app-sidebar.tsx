@@ -1,146 +1,92 @@
-import * as React from 'react';
-import { ChevronRight, File, Folder } from 'lucide-react';
+'use client';
 
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import type React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FileText, Home, ShieldCheck } from 'lucide-react';
+
+import type { DocNavSection } from '@/lib/docs/types';
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
+    SidebarHeader,
     SidebarMenu,
-    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
     SidebarRail,
 } from '@/components/ui/sidebar';
 
-// ---------- Types ----------
-
-type FileState = 'U' | 'M' | string;
-
-interface PinnedItem {
-    file: string;
-    state: FileState;
-}
-
-// Recursive node:
-// - "page.tsx"
-// - ["folderName", child1, child2, ...]
-export type TreeNode = string | [string, ...TreeNode[]];
-
-// Dynamic sections: "Atoms" | "Components" | "Libraries" | whatever
-export interface FileTreeData extends Record<string, TreeNode[]> {}
-
-// ---------- Sample data ----------
-
-const pinned: PinnedItem[] = [
-    { file: 'api/hello/route.ts', state: 'U' },
-    { file: 'app/layout.tsx', state: 'M' },
-];
-
-const treeData: FileTreeData = {
-    Atoms: [
-        [
-            'api',
-            ['hello', 'route.ts'],
-            'page.tsx',
-            'layout.tsx',
-            ['blog', 'page.tsx'],
-        ],
-    ],
-    Components: [['ui', 'button.tsx', 'card.tsx'], 'header.tsx', 'footer.tsx'],
-    Libraries: ['util.ts'],
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+    sections: DocNavSection[];
+    isAdmin: boolean;
 };
 
-// ---------- Sidebar ----------
+export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
+    const pathname = usePathname();
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar {...props}>
-            <SidebarContent>
-                {/* Pinned / Changes */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Changes</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {pinned.map((item, index) => (
-                                <SidebarMenuItem key={index}>
-                                    <SidebarMenuButton>
-                                        <File />
-                                        {item.file}
-                                    </SidebarMenuButton>
-                                    <SidebarMenuBadge>
-                                        {item.state}
-                                    </SidebarMenuBadge>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+            <SidebarHeader>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === '/docs'}>
+                            <Link href='/docs'>
+                                <Home />
+                                Docs Home
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname === '/docs/admin'}>
+                            <Link href='/docs/admin'>
+                                <ShieldCheck />
+                                {isAdmin ? 'Admin Panel' : 'Admin Login'}
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
 
-                {/* Dynamic file sections */}
-                {Object.entries(treeData).map(([sectionName, nodes]) => (
-                    <SidebarGroup key={sectionName}>
-                        <SidebarGroupLabel>{sectionName}</SidebarGroupLabel>
+            <SidebarContent>
+                {sections.map((section) => (
+                    <SidebarGroup key={section.name}>
+                        <SidebarGroupLabel>{section.name}</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {nodes.map((node, index) => (
-                                    <Tree key={index} item={node} />
-                                ))}
+                                {section.pages.map((page) => {
+                                    const href = `/docs/${page.slug}`;
+                                    return (
+                                        <SidebarMenuItem key={page.slug}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={pathname === href}
+                                                tooltip={page.description || page.title}>
+                                                <Link href={href}>
+                                                    <FileText />
+                                                    {page.title}
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
                 ))}
             </SidebarContent>
+
+            <SidebarFooter>
+                <p className='px-2 py-1 text-xs text-muted-foreground'>
+                    Content-driven docs
+                </p>
+            </SidebarFooter>
             <SidebarRail />
         </Sidebar>
-    );
-}
-
-// ---------- Tree ----------
-
-function Tree({ item }: { item: TreeNode }) {
-    const [name, ...items] = Array.isArray(item) ? item : [item];
-
-    // Leaf / file
-    if (!items.length) {
-        return (
-            <SidebarMenuButton
-                isActive={name === 'button.tsx'}
-                className='data-[active=true]:bg-transparent'>
-                <File />
-                {name}
-            </SidebarMenuButton>
-        );
-    }
-
-    // Folder
-    return (
-        <SidebarMenuItem>
-            <Collapsible
-                className='group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90'
-                defaultOpen={name === 'Components' || name === 'ui'}>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                        <ChevronRight className='transition-transform' />
-                        <Folder />
-                        {name}
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                    <SidebarMenuSub>
-                        {items.map((subItem, index) => (
-                            <Tree key={index} item={subItem} />
-                        ))}
-                    </SidebarMenuSub>
-                </CollapsibleContent>
-            </Collapsible>
-        </SidebarMenuItem>
     );
 }

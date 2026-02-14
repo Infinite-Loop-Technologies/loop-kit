@@ -1,4 +1,3 @@
-// crates/loop-runtime/src/lib.rs
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
