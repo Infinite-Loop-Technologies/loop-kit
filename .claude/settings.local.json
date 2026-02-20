@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/joshu/OneDrive/Desktop/loop-kit log --oneline -15)"
+    ]
+  }
+}

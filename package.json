@@ -2,7 +2,6 @@
     "private": true,
     "scripts": {
         "build": "pnpm -r build",
-        "dev": "pnpm --filter @loop-kit/cli dev",
         "release:patch": "pnpm -r version patch && pnpm -r publish --access public",
         "release:minor": "pnpm -r version minor && pnpm -r publish --access public"
     },

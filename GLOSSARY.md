@@ -1,69 +1,61 @@
-Node: A piece of addressable state in the host graph. Nodes are pure data. Nodes do not run code. They have IDs, properties, and edges.
+## Graphite concepts
 
-Edge (Link)
+**Node** — A piece of addressable state in the Graphite graph. Nodes are pure data: they have IDs, properties, and edges. They do not run code.
 
-A typed relationship between nodes. Example: `parent`, `contains`, `refersTo`, `owns`, `renders`, `binds`.
+**Edge (Link)** — A typed relationship between nodes. Examples: `parent`, `contains`, `refersTo`, `owns`.
 
-Facet
+**Intent** — A semantic user goal (e.g. "move selection left", "open item", "rename node"). Intents are input-agnostic; keybindings, mouse, and gestures all produce intents.
 
-A marker that a node “participates in” some schema/role. A facet is a set of fields + invariants. Example: `loop.fs.Entry`, `pulse.browser.Tab`, `pulse.ui.Space`.
+**Patch** — A description of a mutation to apply to the graph. Built using operators: `$set`, `$merge`, `$delete`, `$move`, `$link`, `$unlink`.
 
-Capability
+**Commit** — A finalized, applied patch recorded in history. Enables undo/redo.
 
-A callable contract (function(s) + types + semantics). Capabilities are identified by stable IDs and have schemas. WIT can define capabilities, but the host uses an internal Interface IR.
+**Projection** — A derived, cached view of the graph (tree, list, search results). Queries against the graph produce projections.
 
-Provider
+**Facet** — A marker that a node "participates in" some schema/role — a set of fields and invariants. Example: `loop.fs.Entry`, `loop.ui.Space`.
 
-An implementation of one or more capabilities. Providers are code + manifest (what they implement, what they require, how they run).
+---
 
-Binding
+## Capability/host system (planned)
 
-A rule connecting a capability request in some scope to a specific provider implementation. Bindings are data (often nodes) and are resolved deterministically.
+**Host** — A runtime environment that owns a Graphite graph and controls capability access. The first host will be a browser host. Hosts decide what capabilities modules can access.
 
-Scope
+**Capability** — A callable contract (functions + types + semantics) that a module can request from the host. Graphite itself is treated as a capability. Capabilities are identified by stable IDs.
 
-A boundary that determines bindings, permissions, and ambient handles. Scopes are usually represented as nodes (or derived from a path in the node graph).
+**Module** — A sandboxed unit of code that runs inside a host. Modules are granted capabilities explicitly — they cannot access anything the host hasn't granted.
 
-Session
+**Provider** — An implementation of one or more capabilities. Providers are registered with the host and resolved against requests from modules.
 
-A runtime instance of a provider (or ingestor) running with specific scope/permissions/resources. Sessions have lifecycle (start/stop/restart) and own resources.
+**Binding** — A rule connecting a capability request in a given scope to a specific provider. Bindings are data (often nodes) and resolve deterministically.
 
-Ingestor
+**Scope** — A boundary that determines which bindings and permissions apply. Scopes are usually represented as nodes or derived from a path in the node graph.
 
-A long-lived provider that materializes and maintains a subgraph from an external source (filesystem watcher, browser tabs, HTTP indexer, git repo, etc.). “Spawns nodes” and keeps them fresh.
+**Session** — A runtime instance of a provider running with specific scope/permissions/resources. Sessions have lifecycle (start/stop/restart) and own resources.
 
-Resolver
+**Resolver** — The host component that answers: given (capability, target node, calling scope), which provider session should handle it?
 
-The host component that answers: given (capability, target node, calling scope), which provider session should handle it?
+---
 
-Interface IR
+## Component library concepts
 
-Host’s internal representation of capability contracts (types, functions, semantics). WIT compiles into Interface IR; TS/JSON Schema/etc could too.
+**Block** — A full demo composition in the `registry/` directory. Analogous to blocks on the shadcn registry — larger, opinionated examples rather than single components.
 
-View
+**Registry** — The collection of components and blocks published via `shadcn build`. Currently uses the shadcn registry format; a first-party loop-kit registry is planned for the future.
 
-A provider implementing UI rendering capabilities. A view renders a node into UI IR for a given slot (main panel, sidebar row, inline widget).
+---
 
-UI IR
+## Future / planned
 
-A host-controlled intermediate representation of UI (not raw React elements). Allows sandboxed/remote providers to render safely. Host maps UI IR -> React (loopcn/ui).
+**loop-cloud** — Self-hostable (with a monetized offering) infrastructure for running loop-kit modules as long-running servers, hosting a Graphite sync server, and more.
 
-Space
+**loop-kit CLI** — A new CLI for scaffolding and working with loop-kit projects (the previous CLI was removed).
 
-A node that defines a projection over the graph (query/filter/sort/group), plus UI policy (default view, keymap scope, actions).
+**Ingestor** — A long-lived provider that materializes and maintains a subgraph from an external source (filesystem watcher, browser tabs, HTTP indexer, etc.).
 
-Command
+**View** — A provider implementing UI rendering capabilities. Renders a node into a UI representation for a given slot (main panel, sidebar, inline widget).
 
-A named user-invokable operation with a `when` predicate (context). Commands resolve to actions (capability invocations).
+**Space** — A node defining a projection over the graph (query/filter/sort/group) plus UI policy (default view, keymap scope, actions).
 
-Intent
+**Command** — A named, user-invokable operation with a `when` predicate (context). Commands resolve to capability invocations.
 
-A semantic user goal (e.g. “move selection left”, “open item”, “rename node”). Intents are input-agnostic; keybindings/mouse/gestures produce intents.
-
-Action
-
-A concrete executable recipe, usually “call capability X with args Y,” optionally parameterized. Commands map to actions.
-
-Projection
-
-A derived view of the graph (tree, list, search results). Projections can be cached/incremental.
+**Action** — A concrete executable recipe, usually "call capability X with args Y". Commands map to actions.
