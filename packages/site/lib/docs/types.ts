@@ -12,6 +12,8 @@ export type DocPage = {
     title: string;
     description: string;
     section: string;
+    badgeLabel?: string;
+    fullWidth: boolean;
     order: number;
     body: string;
     published: boolean;
@@ -31,9 +33,11 @@ export type UpsertDocPageInput = {
     title: string;
     description?: string;
     section?: string;
+    badgeLabel?: string;
     order?: number;
     body?: string;
     published?: boolean;
+    fullWidth?: boolean;
     registryItem?: string;
     demoSize?: DocDemoSize;
 };

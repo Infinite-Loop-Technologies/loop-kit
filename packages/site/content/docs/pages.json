@@ -3,64 +3,111 @@
     {
       "slug": "code-editor",
       "title": "Code Editor",
-      "description": "",
+      "description": "CodeMirror block for code-heavy surfaces, with docs-ready theming.",
       "section": "Code",
+      "fullWidth": false,
       "order": 0,
-      "body": "",
+      "body": "# Code Editor\n\nThe code editor block wraps CodeMirror with shadcn token-based theming.\n\n{{demo item=\"code-editor\" title=\"Code Editor Demo\"}}\n\n## Compose with other blocks\n\nThis is most useful when paired with workbench layouts and outline/navigation tools.\n\n{{demo item=\"dockview\" mode=\"iframe\" size=\"large\" title=\"Dockview Workbench (iframe)\"}}\n\n## Editable playground\n\nUse the sandbox below for quick experiments without touching your app code.\n\n{{playground preset=\"starter\" title=\"Starter Sandbox\"}}",
       "published": true,
       "registryItem": "code-editor",
       "demoSize": "default",
       "createdAt": "2026-02-13T03:56:00.109Z",
-      "updatedAt": "2026-02-13T06:03:15.539Z"
+      "updatedAt": "2026-02-17T10:10:38.137Z"
     },
     {
       "slug": "outline-editor",
       "title": "Outline Editor",
-      "description": "",
+      "description": "Graphite-powered outline editing with zoom and linked reference nodes.",
       "section": "Editors",
+      "fullWidth": true,
       "order": 0,
-      "body": "### Future Improvements\r\n- Drag and drop, selection including multi-select + selection box\r\n- Keyboard shortcuts (better ones)\r\n- ^^ both of these wired up with the intent bus system, which will provide super handy hooks that can do things like automatically wire up wasd or arrow keys or whatever you want to some conventions for up/down/left/right intents and other stuff - this will be a fantastic pattern I think. ",
+      "body": "# Outline Editor\n\nThe outline editor now runs on Graphite. Intents compile to patches, references map to graph links, and undo/redo is split properly.\n\n{{registry-item-link item=\"block-editor\" title=\"Install this block\"}}\n\n{{demo item=\"block-editor\" size=\"large\" title=\"Outline Editor Demo\"}}",
       "published": true,
       "registryItem": "block-editor",
       "demoSize": "default",
       "createdAt": "2026-02-13T06:00:13.858Z",
-      "updatedAt": "2026-02-13T23:45:54.725Z"
+      "updatedAt": "2026-02-19T04:30:23.966Z"
     },
     {
       "slug": "getting-started",
       "title": "Getting Started",
       "description": "Overview of loop-kit docs and how to use this site.",
       "section": "General",
+      "fullWidth": false,
       "order": 1,
-      "body": "# Getting Started\r\n\r\nThis docs site is now content-driven.\r\n\r\n- Docs pages are stored in `content/docs/pages.json`.\r\n- Admin editing is available at `/docs/admin`.\r\n- You can link a docs page to a registry item for traceability.\r\n\r\n## Admin workflow\r\n\r\n1. Sign in at `/docs/admin`.\r\n2. Create or edit a page.\r\n3. Publish it and it immediately appears in the sidebar.\r\n",
+      "body": "# Getting Started\n\nThis docs site now supports richer, block-driven content.\n\n- Pages live in `content/docs/pages.json`.\n- Admin editing is available at `/docs/admin`.\n- Admin users can also edit inline directly on each docs page.\n\n## Embedded blocks in markdown\n\nUse these directives in the page body:\n\n- `{{demo item=\"dockview\" mode=\"iframe\" size=\"large\"}}`\n- `{{playground preset=\"starter\"}}`\n\nOnly whitelisted demos and presets are rendered.\n\n{{demo item=\"dockview\" mode=\"iframe\" size=\"large\" title=\"Dockview (isolated iframe)\"}}\n\n{{demo item=\"block-editor\" title=\"Outline block\"}}\n\n{{playground preset=\"layout\" title=\"Layout Playground\"}}",
       "published": true,
       "demoSize": "default",
       "createdAt": "2026-02-13T00:00:00.000Z",
-      "updatedAt": "2026-02-13T06:03:30.872Z"
-    },
-    {
-      "slug": "registry-overview",
-      "title": "Registry Overview",
-      "description": "How docs pages can map to shadcn registry items.",
-      "section": "General",
-      "order": 2,
-      "body": "# Registry Overview\r\n\r\nEach docs page can include a `registryItem` value.\r\n\r\nWhen present, docs pages show:\r\n\r\n- The linked registry item badge.\r\n- A CTA to install from your registry endpoint.\r\n- Optional interactive demo for mapped items.\r\n\r\nThis lets docs and shadcn registry metadata stay aligned.",
-      "published": true,
-      "demoSize": "default",
-      "createdAt": "2026-02-13T00:00:00.000Z",
-      "updatedAt": "2026-02-13T06:03:35.800Z"
+      "updatedAt": "2026-02-17T10:10:38.137Z"
     },
     {
       "slug": "roadmap",
       "title": "Roadmap",
       "description": "",
       "section": "General",
+      "fullWidth": false,
       "order": 10,
-      "body": "- DAW and music related components. Could be a whole category! Definitely midi editor, curve editors. A lot of DAW components also work for video editors, animation editors, and more - timelines, layer systems, pause/play/record.\r\n- A whole section for code related blocks/components. CodeMirror editor is neat. But then terminal. Make a whole IDE bMlock. Powering it is beyond the scope of just a UI component library - but so be it. Demo WebVM, Rolldown, webcontainers, remote VMs, etc. Then have a demo for plugin systems. Another idea is a bytecode interpreter for capability handles like the spell game.\r\n- Definitely a shadertoy clone!\r\n- React flow database schema thingy, perhaps.\r\n- Definitely fancy table! I mean really fancy though - like with user scripting, permissions. Coda level tables. More than just tables - have a whole section that's like this. It's UIs for a data +auth system, maybe? Along these same lines: inspectors and serializers for arbitrary data types like objects, numbers, strings. This goes with on-the-fly generated UIs it's important. Auto validation and stuff. Actually key section here - smart views. Think Coda/Notion tables->list->cards->calendar->whatever. This is super important.\r\n- Definitely a keyboard shortcut system that lets you record and remap them and stuff. Maybe structure this with an intent/command bus to make it awesome.\r\n- A selection box + selectable system to go with drag and drop and more - again, with an intent/command bus to make it clean and sexy\r\n- Non-UI stuff that can plug in as data sources or arbitrary \"connectors\" or sync thingies: PipeDream, for example.\r\n- SVG editor, pixel art editor, keyframe editor.\r\n- Huge: a theming system, ideally one that goes beyond boring old shadcn color reskinning - then have some premade themes. But really cool ones like pixel/8-bit,, liquid glass, etc. \r\n- Maybe set up some awesome animations, art, and more, in different styles. Before when I mentioned themes - perhaps these could go with some of the themes and each theme gets its own page, or something.\r\n- Rive integration! It's pretty trivial, but perhaps I could attempt to do something cool like literally pulling straight from your Rive file to make it easy, or something.\r\n- Monetization of this site in a non-evil way so that I can survive and work more on this without starving to death\r\n- Maybe a bunch of game-related cool stuff, such as an inventory system example. And then going further along these lines; a Unity asset for embedded browser UIs, but performant optimized ones.\r\n- A system for UI adapters so a lot of stuff here can run in a TUI and more - this is maybe a bit far-fetched.\r\n- More WYSIWYG editors, including ones for the content on this docs page itself. Goal: admin & viewer workflows dynamically load based on roles, so no extra bundle size for just non-auth viewers who shouldn't get a whole fancy UI.",
+      "body": "- Get the Graphite library published. Then create tools for it. It'll power just about everything here!\r\n- Graphite intent generators, intent compilers / \"resolvers\", drop-in configurable systems via dynamic queries, and core extensions that uses the patch log to do hardcore stuff like persistence/sync, maybe.\r\n- EZ external system -> graphite patches. \"Connectors\" perhaps. Easily sync an API into Graphite and have intents generated to interact with it.\r\n- A theme system that is more like a UI skin engine. UI components to go along: color palette gen, icon designer, design token browser + editor, theme switcher/browser. Maybe support for animated/interactive themeable stuff, like via a Rive-like format. That's crazy, but would be so cool if doable! This design system would be powered by Graphite too of course. And you could easily fork your design config, undo changes, etc. Maybe even have dynamically scoped design tokens in various ways. Then make example themes and show them off! Another thing: theme switching at runtime doesn't have to mean swapping out every design token - that's crazy. Often times it'll just be swapping out like a set of them or just flipping light to dark or something like that. \r\n- A whole section for code related blocks/components. CodeMirror editor is neat. But then terminal. Make a whole IDE bMlock. Powering it is beyond the scope of just a UI component library - but so be it. Demo WebVM, Rolldown, webcontainers, remote VMs, etc. Then have a demo for plugin systems. Another idea is a bytecode interpreter for capability handles like the spell game.\r\n- Definitely fancy table! I mean really fancy though - like with user scripting, permissions. Coda level tables. More than just tables - have a whole section that's like this. It's UIs for a data +auth system, maybe? Along these same lines: inspectors and serializers for arbitrary data types like objects, numbers, strings. This goes with on-the-fly generated UIs it's important. Auto validation and stuff. Actually key section here - smart views. Think Coda/Notion tables->list->cards->calendar->whatever. This is super important.\r\n- Keyboard shortcut system driven by intents, with a \"when\" clause driven by bounded queries. Extremely powerful. Maybe even evolve it beyond just keyboard shortcuts, and allow controlling different types of intents in various ways. Example: something typically controlled with the mouse could be remapped to a controller, arrow keys, etc.\r\n- Command menu. Intent dispatcher (ctrl+k) thing like what Tana and others have.\r\n- Selection and drag/drop system. I like selection boxes.\r\n- Monetization of this site in a non-evil way. I need money!\r\n- SSR and lazy loading. Especially for views that might have additional functionality for permissions that only some users might have. Or ones that are bouned by some dynamic query.\r\n- React-flow and Graphite powered state visualizer/query/thingy. Fun for experimenting with Graphite DSL. Hooking up little programmable iFrames or whatever into it could turn it into a full-blown scripting environment.\r\n- This one's tricky - but maybe work on the core UI system to try and get native UI stuff working. Maybe even TUI. Custom reconcilers?\r\n- SVG editor, pixel art editor, keyframe editor. Interactivity. Powered by Graphite of course. Goal: make it powerful like Rive.\r\n- Timelines! Useable for DAWs, animation/video editing, and a billion other things. Then specialized editor components/systems.\r\n- Content-editor type layer systems, inspector, and definitely systems for field display & editing! That could get arbitrarily complex.\r\n- Go 3D with editors, physics, and more.",
       "published": true,
       "demoSize": "default",
       "createdAt": "2026-02-13T04:21:29.783Z",
-      "updatedAt": "2026-02-14T05:11:32.309Z"
+      "updatedAt": "2026-02-19T16:05:51.727Z"
+    },
+    {
+      "slug": "library-overview",
+      "title": "Overview",
+      "description": "Graphite is the intent-driven reactive graph runtime powering the advanced components you see here.",
+      "section": "Graphite",
+      "fullWidth": false,
+      "order": 0,
+      "body": "Graphite is what allows all of this to work. You could call it a state management library, but it's much more than that.\r\n\r\n### What is graphite?\r\n- Graphite is a runtime and database that lets you built performant systems. It's inspired by ECS architecture from video games, as well as modern local-first sync type products such as Jazz or InstantDB.\r\n- Graphite isn't some kind of fancy cloud offering with a lot of vendor lock-in. Hell no! Its fairly lightweight.\r\n- Graphite is FAST. I'll prove this by linking to game prototypes completely powered by Graphite, with proof of what's going on via the Graphite dev tools.\r\n- It's inspired by TanstackDB and other incremental local-first database solutions.\r\n- It merges three common architectures. React-style \"state drives everything\", database-style \"transactions + queries\", and ECS-style \"data shapes behavior\".\r\n- In a way you could compare Graphite to Redux or Zustand. But it aims to be more like a realtime incremental query engine. It lets you dynamically construct queries. But the key point: it has built-in scoped queries! This lets you use it on a server and easily implement policy that allows a client to only query what it's allowed to. This is easy with Graphite! This means that you can easily safely cross boundaries with it. It has sync built in!\r\n\r\n### Getting Started\r\n\r\nGraphite gives you a framework to stop even massive complex projects from falling apart. The first key is the intent system. Intents are semantic actions that are ephemeral, e.g. they depend on the current context of your app. Example: in a MIDI editor: \"move that note right\". It's dispatched during **input** events: \"user pressed the right arrow key\". The intent is ephemeral. It doesn't do anything until it's *compiled* and interpreted. The system figures out what note via the input information, and then figures out what \"move right\" means. Then finally, it patches the state, dispatching a log of that patch known as an \"event\". Events are facts about what happened. From there, the event might be persisted. Then, the rest of your application updates. This is because it's watching the current state of your database through queries.\r\n\r\nOccasionally you might want a lower-level intent, but try to avoid those.\r\n\r\nTypically in React shadcn component library example code, they have you make a bunch of useStates. You have local component state, and you change that on an input event, and that's how you code. If it's a little cleaner, you might go through a context, or callback from props. \r\n\r\n```\r\nfunction TodoItem({ todo }) {\r\n  return (\r\n    <button onClick={() => setTodos(...)}>\r\n      Toggle\r\n    </button>\r\n  )\r\n}\r\n```\r\nProblems:\r\n- State mutation logic scattered\r\n- Undo hard\r\n- Sync hard\r\n- Cross-cutting logic duplicated\r\n\r\nGraphite:\r\n```\r\nfunction TodoItem({ id }) {\r\n  const todo = useQuery(q => q.node(id))\r\n\r\n  return (\r\n    <button\r\n      data-nodeid={id}\r\n      onClick={() => dispatch({ type: \"todo.toggle\", id })}\r\n    >\r\n      {todo.completed ? \"✓\" : \" \"}\r\n    </button>\r\n  )\r\n}\r\n```\r\n\r\nIt's pretty much the same. \r\n\r\nThe difference is:\r\n- You never mutate state directly.\r\n- You dispatch semantic intent.\r\n\r\nHonestly it looks a lot li.ke Redux, or any other React state management library. That's because it basically is like the others, but better of course:\r\n- Faster\r\n- Scales better\r\n- Is also a sync engine so gives you multiplayer and takes care of backend integration\r\n- Gives you tools and UI components to work with queries and debug performance\r\n- Is more than just state: it gives your entire app/g. ame structure and the ability to share more code\r\n\r\n## Intent Compilation\r\ncompileIntent = domain logic.\r\n\r\nThis is a game changer for a lot of React devs using shadcn. A lot of you guys end up with projects that don't scale. This was me until recently! A big part of that is not having a good, structured way to separate your domain logic, and maintain it well. This is like a Redux reducer. Or maybe your giant React contexts + hooks files, perhaps. Graphite's approach is to separate it into stages, each of which are simple to reason about.\r\nIn your intent compilers, you take the intent, you read the state, maybe validate the intent in various ways, toss it out if needed - then you construct but do not apply a patch. Then, you return a new command with all of that. \r\n\r\n## Where your code should live with this:\r\nI try to be opinionated with my code! So here:\r\n- graphite core has the store, the patch engine, the query engine, the intent dispatcher, and the built-in history mechanism\r\n- Your \"systems\" are domain specific, e.g. midi.ts. They export intents, compileIntent handlers, and maybe even intent generators, e.g. a React hook that turns inputs -> intents. These are fantastically drop-inable and go great with having a shadcn component library!\r\n\r\nSo yeah, this will be epic and awesome. I need to finish this document!",
+      "published": true,
+      "demoSize": "default",
+      "createdAt": "2026-02-17T11:05:58.038Z",
+      "updatedAt": "2026-02-17T14:20:05.112Z"
+    },
+    {
+      "slug": "graphite-studio",
+      "title": "Graphite Studio",
+      "description": "",
+      "section": "Graphite",
+      "fullWidth": true,
+      "order": 1,
+      "body": "{{registry-item-link item=\"graphite-studio\" title=\"Install this block\"}}\r\n\r\n{{demo item=\"graphite-studio\" size=\"large\" title=\"Live Demo\"}}",
+      "published": true,
+      "registryItem": "graphite-studio",
+      "demoSize": "large",
+      "createdAt": "2026-02-19T03:05:37.267Z",
+      "updatedAt": "2026-02-19T04:15:39.266Z"
+    },
+    {
+      "slug": "graphite-connectors",
+      "title": "Graphite Connectors",
+      "description": "External API integration with connector adapters, external patches, and persistence.",
+      "section": "Graphite",
+      "fullWidth": true,
+      "order": 2,
+      "body": "# Graphite Connectors\n\nGraphite connectors make it easy to sync external systems into your graph runtime.\n\nThis demo uses an HTTP connector that polls a remote API and materializes external patches.\n\n{{registry-item-link item=\"graphite-connectors\" title=\"Install this block\"}}\n\n{{demo item=\"graphite-connectors\" mode=\"iframe\" size=\"large\" title=\"Connector Runtime Demo\"}}\n\n## Connector model\n\n- Connectors run outside intent producers and can still emit patches.\n- External updates are materialized with metadata for auditing.\n- Storage can be swapped through the persistence adapter interface.",
+      "published": true,
+      "registryItem": "graphite-connectors",
+      "demoSize": "large",
+      "createdAt": "2026-02-19T17:10:00.000Z",
+      "updatedAt": "2026-02-19T17:10:00.000Z"
+    },
+    {
+      "slug": "graphite-query-builder-table",
+      "title": "Query Builder + Data Table",
+      "description": "Reusable Graphite query-builder and table systems for filtering, sorting, and intent-driven table actions.",
+      "section": "Graphite",
+      "fullWidth": true,
+      "order": 3,
+      "body": "# Query Builder + Data Table\n\nThis block demonstrates a reusable query builder and data-table pair. It is backed by Graphite queries and intent mutations.\n\n{{registry-item-link item=\"graphite-query-table\" title=\"Install this block\"}}\n\n{{demo item=\"graphite-query-table\" mode=\"iframe\" size=\"large\" title=\"Query + Table Demo\"}}\n\n## Why this matters\n\n- The same query-builder system can drive shortcut `when` clauses.\n- The same data-table system can drive command/intent UIs.\n- It keeps domain logic in intents and keeps UI layers composable.",
+      "published": true,
+      "registryItem": "graphite-query-table",
+      "demoSize": "large",
+      "createdAt": "2026-02-19T17:12:00.000Z",
+      "updatedAt": "2026-02-19T17:12:00.000Z"
     },
     {
       "slug": "panel-system",
@@ -68,12 +115,27 @@
       "description": "",
       "section": "Systems",
       "order": 0,
-      "body": "### Future Improvements\r\n- Fix the external drag-and-drop bug (noticeable in the sidebar demo)0\r\n- Improve the styling: the non-compact version should be more spacious, mimic Notion/VSCode tabs. And improve the look of selected tabs.\r\n- Add gestures for better scrolling, dnd, and more.\r\n- Fix the issue where you can't drag panel groups around (but keep it as an option)\r\n- Fix the vertical tabs system, it is completely bugged\r\n- Fix free floating panels (shift-drag) - you can't drag them, I think similar issue to not being able to grab panel groups\r\n- Improve the drag hover system and the spacing of the boundaries for how a panel snaps around.\r\n- Add auto-layout and perhaps even fancier auto-tiling modes like leftwm-layouts\r\n- Make sure it's easier to use from the outside, e.g. keyboard shortcuts, undo/redo, persistence. Perhaps a command/intent bus system so you can easily map to keyboard shortcuts externally. ",
+      "body": "The panel system supports split layouts, tab groups, and draggable composition.\r\n\r\n{{demo item=\"dockview\" size=\"large\" title=\"Dockview (inline)\"}}\r\n\r\n## Cross-block composition\r\n\r\nBelow is a second block on the same docs page, isolated in iframe mode.\r\n\r\n{{demo item=\"code-editor\" mode=\"iframe\" title=\"Code editor in iframe\"}}",
       "published": true,
+      "fullWidth": false,
       "registryItem": "dockview",
       "demoSize": "large",
       "createdAt": "2026-02-13T23:20:34.319Z",
-      "updatedAt": "2026-02-13T23:31:49.072Z"
+      "updatedAt": "2026-02-19T16:07:54.845Z"
+    },
+    {
+      "slug": "wgsl-shadertoy",
+      "title": "WGSL ShaderToy",
+      "description": "ShaderToy-style fullscreen shader block using UseGPU linker attributes and live uniforms.",
+      "section": "Systems",
+      "fullWidth": false,
+      "order": 1,
+      "body": "# WGSL ShaderToy\n\nThis block is a ShaderToy-style fullscreen shader built with UseGPU.\n\nIt uses the WGSL linker system so uniforms and built-ins are wired semantically instead of manually managing bind groups.\n\n```wgsl\n@optional @link fn getTargetSize() -> vec2<f32>\n@link fn getTime() -> f32\n@link fn getMouse() -> vec2<f32>\n```\n\n{{demo item=\"shadertoy\" size=\"large\" title=\"WGSL ShaderToy Demo\"}}\n\n## Isolated embed mode\n\nUse iframe mode when you want stricter runtime isolation on docs pages.\n\n{{demo item=\"shadertoy\" mode=\"iframe\" size=\"large\" title=\"WGSL ShaderToy (iframe)\"}}\n\n{{playground preset=\"starter\" title=\"Code Playground\"}}",
+      "published": true,
+      "registryItem": "shadertoy",
+      "demoSize": "large",
+      "createdAt": "2026-02-17T15:20:00.000Z",
+      "updatedAt": "2026-02-17T15:20:00.000Z"
     }
   ]
 }

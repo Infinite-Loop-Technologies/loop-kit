@@ -4,8 +4,51 @@ import * as React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { Check, Copy } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Check, ChevronDown, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type PackageManager = 'pnpm' | 'npm' | 'bun';
+
+const DEFAULT_NAMESPACE = '@loop-cn';
+const DEFAULT_ITEM = 'dockview';
+const QUICK_CONFIGURATION_DOCS_URL =
+    'https://ui.shadcn.com/docs/registry/namespace#quick-configuration';
+
+function normalizeOrigin(value?: string | null) {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+        const withProtocol =
+            trimmed.startsWith('http://') || trimmed.startsWith('https://')
+                ? trimmed
+                : `https://${trimmed}`;
+        return new URL(withProtocol).origin;
+    } catch {
+        return null;
+    }
+}
+
+function getCommand(manager: PackageManager, scopedItem: string) {
+    if (manager === 'pnpm') {
+        return `pnpm dlx shadcn@latest add ${scopedItem}`;
+    }
+
+    if (manager === 'npm') {
+        return `npx shadcn@latest add ${scopedItem}`;
+    }
+
+    return `bunx shadcn@latest add ${scopedItem}`;
+}
+
+export type InstallSnippetProps = {
+    itemName?: string;
+    namespace?: string;
+    className?: string;
+    variant?: 'default' | 'compact';
+};
 
 export function FeatureCard({
     icon,
@@ -31,42 +74,154 @@ export function FeatureCard({
     );
 }
 
-export function InstallSnippet() {
-    const map = {
-        pnpm: 'pnpm dlx shadcn@latest add @loop-cn/dockview',
-        npm: 'npx shadcn@latest add @loop-cn/dockview',
-        bun: 'bunx shadcn@latest add @loop-cn/dockview',
-    } as const;
-    const [manager, setManager] = React.useState<keyof typeof map>('pnpm');
+export function InstallSnippet({
+    itemName = DEFAULT_ITEM,
+    namespace = DEFAULT_NAMESPACE,
+    className,
+    variant = 'default',
+}: InstallSnippetProps) {
+    const [manager, setManager] = React.useState<PackageManager>('pnpm');
+    const [origin, setOrigin] = React.useState<string>(() => {
+        const envOrigin = normalizeOrigin(
+            process.env.NEXT_PUBLIC_REGISTRY_ORIGIN ??
+                process.env.NEXT_PUBLIC_SITE_URL ??
+                process.env.NEXT_PUBLIC_APP_URL
+        );
+        return envOrigin ?? 'https://your-domain.com';
+    });
+
+    React.useEffect(() => {
+        const runtimeOrigin = normalizeOrigin(window.location.origin);
+        if (runtimeOrigin) {
+            setOrigin(runtimeOrigin);
+        }
+    }, []);
+
+    const scopedItem = `${namespace}/${itemName}`;
+    const registryPattern = `${origin}/r/{name}.json`;
+    const commandMap = React.useMemo<Record<PackageManager, string>>(
+        () => ({
+            pnpm: getCommand('pnpm', scopedItem),
+            npm: getCommand('npm', scopedItem),
+            bun: getCommand('bun', scopedItem),
+        }),
+        [scopedItem]
+    );
+    const registriesSnippet = React.useMemo(
+        () =>
+            `{\n  "registries": {\n    "${namespace}": "${registryPattern}"\n  }\n}`,
+        [namespace, registryPattern]
+    );
+
+    const renderCommandTabs = (
+        <div className='space-y-2'>
+            <Tabs
+                value={manager}
+                onValueChange={(value) => {
+                    if (value === 'pnpm' || value === 'npm' || value === 'bun') {
+                        setManager(value);
+                    }
+                }}
+                className='w-full'>
+                <TabsList className='mb-3'>
+                    <TabsTrigger value='pnpm'>pnpm</TabsTrigger>
+                    <TabsTrigger value='npm'>npm</TabsTrigger>
+                    <TabsTrigger value='bun'>bun</TabsTrigger>
+                </TabsList>
+
+                {Object.entries(commandMap).map(([name, command]) => (
+                    <TabsContent key={name} value={name} className='space-y-3'>
+                        <div className='group relative overflow-hidden rounded-xl border bg-muted/30'>
+                            <pre className='scrollbar-hide overflow-x-auto p-4 text-sm'>
+                                {`$ ${command}`}
+                            </pre>
+                            <div className='absolute right-2 top-2'>
+                                <CopyButton text={command} />
+                            </div>
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
+            <p className='text-xs text-muted-foreground'>
+                Registry endpoint: <code>{registryPattern}</code>
+            </p>
+        </div>
+    );
+
+    if (variant === 'compact') {
+        return (
+            <div className={cn('space-y-3', className)}>
+                <div className='space-y-1'>
+                    <p className='text-xs font-medium text-foreground'>
+                        Install this block
+                    </p>
+                    {renderCommandTabs}
+                </div>
+                <Collapsible>
+                    <CollapsibleTrigger className='inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground'>
+                        Show one-time registry setup
+                        <ChevronDown className='h-3.5 w-3.5' />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className='mt-2 space-y-2'>
+                        <div className='group relative overflow-hidden rounded-xl border bg-muted/30'>
+                            <pre className='scrollbar-hide overflow-x-auto p-4 text-sm'>
+                                <code>{registriesSnippet}</code>
+                            </pre>
+                            <div className='absolute right-2 top-2'>
+                                <CopyButton text={registriesSnippet} />
+                            </div>
+                        </div>
+                        <p className='text-xs text-muted-foreground'>
+                            Add this to your existing <code>registries</code> object.{' '}
+                            <a
+                                href={QUICK_CONFIGURATION_DOCS_URL}
+                                target='_blank'
+                                rel='noreferrer'
+                                className='underline decoration-dotted underline-offset-2'>
+                                Quick configuration docs
+                            </a>
+                            .
+                        </p>
+                    </CollapsibleContent>
+                </Collapsible>
+            </div>
+        );
+    }
 
     return (
-        <Tabs
-            value={manager}
-            onValueChange={(value) => {
-                if (value in map) {
-                    setManager(value as keyof typeof map);
-                }
-            }}
-            className='w-full'>
-            <TabsList className='mb-3'>
-                <TabsTrigger value='pnpm'>pnpm</TabsTrigger>
-                <TabsTrigger value='npm'>npm</TabsTrigger>
-                <TabsTrigger value='bun'>bun</TabsTrigger>
-            </TabsList>
-
-            {Object.entries(map).map(([k, cmd]) => (
-                <TabsContent key={k} value={k} className='space-y-3'>
-                    <div className='group relative overflow-hidden rounded-xl border bg-muted/30'>
-                        <pre className='scrollbar-hide overflow-x-auto p-4 text-sm'>
-                            {`$ ${cmd}`}
-                        </pre>
-                        <div className='absolute right-2 top-2'>
-                            <CopyButton text={cmd} />
-                        </div>
+        <div className={cn('space-y-4', className)}>
+            <div className='space-y-2'>
+                <p className='text-xs font-medium text-foreground'>
+                    1. Configure namespace in <code>components.json</code>
+                </p>
+                <div className='group relative overflow-hidden rounded-xl border bg-muted/30'>
+                    <pre className='scrollbar-hide overflow-x-auto p-4 text-sm'>
+                        <code>{registriesSnippet}</code>
+                    </pre>
+                    <div className='absolute right-2 top-2'>
+                        <CopyButton text={registriesSnippet} />
                     </div>
-                </TabsContent>
-            ))}
-        </Tabs>
+                </div>
+                <p className='text-xs text-muted-foreground'>
+                    Merge this into your existing `registries` object.{' '}
+                    <a
+                        href={QUICK_CONFIGURATION_DOCS_URL}
+                        target='_blank'
+                        rel='noreferrer'
+                        className='underline decoration-dotted underline-offset-2'>
+                        Quick configuration docs
+                    </a>
+                    .
+                </p>
+            </div>
+
+            <div className='space-y-2'>
+                <p className='text-xs font-medium text-foreground'>
+                    2. Install from the registry
+                </p>
+                {renderCommandTabs}
+            </div>
+        </div>
     );
 }
 

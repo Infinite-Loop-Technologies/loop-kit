@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shadertoy",
+  "type": "registry:block",
+  "title": "WGSL ShaderToy",
+  "description": "ShaderToy-style fullscreen shader demo using UseGPU's WGSL linker system.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/shadertoy/page.tsx",
+      "content": "'use client';\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/shadertoy'), {\n    ssr: false,\n    loading: () => <div className='skeleton'>Loading</div>,\n});\n\nexport default Page;\n",
+      "type": "registry:page",
+      "target": "app/shadertoy/page.tsx"
+    }
+  ]
+}

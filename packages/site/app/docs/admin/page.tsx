@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MarkdownCodeEditorField } from '@/components/docs/markdown-code-editor-field';
+import { RegistryDirectiveReference } from '@/components/docs/registry-directive-reference';
 import { isAdminAuthenticated } from '@/lib/docs/auth';
 import { readRegistryItems } from '@/lib/docs/registry';
 import { listDocPages } from '@/lib/docs/store';
@@ -95,8 +96,6 @@ export default async function DocsAdminPage({
 
     const selectedSlug = pickString(params, 'slug', '');
     const selected = pages.find((page) => page.slug === selectedSlug) ?? null;
-    const selectedRegistry = selected?.registryItem ?? '';
-    const selectedDemoSize = selected?.demoSize ?? 'default';
 
     return (
         <div className='grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]'>
@@ -204,13 +203,24 @@ export default async function DocsAdminPage({
                             />
                         </div>
 
-                        <div className='grid gap-4 md:grid-cols-4'>
+                        <div className='grid gap-4 md:grid-cols-3'>
                             <div className='space-y-2'>
                                 <Label htmlFor='section'>Section</Label>
                                 <Input
                                     id='section'
                                     name='section'
                                     defaultValue={selected?.section ?? 'General'}
+                                />
+                            </div>
+                            <div className='space-y-2'>
+                                <Label htmlFor='badgeLabel'>
+                                    Header badge (optional)
+                                </Label>
+                                <Input
+                                    id='badgeLabel'
+                                    name='badgeLabel'
+                                    defaultValue={selected?.badgeLabel ?? ''}
+                                    placeholder='Graphite'
                                 />
                             </div>
                             <div className='space-y-2'>
@@ -222,54 +232,45 @@ export default async function DocsAdminPage({
                                     defaultValue={selected?.order ?? 0}
                                 />
                             </div>
-                            <div className='space-y-2'>
-                                <Label htmlFor='registryItem'>
-                                    Linked registry item
-                                </Label>
-                                <select
-                                    id='registryItem'
-                                    name='registryItem'
-                                    defaultValue={selectedRegistry}
-                                    className='border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden'>
-                                    <option value=''>None</option>
-                                    {registryItems.map((item) => (
-                                        <option key={item.name} value={item.name}>
-                                            {item.title ?? item.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className='space-y-2'>
-                                <Label htmlFor='demoSize'>Demo size</Label>
-                                <select
-                                    id='demoSize'
-                                    name='demoSize'
-                                    defaultValue={selectedDemoSize}
-                                    className='border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden'>
-                                    <option value='default'>Default</option>
-                                    <option value='large'>Large</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div className='space-y-2'>
-                            <Label htmlFor='body'>Markdown</Label>
-                            <Textarea
+                            <Label htmlFor='body'>Markdown + embeds</Label>
+                            <p className='text-xs text-muted-foreground'>
+                                Supports{' '}
+                                <code>{'{{demo item="dockview" mode="iframe" size="large"}}'}</code>{' '}
+                                <code>{'{{registry-item-link item="dockview"}}'}</code>{' '}
+                                and <code>{'{{playground preset="starter"}}'}</code>.
+                            </p>
+                            <MarkdownCodeEditorField
                                 id='body'
                                 name='body'
-                                rows={18}
                                 defaultValue={selected?.body ?? ''}
+                                height='420px'
+                            />
+                            <RegistryDirectiveReference
+                                registryItems={registryItems}
                             />
                         </div>
 
-                        <label className='inline-flex items-center gap-2 text-sm'>
-                            <input
-                                type='checkbox'
-                                name='published'
-                                defaultChecked={selected?.published ?? true}
-                            />
-                            Published
-                        </label>
+                        <div className='flex flex-wrap items-center gap-4'>
+                            <label className='inline-flex items-center gap-2 text-sm'>
+                                <input
+                                    type='checkbox'
+                                    name='published'
+                                    defaultChecked={selected?.published ?? true}
+                                />
+                                Published
+                            </label>
+                            <label className='inline-flex items-center gap-2 text-sm'>
+                                <input
+                                    type='checkbox'
+                                    name='fullWidth'
+                                    defaultChecked={selected?.fullWidth ?? false}
+                                />
+                                Full-width layout
+                            </label>
+                        </div>
 
                         <div className='flex flex-wrap gap-2'>
                             <Button type='submit'>Save page</Button>

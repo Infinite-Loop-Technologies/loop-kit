@@ -33,7 +33,7 @@ export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild isActive={pathname === '/docs'}>
-                            <Link href='/docs'>
+                            <Link href='/docs' prefetch>
                                 <Home />
                                 Docs Home
                             </Link>
@@ -44,7 +44,7 @@ export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === '/docs/admin'}>
-                                <Link href='/docs/admin'>
+                                <Link href='/docs/admin' prefetch>
                                     <ShieldCheck />
                                     Admin Panel
                                 </Link>
@@ -68,7 +68,7 @@ export function AppSidebar({ sections, isAdmin, ...props }: AppSidebarProps) {
                                                 asChild
                                                 isActive={pathname === href}
                                                 tooltip={page.description || page.title}>
-                                                <Link href={href}>
+                                                <Link href={href} prefetch>
                                                     <FileText />
                                                     {page.title}
                                                 </Link>

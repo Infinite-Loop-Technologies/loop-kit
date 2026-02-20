@@ -1,7 +1,0 @@
-// wit/deps/cli/imports.wit
-// Minimal WASI CLI types we might want to use
-package wasi:cli@0.2.0;
-
-interface stdout {
-    // We'll implement our own logging instead
-}

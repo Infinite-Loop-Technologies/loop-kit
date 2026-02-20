@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "graphite-studio",
+  "type": "registry:block",
+  "title": "Graphite Studio",
+  "description": "Intent-driven graph runtime demo with reusable query builder, data table, shortcut manager, command menu, persistence, and inspector tooling.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/graphite-studio/page.tsx",
+      "content": "'use client';\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/graphite-studio'), {\n  ssr: false,\n  loading: () => <div className='skeleton'>Loading Graphite Studio...</div>,\n});\n\nexport default Page;\n",
+      "type": "registry:page",
+      "target": "app/graphite-studio/page.tsx"
+    }
+  ]
+}

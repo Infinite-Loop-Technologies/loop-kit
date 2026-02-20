@@ -1,9 +1,0 @@
-interface ui {
-    type element-id = u32;
-
-    create-root: func(window: window-id) -> element-id;
-    set-title: func(window: window-id, title: string);
-
-    add-tab: func(label: string) -> u32;
-    select-tab: func(tab: u32);
-}

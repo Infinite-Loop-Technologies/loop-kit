@@ -1,0 +1,19 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "app/docs/**/*.ts",
+        "app/docs/**/*.tsx",
+        "components/docs/**/*.ts",
+        "components/docs/**/*.tsx",
+        "lib/docs/**/*.ts",
+        "registry/new-york/blocks/graphite-studio/**/*.ts",
+        "registry/new-york/blocks/graphite-studio/**/*.tsx",
+        "registry/new-york/hooks/use-graphite-task-query.ts",
+        "registry/new-york/systems/graphite-shortcuts.ts",
+        "registry/new-york/intentproducers/task-intents.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        ".next"
+    ]
+}

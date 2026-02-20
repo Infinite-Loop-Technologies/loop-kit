@@ -37,14 +37,16 @@ export default async function DocsHomePage() {
                     </div>
                     <div className='flex flex-wrap items-center gap-2'>
                         <Button asChild size='sm'>
-                            <Link href='/'>
+                            <Link href='/' prefetch>
                                 Back to landing
                                 <ArrowRight className='ml-1.5 h-3.5 w-3.5' />
                             </Link>
                         </Button>
                         {isAdmin ? (
                             <Button asChild variant='outline' size='sm'>
-                                <Link href='/docs/admin'>Open admin panel</Link>
+                                <Link href='/docs/admin' prefetch>
+                                    Open admin panel
+                                </Link>
                             </Button>
                         ) : null}
                     </div>
@@ -101,6 +103,7 @@ export default async function DocsHomePage() {
                                 <Link
                                     key={page.slug}
                                     href={`/docs/${page.slug}`}
+                                    prefetch
                                     className='group block rounded-md border px-3 py-2 transition-colors hover:bg-muted'>
                                     <div className='flex items-start justify-between gap-3'>
                                         <p className='font-medium'>{page.title}</p>

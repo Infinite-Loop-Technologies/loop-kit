@@ -1,7 +1,0 @@
-package loop:assets;
-
-world assets {
-    resource asset-server {
-
-    }
-}

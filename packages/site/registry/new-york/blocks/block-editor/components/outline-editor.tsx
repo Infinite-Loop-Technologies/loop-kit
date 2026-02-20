@@ -7,8 +7,15 @@ import {
     Link2,
     Plus,
     Rows3,
-    ZoomIn,
+    Undo2,
+    Redo2,
 } from 'lucide-react';
+import {
+    GraphiteProvider,
+    useHistory,
+    useIntent,
+    useQuery,
+} from '@loop-kit/graphite/react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +23,10 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 import { OutlineDocument, OutlineNode, outlineModel } from './outline-model';
+import {
+    createGraphiteOutlineStore,
+    type OutlineGraphiteState,
+} from '../../../systems/graphite-outline';
 
 type FocusRequest = {
     id: string;
@@ -36,7 +47,7 @@ type OutlineRowProps = {
     onChangeText: (id: string, text: string) => void;
     onKeyDown: (
         event: React.KeyboardEvent<HTMLInputElement>,
-        node: OutlineNode
+        node: OutlineNode,
     ) => void;
     registerInput: (id: string, node: HTMLInputElement | null) => void;
 };
@@ -63,39 +74,42 @@ function OutlineRow({
     return (
         <div
             className={cn(
-                'group flex items-center gap-2 rounded-md px-2 py-1.5',
-                isActive && 'bg-accent/60'
+                'group flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors',
+                isActive ? 'bg-accent/60' : 'hover:bg-accent/30',
             )}
             style={{ paddingLeft: `${depth * 18 + 8}px` }}>
-            <button
-                type='button'
-                className='inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent'
-                onClick={() => {
-                    if (hasChildren) {
-                        onToggleCollapsed(node.id);
-                    }
-                }}
-                aria-label={hasChildren ? 'Toggle children' : 'No children'}>
-                {hasChildren ? (
-                    node.collapsed ? (
+            {hasChildren ? (
+                <button
+                    type='button'
+                    className='inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent'
+                    onClick={() => onToggleCollapsed(node.id)}
+                    aria-label={
+                        node.collapsed ? 'Expand children' : 'Collapse children'
+                    }>
+                    {node.collapsed ? (
                         <ChevronRight className='size-3.5' />
                     ) : (
                         <ChevronDown className='size-3.5' />
-                    )
-                ) : (
-                    <span className='size-1.5 rounded-full bg-muted-foreground/70' />
-                )}
-            </button>
+                    )}
+                </button>
+            ) : (
+                <span className='inline-flex size-5 items-center justify-center' />
+            )}
 
             <button
                 type='button'
                 className={cn(
                     'inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent',
-                    isZoomRoot && 'text-primary'
+                    isZoomRoot && 'text-primary',
                 )}
                 onClick={() => onZoom(node.id)}
                 aria-label='Zoom into node'>
-                <ZoomIn className='size-3.5' />
+                <span
+                    className={cn(
+                        'size-2 rounded-full bg-current',
+                        isZoomRoot && 'ring-2 ring-primary/30',
+                    )}
+                />
             </button>
 
             <Input
@@ -105,8 +119,8 @@ function OutlineRow({
                 onChange={(event) => onChangeText(node.id, event.target.value)}
                 onKeyDown={(event) => onKeyDown(event, node)}
                 className={cn(
-                    'h-8 border-0 bg-transparent px-2 shadow-none focus-visible:ring-1',
-                    isReference && 'italic'
+                    'h-8 border-0 bg-transparent px-2 shadow-none dark:bg-transparent focus-visible:bg-accent/55 focus-visible:ring-0',
+                    isReference && 'italic',
                 )}
                 placeholder='Untitled'
             />
@@ -135,23 +149,48 @@ function OutlineRow({
     );
 }
 
-export default function OutlineEditor() {
-    const [doc, setDoc] = React.useState<OutlineDocument>(() =>
-        outlineModel.createSample()
+function extractFocusRequest(metadata: unknown): FocusRequest | null {
+    if (!metadata || typeof metadata !== 'object') return null;
+    const raw = metadata as Record<string, unknown>;
+    const id = raw.focusId;
+    if (typeof id !== 'string' || id.length === 0) return null;
+    return {
+        id,
+        atEnd: raw.focusAtEnd === true,
+    };
+}
+
+function OutlineEditorScene() {
+    const dispatchIntent = useIntent<OutlineGraphiteState>();
+    const history = useHistory<OutlineGraphiteState>();
+    const doc = useQuery<OutlineGraphiteState, OutlineDocument>(
+        (state) => state.doc,
     );
+    const rows = useQuery<
+        OutlineGraphiteState,
+        { id: string; depth: number }[]
+    >((state) => outlineModel.listVisibleRows(state.doc));
+    const breadcrumb = useQuery<OutlineGraphiteState, string[]>((state) =>
+        outlineModel.getBreadcrumb(state.doc),
+    );
+
     const [activeId, setActiveId] = React.useState<string | null>(null);
-    const [focusRequest, setFocusRequest] = React.useState<FocusRequest | null>(null);
+    const [focusRequest, setFocusRequest] = React.useState<FocusRequest | null>(
+        null,
+    );
     const inputRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
 
-    const rows = React.useMemo(() => outlineModel.listVisibleRows(doc), [doc]);
-    const breadcrumb = React.useMemo(() => outlineModel.getBreadcrumb(doc), [doc]);
     const zoomRoot = doc.nodes[doc.zoomRootId];
+    const zoomRootLabel =
+        doc.zoomRootId === doc.rootId
+            ? 'Workspace'
+            : outlineModel.getResolvedText(doc, doc.zoomRootId) || 'Untitled';
 
     const registerInput = React.useCallback(
         (id: string, node: HTMLInputElement | null) => {
             inputRefs.current[id] = node;
         },
-        []
+        [],
     );
 
     React.useEffect(() => {
@@ -170,91 +209,91 @@ export default function OutlineEditor() {
         setFocusRequest(null);
     }, [doc, focusRequest]);
 
-    const apply = React.useCallback(
-        (updater: (current: OutlineDocument) => OutlineDocument) => {
-            setDoc((current) => updater(current));
+    const runIntent = React.useCallback(
+        (name: string, payload: unknown) => {
+            const record = dispatchIntent(name, payload);
+            if (!record) return;
+            const request = extractFocusRequest(record.metadata);
+            if (request) {
+                setFocusRequest(request);
+            }
         },
-        []
+        [dispatchIntent],
     );
 
     const handleChangeText = React.useCallback(
         (id: string, text: string) => {
-            apply((current) => outlineModel.setNodeText(current, id, text));
+            runIntent('outline/set-text', { id, text });
         },
-        [apply]
+        [runIntent],
     );
 
     const handleAddChild = React.useCallback(
         (id: string) => {
-            apply((current) => {
-                const result = outlineModel.insertChild(current, id);
-                setFocusRequest({ id: result.newNodeId });
-                return result.doc;
-            });
+            runIntent('outline/insert-child', { parentId: id });
         },
-        [apply]
+        [runIntent],
     );
 
     const handleAddReference = React.useCallback(
         (id: string) => {
-            apply((current) => {
-                const result = outlineModel.addReferenceAfter(current, id);
-                setFocusRequest({ id: result.newNodeId, atEnd: true });
-                return result.doc;
-            });
+            runIntent('outline/add-reference-after', { id });
         },
-        [apply]
+        [runIntent],
     );
 
     const handleKeyboard = React.useCallback(
         (event: React.KeyboardEvent<HTMLInputElement>, node: OutlineNode) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                apply((current) => {
-                    const result = outlineModel.insertSiblingAfter(current, node.id);
-                    setFocusRequest({ id: result.newNodeId });
-                    return result.doc;
-                });
+                runIntent('outline/insert-sibling-after', { id: node.id });
                 return;
             }
 
             if (event.key === 'Tab') {
                 event.preventDefault();
-                apply((current) =>
-                    event.shiftKey
-                        ? outlineModel.outdentNode(current, node.id)
-                        : outlineModel.indentNode(current, node.id)
+                runIntent(
+                    event.shiftKey ? 'outline/outdent' : 'outline/indent',
+                    {
+                        id: node.id,
+                    },
                 );
-                setFocusRequest({ id: node.id });
                 return;
             }
 
-            if (event.key === 'Backspace' && event.currentTarget.value.length === 0) {
+            if (
+                event.key === 'Backspace' &&
+                event.currentTarget.value.length === 0
+            ) {
                 event.preventDefault();
-                apply((current) => {
-                    const result = outlineModel.deleteNode(current, node.id);
-                    if (result.nextFocusId) {
-                        setFocusRequest({ id: result.nextFocusId, atEnd: true });
-                    }
-                    return result.doc;
-                });
+                runIntent('outline/delete', { id: node.id });
                 return;
             }
 
-            if (event.key === 'ArrowLeft' && node.childIds.length > 0 && !node.collapsed) {
+            if (
+                event.key === 'ArrowLeft' &&
+                node.childIds.length > 0 &&
+                !node.collapsed
+            ) {
                 event.preventDefault();
-                apply((current) => outlineModel.toggleCollapsed(current, node.id));
+                runIntent('outline/toggle-collapsed', { id: node.id });
             }
 
-            if (event.key === 'ArrowRight' && node.childIds.length > 0 && node.collapsed) {
+            if (
+                event.key === 'ArrowRight' &&
+                node.childIds.length > 0 &&
+                node.collapsed
+            ) {
                 event.preventDefault();
-                apply((current) => outlineModel.toggleCollapsed(current, node.id));
+                runIntent('outline/toggle-collapsed', { id: node.id });
             }
         },
-        [apply]
+        [runIntent],
     );
 
-    const activeLabel = activeId ? outlineModel.getResolvedText(doc, activeId) : null;
+    const activeLabel = activeId
+        ? outlineModel.getResolvedText(doc, activeId)
+        : null;
 
     return (
         <div className='space-y-4'>
@@ -264,24 +303,25 @@ export default function OutlineEditor() {
                         const label =
                             id === doc.rootId
                                 ? 'Workspace'
-                                : outlineModel.getResolvedText(doc, id) || 'Untitled';
+                                : outlineModel.getResolvedText(doc, id) ||
+                                  'Untitled';
 
                         return (
                             <React.Fragment key={id}>
                                 {index > 0 ? (
-                                    <span className='text-muted-foreground/60'>/</span>
+                                    <span className='text-muted-foreground/60'>
+                                        /
+                                    </span>
                                 ) : null}
                                 <button
                                     type='button'
                                     className={cn(
                                         'truncate rounded px-1.5 py-0.5 hover:bg-accent',
                                         id === doc.zoomRootId &&
-                                            'text-foreground font-medium'
+                                            'text-foreground font-medium',
                                     )}
                                     onClick={() =>
-                                        apply((current) =>
-                                            outlineModel.zoomTo(current, id)
-                                        )
+                                        runIntent('outline/zoom-to', { id })
                                     }>
                                     {label}
                                 </button>
@@ -292,14 +332,16 @@ export default function OutlineEditor() {
 
                 <div className='ml-auto flex items-center gap-2'>
                     {activeLabel ? (
-                        <Badge variant='secondary' className='max-w-[14rem] truncate'>
+                        <Badge
+                            variant='secondary'
+                            className='max-w-[14rem] truncate'>
                             {activeLabel}
                         </Badge>
                     ) : null}
                     <Button
                         size='sm'
                         variant='outline'
-                        onClick={() => apply((current) => outlineModel.zoomOut(current))}
+                        onClick={() => runIntent('outline/zoom-out', undefined)}
                         disabled={doc.zoomRootId === doc.rootId}>
                         Zoom Out
                     </Button>
@@ -307,13 +349,8 @@ export default function OutlineEditor() {
                         size='sm'
                         variant='outline'
                         onClick={() =>
-                            apply((current) => {
-                                const result = outlineModel.insertChild(
-                                    current,
-                                    current.zoomRootId
-                                );
-                                setFocusRequest({ id: result.newNodeId });
-                                return result.doc;
+                            runIntent('outline/insert-child', {
+                                parentId: doc.zoomRootId,
                             })
                         }>
                         <Plus className='mr-1 size-4' />
@@ -321,10 +358,25 @@ export default function OutlineEditor() {
                     </Button>
                     <Button
                         size='sm'
+                        variant='outline'
+                        onClick={() => history.undo()}
+                        disabled={!history.canUndo}>
+                        <Undo2 className='mr-1 size-4' />
+                        Undo
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => history.redo()}
+                        disabled={!history.canRedo}>
+                        <Redo2 className='mr-1 size-4' />
+                        Redo
+                    </Button>
+                    <Button
+                        size='sm'
                         variant='secondary'
                         onClick={() => {
-                            const sample = outlineModel.createSample();
-                            setDoc(sample);
+                            runIntent('outline/reset-sample', undefined);
                             setActiveId(null);
                             setFocusRequest(null);
                         }}>
@@ -336,25 +388,33 @@ export default function OutlineEditor() {
 
             <div className='rounded-xl border bg-card'>
                 <div className='border-b px-3 py-2 text-sm text-muted-foreground'>
-                    <span className='font-medium text-foreground'>Outliner</span>
+                    <span className='font-medium text-foreground'>
+                        Outliner
+                    </span>
                     <span className='mx-2 text-muted-foreground/60'>-</span>
                     <span>
-                        Tab/Shift+Tab to nest, Enter for sibling, icon to zoom. Reference
-                        nodes mirror the source node.
+                        Graphite-powered outline: Tab/Shift+Tab to nest, Enter
+                        for sibling, bullet icon to zoom. Reference nodes map to
+                        graph links.
                     </span>
                 </div>
 
                 <div className='p-2'>
+                    <div className='px-2 pb-2'>
+                        <h2 className='truncate text-base font-semibold text-foreground'>
+                            {zoomRootLabel}
+                        </h2>
+                    </div>
                     {rows.length === 0 ? (
                         <div className='rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground'>
                             No items inside{' '}
                             <strong className='font-medium text-foreground'>
-                                {zoomRoot?.text || 'this node'}
+                                {zoomRootLabel || zoomRoot?.text || 'this node'}
                             </strong>
                             . Add a child to start outlining.
                         </div>
                     ) : (
-                        <div className='space-y-0.5'>
+                        <div className='space-y-0'>
                             {rows.map((row) => {
                                 const node = doc.nodes[row.id];
                                 if (!node) return null;
@@ -369,16 +429,12 @@ export default function OutlineEditor() {
                                         isZoomRoot={doc.zoomRootId === node.id}
                                         onFocus={setActiveId}
                                         onZoom={(id) =>
-                                            apply((current) =>
-                                                outlineModel.zoomTo(current, id)
-                                            )
+                                            runIntent('outline/zoom-to', { id })
                                         }
                                         onToggleCollapsed={(id) =>
-                                            apply((current) =>
-                                                outlineModel.toggleCollapsed(
-                                                    current,
-                                                    id
-                                                )
+                                            runIntent(
+                                                'outline/toggle-collapsed',
+                                                { id },
                                             )
                                         }
                                         onAddChild={handleAddChild}
@@ -394,5 +450,14 @@ export default function OutlineEditor() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function OutlineEditor() {
+    const store = React.useMemo(() => createGraphiteOutlineStore(), []);
+    return (
+        <GraphiteProvider store={store}>
+            <OutlineEditorScene />
+        </GraphiteProvider>
     );
 }

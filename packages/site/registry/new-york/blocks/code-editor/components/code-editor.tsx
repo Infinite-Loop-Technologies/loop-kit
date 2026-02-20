@@ -1,13 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 import CodeMirror, {
-    EditorView,
     type ReactCodeMirrorProps,
 } from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
-import { json } from '@codemirror/lang-json';
 import { createTheme } from '@uiw/codemirror-themes';
 import { tags as t } from '@lezer/highlight';
 
@@ -79,7 +77,7 @@ export const myTheme = createTheme({
 export type CodeEditorProps = ReactCodeMirrorProps;
 
 export default function CodeEditor(props: CodeEditorProps) {
-    const { value, extensions, theme, ...rest } = props;
+    const { value, extensions, theme, onChange, onUpdate, ...rest } = props;
 
     const finalValue = value ?? defaultDemoCode;
     const finalExtensions = extensions ?? [
@@ -89,11 +87,23 @@ export default function CodeEditor(props: CodeEditorProps) {
         }),
     ];
 
+    const handleUpdate = useCallback<NonNullable<ReactCodeMirrorProps['onUpdate']>>(
+        (viewUpdate) => {
+            if (typeof onChange === 'function' && viewUpdate.docChanged) {
+                onChange(viewUpdate.state.doc.toString(), viewUpdate);
+            }
+            onUpdate?.(viewUpdate);
+        },
+        [onChange, onUpdate]
+    );
+
     return (
         <CodeMirror
             value={finalValue}
             extensions={finalExtensions}
             theme={theme ?? myTheme}
+            onChange={undefined}
+            onUpdate={handleUpdate}
             {...rest}
         />
     );

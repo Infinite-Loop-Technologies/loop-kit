@@ -3,7 +3,7 @@
   "name": "block-editor",
   "type": "registry:block",
   "title": "Block Editor",
-  "description": "Workflowy-style outline editor with zoom and synced references.",
+  "description": "Graphite-powered outline editor with zoom and linked reference nodes.",
   "registryDependencies": [
     "card"
   ],

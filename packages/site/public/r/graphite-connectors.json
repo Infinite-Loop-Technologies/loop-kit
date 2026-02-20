@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "graphite-connectors",
+  "type": "registry:block",
+  "title": "Graphite Connectors",
+  "description": "HTTP connector demo that materializes external API responses into Graphite patches with optional persistence.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/graphite-connectors/page.tsx",
+      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/graphite-connectors'), {\n  ssr: false,\n  loading: () => <div className='skeleton'>Loading Graphite Connectors...</div>,\n});\n\nexport default Page;\n",
+      "type": "registry:page",
+      "target": "app/graphite-connectors/page.tsx"
+    }
+  ]
+}

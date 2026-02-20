@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "graphite-query-table",
+  "type": "registry:block",
+  "title": "Graphite Query Table",
+  "description": "Reusable query-builder + data-table system powered by Graphite query subscriptions and intent mutations.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/graphite-query-table/page.tsx",
+      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/graphite-query-table'), {\n  ssr: false,\n  loading: () => <div className='skeleton'>Loading Graphite Query Table...</div>,\n});\n\nexport default Page;\n",
+      "type": "registry:page",
+      "target": "app/graphite-query-table/page.tsx"
+    }
+  ]
+}

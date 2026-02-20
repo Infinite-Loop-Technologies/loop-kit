@@ -1,0 +1,94 @@
+name: Publish Graphite
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Version bump strategy
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - custom
+      custom_version:
+        description: Custom semver version (required when release_type=custom)
+        required: false
+        type: string
+      dry_run:
+        description: Build and pack only (do not publish)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump package version
+        id: version
+        working-directory: packages/graphite
+        run: |
+          release_type="${{ github.event.inputs.release_type }}"
+          custom_version="${{ github.event.inputs.custom_version }}"
+
+          if [[ "$release_type" == "custom" ]]; then
+            if [[ -z "$custom_version" ]]; then
+              echo "custom_version is required when release_type=custom"
+              exit 1
+            fi
+            npm version "$custom_version" --no-git-tag-version
+          else
+            npm version "$release_type" --no-git-tag-version
+          fi
+
+          next_version=$(node -p "require('./package.json').version")
+          echo "next_version=$next_version" >> "$GITHUB_OUTPUT"
+          echo "Publishing @loop-kit/graphite@$next_version"
+
+      - name: Typecheck
+        run: pnpm --filter @loop-kit/graphite typecheck
+
+      - name: Build
+        run: pnpm --filter @loop-kit/graphite build
+
+      - name: Pack (dry run)
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        working-directory: packages/graphite
+        run: pnpm pack
+
+      - name: Publish to npm
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        working-directory: packages/graphite
+        run: pnpm publish --access public --no-git-checks

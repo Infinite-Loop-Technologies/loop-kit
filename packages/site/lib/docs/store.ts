@@ -25,6 +25,34 @@ function toDemoSize(value: unknown): DocDemoSize {
     return value === 'large' ? 'large' : 'default';
 }
 
+function toBoolean(value: unknown, fallback = false) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (
+            normalized === '1' ||
+            normalized === 'true' ||
+            normalized === 'yes' ||
+            normalized === 'on'
+        ) {
+            return true;
+        }
+        if (
+            normalized === '0' ||
+            normalized === 'false' ||
+            normalized === 'no' ||
+            normalized === 'off'
+        ) {
+            return false;
+        }
+    }
+    return fallback;
+}
+
 export function toSlug(value: string) {
     return value
         .trim()
@@ -39,6 +67,8 @@ function normalizePage(raw: Partial<DocPage>, index: number): DocPage {
     const title = toSafeString(raw.title).trim() || `Untitled ${index + 1}`;
     const description = toSafeString(raw.description).trim();
     const section = toSafeString(raw.section).trim() || 'General';
+    const badgeLabel = toSafeString(raw.badgeLabel).trim() || undefined;
+    const fullWidth = toBoolean(raw.fullWidth, false);
     const rawOrder =
         typeof raw.order === 'number' ? raw.order : Number(raw.order);
     const order = Number.isFinite(rawOrder) ? Number(rawOrder) : 0;
@@ -58,6 +88,8 @@ function normalizePage(raw: Partial<DocPage>, index: number): DocPage {
         title,
         description,
         section,
+        badgeLabel,
+        fullWidth,
         order,
         body,
         published,
@@ -182,17 +214,32 @@ export async function upsertDocPage(input: UpsertDocPageInput) {
     const existingIndex = store.pages.findIndex(
         (page) => page.slug === originalSlug
     );
+    const existing = existingIndex >= 0 ? store.pages[existingIndex] : undefined;
 
     const nextPage: DocPage = {
         slug,
         title: input.title.trim(),
         description: input.description?.trim() ?? '',
         section: input.section?.trim() || 'General',
+        badgeLabel:
+            typeof input.badgeLabel === 'string'
+                ? input.badgeLabel.trim() || undefined
+                : existing?.badgeLabel,
         order: Number.isFinite(input.order) ? Number(input.order) : 0,
         body: input.body ?? '',
         published: input.published ?? false,
-        registryItem: input.registryItem?.trim() || undefined,
-        demoSize: toDemoSize(input.demoSize),
+        fullWidth:
+            typeof input.fullWidth === 'boolean'
+                ? input.fullWidth
+                : existing?.fullWidth ?? false,
+        registryItem:
+            typeof input.registryItem === 'string'
+                ? input.registryItem.trim() || undefined
+                : existing?.registryItem,
+        demoSize:
+            typeof input.demoSize === 'string'
+                ? toDemoSize(input.demoSize)
+                : existing?.demoSize ?? 'default',
         createdAt:
             existingIndex >= 0 ? store.pages[existingIndex].createdAt : now,
         updatedAt: now,

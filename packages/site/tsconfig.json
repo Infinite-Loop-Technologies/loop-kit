@@ -19,15 +19,12 @@
             }
         ],
         "paths": {
-            "@/*": ["./*"]
+            "@/*": ["./*"],
+            "@loop-kit/graphite": ["../graphite/src/index.ts"],
+            "@loop-kit/graphite/react": ["../graphite/src/react.tsx"]
         }
     },
-    "include": [
-        "next-env.d.ts",
-        "**/*.ts",
-        "**/*.tsx",
-        ".next/types/**/*.ts"
-    ],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
     "exclude": [
         "node_modules",
         "app/playground/**/*",

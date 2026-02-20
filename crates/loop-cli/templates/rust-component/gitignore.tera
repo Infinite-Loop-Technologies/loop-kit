@@ -1,5 +1,0 @@
-target/
-*.wasm
-wit/deps/
-wit/deps.lock
-Cargo.lock

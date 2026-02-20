@@ -23,10 +23,8 @@
             "name": "block-editor",
             "type": "registry:block",
             "title": "Block Editor",
-            "description": "Workflowy-style outline editor with zoom and synced references.",
-            "registryDependencies": [
-                "card"
-            ],
+            "description": "Graphite-powered outline editor with zoom and linked reference nodes.",
+            "registryDependencies": ["card"],
             "files": [
                 {
                     "path": "registry/new-york/blocks/block-editor/page.tsx",
@@ -75,15 +73,54 @@
             ]
         },
         {
-            "name": "game",
+            "name": "shadertoy",
             "type": "registry:block",
-            "title": "Game",
-            "description": "Game demo block.",
+            "title": "WGSL ShaderToy",
+            "description": "ShaderToy-style fullscreen shader demo using UseGPU's WGSL linker system.",
             "files": [
                 {
-                    "path": "registry/new-york/blocks/game/page.tsx",
+                    "path": "registry/new-york/blocks/shadertoy/page.tsx",
                     "type": "registry:page",
-                    "target": "app/game/page.tsx"
+                    "target": "app/shadertoy/page.tsx"
+                }
+            ]
+        },
+        {
+            "name": "graphite-studio",
+            "type": "registry:block",
+            "title": "Graphite Studio",
+            "description": "Intent-driven graph runtime demo with reusable query builder, data table, shortcut manager, command menu, persistence, and inspector tooling.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/graphite-studio/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/graphite-studio/page.tsx"
+                }
+            ]
+        },
+        {
+            "name": "graphite-connectors",
+            "type": "registry:block",
+            "title": "Graphite Connectors",
+            "description": "HTTP connector demo that materializes external API responses into Graphite patches with optional persistence.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/graphite-connectors/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/graphite-connectors/page.tsx"
+                }
+            ]
+        },
+        {
+            "name": "graphite-query-table",
+            "type": "registry:block",
+            "title": "Graphite Query Table",
+            "description": "Reusable query-builder + data-table system powered by Graphite query subscriptions and intent mutations.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/graphite-query-table/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/graphite-query-table/page.tsx"
                 }
             ]
         }

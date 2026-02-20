@@ -1,17 +1,16 @@
 import Link from 'next/link';
 import {
     ArrowRight,
-    Blocks,
     BookOpen,
     Braces,
     Github,
     PanelsTopLeft,
-    Sparkles,
     Workflow,
 } from 'lucide-react';
 
 import PixelBlast from '@/components/PixelBlast';
 import { LoopCnLogo } from '@/components/loopcn-logo';
+import RegistryWorkbenchPreview from '@/components/registry-workbench-preview';
 import { FeatureCard, InstallSnippet } from '@/components/snippets';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +22,7 @@ const BLOCKS = [
     {
         title: 'Dockview Workbench',
         description: 'Multi-panel workspace with shadcn-native controls and custom drop guides.',
-        href: '/docs/dockview-panels',
+        href: '/docs/panel-system',
         icon: PanelsTopLeft,
     },
     {
@@ -63,7 +62,7 @@ export default function Home() {
                 <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(9,10,14,0.34),transparent_54%),linear-gradient(to_bottom,rgba(8,10,13,0.22),rgba(8,10,13,0.62))]' />
             </div>
 
-            <div className='relative z-10 pointer-events-none'>
+            <div className='relative z-10'>
                 <header className='pointer-events-auto sticky top-0 z-40 w-full'>
                     <div className='mx-auto max-w-7xl px-6'>
                         <div className='mt-5 flex items-center justify-between rounded-2xl border bg-background/60 px-4 py-2 backdrop-blur-md'>
@@ -121,43 +120,12 @@ export default function Home() {
                             </div>
                             <div className='pointer-events-auto mx-auto flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
                                 <Button size='lg' asChild>
-                                    <Link href='#getting-started'>Get Started</Link>
+                                    <Link href='#blocks'>Preview blocks</Link>
                                 </Button>
                                 <Button size='lg' variant='outline' asChild>
-                                    <Link href='/docs'>Explore docs</Link>
+                                    <Link href='#getting-started'>Install now</Link>
                                 </Button>
                             </div>
-
-                            <Card
-                                id='getting-started'
-                                className='pointer-events-auto mx-auto mt-6 w-full max-w-3xl border-primary/20 bg-background/65 backdrop-blur'>
-                                <CardHeader>
-                                    <div className='flex items-center justify-between gap-3'>
-                                        <CardTitle className='flex items-center gap-2 text-base'>
-                                            <Sparkles className='h-4 w-4' />
-                                            Install from registry
-                                        </CardTitle>
-                                        <Badge variant='outline'>shadcn registry</Badge>
-                                    </div>
-                                    <CardDescription>
-                                        Start by pulling a real block into your app, then customize freely.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <InstallSnippet />
-                                </CardContent>
-                                <CardFooter className='justify-between gap-2'>
-                                    <p className='text-left text-xs text-muted-foreground'>
-                                        Tip: swap `@loop-cn/dockview` for the block package you want.
-                                    </p>
-                                    <Button size='sm' variant='ghost' asChild>
-                                        <Link href='/docs'>
-                                            Read docs
-                                            <ArrowRight className='ml-1.5 h-3.5 w-3.5' />
-                                        </Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
                         </div>
                     </div>
                 </section>
@@ -167,34 +135,27 @@ export default function Home() {
                         <div className='mb-8 space-y-2'>
                             <h2 className='text-2xl font-semibold tracking-tight sm:text-3xl'>Block Display</h2>
                             <p className='max-w-2xl text-sm text-muted-foreground sm:text-base'>
-                                A small map of where loop/cn is headed: practical blocks for editor-heavy and tool-heavy
-                                web apps.
+                                Real registry blocks, wired together in a Dockview workspace. Code editor and outline editor
+                                are running inside panels below.
                             </p>
                         </div>
-                        <div className='pointer-events-auto grid gap-4 md:grid-cols-12'>
-                            <Card className='md:col-span-7 bg-background/65 backdrop-blur'>
+                        <div className='pointer-events-auto grid gap-4 xl:grid-cols-12'>
+                            <Card className='bg-background/65 backdrop-blur xl:col-span-8'>
                                 <CardHeader>
                                     <CardTitle className='flex items-center gap-2'>
-                                        <Blocks className='h-4 w-4 text-primary' />
-                                        Workspace Surface
+                                        <PanelsTopLeft className='h-4 w-4 text-primary' />
+                                        Live Registry Workbench
                                     </CardTitle>
                                     <CardDescription>
-                                        Panel orchestration, saved layouts, group controls, and drag/drop behavior tuned for real tools.
+                                        Dockview panel system with registry-native editors mounted as panel content.
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className='grid h-32 grid-cols-12 gap-2 rounded-xl border p-2'>
-                                        <div className='col-span-4 rounded-md border bg-card/80' />
-                                        <div className='col-span-5 rounded-md border bg-card/80' />
-                                        <div className='col-span-3 rounded-md border bg-card/80' />
-                                        <div className='col-span-6 rounded-md border bg-muted/50' />
-                                        <div className='col-span-3 rounded-md border bg-muted/50' />
-                                        <div className='col-span-3 rounded-md border bg-muted/50' />
-                                    </div>
+                                    <RegistryWorkbenchPreview />
                                 </CardContent>
                             </Card>
 
-                            <div className='grid gap-4 md:col-span-5'>
+                            <div className='grid gap-4 xl:col-span-4'>
                                 {BLOCKS.map((block) => (
                                     <Card key={block.title} className='bg-background/65 backdrop-blur'>
                                         <CardHeader className='pb-4'>
@@ -239,6 +200,38 @@ export default function Home() {
                                 blurb='Content-driven docs with live demos so each block is documented where it runs.'
                             />
                         </div>
+                    </div>
+                </section>
+
+                <section id='getting-started' className='pb-14 sm:pb-20'>
+                    <div className='mx-auto max-w-7xl px-6'>
+                        <Card className='pointer-events-auto mx-auto w-full max-w-4xl border-primary/20 bg-background/65 backdrop-blur'>
+                            <CardHeader>
+                                <div className='flex items-center justify-between gap-3'>
+                                    <CardTitle className='text-base'>
+                                        Install from registry
+                                    </CardTitle>
+                                    <Badge variant='outline'>shadcn registry</Badge>
+                                </div>
+                                <CardDescription>
+                                    Configure the namespace once, then pull any loop/cn block by name.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <InstallSnippet itemName='dockview' />
+                            </CardContent>
+                            <CardFooter className='justify-between gap-2'>
+                                <p className='text-left text-xs text-muted-foreground'>
+                                    Tip: swap `@loop-cn/dockview` for the registry item you want.
+                                </p>
+                                <Button size='sm' variant='ghost' asChild>
+                                    <Link href='/docs'>
+                                        Read docs
+                                        <ArrowRight className='ml-1.5 h-3.5 w-3.5' />
+                                    </Link>
+                                </Button>
+                            </CardFooter>
+                        </Card>
                     </div>
                 </section>
 
