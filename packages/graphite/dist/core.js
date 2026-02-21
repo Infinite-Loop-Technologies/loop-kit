@@ -3,6 +3,7 @@ const numericPathPattern = /^\d+$/;
 const now = () => typeof performance !== 'undefined' && typeof performance.now === 'function'
     ? performance.now()
     : Date.now();
+const DEFAULT_HISTORY_CHANNEL = 'default';
 function isObjectLike(value) {
     return typeof value === 'object' && value !== null;
 }
@@ -23,6 +24,12 @@ function asArrayIndex(segment) {
 }
 function isGraphPath(value) {
     return Array.isArray(value);
+}
+function isPathSegmentValue(value) {
+    return typeof value === 'string' || (typeof value === 'number' && Number.isInteger(value));
+}
+function isUnknownGraphPath(value) {
+    return Array.isArray(value) && value.every((segment) => isPathSegmentValue(segment));
 }
 function cloneValue(value) {
     if (!isObjectLike(value))
@@ -429,10 +436,17 @@ function isLinkPayload(payload) {
     if (typeof payload.relation !== 'string')
         return false;
     const to = payload.to;
-    return typeof to === 'string' || Array.isArray(to);
+    const nodesPath = payload.nodesPath;
+    const hasValidNodesPath = typeof nodesPath === 'undefined' || isUnknownGraphPath(nodesPath);
+    return (typeof to === 'string' || Array.isArray(to)) && hasValidNodesPath;
 }
 function isUnlinkPayload(payload) {
-    return isPlainObject(payload) && typeof payload.relation === 'string';
+    if (!isPlainObject(payload))
+        return false;
+    if (typeof payload.relation !== 'string')
+        return false;
+    const nodesPath = payload.nodesPath;
+    return typeof nodesPath === 'undefined' || isUnknownGraphPath(nodesPath);
 }
 function isPathAllowed(path, scope) {
     if (!scope)
@@ -586,11 +600,12 @@ class PatchExecutor {
         const targets = asStringArray(payload.to);
         if (targets.length === 0)
             return;
-        this.addLinks(fromId, relation, targets, 'link');
+        const nodesPath = payload.nodesPath ?? ['nodes'];
+        this.addLinks(nodesPath, fromId, relation, targets, 'link');
         if (payload.bidirectional || payload.inverseRelation) {
             const inverseRelation = payload.inverseRelation ?? relation;
             for (const target of targets) {
-                this.addLinks(target, inverseRelation, [fromId], 'link');
+                this.addLinks(nodesPath, target, inverseRelation, [fromId], 'link');
             }
         }
     }
@@ -602,12 +617,13 @@ class PatchExecutor {
         if (!relation)
             return;
         const targets = asStringArray(payload.to);
-        this.removeLinks(fromId, relation, targets.length > 0 ? targets : undefined, 'unlink');
+        const nodesPath = payload.nodesPath ?? ['nodes'];
+        this.removeLinks(nodesPath, fromId, relation, targets.length > 0 ? targets : undefined, 'unlink');
         if (payload.bidirectional || payload.inverseRelation) {
             const inverseRelation = payload.inverseRelation ?? relation;
             if (targets.length > 0) {
                 for (const target of targets) {
-                    this.removeLinks(target, inverseRelation, [fromId], 'unlink');
+                    this.removeLinks(nodesPath, target, inverseRelation, [fromId], 'unlink');
                 }
             }
         }
@@ -622,8 +638,8 @@ class PatchExecutor {
         const maybeId = path[path.length - 1];
         return typeof maybeId === 'string' && maybeId.trim().length > 0 ? maybeId : null;
     }
-    addLinks(nodeId, relation, targets, operation) {
-        const relationPath = ['nodes', nodeId, 'links', relation];
+    addLinks(nodesPath, nodeId, relation, targets, operation) {
+        const relationPath = [...nodesPath, nodeId, 'links', relation];
         this.capture(relationPath, operation, () => {
             const existing = getAtPath(this.state, relationPath);
             const next = Array.isArray(existing) ? [...existing] : [];
@@ -633,7 +649,7 @@ class PatchExecutor {
                 }
             }
             setAtPath(this.state, relationPath, next);
-            const nodePath = ['nodes', nodeId];
+            const nodePath = [...nodesPath, nodeId];
             if (!pathExists(this.state, nodePath)) {
                 setAtPath(this.state, nodePath, {
                     id: nodeId,
@@ -644,8 +660,8 @@ class PatchExecutor {
             }
         });
     }
-    removeLinks(nodeId, relation, targets, operation) {
-        const relationPath = ['nodes', nodeId, 'links', relation];
+    removeLinks(nodesPath, nodeId, relation, targets, operation) {
+        const relationPath = [...nodesPath, nodeId, 'links', relation];
         this.capture(relationPath, operation, () => {
             const existing = getAtPath(this.state, relationPath);
             if (!Array.isArray(existing))
@@ -1036,6 +1052,9 @@ function mergeMetadata(first, second) {
         ...(second ?? {}),
     };
 }
+/**
+ * Graphite runtime implementation: commit pipeline, intent dispatch, query reactivity, and history.
+ */
 export class GraphiteRuntime {
     mutationOperators = new Map();
     queryOperators = new Map();
@@ -1052,8 +1071,7 @@ export class GraphiteRuntime {
     idFactory;
     state;
     commits = [];
-    undoStack = [];
-    redoStack = [];
+    historyChannels = new Map();
     commitCounter = 0;
     idCounter = 0;
     constructor(options = {}) {
@@ -1080,9 +1098,15 @@ export class GraphiteRuntime {
             }
         }
     }
+    /**
+     * Returns the current immutable state snapshot.
+     */
     getState() {
         return this.state;
     }
+    /**
+     * Applies a mutation patch and records a commit/diff.
+     */
     commit(patch, options = {}) {
         const executor = new PatchExecutor(this.state, this.mutationOperators, options);
         executor.applyPatch(patch);
@@ -1093,6 +1117,7 @@ export class GraphiteRuntime {
         this.commitCounter += 1;
         const at = Date.now();
         const source = options.source ?? 'patch';
+        const historyChannel = this.resolveHistoryChannel(options);
         const nextRecord = {
             id: this.nextId('commit'),
             index: this.commitCounter,
@@ -1104,6 +1129,7 @@ export class GraphiteRuntime {
             changedPaths,
             metadata: options.metadata ? cloneValue(options.metadata) : undefined,
             intent: options.intent ? cloneValue(options.intent) : undefined,
+            historyChannel,
             event: undefined,
             state: cloneValue(this.state),
         };
@@ -1115,7 +1141,7 @@ export class GraphiteRuntime {
         if (this.commits.length > this.maxCommits) {
             this.commits = this.commits.slice(this.commits.length - this.maxCommits);
         }
-        this.updateHistoryStacks(nextRecord);
+        this.updateHistoryStacks(nextRecord, options);
         for (const listener of this.commitListeners) {
             listener(nextRecord);
         }
@@ -1132,6 +1158,9 @@ export class GraphiteRuntime {
         }
         return nextRecord;
     }
+    /**
+     * Applies an external patch source (filesystem, websocket, polling) with source metadata.
+     */
     materializeExternalPatch(patch, metadata) {
         return this.commit(patch, {
             source: 'external',
@@ -1139,10 +1168,16 @@ export class GraphiteRuntime {
             emitEvent: false,
         });
     }
+    /**
+     * Executes a one-off query against current state.
+     */
     query(query, scope) {
         const execution = this.executeQuery(query, scope, 'manual', undefined, 'manual');
         return execution.result;
     }
+    /**
+     * Registers a reactive query subscription.
+     */
     watchQuery(query, listener, options = {}) {
         const id = this.nextId('query');
         const active = {
@@ -1183,6 +1218,9 @@ export class GraphiteRuntime {
             },
         };
     }
+    /**
+     * Registers a custom mutation operator.
+     */
     registerMutationOperator(name, handler) {
         const normalized = normalizeOperatorName(name);
         this.mutationOperators.set(normalized, handler);
@@ -1190,6 +1228,9 @@ export class GraphiteRuntime {
             this.mutationOperators.delete(normalized);
         };
     }
+    /**
+     * Registers a custom query operator.
+     */
     registerQueryOperator(name, handler) {
         const normalized = normalizeOperatorName(name);
         this.queryOperators.set(normalized, handler);
@@ -1197,12 +1238,18 @@ export class GraphiteRuntime {
             this.queryOperators.delete(normalized);
         };
     }
+    /**
+     * Registers an intent producer by name.
+     */
     registerIntent(name, producer) {
         this.intentProducers.set(name, producer);
         return () => {
             this.intentProducers.delete(name);
         };
     }
+    /**
+     * Compiles and dispatches an intent, returning a commit when a patch is produced.
+     */
     dispatchIntent(name, payload, options = {}) {
         const producer = this.intentProducers.get(name);
         if (!producer)
@@ -1232,8 +1279,9 @@ export class GraphiteRuntime {
                 payload,
             },
             metadata: mergeMetadata(metadata, options.metadata),
+            history: options.history,
             emitEvent: options.emitEvent,
-            event,
+            event: typeof options.event === 'undefined' ? event : options.event,
         });
     }
     onCommit(listener) {
@@ -1269,14 +1317,27 @@ export class GraphiteRuntime {
     getCommitLog() {
         return this.commits;
     }
-    canUndo() {
-        return this.undoStack.length > 0;
+    /**
+     * Returns whether undo is available for a given history channel.
+     */
+    canUndo(channel) {
+        const history = this.getHistoryChannelState(this.normalizeHistoryChannel(channel));
+        return history.undoStack.length > 0;
     }
-    canRedo() {
-        return this.redoStack.length > 0;
+    /**
+     * Returns whether redo is available for a given history channel.
+     */
+    canRedo(channel) {
+        const history = this.getHistoryChannelState(this.normalizeHistoryChannel(channel));
+        return history.redoStack.length > 0;
     }
-    undo(recordOrId) {
-        const target = this.undoStack[this.undoStack.length - 1];
+    /**
+     * Applies the inverse patch for the latest undoable commit in a history channel.
+     */
+    undo(recordOrId, channel) {
+        const resolvedChannel = this.normalizeHistoryChannel(channel);
+        const history = this.getHistoryChannelState(resolvedChannel);
+        const target = history.undoStack[history.undoStack.length - 1];
         if (!target)
             return null;
         const requestedCommitId = this.toRequestedCommitId(recordOrId);
@@ -1287,16 +1348,23 @@ export class GraphiteRuntime {
             source: 'undo',
             metadata: {
                 undoneCommitId: target.id,
+                historyChannel: resolvedChannel,
             },
+            history: false,
             emitEvent: false,
         });
-        this.undoStack.pop();
-        this.redoStack.push(target);
-        this.clampHistory();
+        history.undoStack.pop();
+        history.redoStack.push(target);
+        this.clampHistoryChannel(history);
         return record;
     }
-    redo(recordOrId) {
-        const target = this.redoStack[this.redoStack.length - 1];
+    /**
+     * Re-applies the latest redone commit in a history channel.
+     */
+    redo(recordOrId, channel) {
+        const resolvedChannel = this.normalizeHistoryChannel(channel);
+        const history = this.getHistoryChannelState(resolvedChannel);
+        const target = history.redoStack[history.redoStack.length - 1];
         if (!target)
             return null;
         const requestedCommitId = this.toRequestedCommitId(recordOrId);
@@ -1307,12 +1375,14 @@ export class GraphiteRuntime {
             source: 'redo',
             metadata: {
                 redoneCommitId: target.id,
+                historyChannel: resolvedChannel,
             },
+            history: false,
             emitEvent: false,
         });
-        this.redoStack.pop();
-        this.undoStack.push(target);
-        this.clampHistory();
+        history.redoStack.pop();
+        history.undoStack.push(target);
+        this.clampHistoryChannel(history);
         return record;
     }
     nextId(prefix) {
@@ -1371,27 +1441,62 @@ export class GraphiteRuntime {
         active.dependencies = event.dependencies.map((path) => [...path]);
         return { event, changed };
     }
-    updateHistoryStacks(record) {
+    updateHistoryStacks(record, options) {
         if (!record.inversePatch) {
             return;
         }
         if (record.source === 'undo' || record.source === 'redo') {
             return;
         }
-        this.undoStack.push({
+        if (options.history === false) {
+            return;
+        }
+        const channel = record.historyChannel ?? this.normalizeHistoryChannel();
+        const history = this.getHistoryChannelState(channel);
+        history.undoStack.push({
             id: record.id,
             patch: cloneValue(record.patch),
             inversePatch: cloneValue(record.inversePatch),
         });
-        this.redoStack = [];
-        this.clampHistory();
+        history.redoStack = [];
+        this.clampHistoryChannel(history);
     }
-    clampHistory() {
-        if (this.undoStack.length > this.maxCommits) {
-            this.undoStack = this.undoStack.slice(this.undoStack.length - this.maxCommits);
+    resolveHistoryChannel(options) {
+        if (options.history === false) {
+            return undefined;
         }
-        if (this.redoStack.length > this.maxCommits) {
-            this.redoStack = this.redoStack.slice(this.redoStack.length - this.maxCommits);
+        if (typeof options.history === 'string') {
+            return this.normalizeHistoryChannel(options.history);
+        }
+        if (options.history && typeof options.history === 'object') {
+            return this.normalizeHistoryChannel(options.history.channel);
+        }
+        return this.normalizeHistoryChannel();
+    }
+    normalizeHistoryChannel(channel) {
+        const normalized = channel?.trim();
+        return normalized && normalized.length > 0
+            ? normalized
+            : DEFAULT_HISTORY_CHANNEL;
+    }
+    getHistoryChannelState(channel) {
+        const existing = this.historyChannels.get(channel);
+        if (existing) {
+            return existing;
+        }
+        const created = {
+            undoStack: [],
+            redoStack: [],
+        };
+        this.historyChannels.set(channel, created);
+        return created;
+    }
+    clampHistoryChannel(history) {
+        if (history.undoStack.length > this.maxCommits) {
+            history.undoStack = history.undoStack.slice(history.undoStack.length - this.maxCommits);
+        }
+        if (history.redoStack.length > this.maxCommits) {
+            history.redoStack = history.redoStack.slice(history.redoStack.length - this.maxCommits);
         }
     }
     toRequestedCommitId(recordOrId) {
@@ -1480,6 +1585,9 @@ export class GraphiteRuntime {
         };
     }
 }
+/**
+ * Creates a new Graphite runtime/store instance.
+ */
 export function createGraphStore(options) {
     return new GraphiteRuntime(options);
 }

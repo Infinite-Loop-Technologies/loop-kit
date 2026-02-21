@@ -1,4 +1,5 @@
 import type { GraphState } from '@loop-kit/graphite';
+import type { DispatchIntentOptions } from '@loop-kit/graphite';
 
 export interface GraphiteIntentRegistryEntry<
     TState extends GraphState = GraphState,
@@ -11,6 +12,7 @@ export interface GraphiteIntentRegistryEntry<
     category?: string;
     keywords?: readonly string[];
     payload?: TPayload | ((state: Readonly<TState>) => TPayload);
+    dispatchOptions?: DispatchIntentOptions<TState>;
 }
 
 export function resolveIntentPayload<

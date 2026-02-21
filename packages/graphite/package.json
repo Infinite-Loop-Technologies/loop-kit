@@ -46,5 +46,10 @@
         "intent",
         "dsl"
     ],
-    "license": "MIT"
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Infinite-Loop-Technologies/design-system.git",
+        "directory": "packages/graphite"
+    }
 }

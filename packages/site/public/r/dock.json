@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "dock",
+  "type": "registry:block",
+  "title": "Dock",
+  "description": "Headless Graphite-powered docking system with dnd-kit tab reordering, debug overlay, and keyboard-intent tooling.",
+  "files": [
+    {
+      "path": "registry/new-york/blocks/dock/page.tsx",
+      "content": "'use client';\n\nimport dynamic from 'next/dynamic';\n\nconst Page = dynamic(() => import('./components/dock'), {\n  ssr: false,\n  loading: () => <div className='skeleton'>Loading dock demo...</div>,\n});\n\nexport default Page;\r\n",
+      "type": "registry:page",
+      "target": "app/dock/page.tsx"
+    }
+  ]
+}

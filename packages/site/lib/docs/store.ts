@@ -17,6 +17,13 @@ function nowIso() {
     return new Date().toISOString();
 }
 
+function stripBom(value: string) {
+    if (value.charCodeAt(0) === 0xfeff) {
+        return value.slice(1);
+    }
+    return value;
+}
+
 function toSafeString(value: unknown) {
     return typeof value === 'string' ? value : '';
 }
@@ -127,7 +134,7 @@ async function ensureStoreExists() {
 async function readStore(): Promise<DocsStore> {
     await ensureStoreExists();
 
-    const content = await fs.readFile(DOCS_STORE_PATH, 'utf8');
+    const content = stripBom(await fs.readFile(DOCS_STORE_PATH, 'utf8'));
     let parsed: Partial<DocsStore>;
     try {
         parsed = JSON.parse(content) as Partial<DocsStore>;

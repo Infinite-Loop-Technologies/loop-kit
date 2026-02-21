@@ -47,10 +47,23 @@
             ]
         },
         {
+            "name": "dock",
+            "type": "registry:block",
+            "title": "Dock",
+            "description": "Headless Graphite-powered docking system with dnd-kit tab reordering, debug overlay, and keyboard-intent tooling.",
+            "files": [
+                {
+                    "path": "registry/new-york/blocks/dock/page.tsx",
+                    "type": "registry:page",
+                    "target": "app/dock/page.tsx"
+                }
+            ]
+        },
+        {
             "name": "dockview",
             "type": "registry:block",
-            "title": "Dockview Panels",
-            "description": "Composable panel system built with Dockview.",
+            "title": "Dynamic Panels",
+            "description": "Graphite-powered dynamic panel dock system built on Dockview core.",
             "files": [
                 {
                     "path": "registry/new-york/blocks/dockview/dockview.tsx",
@@ -126,3 +139,5 @@
         }
     ]
 }
+
+

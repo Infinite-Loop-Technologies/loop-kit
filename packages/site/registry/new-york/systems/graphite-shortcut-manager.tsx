@@ -65,6 +65,7 @@ type UseGraphiteShortcutBindingsOptions<
     bindings: readonly GraphiteShortcutBinding[];
     contextSelector: (state: Readonly<TState>) => Record<string, unknown>;
     enabled?: boolean;
+    allowInEditable?: boolean;
 };
 
 export function useGraphiteShortcutBindings<
@@ -74,6 +75,7 @@ export function useGraphiteShortcutBindings<
     bindings,
     contextSelector,
     enabled = true,
+    allowInEditable = false,
 }: UseGraphiteShortcutBindingsOptions<TState>) {
     const intentMap = useMemo(() => {
         const map = new Map<string, GraphiteIntentRegistryEntry<TState>>();
@@ -94,6 +96,7 @@ export function useGraphiteShortcutBindings<
                 shortcut: binding.shortcut,
                 intent: intent.intent,
                 description: binding.description || intent.description,
+                dispatchOptions: intent.dispatchOptions,
                 payload: (context: { state: Readonly<TState> }) =>
                     resolveIntentPayload(intent, context.state),
                 preventDefault: binding.preventDefault,
@@ -109,6 +112,7 @@ export function useGraphiteShortcutBindings<
 
     useIntentShortcuts(shortcuts, {
         enabled,
+        allowInEditable,
     });
 
     return shortcuts;

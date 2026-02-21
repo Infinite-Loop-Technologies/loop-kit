@@ -99,6 +99,13 @@ interface HistoryEntry {
   inversePatch: MutationPatch;
 }
 
+interface HistoryChannelState {
+  undoStack: HistoryEntry[];
+  redoStack: HistoryEntry[];
+}
+
+const DEFAULT_HISTORY_CHANNEL = 'default';
+
 function isObjectLike(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -120,6 +127,14 @@ function asArrayIndex(segment: PathSegment): number | null {
 
 function isGraphPath(value: PathSegment | GraphPath): value is GraphPath {
   return Array.isArray(value);
+}
+
+function isPathSegmentValue(value: unknown): value is PathSegment {
+  return typeof value === 'string' || (typeof value === 'number' && Number.isInteger(value));
+}
+
+function isUnknownGraphPath(value: unknown): value is GraphPath {
+  return Array.isArray(value) && value.every((segment) => isPathSegmentValue(segment));
 }
 
 function cloneValue<T>(value: T): T {
@@ -549,11 +564,16 @@ function isLinkPayload(payload: unknown): payload is LinkMutationPayload {
   if (!isPlainObject(payload)) return false;
   if (typeof payload.relation !== 'string') return false;
   const to = payload.to;
-  return typeof to === 'string' || Array.isArray(to);
+  const nodesPath = payload.nodesPath;
+  const hasValidNodesPath = typeof nodesPath === 'undefined' || isUnknownGraphPath(nodesPath);
+  return (typeof to === 'string' || Array.isArray(to)) && hasValidNodesPath;
 }
 
 function isUnlinkPayload(payload: unknown): payload is UnlinkMutationPayload {
-  return isPlainObject(payload) && typeof payload.relation === 'string';
+  if (!isPlainObject(payload)) return false;
+  if (typeof payload.relation !== 'string') return false;
+  const nodesPath = payload.nodesPath;
+  return typeof nodesPath === 'undefined' || isUnknownGraphPath(nodesPath);
 }
 
 function isPathAllowed(path: GraphPath, scope?: QueryCapabilityScope): boolean {
@@ -740,12 +760,13 @@ class PatchExecutor<TState extends GraphState> {
     const targets = asStringArray(payload.to);
     if (targets.length === 0) return;
 
-    this.addLinks(fromId, relation, targets, 'link');
+    const nodesPath = payload.nodesPath ?? ['nodes'];
+    this.addLinks(nodesPath, fromId, relation, targets, 'link');
 
     if (payload.bidirectional || payload.inverseRelation) {
       const inverseRelation = payload.inverseRelation ?? relation;
       for (const target of targets) {
-        this.addLinks(target, inverseRelation, [fromId], 'link');
+        this.addLinks(nodesPath, target, inverseRelation, [fromId], 'link');
       }
     }
   }
@@ -758,13 +779,20 @@ class PatchExecutor<TState extends GraphState> {
     if (!relation) return;
 
     const targets = asStringArray(payload.to);
-    this.removeLinks(fromId, relation, targets.length > 0 ? targets : undefined, 'unlink');
+    const nodesPath = payload.nodesPath ?? ['nodes'];
+    this.removeLinks(
+      nodesPath,
+      fromId,
+      relation,
+      targets.length > 0 ? targets : undefined,
+      'unlink'
+    );
 
     if (payload.bidirectional || payload.inverseRelation) {
       const inverseRelation = payload.inverseRelation ?? relation;
       if (targets.length > 0) {
         for (const target of targets) {
-          this.removeLinks(target, inverseRelation, [fromId], 'unlink');
+          this.removeLinks(nodesPath, target, inverseRelation, [fromId], 'unlink');
         }
       }
     }
@@ -782,8 +810,14 @@ class PatchExecutor<TState extends GraphState> {
     return typeof maybeId === 'string' && maybeId.trim().length > 0 ? maybeId : null;
   }
 
-  private addLinks(nodeId: string, relation: string, targets: readonly string[], operation: string): void {
-    const relationPath: GraphPath = ['nodes', nodeId, 'links', relation];
+  private addLinks(
+    nodesPath: GraphPath,
+    nodeId: string,
+    relation: string,
+    targets: readonly string[],
+    operation: string
+  ): void {
+    const relationPath: GraphPath = [...nodesPath, nodeId, 'links', relation];
     this.capture(relationPath, operation, () => {
       const existing = getAtPath(this.state, relationPath);
       const next = Array.isArray(existing) ? [...existing] : [];
@@ -793,7 +827,7 @@ class PatchExecutor<TState extends GraphState> {
         }
       }
       setAtPath(this.state, relationPath, next);
-      const nodePath: GraphPath = ['nodes', nodeId];
+      const nodePath: GraphPath = [...nodesPath, nodeId];
       if (!pathExists(this.state, nodePath)) {
         setAtPath(this.state, nodePath, {
           id: nodeId,
@@ -806,12 +840,13 @@ class PatchExecutor<TState extends GraphState> {
   }
 
   private removeLinks(
+    nodesPath: GraphPath,
     nodeId: string,
     relation: string,
     targets: readonly string[] | undefined,
     operation: string
   ): void {
-    const relationPath: GraphPath = ['nodes', nodeId, 'links', relation];
+    const relationPath: GraphPath = [...nodesPath, nodeId, 'links', relation];
     this.capture(relationPath, operation, () => {
       const existing = getAtPath(this.state, relationPath);
       if (!Array.isArray(existing)) return;
@@ -1276,6 +1311,9 @@ function mergeMetadata(
   };
 }
 
+/**
+ * Graphite runtime implementation: commit pipeline, intent dispatch, query reactivity, and history.
+ */
 export class GraphiteRuntime<TState extends GraphState = GraphState> implements GraphiteStore<TState> {
   private readonly mutationOperators = new Map<string, MutationOperatorHandler<TState>>();
   private readonly queryOperators = new Map<string, QueryOperatorHandler<TState>>();
@@ -1295,8 +1333,7 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
 
   private state: TState;
   private commits: CommitRecord<TState>[] = [];
-  private undoStack: HistoryEntry[] = [];
-  private redoStack: HistoryEntry[] = [];
+  private readonly historyChannels = new Map<string, HistoryChannelState>();
   private commitCounter = 0;
   private idCounter = 0;
 
@@ -1329,10 +1366,16 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     }
   }
 
+  /**
+   * Returns the current immutable state snapshot.
+   */
   getState(): Readonly<TState> {
     return this.state;
   }
 
+  /**
+   * Applies a mutation patch and records a commit/diff.
+   */
   commit(patch: MutationPatch, options: CommitOptions<TState> = {}): CommitRecord<TState> {
     const executor = new PatchExecutor(this.state, this.mutationOperators, options);
     executor.applyPatch(patch);
@@ -1344,6 +1387,7 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     this.commitCounter += 1;
     const at = Date.now();
     const source = options.source ?? 'patch';
+    const historyChannel = this.resolveHistoryChannel(options);
 
     const nextRecord: Mutable<CommitRecord<TState>> = {
       id: this.nextId('commit'),
@@ -1356,6 +1400,7 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
       changedPaths,
       metadata: options.metadata ? cloneValue(options.metadata) : undefined,
       intent: options.intent ? cloneValue(options.intent) : undefined,
+      historyChannel,
       event: undefined,
       state: cloneValue(this.state),
     };
@@ -1370,7 +1415,7 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
       this.commits = this.commits.slice(this.commits.length - this.maxCommits);
     }
 
-    this.updateHistoryStacks(nextRecord);
+    this.updateHistoryStacks(nextRecord, options);
 
     for (const listener of this.commitListeners) {
       listener(nextRecord);
@@ -1393,6 +1438,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     return nextRecord;
   }
 
+  /**
+   * Applies an external patch source (filesystem, websocket, polling) with source metadata.
+   */
   materializeExternalPatch(
     patch: MutationPatch,
     metadata?: Record<string, unknown>
@@ -1404,11 +1452,17 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     });
   }
 
+  /**
+   * Executes a one-off query against current state.
+   */
   query<TResult>(query: QueryInput<TState, TResult>, scope?: QueryCapabilityScope): TResult {
     const execution = this.executeQuery(query, scope, 'manual', undefined, 'manual');
     return execution.result;
   }
 
+  /**
+   * Registers a reactive query subscription.
+   */
   watchQuery<TResult>(
     query: QueryInput<TState, TResult>,
     listener: (value: TResult, event: QueryRunEvent<TState, TResult>) => void,
@@ -1456,6 +1510,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     };
   }
 
+  /**
+   * Registers a custom mutation operator.
+   */
   registerMutationOperator(name: string, handler: MutationOperatorHandler<TState>): () => void {
     const normalized = normalizeOperatorName(name);
     this.mutationOperators.set(normalized, handler);
@@ -1464,6 +1521,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     };
   }
 
+  /**
+   * Registers a custom query operator.
+   */
   registerQueryOperator(name: string, handler: QueryOperatorHandler<TState>): () => void {
     const normalized = normalizeOperatorName(name);
     this.queryOperators.set(normalized, handler);
@@ -1472,6 +1532,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     };
   }
 
+  /**
+   * Registers an intent producer by name.
+   */
   registerIntent<TPayload>(name: string, producer: IntentProducer<TState, TPayload>): () => void {
     this.intentProducers.set(name, producer as IntentProducer<TState, unknown>);
     return () => {
@@ -1479,6 +1542,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     };
   }
 
+  /**
+   * Compiles and dispatches an intent, returning a commit when a patch is produced.
+   */
   dispatchIntent<TPayload>(
     name: string,
     payload: TPayload,
@@ -1514,8 +1580,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
         payload,
       },
       metadata: mergeMetadata(metadata, options.metadata),
+      history: options.history,
       emitEvent: options.emitEvent,
-      event,
+      event: typeof options.event === 'undefined' ? event : options.event,
     });
   }
 
@@ -1558,16 +1625,29 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     return this.commits;
   }
 
-  canUndo(): boolean {
-    return this.undoStack.length > 0;
+  /**
+   * Returns whether undo is available for a given history channel.
+   */
+  canUndo(channel?: string): boolean {
+    const history = this.getHistoryChannelState(this.normalizeHistoryChannel(channel));
+    return history.undoStack.length > 0;
   }
 
-  canRedo(): boolean {
-    return this.redoStack.length > 0;
+  /**
+   * Returns whether redo is available for a given history channel.
+   */
+  canRedo(channel?: string): boolean {
+    const history = this.getHistoryChannelState(this.normalizeHistoryChannel(channel));
+    return history.redoStack.length > 0;
   }
 
-  undo(recordOrId?: string | CommitRecord<TState>): CommitRecord<TState> | null {
-    const target = this.undoStack[this.undoStack.length - 1];
+  /**
+   * Applies the inverse patch for the latest undoable commit in a history channel.
+   */
+  undo(recordOrId?: string | CommitRecord<TState>, channel?: string): CommitRecord<TState> | null {
+    const resolvedChannel = this.normalizeHistoryChannel(channel);
+    const history = this.getHistoryChannelState(resolvedChannel);
+    const target = history.undoStack[history.undoStack.length - 1];
     if (!target) return null;
 
     const requestedCommitId = this.toRequestedCommitId(recordOrId);
@@ -1579,17 +1659,24 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
       source: 'undo',
       metadata: {
         undoneCommitId: target.id,
+        historyChannel: resolvedChannel,
       },
+      history: false,
       emitEvent: false,
     });
-    this.undoStack.pop();
-    this.redoStack.push(target);
-    this.clampHistory();
+    history.undoStack.pop();
+    history.redoStack.push(target);
+    this.clampHistoryChannel(history);
     return record;
   }
 
-  redo(recordOrId?: string | CommitRecord<TState>): CommitRecord<TState> | null {
-    const target = this.redoStack[this.redoStack.length - 1];
+  /**
+   * Re-applies the latest redone commit in a history channel.
+   */
+  redo(recordOrId?: string | CommitRecord<TState>, channel?: string): CommitRecord<TState> | null {
+    const resolvedChannel = this.normalizeHistoryChannel(channel);
+    const history = this.getHistoryChannelState(resolvedChannel);
+    const target = history.redoStack[history.redoStack.length - 1];
     if (!target) return null;
 
     const requestedCommitId = this.toRequestedCommitId(recordOrId);
@@ -1601,12 +1688,14 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
       source: 'redo',
       metadata: {
         redoneCommitId: target.id,
+        historyChannel: resolvedChannel,
       },
+      history: false,
       emitEvent: false,
     });
-    this.redoStack.pop();
-    this.undoStack.push(target);
-    this.clampHistory();
+    history.redoStack.pop();
+    history.undoStack.push(target);
+    this.clampHistoryChannel(history);
     return record;
   }
 
@@ -1689,7 +1778,7 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
     return { event, changed };
   }
 
-  private updateHistoryStacks(record: CommitRecord<TState>): void {
+  private updateHistoryStacks(record: CommitRecord<TState>, options: CommitOptions<TState>): void {
     if (!record.inversePatch) {
       return;
     }
@@ -1698,21 +1787,64 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
       return;
     }
 
-    this.undoStack.push({
+    if (options.history === false) {
+      return;
+    }
+
+    const channel = record.historyChannel ?? this.normalizeHistoryChannel();
+    const history = this.getHistoryChannelState(channel);
+    history.undoStack.push({
       id: record.id,
       patch: cloneValue(record.patch),
       inversePatch: cloneValue(record.inversePatch),
     });
-    this.redoStack = [];
-    this.clampHistory();
+    history.redoStack = [];
+    this.clampHistoryChannel(history);
   }
 
-  private clampHistory(): void {
-    if (this.undoStack.length > this.maxCommits) {
-      this.undoStack = this.undoStack.slice(this.undoStack.length - this.maxCommits);
+  private resolveHistoryChannel(options: CommitOptions<TState>): string | undefined {
+    if (options.history === false) {
+      return undefined;
     }
-    if (this.redoStack.length > this.maxCommits) {
-      this.redoStack = this.redoStack.slice(this.redoStack.length - this.maxCommits);
+
+    if (typeof options.history === 'string') {
+      return this.normalizeHistoryChannel(options.history);
+    }
+
+    if (options.history && typeof options.history === 'object') {
+      return this.normalizeHistoryChannel(options.history.channel);
+    }
+
+    return this.normalizeHistoryChannel();
+  }
+
+  private normalizeHistoryChannel(channel?: string): string {
+    const normalized = channel?.trim();
+    return normalized && normalized.length > 0
+      ? normalized
+      : DEFAULT_HISTORY_CHANNEL;
+  }
+
+  private getHistoryChannelState(channel: string): HistoryChannelState {
+    const existing = this.historyChannels.get(channel);
+    if (existing) {
+      return existing;
+    }
+
+    const created: HistoryChannelState = {
+      undoStack: [],
+      redoStack: [],
+    };
+    this.historyChannels.set(channel, created);
+    return created;
+  }
+
+  private clampHistoryChannel(history: HistoryChannelState): void {
+    if (history.undoStack.length > this.maxCommits) {
+      history.undoStack = history.undoStack.slice(history.undoStack.length - this.maxCommits);
+    }
+    if (history.redoStack.length > this.maxCommits) {
+      history.redoStack = history.redoStack.slice(history.redoStack.length - this.maxCommits);
     }
   }
 
@@ -1813,6 +1945,9 @@ export class GraphiteRuntime<TState extends GraphState = GraphState> implements 
   }
 }
 
+/**
+ * Creates a new Graphite runtime/store instance.
+ */
 export function createGraphStore<TState extends GraphState = GraphState>(
   options?: GraphiteStoreOptions<TState>
 ): GraphiteRuntime<TState> {

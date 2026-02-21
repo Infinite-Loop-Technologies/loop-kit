@@ -20,6 +20,13 @@ const REGISTRY_BLOCKS_PATH = path.join(
     'blocks'
 );
 
+function stripBom(value: string) {
+    if (value.charCodeAt(0) === 0xfeff) {
+        return value.slice(1);
+    }
+    return value;
+}
+
 function dedupeAndSort(items: RegistryItemMeta[]) {
     const map = new Map<string, RegistryItemMeta>();
     for (const item of items) {
@@ -31,7 +38,7 @@ function dedupeAndSort(items: RegistryItemMeta[]) {
 }
 
 async function readFromManifest(): Promise<RegistryItemMeta[]> {
-    const raw = await fs.readFile(REGISTRY_MANIFEST_PATH, 'utf8');
+    const raw = stripBom(await fs.readFile(REGISTRY_MANIFEST_PATH, 'utf8'));
     const parsed = JSON.parse(raw) as RegistryManifest;
     const items = Array.isArray(parsed.items) ? parsed.items : [];
 

@@ -30,11 +30,17 @@ import {
 
 const GraphiteContext = createContext<GraphiteStore<GraphState> | null>(null);
 
+/**
+ * React provider props for sharing a Graphite store through context.
+ */
 export interface GraphiteProviderProps<TState extends GraphState = GraphState>
   extends PropsWithChildren {
   store: GraphiteStore<TState>;
 }
 
+/**
+ * Binds a Graphite store to React context.
+ */
 export function GraphiteProvider<TState extends GraphState>({
   store,
   children,
@@ -46,6 +52,9 @@ export function GraphiteProvider<TState extends GraphState>({
   );
 }
 
+/**
+ * Returns the current Graphite store from context.
+ */
 export function useGraphite<TState extends GraphState = GraphState>(): GraphiteStore<TState> {
   const store = useContext(GraphiteContext);
   if (!store) {
@@ -59,6 +68,9 @@ export interface UseGraphiteQueryOptions<
   TResult = unknown,
 > extends Omit<QueryWatchOptions<TState, TResult>, 'fireImmediately'> {}
 
+/**
+ * React hook for reactive queries.
+ */
 export function useQuery<TState extends GraphState, TResult>(
   query: QueryInput<TState, TResult>,
   options: UseGraphiteQueryOptions<TState, TResult> = {}
@@ -104,6 +116,9 @@ export function useQuery<TState extends GraphState, TResult>(
   return result;
 }
 
+/**
+ * Returns a stable callback for `store.commit`.
+ */
 export function useCommit<TState extends GraphState = GraphState>() {
   const store = useGraphite<TState>();
   return useCallback(
@@ -112,32 +127,50 @@ export function useCommit<TState extends GraphState = GraphState>() {
   );
 }
 
-export function useHistory<TState extends GraphState = GraphState>() {
+export interface UseHistoryOptions {
+  channel?: string;
+}
+
+/**
+ * Exposes undo/redo state and commands for a history channel.
+ */
+export function useHistory<TState extends GraphState = GraphState>(
+  options: UseHistoryOptions = {}
+) {
   const store = useGraphite<TState>();
+  const channel = options.channel;
   const [state, setState] = useState(() => ({
-    canUndo: store.canUndo(),
-    canRedo: store.canRedo(),
+    canUndo: store.canUndo(channel),
+    canRedo: store.canRedo(channel),
   }));
+
+  useEffect(() => {
+    setState({
+      canUndo: store.canUndo(channel),
+      canRedo: store.canRedo(channel),
+    });
+  }, [store, channel]);
 
   useEffect(() => {
     return store.onCommit(() => {
       setState({
-        canUndo: store.canUndo(),
-        canRedo: store.canRedo(),
+        canUndo: store.canUndo(channel),
+        canRedo: store.canRedo(channel),
       });
     });
-  }, [store]);
+  }, [store, channel]);
 
   const undo = useCallback(
-    (recordOrId?: string | CommitRecord<TState>) => store.undo(recordOrId),
-    [store]
+    (recordOrId?: string | CommitRecord<TState>) => store.undo(recordOrId, channel),
+    [store, channel]
   );
   const redo = useCallback(
-    (recordOrId?: string | CommitRecord<TState>) => store.redo(recordOrId),
-    [store]
+    (recordOrId?: string | CommitRecord<TState>) => store.redo(recordOrId, channel),
+    [store, channel]
   );
 
   return {
+    channel,
     canUndo: state.canUndo,
     canRedo: state.canRedo,
     undo,
@@ -145,6 +178,9 @@ export function useHistory<TState extends GraphState = GraphState>() {
   };
 }
 
+/**
+ * Returns a typed dispatcher for registered intents.
+ */
 export function useIntent<TState extends GraphState = GraphState>() {
   const store = useGraphite<TState>();
   const dispatch = useCallback(
@@ -166,6 +202,9 @@ export interface UseGraphitePersistenceOptions<
   hydrateOnMount?: boolean;
 }
 
+/**
+ * Attaches a persistence adapter for the current store lifecycle.
+ */
 export function useGraphitePersistence<TState extends GraphState = GraphState>(
   options: UseGraphitePersistenceOptions<TState>
 ): void {
@@ -196,6 +235,9 @@ export function useGraphitePersistence<TState extends GraphState = GraphState>(
   }, [store, adapter, strategy, debounceMs, maxCommits, hydrateOnMount]);
 }
 
+/**
+ * Returns a rolling window of recent commit records.
+ */
 export function useCommitLog<TState extends GraphState = GraphState>(
   limit = 50
 ): readonly CommitRecord<TState>[] {
@@ -241,6 +283,7 @@ export interface IntentShortcut<
   intent: string;
   description?: string;
   payload?: TPayload | ((context: IntentShortcutExecutionContext<TState>) => TPayload);
+  dispatchOptions?: DispatchIntentOptions<TState>;
   when?: boolean | ((context: IntentShortcutContext<TState, TPayload>) => boolean);
   preventDefault?: boolean;
   allowInEditable?: boolean;
@@ -255,6 +298,9 @@ export interface UseIntentShortcutsOptions {
   capture?: boolean;
 }
 
+/**
+ * Binds keyboard shortcuts to Graphite intents.
+ */
 export function useIntentShortcuts<TState extends GraphState = GraphState, TPayload = unknown>(
   shortcuts: readonly IntentShortcut<TPayload, TState>[],
   options: UseIntentShortcutsOptions = {}
@@ -274,6 +320,11 @@ export function useIntentShortcuts<TState extends GraphState = GraphState, TPayl
     if (!enabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      const alreadyHandledKey = '__graphiteShortcutHandled';
+      if ((event as KeyboardEvent & Record<string, unknown>)[alreadyHandledKey]) {
+        return;
+      }
+
       for (const shortcut of shortcutsRef.current) {
         if (!matchesShortcut(event, shortcut.shortcut)) {
           continue;
@@ -307,8 +358,9 @@ export function useIntentShortcuts<TState extends GraphState = GraphState, TPayl
           continue;
         }
 
-        if ((shortcut.preventDefault ?? preventDefault) && event.cancelable) {
+        if (shortcut.preventDefault ?? preventDefault) {
           event.preventDefault();
+          (event as KeyboardEvent & { returnValue?: boolean }).returnValue = false;
         }
 
         if (shortcut.stopPropagation ?? stopPropagation) {
@@ -316,14 +368,15 @@ export function useIntentShortcuts<TState extends GraphState = GraphState, TPayl
           event.stopImmediatePropagation();
         }
 
-        dispatchIntent(shortcut.intent, payload as TPayload);
+        (event as KeyboardEvent & Record<string, unknown>)[alreadyHandledKey] = true;
+        dispatchIntent(shortcut.intent, payload as TPayload, shortcut.dispatchOptions);
         break;
       }
     };
 
-    window.addEventListener('keydown', onKeyDown, { capture });
+    document.addEventListener('keydown', onKeyDown, { capture });
     return () => {
-      window.removeEventListener('keydown', onKeyDown, { capture });
+      document.removeEventListener('keydown', onKeyDown, { capture });
     };
   }, [store, dispatchIntent, enabled, preventDefault, allowInEditable, stopPropagation, capture]);
 }
@@ -426,6 +479,9 @@ export interface GraphiteInspectorProps {
   maxRows?: number;
 }
 
+/**
+ * Lightweight inspector UI for commits, events, query runs, and invalidations.
+ */
 export function GraphiteInspector({ className, maxRows = 20 }: GraphiteInspectorProps): ReactElement {
   const store = useGraphite<GraphState>();
   const commits = useCommitLog<GraphState>(maxRows);
@@ -565,6 +621,9 @@ export interface IntentBrowserProps<
   className?: string;
 }
 
+/**
+ * Renders a table of intent shortcuts and can optionally bind them.
+ */
 export function GraphiteIntentBrowser<
   TPayload = unknown,
   TState extends GraphState = GraphState,

@@ -3,6 +3,7 @@ import type { DocDemoSize } from '@/lib/docs/types';
 export const SUPPORTED_DEMO_ITEMS = [
     'block-editor',
     'code-editor',
+    'dock',
     'dockview',
     'physics',
     'shadertoy',

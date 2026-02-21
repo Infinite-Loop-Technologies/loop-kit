@@ -2,6 +2,15 @@
 
 import * as React from 'react';
 import type { CSSProperties } from 'react';
+import { $set } from '@loop-kit/graphite';
+import {
+    GraphiteIntentBrowser,
+    GraphiteProvider,
+    useCommit,
+    useGraphite,
+    useHistory,
+    useQuery,
+} from '@loop-kit/graphite/react';
 import {
     DndContext,
     DragEndEvent,
@@ -28,9 +37,12 @@ import {
     IDockviewPanelProps,
     Position,
 } from 'dockview-react';
-import { useDrag } from '@use-gesture/react';
+import { useDrag, useGesture } from '@use-gesture/react';
 import {
     Check,
+    ChevronsLeftRightEllipsis,
+    ChevronLeft,
+    ChevronRight,
     GripVertical,
     MoreHorizontal,
     PanelLeft,
@@ -39,6 +51,7 @@ import {
     PanelTop,
     Plus,
     Redo2,
+    Search,
     SplitSquareHorizontal,
     SplitSquareVertical,
     Undo2,
@@ -47,6 +60,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
     ContextMenu,
     ContextMenuContent,
@@ -63,8 +77,23 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { GraphiteIntentCommandMenu } from '../../../systems/graphite-intent-command-menu';
+import { GraphiteShortcutManager } from '../../../systems/graphite-shortcut-manager';
+import {
+    createDefaultDynamicPanelsShortcutBindings,
+    createDynamicPanelsIntentRegistry,
+    createDynamicPanelsStore,
+    DYNAMIC_PANELS_SHORTCUT_CONTEXT_FIELDS,
+    useDynamicPanelsShortcutSystem,
+    type PanelCommandIntent,
+    type DynamicPanelsState,
+    type DynamicPanelsWorkspaceId,
+} from '../../../systems/graphite-panels';
+import type { GraphiteShortcutBinding } from '../../../systems/graphite-shortcut-manager';
 
 import 'dockview-react/dist/styles/dockview.css';
 import './dv-theme.css';
@@ -106,31 +135,60 @@ type LayoutSnapshot = ReturnType<DockviewApi['toJSON']>;
 
 type DockviewWorkspaceState = {
     panelCount: number;
+    panels: WorkspacePanelSearchItem[];
     guide: DropGuide | null;
-    nativeOverlayKind: OverlayEventLike['kind'] | null;
-    canUndo: boolean;
-    canRedo: boolean;
-};
-
-type OverlayEventLike = {
-    kind: 'tab' | 'header_space' | 'content' | 'edge';
-    position: Position;
-    nativeEvent: DragEvent;
-    group?: { id: string; element: HTMLElement };
 };
 
 type TabListMode = 'horizontal' | 'compact' | 'vertical';
 
+type DockviewWorkspaceHandle = {
+    workspaceId: DynamicPanelsWorkspaceId;
+    addTemplatePanel: () => void;
+    activatePanel: (panelId: string) => void;
+    closeActiveTab: () => void;
+    closeActiveGroup: () => void;
+    cycleGroupNext: () => void;
+    cycleGroupPrevious: () => void;
+    splitPanel: (position: Position) => void;
+    saveLayout: () => void;
+    restoreLayout: () => void;
+    undoLayout: () => void;
+    redoLayout: () => void;
+    cycleActiveGroupMode: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    panelCount: number;
+    panels: WorkspacePanelSearchItem[];
+};
+
 type DockviewUiContextValue = {
     createTabInGroup: (groupId?: string) => void;
     closeGroup: (groupId: string) => void;
+    moveGroup: (
+        sourceGroupId: string,
+        targetGroupId: string,
+        clientX: number,
+        clientY: number
+    ) => void;
     cycleGroupMode: (groupId: string) => void;
     getGroupMode: (groupId: string) => TabListMode;
+};
+
+type WorkspacePanelSearchItem = {
+    id: string;
+    title: string;
+    groupId: string;
 };
 
 const CORE_STORAGE_KEY = 'loop-kit:dockview:core-layout';
 const SIDEBAR_STORAGE_KEY = 'loop-kit:dockview:sidebar-layout';
 const SIDEBAR_DROP_ZONE = 'loop-kit:dockview:sidebar-drop-zone';
+const WORKBENCH_HISTORY_CHANNEL = 'dynamic-panels/workbench-layout';
+const SIDEBAR_HISTORY_CHANNEL = 'dynamic-panels/sidebar-layout';
+const WORKSPACE_HISTORY_CHANNEL: Record<DynamicPanelsWorkspaceId, string> = {
+    workbench: WORKBENCH_HISTORY_CHANNEL,
+    sidebar: SIDEBAR_HISTORY_CHANNEL,
+};
 const DEFAULT_TAB_MODE: TabListMode = 'horizontal';
 const TAB_MODE_ORDER: TabListMode[] = ['horizontal', 'compact', 'vertical'];
 const DOCKVIEW_THEME: DockviewTheme = {
@@ -274,7 +332,7 @@ function addPanelFromTemplate(
         params: {
             body:
                 selectedTemplate?.body ??
-                'New panel created from the Dockview panel system.',
+                'New panel created from the Dynamic Panels system.',
             source: selectedTemplate?.id ?? 'generated',
             description: selectedTemplate?.description,
             templateId: selectedTemplate?.id,
@@ -381,132 +439,108 @@ function buildZoneGuide(
     };
 }
 
-function autoScrollTabList(event: OverlayEventLike) {
-    if (event.kind !== 'tab' && event.kind !== 'header_space') {
-        return;
-    }
+type TabInsertionHint = {
+    index: number;
+    axis: 'x' | 'y';
+    edge: number;
+    tabsRect: DOMRect;
+};
 
-    const groupElement = event.group?.element;
-    if (!groupElement) {
-        return;
-    }
-
+function resolveTabInsertionHint(
+    groupElement: HTMLElement,
+    clientX: number,
+    clientY: number
+): TabInsertionHint | null {
     const tabsElement = groupElement.querySelector(
         ':scope > .dv-tabs-and-actions-container .dv-tabs-container'
     ) as HTMLElement | null;
 
     if (!tabsElement) {
-        return;
-    }
-
-    const mode = getGroupTabMode(groupElement);
-    const rect = tabsElement.getBoundingClientRect();
-    const threshold = 36;
-    const scrollStep = 18;
-
-    if (mode === 'vertical') {
-        if (event.nativeEvent.clientY <= rect.top + threshold) {
-            tabsElement.scrollTop -= scrollStep;
-        } else if (event.nativeEvent.clientY >= rect.bottom - threshold) {
-            tabsElement.scrollTop += scrollStep;
-        }
-        return;
-    }
-
-    if (event.nativeEvent.clientX <= rect.left + threshold) {
-        tabsElement.scrollLeft -= scrollStep;
-    } else if (event.nativeEvent.clientX >= rect.right - threshold) {
-        tabsElement.scrollLeft += scrollStep;
-    }
-}
-
-function buildInternalDropGuide(
-    event: OverlayEventLike,
-    rootRect: DOMRect
-): DropGuide | null {
-    if (!event.group) {
         return null;
     }
 
-    const groupElement = event.group.element;
-    const groupRect = groupElement.getBoundingClientRect();
-    const headerElement = groupElement.querySelector(
-        ':scope > .dv-tabs-and-actions-container'
-    ) as HTMLElement | null;
-    const headerRect = headerElement?.getBoundingClientRect();
-    const contentArea = getContentRectForGroup(groupRect, headerRect);
-    const nativeTarget = event.nativeEvent.target as HTMLElement | null;
-    const tabMode = getGroupTabMode(groupElement);
+    const tabRects = Array.from(
+        tabsElement.querySelectorAll(':scope > .dv-tab')
+    )
+        .map((element) => (element as HTMLElement).getBoundingClientRect())
+        .filter((rect) => rect.width > 0 && rect.height > 0);
 
-    if (event.kind === 'tab') {
-        const tabElement = nativeTarget?.closest(
-            '[data-loop-panel-id], .dv-tab'
-        ) as HTMLElement | null;
+    const mode = getGroupTabMode(groupElement);
+    const isVertical = mode === 'vertical';
+    const pointer = isVertical ? clientY : clientX;
+    const tabsRect = tabsElement.getBoundingClientRect();
+    const defaultEdge = isVertical ? tabsRect.top + 6 : tabsRect.left + 6;
 
-        if (tabElement) {
-            const tabRect = tabElement.getBoundingClientRect();
+    if (tabRects.length === 0) {
+        return {
+            index: 0,
+            axis: isVertical ? 'y' : 'x',
+            edge: defaultEdge,
+            tabsRect,
+        };
+    }
 
-            if (tabMode === 'vertical') {
-                const insertBefore =
-                    event.nativeEvent.clientY <= tabRect.top + tabRect.height / 2;
-                const lineY = insertBefore ? tabRect.top : tabRect.bottom;
+    let bestIndex = tabRects.length;
+    let bestEdge = isVertical
+        ? tabRects[tabRects.length - 1]!.bottom
+        : tabRects[tabRects.length - 1]!.right;
+    let bestDistance = Number.POSITIVE_INFINITY;
 
-                return {
-                    mode: 'line-horizontal',
-                    label: '',
-                    rect: {
-                        left: tabRect.left - rootRect.left + 4,
-                        top: lineY - rootRect.top - 1,
-                        width: Math.max(18, tabRect.width - 8),
-                        height: 2,
-                    },
-                };
-            }
+    for (let index = 0; index < tabRects.length; index += 1) {
+        const rect = tabRects[index]!;
+        const start = isVertical ? rect.top : rect.left;
+        const end = isVertical ? rect.bottom : rect.right;
 
-            const insertBefore =
-                event.nativeEvent.clientX <= tabRect.left + tabRect.width / 2;
-            const lineX = insertBefore ? tabRect.left : tabRect.right;
+        const startDistance = Math.abs(pointer - start);
+        if (startDistance < bestDistance) {
+            bestDistance = startDistance;
+            bestIndex = index;
+            bestEdge = start;
+        }
 
-            return {
-                mode: 'line-vertical',
-                label: '',
-                rect: {
-                    left: lineX - rootRect.left - 1,
-                    top: tabRect.top - rootRect.top + 4,
-                    width: 2,
-                    height: Math.max(16, tabRect.height - 8),
-                },
-            } satisfies DropGuide;
+        const endDistance = Math.abs(pointer - end);
+        if (endDistance < bestDistance) {
+            bestDistance = endDistance;
+            bestIndex = index + 1;
+            bestEdge = end;
         }
     }
 
-    if (event.kind === 'header_space' && headerRect) {
-        if (tabMode === 'vertical') {
-            return {
-                mode: 'line-horizontal',
-                label: '',
-                rect: {
-                    left: headerRect.left - rootRect.left + 6,
-                    top: headerRect.bottom - rootRect.top - 10,
-                    width: Math.max(18, headerRect.width - 12),
-                    height: 2,
-                },
-            };
-        }
+    return {
+        index: bestIndex,
+        axis: isVertical ? 'y' : 'x',
+        edge: bestEdge,
+        tabsRect,
+    };
+}
 
+function buildGuideFromTabInsertion(
+    hint: TabInsertionHint,
+    rootRect: DOMRect
+): DropGuide {
+    if (hint.axis === 'y') {
         return {
-            mode: 'line-vertical',
+            mode: 'line-horizontal',
             label: '',
             rect: {
-                left: headerRect.right - rootRect.left - 10,
-                top: headerRect.top - rootRect.top + 6,
-                width: 2,
-                height: Math.max(16, headerRect.height - 12),
+                left: hint.tabsRect.left - rootRect.left + 4,
+                top: hint.edge - rootRect.top - 1,
+                width: Math.max(18, hint.tabsRect.width - 8),
+                height: 2,
             },
-        } as const;
+        };
     }
 
-    return buildZoneGuide(rootRect, contentArea, event.position);
+    return {
+        mode: 'line-vertical',
+        label: '',
+        rect: {
+            left: hint.edge - rootRect.left - 1,
+            top: hint.tabsRect.top - rootRect.top + 4,
+            width: 2,
+            height: Math.max(16, hint.tabsRect.height - 8),
+        },
+    };
 }
 
 function detectDropPosition(rootRect: DOMRect, clientX: number, clientY: number) {
@@ -519,6 +553,140 @@ function detectDropPosition(rootRect: DOMRect, clientX: number, clientY: number)
     if (y <= edge) return 'top' as Position;
     if (y >= 1 - edge) return 'bottom' as Position;
     return 'center' as Position;
+}
+
+function resolveDropPositionWithoutCenter(
+    rootRect: DOMRect,
+    clientX: number,
+    clientY: number
+): Exclude<Position, 'center'> {
+    const position = detectDropPosition(rootRect, clientX, clientY);
+    if (position !== 'center') {
+        return position;
+    }
+
+    const horizontalDistance = Math.abs(
+        clientX - rootRect.left - rootRect.width / 2
+    );
+    const verticalDistance = Math.abs(
+        clientY - rootRect.top - rootRect.height / 2
+    );
+    if (horizontalDistance >= verticalDistance) {
+        return clientX < rootRect.left + rootRect.width / 2 ? 'left' : 'right';
+    }
+    return clientY < rootRect.top + rootRect.height / 2 ? 'top' : 'bottom';
+}
+
+function findGroupAtPoint(api: DockviewApi, clientX: number, clientY: number) {
+    const element = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+    const fromElement = element
+        ? api.groups.find((group) => group.element.contains(element))
+        : undefined;
+    if (fromElement) {
+        return fromElement;
+    }
+
+    return api.groups.find((group) =>
+        isPointInsideRect(group.element.getBoundingClientRect(), clientX, clientY)
+    );
+}
+
+type PanelDropResolution = {
+    groupId: string;
+    mode: 'insert' | 'split';
+    index?: number;
+    position?: Exclude<Position, 'center'>;
+    guide: DropGuide;
+};
+
+function resolvePanelDropResolution(
+    api: DockviewApi,
+    rootRect: DOMRect,
+    clientX: number,
+    clientY: number
+): PanelDropResolution | null {
+    const targetGroup = findGroupAtPoint(api, clientX, clientY);
+    if (!targetGroup) {
+        return null;
+    }
+
+    const groupElement = targetGroup.element;
+    const groupRect = groupElement.getBoundingClientRect();
+    const headerElement = groupElement.querySelector(
+        ':scope > .dv-tabs-and-actions-container'
+    ) as HTMLElement | null;
+    const headerRect = headerElement?.getBoundingClientRect();
+
+    const inHeader =
+        Boolean(headerRect) &&
+        clientY >= (headerRect?.top ?? 0) - 1 &&
+        clientY <= (headerRect?.bottom ?? 0) + 2;
+    if (inHeader) {
+        const insertion = resolveTabInsertionHint(groupElement, clientX, clientY);
+        if (!insertion) {
+            return null;
+        }
+
+        return {
+            groupId: targetGroup.id,
+            mode: 'insert',
+            index: insertion.index,
+            guide: buildGuideFromTabInsertion(insertion, rootRect),
+        };
+    }
+
+    const contentArea = getContentRectForGroup(groupRect, headerRect);
+    const contentRect = new DOMRect(
+        contentArea.left,
+        contentArea.top,
+        Math.max(1, contentArea.width),
+        Math.max(1, contentArea.height)
+    );
+    const position = resolveDropPositionWithoutCenter(contentRect, clientX, clientY);
+    return {
+        groupId: targetGroup.id,
+        mode: 'split',
+        position,
+        guide: buildZoneGuide(rootRect, contentArea, position),
+    };
+}
+
+function toWorkspacePanelSearchItems(
+    api: DockviewApi | null
+): WorkspacePanelSearchItem[] {
+    if (!api) {
+        return [];
+    }
+
+    return api.panels
+        .map((panel) => ({
+            id: panel.id,
+            title: panel.title ?? panel.id,
+            groupId: panel.group.id,
+        }))
+        .sort((left, right) => left.title.localeCompare(right.title));
+}
+
+function arePanelSearchItemsEqual(
+    left: readonly WorkspacePanelSearchItem[],
+    right: readonly WorkspacePanelSearchItem[]
+) {
+    if (left.length !== right.length) {
+        return false;
+    }
+
+    for (let index = 0; index < left.length; index += 1) {
+        const a = left[index];
+        const b = right[index];
+        if (!a || !b) {
+            return false;
+        }
+        if (a.id !== b.id || a.groupId !== b.groupId || a.title !== b.title) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function buildExternalDropGuide(rootRect: DOMRect, position: Position) {
@@ -626,37 +794,56 @@ function DockTab({ api, containerApi }: IDockviewPanelHeaderProps<PanelParams>) 
     const ui = React.useContext(DockviewUiContext);
     const tabMode = ui?.getGroupMode(api.group.id) ?? DEFAULT_TAB_MODE;
     const [, rerender] = React.useReducer((value: number) => value + 1, 0);
+    const { attributes, listeners, setNodeRef, isDragging } =
+        useDraggable({
+            id: `panel:${api.id}`,
+            data: {
+                kind: 'panel',
+                panelId: api.id,
+                groupId: api.group.id,
+            },
+        });
 
     React.useEffect(() => {
         const disposeTitle = api.onDidTitleChange(() => rerender());
         const disposeGroup = api.onDidGroupChange(() => rerender());
+        const disposeActive = api.onDidActiveChange(() => rerender());
         const disposeActiveGroup = containerApi.onDidActiveGroupChange(() => rerender());
 
         return () => {
             disposeTitle.dispose();
             disposeGroup.dispose();
+            disposeActive.dispose();
             disposeActiveGroup.dispose();
         };
     }, [api, containerApi]);
 
-    const isActive = api.group.activePanel?.id === api.id;
+    const isActive = api.isActive;
 
     const tab = (
         <div
+            ref={setNodeRef}
+            style={{
+                opacity: isDragging ? 0.7 : 1,
+            }}
             className={cn(
                 'loop-tab',
                 `loop-tab-mode-${tabMode}`,
                 isActive && 'loop-tab-active',
                 !api.isGroupActive && 'loop-tab-group-inactive'
             )}
-            data-loop-panel-id={api.id}>
+            data-loop-panel-id={api.id}
+            {...attributes}
+            {...listeners}>
             <span className='loop-tab-title'>{api.title ?? 'Panel'}</span>
             <button
                 className='loop-tab-close'
                 onClick={(event) => {
                     event.stopPropagation();
+                    event.preventDefault();
                     api.close();
                 }}
+                onPointerDown={(event) => event.stopPropagation()}
                 aria-label='Close tab'>
                 <X className='size-3.5' />
             </button>
@@ -717,13 +904,20 @@ function DockHeaderActions({
     const ui = React.useContext(DockviewUiContext);
     const mode = ui?.getGroupMode(group.id) ?? DEFAULT_TAB_MODE;
     const [hasOverflow, setHasOverflow] = React.useState(false);
+    const tabsContainerRef = React.useRef<HTMLElement | null>(null);
+    const headerContainerRef = React.useRef<HTMLElement | null>(null);
 
     React.useEffect(() => {
+        const headerElement = group.element.querySelector(
+            ':scope > .dv-tabs-and-actions-container'
+        ) as HTMLElement | null;
         const tabsElement = group.element.querySelector(
             ':scope > .dv-tabs-and-actions-container .dv-tabs-container'
         ) as HTMLElement | null;
+        headerContainerRef.current = headerElement;
+        tabsContainerRef.current = tabsElement;
 
-        if (!tabsElement) {
+        if (!headerElement || !tabsElement) {
             setHasOverflow(false);
             return;
         }
@@ -745,12 +939,139 @@ function DockHeaderActions({
 
         const observer = new ResizeObserver(measureOverflow);
         observer.observe(tabsElement);
+        observer.observe(headerElement);
         observer.observe(group.element);
 
         return () => {
+            headerContainerRef.current = null;
+            tabsContainerRef.current = null;
             observer.disconnect();
         };
     }, [group, mode, panels.length]);
+
+    React.useEffect(() => {
+        const headerElement = headerContainerRef.current;
+        const voidElement = group.element.querySelector(
+            ':scope > .dv-tabs-and-actions-container .dv-void-container'
+        ) as HTMLElement | null;
+        if (!headerElement || !voidElement) {
+            return;
+        }
+
+        const removeDropStyle = () => {
+            headerElement.classList.remove('loop-group-drop-target');
+        };
+
+        const onVoidDragStart = (event: DragEvent) => {
+            if (!event.dataTransfer) return;
+            event.stopPropagation();
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('application/x-loop-group-id', group.id);
+            event.dataTransfer.setData('text/plain', `group:${group.id}`);
+        };
+
+        const onHeaderDragOver = (event: DragEvent) => {
+            const sourceGroupId =
+                event.dataTransfer?.getData('application/x-loop-group-id') ?? '';
+            if (!sourceGroupId || sourceGroupId === group.id) {
+                removeDropStyle();
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'move';
+            }
+            headerElement.classList.add('loop-group-drop-target');
+        };
+
+        const onHeaderDrop = (event: DragEvent) => {
+            const sourceGroupId =
+                event.dataTransfer?.getData('application/x-loop-group-id') ?? '';
+            removeDropStyle();
+            if (!sourceGroupId || sourceGroupId === group.id) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            const targetGroupId = group.id;
+            if (ui) {
+                ui.moveGroup(
+                    sourceGroupId,
+                    targetGroupId,
+                    event.clientX,
+                    event.clientY
+                );
+                return;
+            }
+
+            const sourceGroup = containerApi.getGroup(sourceGroupId);
+            if (!sourceGroup) {
+                return;
+            }
+            const targetRect = group.element.getBoundingClientRect();
+            const position = resolveDropPositionWithoutCenter(
+                targetRect,
+                event.clientX,
+                event.clientY
+            );
+            sourceGroup.api.moveTo({ group, position } as never);
+        };
+
+        const onDragLeave = (event: DragEvent) => {
+            const nextTarget = event.relatedTarget as Node | null;
+            if (nextTarget && headerElement.contains(nextTarget)) {
+                return;
+            }
+            removeDropStyle();
+        };
+
+        voidElement.draggable = true;
+        voidElement.addEventListener('dragstart', onVoidDragStart);
+        headerElement.addEventListener('dragover', onHeaderDragOver);
+        headerElement.addEventListener('drop', onHeaderDrop);
+        headerElement.addEventListener('dragleave', onDragLeave);
+
+        return () => {
+            removeDropStyle();
+            voidElement.removeEventListener('dragstart', onVoidDragStart);
+            headerElement.removeEventListener('dragover', onHeaderDragOver);
+            headerElement.removeEventListener('drop', onHeaderDrop);
+            headerElement.removeEventListener('dragleave', onDragLeave);
+        };
+    }, [containerApi, group, ui]);
+
+    useGesture(
+        {
+            onWheel: ({ event, delta: [deltaX, deltaY] }) => {
+                const tabsElement = tabsContainerRef.current;
+                if (!tabsElement || mode === 'vertical') {
+                    return;
+                }
+
+                if (tabsElement.scrollWidth <= tabsElement.clientWidth + 1) {
+                    return;
+                }
+
+                const useHorizontalFromVertical =
+                    Math.abs(deltaY) >= Math.abs(deltaX);
+                const step = useHorizontalFromVertical ? deltaY : deltaX;
+                if (Math.abs(step) < 0.1) {
+                    return;
+                }
+
+                tabsElement.scrollLeft += step;
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
+            },
+        },
+        {
+            target: headerContainerRef,
+            eventOptions: { passive: false },
+        }
+    );
 
     const closeGroup = React.useCallback(() => {
         if (ui) {
@@ -870,21 +1191,42 @@ function DockHeaderActions({
     );
 }
 
-function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]) {
+function toSnapshotKey(snapshot: unknown): string {
+    try {
+        return JSON.stringify(snapshot);
+    } catch {
+        return String(Date.now());
+    }
+}
+
+function useDockviewWorkspace(
+    workspaceId: DynamicPanelsWorkspaceId,
+    storageKey: string,
+    seedTemplates: PanelTemplate[]
+) {
+    const store = useGraphite<DynamicPanelsState>();
+    const commit = useCommit<DynamicPanelsState>();
+    const history = useHistory<DynamicPanelsState>({
+        channel: WORKSPACE_HISTORY_CHANNEL[workspaceId],
+    });
+
+    const syncedLayout = useQuery<DynamicPanelsState, LayoutSnapshot | null>(
+        (state) => (state.layouts[workspaceId] as LayoutSnapshot | null) ?? null
+    );
+    const savedLayout = useQuery<DynamicPanelsState, LayoutSnapshot | null>(
+        (state) => (state.savedLayouts[workspaceId] as LayoutSnapshot | null) ?? null
+    );
+
     const apiRef = React.useRef<DockviewApi | null>(null);
     const surfaceRef = React.useRef<HTMLDivElement | null>(null);
     const disposablesRef = React.useRef<Array<{ dispose: () => void }>>([]);
-    const historyRef = React.useRef<LayoutSnapshot[]>([]);
-    const historyKeysRef = React.useRef<string[]>([]);
-    const historyIndexRef = React.useRef(-1);
     const historyTimerRef = React.useRef<number | null>(null);
-    const applyingHistoryRef = React.useRef(false);
+    const applyingGraphiteLayoutRef = React.useRef(false);
+    const snapshotKeyRef = React.useRef<string | null>(null);
     const [state, setState] = React.useState<DockviewWorkspaceState>({
         panelCount: 0,
+        panels: [],
         guide: null,
-        nativeOverlayKind: null,
-        canUndo: false,
-        canRedo: false,
     });
 
     const setSurfaceNode = React.useCallback((node: HTMLDivElement | null) => {
@@ -911,163 +1253,185 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
         };
     }, [clearDisposables]);
 
-    const refreshPanelCount = React.useCallback(() => {
-        const api = apiRef.current;
-        setState((previous) => ({
-            ...previous,
-            panelCount: api?.panels.length ?? 0,
-        }));
-    }, []);
-
     const setGuide = React.useCallback((guide: DropGuide | null) => {
         setState((previous) => ({ ...previous, guide }));
     }, []);
 
-    const setNativeOverlayKind = React.useCallback(
-        (kind: OverlayEventLike['kind'] | null) => {
-            setState((previous) => ({ ...previous, nativeOverlayKind: kind }));
-        },
-        []
-    );
-
     const clearGuide = React.useCallback(() => {
         setGuide(null);
-        setNativeOverlayKind(null);
-    }, [setGuide, setNativeOverlayKind]);
+    }, [setGuide]);
 
-    const updateHistoryState = React.useCallback(() => {
-        const canUndo = historyIndexRef.current > 0;
-        const canRedo =
-            historyIndexRef.current >= 0 &&
-            historyIndexRef.current < historyRef.current.length - 1;
+    const syncPanelCount = React.useCallback(
+        (count: number) => {
+            const current = Number(store.getState().panelCounts[workspaceId] ?? 0);
+            if (current === count) {
+                return;
+            }
+            commit(
+                {
+                    panelCounts: {
+                        [workspaceId]: $set(count),
+                    },
+                },
+                {
+                    source: 'panels/panel-count',
+                    history: false,
+                    metadata: { workspaceId },
+                }
+            );
+        },
+        [commit, store, workspaceId]
+    );
 
+    const refreshPanels = React.useCallback(() => {
+        const api = apiRef.current;
+        const nextPanels = toWorkspacePanelSearchItems(api);
+        const panelCount = nextPanels.length;
         setState((previous) => {
-            if (previous.canUndo === canUndo && previous.canRedo === canRedo) {
+            if (
+                previous.panelCount === panelCount &&
+                arePanelSearchItemsEqual(previous.panels, nextPanels)
+            ) {
                 return previous;
             }
-
             return {
                 ...previous,
-                canUndo,
-                canRedo,
+                panelCount,
+                panels: nextPanels,
             };
         });
-    }, []);
+        syncPanelCount(panelCount);
+    }, [syncPanelCount]);
 
-    const captureHistorySnapshot = React.useCallback(() => {
-        const api = apiRef.current;
-        if (!api || applyingHistoryRef.current) return;
+    const syncLayoutSnapshot = React.useCallback(
+        (
+            snapshot: LayoutSnapshot,
+            includeHistory: boolean,
+            source = 'panels/layout-sync'
+        ) => {
+            const key = toSnapshotKey(snapshot);
+            if (snapshotKeyRef.current === key) {
+                return;
+            }
+            snapshotKeyRef.current = key;
 
-        const snapshot = api.toJSON();
-        const key = JSON.stringify(snapshot);
-        const currentKey = historyKeysRef.current[historyIndexRef.current];
-
-        if (currentKey === key) {
-            return;
-        }
-
-        const nextSnapshots = historyRef.current.slice(0, historyIndexRef.current + 1);
-        const nextKeys = historyKeysRef.current.slice(0, historyIndexRef.current + 1);
-
-        nextSnapshots.push(snapshot);
-        nextKeys.push(key);
-
-        if (nextSnapshots.length > 120) {
-            nextSnapshots.shift();
-            nextKeys.shift();
-        }
-
-        historyRef.current = nextSnapshots;
-        historyKeysRef.current = nextKeys;
-        historyIndexRef.current = nextSnapshots.length - 1;
-        updateHistoryState();
-    }, [updateHistoryState]);
+            commit(
+                {
+                    layouts: {
+                        [workspaceId]: $set(snapshot),
+                    },
+                },
+                {
+                    source,
+                    history: includeHistory
+                        ? { channel: WORKSPACE_HISTORY_CHANNEL[workspaceId] }
+                        : false,
+                    metadata: { workspaceId },
+                }
+            );
+        },
+        [commit, workspaceId]
+    );
 
     const scheduleHistoryCapture = React.useCallback(() => {
         clearHistoryTimer();
         historyTimerRef.current = window.setTimeout(() => {
             historyTimerRef.current = null;
-            captureHistorySnapshot();
-        }, 0);
-    }, [captureHistorySnapshot, clearHistoryTimer]);
-
-    const resetHistory = React.useCallback(() => {
-        historyRef.current = [];
-        historyKeysRef.current = [];
-        historyIndexRef.current = -1;
-        updateHistoryState();
-    }, [updateHistoryState]);
-
-    const applyHistorySnapshot = React.useCallback(
-        (snapshot: LayoutSnapshot | undefined) => {
             const api = apiRef.current;
-            if (!api || !snapshot) return;
+            if (!api || applyingGraphiteLayoutRef.current) return;
+            syncLayoutSnapshot(api.toJSON(), true);
+        }, 60);
+    }, [clearHistoryTimer, syncLayoutSnapshot]);
 
-            applyingHistoryRef.current = true;
+    const applySnapshotToApi = React.useCallback(
+        (snapshot: LayoutSnapshot, source = 'panels/layout-apply') => {
+            const api = apiRef.current;
+            if (!api) return;
+
+            const key = toSnapshotKey(snapshot);
+            if (snapshotKeyRef.current === key) {
+                return;
+            }
+
+            applyingGraphiteLayoutRef.current = true;
             try {
                 api.fromJSON(snapshot);
-                refreshPanelCount();
+                snapshotKeyRef.current = key;
+                refreshPanels();
                 clearGuide();
             } finally {
-                applyingHistoryRef.current = false;
+                applyingGraphiteLayoutRef.current = false;
             }
+
+            syncLayoutSnapshot(snapshot, false, source);
         },
-        [clearGuide, refreshPanelCount]
+        [clearGuide, refreshPanels, syncLayoutSnapshot]
     );
 
-    const undoLayout = React.useCallback(() => {
-        const nextIndex = historyIndexRef.current - 1;
-        if (nextIndex < 0) return;
+    const readLocalStorageLayout = React.useCallback((): LayoutSnapshot | null => {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return null;
 
-        historyIndexRef.current = nextIndex;
-        applyHistorySnapshot(historyRef.current[nextIndex]);
-        updateHistoryState();
-    }, [applyHistorySnapshot, updateHistoryState]);
-
-    const redoLayout = React.useCallback(() => {
-        const nextIndex = historyIndexRef.current + 1;
-        if (nextIndex >= historyRef.current.length) return;
-
-        historyIndexRef.current = nextIndex;
-        applyHistorySnapshot(historyRef.current[nextIndex]);
-        updateHistoryState();
-    }, [applyHistorySnapshot, updateHistoryState]);
+        try {
+            return JSON.parse(raw) as LayoutSnapshot;
+        } catch {
+            return null;
+        }
+    }, [storageKey]);
 
     const saveLayout = React.useCallback(() => {
         const api = apiRef.current;
         if (!api) return;
-        localStorage.setItem(storageKey, JSON.stringify(api.toJSON()));
-    }, [storageKey]);
+        const snapshot = api.toJSON();
+        localStorage.setItem(storageKey, JSON.stringify(snapshot));
+        commit(
+            {
+                savedLayouts: {
+                    [workspaceId]: $set(snapshot),
+                },
+            },
+            {
+                source: 'panels/layout-save',
+                history: false,
+                metadata: { workspaceId },
+            }
+        );
+    }, [commit, storageKey, workspaceId]);
 
     const restoreLayout = React.useCallback(() => {
-        const api = apiRef.current;
-        if (!api) return;
+        const fromGraphite = savedLayout;
+        const fromStorage = readLocalStorageLayout();
+        const snapshot = fromGraphite ?? fromStorage;
+        if (!snapshot) return;
 
-        const raw = localStorage.getItem(storageKey);
-        if (!raw) return;
-
-        try {
-            api.fromJSON(JSON.parse(raw));
-            refreshPanelCount();
-            scheduleHistoryCapture();
-        } catch {
-            // Ignore malformed saved layouts.
-        }
-    }, [refreshPanelCount, scheduleHistoryCapture, storageKey]);
+        applySnapshotToApi(snapshot, 'panels/layout-restore');
+    }, [applySnapshotToApi, readLocalStorageLayout, savedLayout]);
 
     const clearLayout = React.useCallback(() => {
         localStorage.removeItem(storageKey);
-    }, [storageKey]);
+        commit(
+            {
+                savedLayouts: {
+                    [workspaceId]: $set(null),
+                },
+            },
+            {
+                source: 'panels/layout-clear',
+                history: false,
+                metadata: { workspaceId },
+            }
+        );
+    }, [commit, storageKey, workspaceId]);
 
     const addTemplatePanel = React.useCallback(
         (template?: PanelTemplate, intent?: AddPanelIntent) => {
             const api = apiRef.current;
             if (!api) return;
             addPanelFromTemplate(api, template, intent);
-            refreshPanelCount();
+            refreshPanels();
             scheduleHistoryCapture();
         },
-        [refreshPanelCount, scheduleHistoryCapture]
+        [refreshPanels, scheduleHistoryCapture]
     );
 
     const splitPanel = React.useCallback(
@@ -1075,43 +1439,187 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             const api = apiRef.current;
             if (!api) return;
             addPanelFromTemplate(api, undefined, { dropPosition: position });
-            refreshPanelCount();
+            refreshPanels();
             scheduleHistoryCapture();
         },
-        [refreshPanelCount, scheduleHistoryCapture]
+        [refreshPanels, scheduleHistoryCapture]
     );
 
     const closeGroup = React.useCallback(
         (groupId: string) => {
             const api = apiRef.current;
             if (!api) return;
-
             closeGroupById(api, groupId);
-            refreshPanelCount();
+            refreshPanels();
             scheduleHistoryCapture();
         },
-        [refreshPanelCount, scheduleHistoryCapture]
+        [refreshPanels, scheduleHistoryCapture]
     );
+
+    const closeActiveTab = React.useCallback(() => {
+        const api = apiRef.current;
+        const activePanel = api?.activePanel;
+        if (!activePanel) return;
+
+        activePanel.api.close();
+        refreshPanels();
+        scheduleHistoryCapture();
+    }, [refreshPanels, scheduleHistoryCapture]);
+
+    const closeActiveGroup = React.useCallback(() => {
+        const api = apiRef.current;
+        const activeGroup = api?.activeGroup;
+        if (!api || !activeGroup) return;
+
+        api.removeGroup(activeGroup);
+        refreshPanels();
+        scheduleHistoryCapture();
+    }, [refreshPanels, scheduleHistoryCapture]);
+
+    const cycleGroupNext = React.useCallback(() => {
+        const api = apiRef.current;
+        if (!api) return;
+        api.moveToNext({ includePanel: false });
+        clearGuide();
+    }, [clearGuide]);
+
+    const cycleGroupPrevious = React.useCallback(() => {
+        const api = apiRef.current;
+        if (!api) return;
+        api.moveToPrevious({ includePanel: false });
+        clearGuide();
+    }, [clearGuide]);
+
+    const activatePanel = React.useCallback(
+        (panelId: string) => {
+            const api = apiRef.current;
+            if (!api) return;
+            const panel = api.getPanel(panelId);
+            if (!panel) return;
+            panel.api.setActive();
+            clearGuide();
+        },
+        [clearGuide]
+    );
+
+    const movePanelByDrop = React.useCallback(
+        (
+            panelId: string,
+            drop: {
+                groupId: string;
+                mode: 'insert' | 'split';
+                index?: number;
+                position?: Exclude<Position, 'center'>;
+            }
+        ) => {
+            const api = apiRef.current;
+            if (!api) return;
+            const panel = api.getPanel(panelId);
+            const targetGroup = api.getGroup(drop.groupId);
+            if (!panel || !targetGroup) return;
+
+            if (drop.mode === 'insert') {
+                panel.api.moveTo({
+                    group: targetGroup as unknown as typeof panel.group,
+                    position: 'center',
+                    index: drop.index ?? targetGroup.panels.length,
+                });
+            } else {
+                panel.api.moveTo({
+                    group: targetGroup as unknown as typeof panel.group,
+                    position: drop.position ?? 'right',
+                });
+            }
+
+            panel.api.setActive();
+            clearGuide();
+            refreshPanels();
+            scheduleHistoryCapture();
+        },
+        [clearGuide, refreshPanels, scheduleHistoryCapture]
+    );
+
+    const moveGroupByDrop = React.useCallback(
+        (
+            sourceGroupId: string,
+            targetGroupId: string,
+            clientX: number,
+            clientY: number
+        ) => {
+            const api = apiRef.current;
+            if (!api) return;
+            const sourceGroup = api.getGroup(sourceGroupId);
+            const targetGroup = api.getGroup(targetGroupId);
+            if (!sourceGroup || !targetGroup || sourceGroup.id === targetGroup.id) {
+                return;
+            }
+
+            const targetGroupElement = (
+                targetGroup as { element?: HTMLElement }
+            ).element;
+            if (!targetGroupElement) {
+                return;
+            }
+
+            const targetRect = targetGroupElement.getBoundingClientRect();
+            const position = resolveDropPositionWithoutCenter(
+                targetRect,
+                clientX,
+                clientY
+            );
+            sourceGroup.api.moveTo({ group: targetGroup as never, position } as never);
+            targetGroup.api.setActive();
+            clearGuide();
+            refreshPanels();
+            scheduleHistoryCapture();
+        },
+        [clearGuide, refreshPanels, scheduleHistoryCapture]
+    );
+
+    const undoLayout = React.useCallback(() => {
+        history.undo();
+    }, [history]);
+
+    const redoLayout = React.useCallback(() => {
+        history.redo();
+    }, [history]);
 
     const handleReady = React.useCallback(
         (event: DockviewReadyEvent) => {
             clearDisposables();
             apiRef.current = event.api;
 
+            const hydrateWithSnapshot = (snapshot: LayoutSnapshot | null): boolean => {
+                if (!snapshot) return false;
+                applyingGraphiteLayoutRef.current = true;
+                try {
+                    event.api.fromJSON(snapshot);
+                    snapshotKeyRef.current = toSnapshotKey(snapshot);
+                } finally {
+                    applyingGraphiteLayoutRef.current = false;
+                }
+                return true;
+            };
+
             if (event.api.panels.length === 0) {
-                const first = addPanelFromTemplate(event.api, seedTemplates[0]);
-                const second = seedTemplates[1];
-                if (second) {
-                    addPanelFromTemplate(event.api, second, {
-                        referencePanel: first,
-                        dropPosition: 'right',
-                    });
+                const hydratedFromGraphite = hydrateWithSnapshot(syncedLayout);
+                const hydratedFromLocal =
+                    !hydratedFromGraphite && hydrateWithSnapshot(readLocalStorageLayout());
+
+                if (!hydratedFromGraphite && !hydratedFromLocal) {
+                    const first = addPanelFromTemplate(event.api, seedTemplates[0]);
+                    const second = seedTemplates[1];
+                    if (second) {
+                        addPanelFromTemplate(event.api, second, {
+                            referencePanel: first,
+                            dropPosition: 'right',
+                        });
+                    }
                 }
             }
 
-            refreshPanelCount();
-            resetHistory();
-            captureHistorySnapshot();
+            refreshPanels();
+            syncLayoutSnapshot(event.api.toJSON(), false, 'panels/layout-init');
 
             const addDisposable = (disposable: { dispose: () => void }) => {
                 disposablesRef.current.push(disposable);
@@ -1119,13 +1627,13 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
 
             addDisposable(
                 event.api.onDidAddPanel(() => {
-                    refreshPanelCount();
+                    refreshPanels();
                     scheduleHistoryCapture();
                 })
             );
             addDisposable(
                 event.api.onDidRemovePanel(() => {
-                    refreshPanelCount();
+                    refreshPanels();
                     scheduleHistoryCapture();
                 })
             );
@@ -1133,53 +1641,40 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
             addDisposable(event.api.onDidAddGroup(scheduleHistoryCapture));
             addDisposable(event.api.onDidRemoveGroup(scheduleHistoryCapture));
             addDisposable(event.api.onDidLayoutFromJSON(scheduleHistoryCapture));
-            addDisposable(
-                event.api.onWillShowOverlay((overlayEvent) => {
-                    const root = surfaceRef.current;
-                    if (!root) return;
-                    const typedEvent = overlayEvent as OverlayEventLike;
-                    autoScrollTabList(typedEvent);
-                    setNativeOverlayKind(typedEvent.kind);
-                    const rootRect = root.getBoundingClientRect();
-                    setGuide(
-                        buildInternalDropGuide(
-                            typedEvent,
-                            rootRect
-                        )
-                    );
-                })
-            );
-            addDisposable(
-                event.api.onDidDrop(() => {
-                    clearGuide();
-                    scheduleHistoryCapture();
-                })
-            );
-            addDisposable(event.api.onWillDrop(clearGuide));
             addDisposable(event.api.onDidActiveGroupChange(clearGuide));
         },
         [
-            captureHistorySnapshot,
             clearDisposables,
             clearGuide,
-            refreshPanelCount,
-            resetHistory,
+            readLocalStorageLayout,
+            refreshPanels,
             scheduleHistoryCapture,
             seedTemplates,
-            setGuide,
-            setNativeOverlayKind,
+            syncLayoutSnapshot,
+            syncedLayout,
         ]
     );
+
+    React.useEffect(() => {
+        if (!syncedLayout) {
+            return;
+        }
+        if (!apiRef.current) {
+            return;
+        }
+        applySnapshotToApi(syncedLayout, 'panels/layout-query-sync');
+    }, [applySnapshotToApi, syncedLayout]);
 
     return {
         apiRef,
         surfaceRef,
         setSurfaceNode,
         panelCount: state.panelCount,
+        panels: state.panels,
         guide: state.guide,
-        nativeOverlayKind: state.nativeOverlayKind,
-        canUndo: state.canUndo,
-        canRedo: state.canRedo,
+        canUndo: history.canUndo,
+        canRedo: history.canRedo,
+        setGuide,
         clearGuide,
         handleReady,
         saveLayout,
@@ -1188,34 +1683,111 @@ function useDockviewWorkspace(storageKey: string, seedTemplates: PanelTemplate[]
         undoLayout,
         redoLayout,
         addTemplatePanel,
+        activatePanel,
+        movePanelByDrop,
+        moveGroupByDrop,
         splitPanel,
+        closeActiveTab,
+        closeActiveGroup,
+        cycleGroupNext,
+        cycleGroupPrevious,
         closeGroup,
     };
 }
 
-function useGroupTabModes(apiRef: React.RefObject<DockviewApi | null>) {
-    const [defaultMode, setDefaultMode] = React.useState<TabListMode>('horizontal');
-    const [groupModes, setGroupModes] = React.useState<Record<string, TabListMode>>(
-        {}
+function useGroupTabModes(
+    apiRef: React.RefObject<DockviewApi | null>,
+    workspaceId: DynamicPanelsWorkspaceId
+) {
+    const commit = useCommit<DynamicPanelsState>();
+    const defaultMode = useQuery<DynamicPanelsState, TabListMode>(
+        (state) => state.ui.defaultTabMode as TabListMode
+    );
+    const groupModes = useQuery<DynamicPanelsState, Record<string, TabListMode>>(
+        (state) => state.ui.groupTabModes as Record<string, TabListMode>
+    );
+
+    const toGroupModeKey = React.useCallback(
+        (groupId: string) => `${workspaceId}:${groupId}`,
+        [workspaceId]
     );
 
     const getGroupMode = React.useCallback(
-        (groupId: string) => groupModes[groupId] ?? defaultMode,
-        [defaultMode, groupModes]
+        (groupId: string) => {
+            const key = toGroupModeKey(groupId);
+            return groupModes[key] ?? defaultMode;
+        },
+        [defaultMode, groupModes, toGroupModeKey]
+    );
+
+    const setDefaultMode = React.useCallback(
+        (mode: TabListMode) => {
+            const api = apiRef.current;
+            if (api) {
+                for (const group of api.groups) {
+                    const key = toGroupModeKey(group.id);
+                    if (!groupModes[key]) {
+                        const groupElement = (
+                            group as { element?: HTMLElement }
+                        ).element;
+                        if (groupElement) {
+                            groupElement.dataset.loopTabList = mode;
+                        }
+                    }
+                }
+            }
+            commit(
+                {
+                    ui: {
+                        defaultTabMode: $set(mode),
+                    },
+                },
+                {
+                    source: 'panels/ui/default-tab-mode',
+                    history: false,
+                    metadata: { workspaceId },
+                }
+            );
+        },
+        [apiRef, commit, groupModes, toGroupModeKey, workspaceId]
     );
 
     const cycleGroupMode = React.useCallback(
         (groupId: string) => {
-            setGroupModes((current) => {
-                const currentMode = current[groupId] ?? defaultMode;
-                return {
-                    ...current,
-                    [groupId]: getNextTabMode(currentMode),
-                };
-            });
+            const key = toGroupModeKey(groupId);
+            const currentMode = groupModes[key] ?? defaultMode;
+            const nextMode = getNextTabMode(currentMode);
+            const group = apiRef.current?.getGroup(groupId);
+            if (group) {
+                const groupElement = (group as { element?: HTMLElement }).element;
+                if (groupElement) {
+                    groupElement.dataset.loopTabList = nextMode;
+                }
+            }
+            commit(
+                {
+                    ui: {
+                        groupTabModes: {
+                            [key]: $set(nextMode),
+                        },
+                    },
+                },
+                {
+                    source: 'panels/ui/group-tab-mode',
+                    history: false,
+                    metadata: { workspaceId, groupId },
+                }
+            );
         },
-        [defaultMode]
+        [apiRef, commit, defaultMode, groupModes, toGroupModeKey, workspaceId]
     );
+
+    const cycleActiveGroupMode = React.useCallback(() => {
+        const api = apiRef.current;
+        const group = api?.activeGroup;
+        if (!group) return;
+        cycleGroupMode(group.id);
+    }, [apiRef, cycleGroupMode]);
 
     const applyModes = React.useCallback(() => {
         const api = apiRef.current;
@@ -1250,98 +1822,373 @@ function useGroupTabModes(apiRef: React.RefObject<DockviewApi | null>) {
         setDefaultMode,
         getGroupMode,
         cycleGroupMode,
+        cycleActiveGroupMode,
     };
 }
 
 function PanelToolbar({
     panelCount,
+    panels,
     canUndo,
     canRedo,
     tabMode,
     onTabModeChange,
+    onSelectPanel,
     onUndo,
     onRedo,
     onAdd,
+    onCloseTab,
+    onCloseGroup,
+    onCycleGroupNext,
+    onCycleGroupPrevious,
     onSplitRight,
     onSplitDown,
     onSave,
     onRestore,
 }: {
     panelCount: number;
+    panels: readonly WorkspacePanelSearchItem[];
     canUndo: boolean;
     canRedo: boolean;
     tabMode: TabListMode;
     onTabModeChange: (mode: TabListMode) => void;
+    onSelectPanel: (panelId: string) => void;
     onUndo: () => void;
     onRedo: () => void;
     onAdd: () => void;
+    onCloseTab: () => void;
+    onCloseGroup: () => void;
+    onCycleGroupNext: () => void;
+    onCycleGroupPrevious: () => void;
     onSplitRight: () => void;
     onSplitDown: () => void;
     onSave: () => void;
     onRestore: () => void;
 }) {
+    const [search, setSearch] = React.useState('');
+    const searchListId = React.useId();
+
+    const searchMatches = React.useMemo(() => {
+        const needle = search.trim().toLowerCase();
+        if (!needle) {
+            return panels.slice(0, 10);
+        }
+        return panels
+            .filter((panel) => panel.title.toLowerCase().includes(needle))
+            .sort((left, right) => {
+                const leftStarts = left.title.toLowerCase().startsWith(needle);
+                const rightStarts = right.title.toLowerCase().startsWith(needle);
+                if (leftStarts && !rightStarts) return -1;
+                if (!leftStarts && rightStarts) return 1;
+                return left.title.localeCompare(right.title);
+            })
+            .slice(0, 12);
+    }, [panels, search]);
+
+    const runSearch = React.useCallback(() => {
+        if (searchMatches.length === 0) return;
+        const needle = search.trim().toLowerCase();
+        const exact = panels.find((panel) => panel.title.toLowerCase() === needle);
+        const target = exact ?? searchMatches[0];
+        if (!target) return;
+        onSelectPanel(target.id);
+        setSearch(target.title);
+    }, [onSelectPanel, panels, search, searchMatches]);
+
+    const iconButtonClass =
+        'h-9 w-9 rounded-full p-0 [&_svg]:size-4';
+
+    const IconButton = ({
+        label,
+        disabled,
+        onClick,
+        children,
+    }: {
+        label: string;
+        disabled?: boolean;
+        onClick: () => void;
+        children: React.ReactNode;
+    }) => (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Button
+                    size='sm'
+                    variant='outline'
+                    className={iconButtonClass}
+                    disabled={disabled}
+                    onClick={onClick}
+                    aria-label={label}>
+                    {children}
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+    );
+
     return (
-        <div className='flex flex-wrap items-center gap-2'>
-            <Badge variant='secondary'>{panelCount} panels</Badge>
-            <Button
-                size='sm'
-                variant='outline'
-                onClick={onUndo}
-                disabled={!canUndo}>
-                <Undo2 className='mr-1 size-4' />
-                Undo
-            </Button>
-            <Button
-                size='sm'
-                variant='outline'
-                onClick={onRedo}
-                disabled={!canRedo}>
-                <Redo2 className='mr-1 size-4' />
-                Redo
-            </Button>
-            <Button size='sm' onClick={onAdd}>
-                <Plus className='mr-1 size-4' />
-                New Tab
-            </Button>
-            <Button size='sm' variant='outline' onClick={onSplitRight}>
-                <SplitSquareVertical className='mr-1 size-4' />
-                Split Right
-            </Button>
-            <Button size='sm' variant='outline' onClick={onSplitDown}>
-                <SplitSquareHorizontal className='mr-1 size-4' />
-                Split Down
-            </Button>
-            <Button size='sm' variant='outline' onClick={onSave}>
-                Save Layout
-            </Button>
-            <Button size='sm' variant='outline' onClick={onRestore}>
-                Restore Layout
-            </Button>
-            <div className='ml-auto inline-flex items-center gap-1 rounded-md border bg-background p-1'>
-                <Button
-                    size='sm'
-                    variant={tabMode === 'horizontal' ? 'secondary' : 'ghost'}
-                    className='h-7 px-2 text-xs'
-                    onClick={() => onTabModeChange('horizontal')}>
-                    Horizontal
-                </Button>
-                <Button
-                    size='sm'
-                    variant={tabMode === 'compact' ? 'secondary' : 'ghost'}
-                    className='h-7 px-2 text-xs'
-                    onClick={() => onTabModeChange('compact')}>
-                    Compact
-                </Button>
-                <Button
-                    size='sm'
-                    variant={tabMode === 'vertical' ? 'secondary' : 'ghost'}
-                    className='h-7 px-2 text-xs'
-                    onClick={() => onTabModeChange('vertical')}>
-                    Vertical
-                </Button>
+        <div className='space-y-2'>
+            <div className='flex flex-wrap items-center gap-2'>
+                <ButtonGroup>
+                    <ButtonGroupText className='h-9 rounded-md px-3 text-xs'>
+                        {panelCount} panels
+                    </ButtonGroupText>
+                    <IconButton label='Undo' disabled={!canUndo} onClick={onUndo}>
+                        <Undo2 />
+                    </IconButton>
+                    <IconButton label='Redo' disabled={!canRedo} onClick={onRedo}>
+                        <Redo2 />
+                    </IconButton>
+                    <IconButton label='Previous Group' onClick={onCycleGroupPrevious}>
+                        <ChevronLeft />
+                    </IconButton>
+                    <IconButton label='Next Group' onClick={onCycleGroupNext}>
+                        <ChevronRight />
+                    </IconButton>
+                </ButtonGroup>
+
+                <ButtonGroup>
+                    <Button size='sm' className='h-9 px-3' onClick={onAdd}>
+                        <Plus className='mr-1 size-4' />
+                        New Tab
+                    </Button>
+                    <IconButton label='Close Tab' onClick={onCloseTab}>
+                        <X />
+                    </IconButton>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={onCloseGroup}>
+                        Close Group
+                    </Button>
+                </ButtonGroup>
+
+                <ButtonGroup>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={onSplitRight}>
+                        <SplitSquareVertical className='mr-1 size-4' />
+                        Split Right
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={onSplitDown}>
+                        <SplitSquareHorizontal className='mr-1 size-4' />
+                        Split Down
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={onSave}>
+                        Save
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={onRestore}>
+                        Restore
+                    </Button>
+                </ButtonGroup>
+
+                <div className='ml-auto flex min-w-[280px] flex-1 items-center justify-end gap-2'>
+                    <div className='relative w-full max-w-[360px]'>
+                        <Search className='pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+                        <Input
+                            list={searchListId}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key !== 'Enter') return;
+                                event.preventDefault();
+                                runSearch();
+                            }}
+                            placeholder='Find tab by name...'
+                            className='h-9 pl-8'
+                        />
+                        <datalist id={searchListId}>
+                            {panels.slice(0, 80).map((panel) => (
+                                <option key={panel.id} value={panel.title} />
+                            ))}
+                        </datalist>
+                    </div>
+                    <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9 px-3'
+                        onClick={runSearch}>
+                        Find
+                    </Button>
+                </div>
+            </div>
+
+            <div className='flex items-center justify-end'>
+                <div className='inline-flex items-center gap-1 rounded-lg border bg-background/80 p-1'>
+                    <Button
+                        size='sm'
+                        variant={tabMode === 'horizontal' ? 'secondary' : 'ghost'}
+                        className='h-8 px-2 text-xs'
+                        onClick={() => onTabModeChange('horizontal')}>
+                        Horizontal
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant={tabMode === 'compact' ? 'secondary' : 'ghost'}
+                        className='h-8 px-2 text-xs'
+                        onClick={() => onTabModeChange('compact')}>
+                        Compact
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant={tabMode === 'vertical' ? 'secondary' : 'ghost'}
+                        className='h-8 px-2 text-xs'
+                        onClick={() => onTabModeChange('vertical')}>
+                        Vertical
+                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size='sm'
+                                variant='ghost'
+                                className='h-8 w-8 p-0'
+                                onClick={() => {
+                                    const mode = getNextTabMode(tabMode);
+                                    onTabModeChange(mode);
+                                }}
+                                aria-label='Cycle tab mode'>
+                                <ChevronsLeftRightEllipsis className='size-4' />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Cycle tab mode</TooltipContent>
+                    </Tooltip>
+                </div>
             </div>
         </div>
     );
+}
+
+function getPointerFromDragEvent(event: DragMoveEvent | DragEndEvent) {
+    const translatedRect = event.active.rect.current.translated;
+    if (!translatedRect) {
+        return null;
+    }
+
+    return {
+        x: translatedRect.left + translatedRect.width / 2,
+        y: translatedRect.top + translatedRect.height / 2,
+    };
+}
+
+function useWorkspacePanelDnd(
+    runtime: ReturnType<typeof useDockviewWorkspace>
+) {
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 6 },
+        })
+    );
+    const [activePanelId, setActivePanelId] = React.useState<string | null>(null);
+
+    const handlePanelDragStart = React.useCallback((event: DragStartEvent) => {
+        const kind = event.active.data.current?.kind as string | undefined;
+        if (kind !== 'panel') {
+            return;
+        }
+
+        const panelId = event.active.data.current?.panelId as string | undefined;
+        setActivePanelId(panelId ?? null);
+    }, []);
+
+    const handlePanelDragMove = React.useCallback(
+        (event: DragMoveEvent) => {
+            const kind = event.active.data.current?.kind as string | undefined;
+            if (kind !== 'panel') {
+                return;
+            }
+
+            const pointer = getPointerFromDragEvent(event);
+            const api = runtime.apiRef.current;
+            const root = runtime.surfaceRef.current;
+            if (!pointer || !api || !root) {
+                runtime.clearGuide();
+                return;
+            }
+
+            const rootRect = root.getBoundingClientRect();
+            if (!isPointInsideRect(rootRect, pointer.x, pointer.y)) {
+                runtime.clearGuide();
+                return;
+            }
+
+            const resolution = resolvePanelDropResolution(
+                api,
+                rootRect,
+                pointer.x,
+                pointer.y
+            );
+            runtime.setGuide(resolution?.guide ?? null);
+        },
+        [runtime]
+    );
+
+    const handlePanelDragEnd = React.useCallback(
+        (event: DragEndEvent) => {
+            const kind = event.active.data.current?.kind as string | undefined;
+            if (kind !== 'panel') {
+                return;
+            }
+
+            const panelId = event.active.data.current?.panelId as
+                | string
+                | undefined;
+            const pointer = getPointerFromDragEvent(event);
+            const api = runtime.apiRef.current;
+            const root = runtime.surfaceRef.current;
+            if (panelId && pointer && api && root) {
+                const rootRect = root.getBoundingClientRect();
+                if (isPointInsideRect(rootRect, pointer.x, pointer.y)) {
+                    const resolution = resolvePanelDropResolution(
+                        api,
+                        rootRect,
+                        pointer.x,
+                        pointer.y
+                    );
+                    if (resolution) {
+                        runtime.movePanelByDrop(panelId, resolution);
+                    }
+                }
+            }
+
+            setActivePanelId(null);
+            runtime.clearGuide();
+        },
+        [runtime]
+    );
+
+    const handlePanelDragCancel = React.useCallback(() => {
+        setActivePanelId(null);
+        runtime.clearGuide();
+    }, [runtime]);
+
+    const activePanelTitle = React.useMemo(() => {
+        if (!activePanelId) return null;
+        const panel = runtime.panels.find((candidate) => candidate.id === activePanelId);
+        return panel?.title ?? null;
+    }, [activePanelId, runtime.panels]);
+
+    return {
+        sensors,
+        activePanelTitle,
+        handlePanelDragStart,
+        handlePanelDragMove,
+        handlePanelDragEnd,
+        handlePanelDragCancel,
+    };
 }
 
 function TemplateDragItem({
@@ -1353,7 +2200,7 @@ function TemplateDragItem({
 }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `template:${template.id}`,
-        data: { template },
+        data: { kind: 'template', template },
     });
 
     const style: CSSProperties = {
@@ -1384,9 +2231,17 @@ function TemplateDragItem({
     );
 }
 
-function CoreDockviewDemo() {
-    const runtime = useDockviewWorkspace(CORE_STORAGE_KEY, PANEL_TEMPLATES);
-    const groupModes = useGroupTabModes(runtime.apiRef);
+function CoreDockviewDemo({
+    onHandleChange,
+}: {
+    onHandleChange?: (handle: DockviewWorkspaceHandle | null) => void;
+}) {
+    const runtime = useDockviewWorkspace(
+        'workbench',
+        CORE_STORAGE_KEY,
+        PANEL_TEMPLATES
+    );
+    const groupModes = useGroupTabModes(runtime.apiRef, 'workbench');
     const createTabInGroup = React.useCallback(
         (groupId?: string) => {
             const api = runtime.apiRef.current;
@@ -1407,6 +2262,7 @@ function CoreDockviewDemo() {
         () => ({
             createTabInGroup,
             closeGroup: runtime.closeGroup,
+            moveGroup: runtime.moveGroupByDrop,
             cycleGroupMode: groupModes.cycleGroupMode,
             getGroupMode: groupModes.getGroupMode,
         }),
@@ -1415,68 +2271,132 @@ function CoreDockviewDemo() {
             groupModes.cycleGroupMode,
             groupModes.getGroupMode,
             runtime.closeGroup,
+            runtime.moveGroupByDrop,
         ]
     );
+    const panelDnd = useWorkspacePanelDnd(runtime);
 
-    const hideNativeOverlay =
-        runtime.nativeOverlayKind === 'tab' ||
-        runtime.nativeOverlayKind === 'header_space';
+    React.useEffect(() => {
+        if (!onHandleChange) return;
+
+        onHandleChange({
+            workspaceId: 'workbench',
+            addTemplatePanel: () => runtime.addTemplatePanel(),
+            activatePanel: runtime.activatePanel,
+            closeActiveTab: runtime.closeActiveTab,
+            closeActiveGroup: runtime.closeActiveGroup,
+            cycleGroupNext: runtime.cycleGroupNext,
+            cycleGroupPrevious: runtime.cycleGroupPrevious,
+            splitPanel: runtime.splitPanel,
+            saveLayout: runtime.saveLayout,
+            restoreLayout: runtime.restoreLayout,
+            undoLayout: runtime.undoLayout,
+            redoLayout: runtime.redoLayout,
+            cycleActiveGroupMode: groupModes.cycleActiveGroupMode,
+            canUndo: runtime.canUndo,
+            canRedo: runtime.canRedo,
+            panelCount: runtime.panelCount,
+            panels: runtime.panels,
+        });
+
+        return () => {
+            onHandleChange(null);
+        };
+    }, [
+        groupModes.cycleActiveGroupMode,
+        onHandleChange,
+        runtime.addTemplatePanel,
+        runtime.activatePanel,
+        runtime.canRedo,
+        runtime.canUndo,
+        runtime.closeActiveGroup,
+        runtime.closeActiveTab,
+        runtime.cycleGroupNext,
+        runtime.cycleGroupPrevious,
+        runtime.panelCount,
+        runtime.panels,
+        runtime.redoLayout,
+        runtime.restoreLayout,
+        runtime.saveLayout,
+        runtime.splitPanel,
+        runtime.undoLayout,
+    ]);
 
     return (
-        <div className='space-y-3'>
-            <PanelToolbar
-                panelCount={runtime.panelCount}
-                canUndo={runtime.canUndo}
-                canRedo={runtime.canRedo}
-                tabMode={groupModes.defaultMode}
-                onTabModeChange={groupModes.setDefaultMode}
-                onUndo={runtime.undoLayout}
-                onRedo={runtime.redoLayout}
-                onAdd={() => runtime.addTemplatePanel()}
-                onSplitRight={() => runtime.splitPanel('right')}
-                onSplitDown={() => runtime.splitPanel('bottom')}
-                onSave={runtime.saveLayout}
-                onRestore={runtime.restoreLayout}
-            />
-            <div className='relative h-[68vh] overflow-hidden rounded-xl border bg-card'>
-                <div
-                    ref={runtime.setSurfaceNode}
-                    className={cn(
-                        'h-full w-full',
-                        hideNativeOverlay && 'loop-hide-native-tab-overlay'
-                    )}>
-                    <DockviewUiContext.Provider value={uiContext}>
-                        <DockviewReact
-                            className='dockview-theme-shadcn h-full w-full'
-                            theme={DOCKVIEW_THEME}
-                            components={{ default: DockPanel }}
-                            defaultTabComponent={DockTab}
-                            rightHeaderActionsComponent={DockHeaderActions}
-                            onReady={runtime.handleReady}
-                            dndEdges={{
-                                size: { value: 32, type: 'percentage' },
-                                activationSize: { value: 12, type: 'pixels' },
-                            }}
-                            hideBorders
-                            disableTabsOverflowList
-                            scrollbars='custom'
-                        />
-                    </DockviewUiContext.Provider>
-                    <DropGuideOverlay guide={runtime.guide} />
+        <DndContext
+            sensors={panelDnd.sensors}
+            collisionDetection={pointerWithin}
+            onDragStart={panelDnd.handlePanelDragStart}
+            onDragMove={panelDnd.handlePanelDragMove}
+            onDragEnd={panelDnd.handlePanelDragEnd}
+            onDragCancel={panelDnd.handlePanelDragCancel}>
+            <div className='space-y-3'>
+                <PanelToolbar
+                    panelCount={runtime.panelCount}
+                    panels={runtime.panels}
+                    canUndo={runtime.canUndo}
+                    canRedo={runtime.canRedo}
+                    tabMode={groupModes.defaultMode}
+                    onTabModeChange={groupModes.setDefaultMode}
+                    onSelectPanel={runtime.activatePanel}
+                    onUndo={runtime.undoLayout}
+                    onRedo={runtime.redoLayout}
+                    onAdd={() => runtime.addTemplatePanel()}
+                    onCloseTab={runtime.closeActiveTab}
+                    onCloseGroup={runtime.closeActiveGroup}
+                    onCycleGroupNext={runtime.cycleGroupNext}
+                    onCycleGroupPrevious={runtime.cycleGroupPrevious}
+                    onSplitRight={() => runtime.splitPanel('right')}
+                    onSplitDown={() => runtime.splitPanel('bottom')}
+                    onSave={runtime.saveLayout}
+                    onRestore={runtime.restoreLayout}
+                />
+                <div className='relative h-[68vh] overflow-hidden rounded-xl border bg-card'>
+                    <div ref={runtime.setSurfaceNode} className='h-full w-full'>
+                        <DockviewUiContext.Provider value={uiContext}>
+                            <DockviewReact
+                                className='dockview-theme-shadcn h-full w-full'
+                                theme={DOCKVIEW_THEME}
+                                components={{ default: DockPanel }}
+                                defaultTabComponent={DockTab}
+                                rightHeaderActionsComponent={DockHeaderActions}
+                                onReady={runtime.handleReady}
+                                dndEdges={{
+                                    size: { value: 32, type: 'percentage' },
+                                    activationSize: { value: 12, type: 'pixels' },
+                                }}
+                                disableDnd
+                                hideBorders
+                                disableTabsOverflowList
+                                scrollbars='custom'
+                            />
+                        </DockviewUiContext.Provider>
+                        <DropGuideOverlay guide={runtime.guide} />
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <DragOverlay>
+                {panelDnd.activePanelTitle ? (
+                    <div className='loop-drag-overlay'>{panelDnd.activePanelTitle}</div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     );
 }
 
-function SidebarDockviewDemo() {
-    const runtime = useDockviewWorkspace(SIDEBAR_STORAGE_KEY, PANEL_TEMPLATES);
-    const groupModes = useGroupTabModes(runtime.apiRef);
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: { distance: 4 },
-        })
+function SidebarDockviewDemo({
+    onHandleChange,
+}: {
+    onHandleChange?: (handle: DockviewWorkspaceHandle | null) => void;
+}) {
+    const runtime = useDockviewWorkspace(
+        'sidebar',
+        SIDEBAR_STORAGE_KEY,
+        PANEL_TEMPLATES
     );
+    const groupModes = useGroupTabModes(runtime.apiRef, 'sidebar');
+    const panelDnd = useWorkspacePanelDnd(runtime);
     const { setNodeRef: setDropNodeRef } = useDroppable({
         id: SIDEBAR_DROP_ZONE,
     });
@@ -1507,6 +2427,7 @@ function SidebarDockviewDemo() {
         () => ({
             createTabInGroup,
             closeGroup: runtime.closeGroup,
+            moveGroup: runtime.moveGroupByDrop,
             cycleGroupMode: groupModes.cycleGroupMode,
             getGroupMode: groupModes.getGroupMode,
         }),
@@ -1515,6 +2436,7 @@ function SidebarDockviewDemo() {
             groupModes.cycleGroupMode,
             groupModes.getGroupMode,
             runtime.closeGroup,
+            runtime.moveGroupByDrop,
         ]
     );
 
@@ -1550,15 +2472,32 @@ function SidebarDockviewDemo() {
         pointerRef.current = null;
     }, []);
 
-    const handleDragStart = React.useCallback((event: DragStartEvent) => {
-        const template = event.active.data.current?.template as
-            | PanelTemplate
-            | undefined;
-        setActiveTemplate(template ?? null);
-    }, []);
+    const handleDragStart = React.useCallback(
+        (event: DragStartEvent) => {
+            const kind = event.active.data.current?.kind as string | undefined;
+            if (kind === 'panel') {
+                setActiveTemplate(null);
+                clearDnDGuide();
+                panelDnd.handlePanelDragStart(event);
+                return;
+            }
+
+            const template = event.active.data.current?.template as
+                | PanelTemplate
+                | undefined;
+            setActiveTemplate(template ?? null);
+        },
+        [clearDnDGuide, panelDnd]
+    );
 
     const handleDragMove = React.useCallback(
         (event: DragMoveEvent) => {
+            const kind = event.active.data.current?.kind as string | undefined;
+            if (kind === 'panel') {
+                panelDnd.handlePanelDragMove(event);
+                return;
+            }
+
             const root = runtime.surfaceRef.current;
             if (!root) return;
 
@@ -1578,11 +2517,17 @@ function SidebarDockviewDemo() {
             const position = detectDropPosition(rootRect, pointerX, pointerY);
             setExternalGuide(buildExternalDropGuide(rootRect, position));
         },
-        [runtime.surfaceRef]
+        [panelDnd, runtime.surfaceRef]
     );
 
     const handleDragEnd = React.useCallback(
         (event: DragEndEvent) => {
+            const kind = event.active.data.current?.kind as string | undefined;
+            if (kind === 'panel') {
+                panelDnd.handlePanelDragEnd(event);
+                return;
+            }
+
             const template = event.active.data.current?.template as
                 | PanelTemplate
                 | undefined;
@@ -1614,7 +2559,7 @@ function SidebarDockviewDemo() {
             setActiveTemplate(null);
             clearDnDGuide();
         },
-        [clearDnDGuide, runtime]
+        [clearDnDGuide, panelDnd, runtime]
     );
 
     const isPointerOverSurface = React.useMemo(() => {
@@ -1624,13 +2569,55 @@ function SidebarDockviewDemo() {
         return isPointInsideRect(root.getBoundingClientRect(), pointer.x, pointer.y);
     }, [runtime.surfaceRef, externalGuide]);
 
-    const hideNativeOverlay =
-        runtime.nativeOverlayKind === 'tab' ||
-        runtime.nativeOverlayKind === 'header_space';
+    React.useEffect(() => {
+        if (!onHandleChange) return;
+
+        onHandleChange({
+            workspaceId: 'sidebar',
+            addTemplatePanel: () => runtime.addTemplatePanel(),
+            activatePanel: runtime.activatePanel,
+            closeActiveTab: runtime.closeActiveTab,
+            closeActiveGroup: runtime.closeActiveGroup,
+            cycleGroupNext: runtime.cycleGroupNext,
+            cycleGroupPrevious: runtime.cycleGroupPrevious,
+            splitPanel: runtime.splitPanel,
+            saveLayout: runtime.saveLayout,
+            restoreLayout: runtime.restoreLayout,
+            undoLayout: runtime.undoLayout,
+            redoLayout: runtime.redoLayout,
+            cycleActiveGroupMode: groupModes.cycleActiveGroupMode,
+            canUndo: runtime.canUndo,
+            canRedo: runtime.canRedo,
+            panelCount: runtime.panelCount,
+            panels: runtime.panels,
+        });
+
+        return () => {
+            onHandleChange(null);
+        };
+    }, [
+        groupModes.cycleActiveGroupMode,
+        onHandleChange,
+        runtime.addTemplatePanel,
+        runtime.activatePanel,
+        runtime.canRedo,
+        runtime.canUndo,
+        runtime.closeActiveGroup,
+        runtime.closeActiveTab,
+        runtime.cycleGroupNext,
+        runtime.cycleGroupPrevious,
+        runtime.panelCount,
+        runtime.panels,
+        runtime.redoLayout,
+        runtime.restoreLayout,
+        runtime.saveLayout,
+        runtime.splitPanel,
+        runtime.undoLayout,
+    ]);
 
     return (
         <DndContext
-            sensors={sensors}
+            sensors={panelDnd.sensors}
             collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragMove={handleDragMove}
@@ -1638,17 +2625,24 @@ function SidebarDockviewDemo() {
             onDragCancel={() => {
                 setActiveTemplate(null);
                 clearDnDGuide();
+                panelDnd.handlePanelDragCancel();
             }}>
             <div className='space-y-3'>
                 <PanelToolbar
                     panelCount={runtime.panelCount}
+                    panels={runtime.panels}
                     canUndo={runtime.canUndo}
                     canRedo={runtime.canRedo}
                     tabMode={groupModes.defaultMode}
                     onTabModeChange={groupModes.setDefaultMode}
+                    onSelectPanel={runtime.activatePanel}
                     onUndo={runtime.undoLayout}
                     onRedo={runtime.redoLayout}
                     onAdd={() => runtime.addTemplatePanel()}
+                    onCloseTab={runtime.closeActiveTab}
+                    onCloseGroup={runtime.closeActiveGroup}
+                    onCycleGroupNext={runtime.cycleGroupNext}
+                    onCycleGroupPrevious={runtime.cycleGroupPrevious}
                     onSplitRight={() => runtime.splitPanel('right')}
                     onSplitDown={() => runtime.splitPanel('bottom')}
                     onSave={runtime.saveLayout}
@@ -1716,7 +2710,6 @@ function SidebarDockviewDemo() {
                             ref={setSurfaceAndDropNode}
                             className={cn(
                                 'h-full w-full',
-                                hideNativeOverlay && 'loop-hide-native-tab-overlay',
                                 isPointerOverSurface && 'ring-1 ring-primary/40'
                             )}>
                             <DockviewUiContext.Provider value={uiContext}>
@@ -1734,6 +2727,7 @@ function SidebarDockviewDemo() {
                                             type: 'pixels',
                                         },
                                     }}
+                                    disableDnd
                                     hideBorders
                                     disableTabsOverflowList
                                     scrollbars='custom'
@@ -1750,29 +2744,249 @@ function SidebarDockviewDemo() {
             <DragOverlay>
                 {activeTemplate ? (
                     <div className='loop-drag-overlay'>{activeTemplate.title}</div>
+                ) : panelDnd.activePanelTitle ? (
+                    <div className='loop-drag-overlay'>{panelDnd.activePanelTitle}</div>
                 ) : null}
             </DragOverlay>
         </DndContext>
     );
 }
 
-export default function DockviewPanelsPage() {
+function DynamicPanelsScene() {
+    const store = useGraphite<DynamicPanelsState>();
+    const commit = useCommit<DynamicPanelsState>();
+    const ui = useQuery<DynamicPanelsState, DynamicPanelsState['ui']>(
+        (state) => state.ui
+    );
+    const intents = React.useMemo(
+        () => createDynamicPanelsIntentRegistry(),
+        []
+    );
+    const [shortcutBindings, setShortcutBindings] = React.useState<
+        GraphiteShortcutBinding[]
+    >(createDefaultDynamicPanelsShortcutBindings);
+    const shortcuts = useDynamicPanelsShortcutSystem(
+        intents,
+        shortcutBindings,
+        ui.shortcutsEnabled
+    );
+    const workspaceHandlesRef = React.useRef<
+        Partial<Record<DynamicPanelsWorkspaceId, DockviewWorkspaceHandle>>
+    >({});
+
+    const setWorkspaceHandle = React.useCallback(
+        (
+            workspaceId: DynamicPanelsWorkspaceId,
+            handle: DockviewWorkspaceHandle | null
+        ) => {
+            if (!handle) {
+                delete workspaceHandlesRef.current[workspaceId];
+                return;
+            }
+            workspaceHandlesRef.current[workspaceId] = handle;
+        },
+        []
+    );
+
+    React.useEffect(() => {
+        return store.onCommit((record) => {
+            const intentName = record.intent?.name as PanelCommandIntent | undefined;
+            if (!intentName || !intentName.startsWith('panels/')) {
+                return;
+            }
+
+            const payload = record.intent?.payload as
+                | { workspace?: DynamicPanelsWorkspaceId }
+                | undefined;
+            const workspaceId =
+                payload?.workspace ?? store.getState().ui.activeWorkspace;
+            const runtime =
+                workspaceHandlesRef.current[workspaceId] ??
+                workspaceHandlesRef.current[store.getState().ui.activeWorkspace] ??
+                workspaceHandlesRef.current.workbench ??
+                workspaceHandlesRef.current.sidebar;
+            if (!runtime) {
+                return;
+            }
+
+            switch (intentName) {
+                case 'panels/new-tab': {
+                    runtime.addTemplatePanel();
+                    break;
+                }
+                case 'panels/close-tab': {
+                    runtime.closeActiveTab();
+                    break;
+                }
+                case 'panels/close-group': {
+                    runtime.closeActiveGroup();
+                    break;
+                }
+                case 'panels/split-right': {
+                    runtime.splitPanel('right');
+                    break;
+                }
+                case 'panels/split-down': {
+                    runtime.splitPanel('bottom');
+                    break;
+                }
+                case 'panels/cycle-group-next': {
+                    runtime.cycleGroupNext();
+                    break;
+                }
+                case 'panels/cycle-group-previous': {
+                    runtime.cycleGroupPrevious();
+                    break;
+                }
+                case 'panels/save-layout': {
+                    runtime.saveLayout();
+                    break;
+                }
+                case 'panels/restore-layout': {
+                    runtime.restoreLayout();
+                    break;
+                }
+                case 'panels/undo-layout': {
+                    runtime.undoLayout();
+                    break;
+                }
+                case 'panels/redo-layout': {
+                    runtime.redoLayout();
+                    break;
+                }
+                case 'panels/cycle-tab-mode': {
+                    runtime.cycleActiveGroupMode();
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        });
+    }, [store]);
+
     return (
         <div className='space-y-3'>
-            <Tabs defaultValue='workbench' className='w-full'>
+            <GraphiteIntentCommandMenu intents={intents} enabled />
+
+            <div className='flex flex-wrap items-center gap-3 rounded-xl border bg-card/40 p-3 text-sm'>
+                <div className='font-medium'>Dynamic Panels Studio</div>
+                <Badge variant='outline'>
+                    Active: {ui.activeWorkspace === 'workbench' ? 'Workbench' : 'Sidebar'}
+                </Badge>
+                <label className='inline-flex items-center gap-2'>
+                    <input
+                        type='checkbox'
+                        checked={ui.shortcutsEnabled}
+                        onChange={(event) =>
+                            commit(
+                                {
+                                    ui: {
+                                        shortcutsEnabled: $set(
+                                            event.target.checked
+                                        ),
+                                    },
+                                },
+                                {
+                                    source: 'panels/ui/shortcuts',
+                                    history: false,
+                                }
+                            )
+                        }
+                    />
+                    Keyboard Shortcuts
+                </label>
+                <label className='inline-flex items-center gap-2'>
+                    <input
+                        type='checkbox'
+                        checked={ui.showShortcutManager}
+                        onChange={(event) =>
+                            commit(
+                                {
+                                    ui: {
+                                        showShortcutManager: $set(
+                                            event.target.checked
+                                        ),
+                                    },
+                                },
+                                {
+                                    source: 'panels/ui/shortcut-manager',
+                                    history: false,
+                                }
+                            )
+                        }
+                    />
+                    Shortcut Manager
+                </label>
+            </div>
+
+            {ui.showShortcutManager ? (
+                <div className='rounded-xl border bg-card/40 p-3'>
+                    <GraphiteShortcutManager
+                        intents={intents}
+                        bindings={shortcutBindings}
+                        onBindingsChange={setShortcutBindings}
+                        contextFields={DYNAMIC_PANELS_SHORTCUT_CONTEXT_FIELDS}
+                    />
+                </div>
+            ) : null}
+
+            <Tabs
+                value={ui.activeWorkspace}
+                onValueChange={(value) => {
+                    const workspace =
+                        value === 'sidebar'
+                            ? 'sidebar'
+                            : ('workbench' as DynamicPanelsWorkspaceId);
+                    commit(
+                        {
+                            ui: {
+                                activeWorkspace: $set(workspace),
+                            },
+                        },
+                        {
+                            source: 'panels/ui/active-workspace',
+                            history: false,
+                        }
+                    );
+                }}
+                className='w-full'>
                 <TabsList>
                     <TabsTrigger value='workbench'>Workbench Demo</TabsTrigger>
-                    <TabsTrigger value='sidebar'>
-                        Sidebar Drop Demo
-                    </TabsTrigger>
+                    <TabsTrigger value='sidebar'>Sidebar Drop Demo</TabsTrigger>
                 </TabsList>
-                <TabsContent value='workbench'>
-                    <CoreDockviewDemo />
+                <TabsContent value='workbench' forceMount>
+                    <CoreDockviewDemo
+                        onHandleChange={(handle) =>
+                            setWorkspaceHandle('workbench', handle)
+                        }
+                    />
                 </TabsContent>
-                <TabsContent value='sidebar'>
-                    <SidebarDockviewDemo />
+                <TabsContent value='sidebar' forceMount>
+                    <SidebarDockviewDemo
+                        onHandleChange={(handle) =>
+                            setWorkspaceHandle('sidebar', handle)
+                        }
+                    />
                 </TabsContent>
             </Tabs>
+
+            <div className='rounded-xl border bg-card/40 p-3'>
+                <GraphiteIntentBrowser
+                    shortcuts={shortcuts}
+                    bind={false}
+                    active={ui.shortcutsEnabled}
+                />
+            </div>
         </div>
+    );
+}
+
+export default function DynamicPanelsPage() {
+    const store = React.useMemo(() => createDynamicPanelsStore(), []);
+    return (
+        <GraphiteProvider store={store}>
+            <DynamicPanelsScene />
+        </GraphiteProvider>
     );
 }

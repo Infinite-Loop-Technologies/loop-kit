@@ -82,7 +82,7 @@ export function GraphiteIntentCommandMenu<
 
     const execute = (entry: GraphiteIntentRegistryEntry<TState>) => {
         const payload = resolveIntentPayload(entry, store.getState());
-        dispatchIntent(entry.intent, payload);
+        dispatchIntent(entry.intent, payload, entry.dispatchOptions);
         setOpen(false);
     };
 

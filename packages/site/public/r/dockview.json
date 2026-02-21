@@ -2,8 +2,8 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "dockview",
   "type": "registry:block",
-  "title": "Dockview Panels",
-  "description": "Composable panel system built with Dockview.",
+  "title": "Dynamic Panels",
+  "description": "Graphite-powered dynamic panel dock system built on Dockview core.",
   "files": [
     {
       "path": "registry/new-york/blocks/dockview/dockview.tsx",

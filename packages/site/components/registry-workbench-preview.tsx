@@ -29,7 +29,7 @@ const DEMO_CODE = `import { DockviewReact } from 'dockview-react'
 
 const panels = ['outline-editor', 'code-editor']
 
-export function Workbench() {
+export function DynamicPanelsWorkbench() {
   return <DockviewReact />
 }
 `;
@@ -55,11 +55,11 @@ function ShowcasePanel({ params }: IDockviewPanelProps<ShowcasePanelParams>) {
         <div className='flex h-full flex-col gap-2 p-4'>
             <h3 className='text-sm font-semibold'>Panel System + Real Blocks</h3>
             <p className='text-sm text-muted-foreground'>
-                This workbench is running Dockview with live registry blocks in each
+                This workbench is running the dynamic panels system with live registry blocks in each
                 panel.
             </p>
             <div className='flex flex-wrap gap-2'>
-                <Badge variant='secondary'>dockview</Badge>
+                <Badge variant='secondary'>dynamic-panels</Badge>
                 <Badge variant='secondary'>code-editor</Badge>
                 <Badge variant='secondary'>block-editor</Badge>
             </div>
@@ -107,7 +107,7 @@ export default function RegistryWorkbenchPreview() {
     return (
         <div className='space-y-3'>
             <div className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'>
-                <Badge variant='outline'>Dockview panel system</Badge>
+                <Badge variant='outline'>Dynamic panel system</Badge>
                 <span>Code editor + outline editor are mounted in real panels.</span>
             </div>
             <div className='h-[560px] overflow-hidden rounded-xl border bg-card'>

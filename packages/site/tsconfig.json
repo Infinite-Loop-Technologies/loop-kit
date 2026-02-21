@@ -20,6 +20,7 @@
         ],
         "paths": {
             "@/*": ["./*"],
+            "@loop-kit/dock": ["../dock/src/index.ts"],
             "@loop-kit/graphite": ["../graphite/src/index.ts"],
             "@loop-kit/graphite/react": ["../graphite/src/react.tsx"]
         }

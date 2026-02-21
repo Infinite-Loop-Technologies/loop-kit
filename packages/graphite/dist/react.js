@@ -2,9 +2,15 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, } from 'react';
 import { attachGraphitePersistence, } from './persistence';
 const GraphiteContext = createContext(null);
+/**
+ * Binds a Graphite store to React context.
+ */
 export function GraphiteProvider({ store, children, }) {
     return (_jsx(GraphiteContext.Provider, { value: store, children: children }));
 }
+/**
+ * Returns the current Graphite store from context.
+ */
 export function useGraphite() {
     const store = useContext(GraphiteContext);
     if (!store) {
@@ -12,6 +18,9 @@ export function useGraphite() {
     }
     return store;
 }
+/**
+ * React hook for reactive queries.
+ */
 export function useQuery(query, options = {}) {
     const store = useGraphite();
     const queryRef = useRef(query);
@@ -43,38 +52,58 @@ export function useQuery(query, options = {}) {
     }, [query]);
     return result;
 }
+/**
+ * Returns a stable callback for `store.commit`.
+ */
 export function useCommit() {
     const store = useGraphite();
     return useCallback((patch, options) => store.commit(patch, options), [store]);
 }
-export function useHistory() {
+/**
+ * Exposes undo/redo state and commands for a history channel.
+ */
+export function useHistory(options = {}) {
     const store = useGraphite();
+    const channel = options.channel;
     const [state, setState] = useState(() => ({
-        canUndo: store.canUndo(),
-        canRedo: store.canRedo(),
+        canUndo: store.canUndo(channel),
+        canRedo: store.canRedo(channel),
     }));
+    useEffect(() => {
+        setState({
+            canUndo: store.canUndo(channel),
+            canRedo: store.canRedo(channel),
+        });
+    }, [store, channel]);
     useEffect(() => {
         return store.onCommit(() => {
             setState({
-                canUndo: store.canUndo(),
-                canRedo: store.canRedo(),
+                canUndo: store.canUndo(channel),
+                canRedo: store.canRedo(channel),
             });
         });
-    }, [store]);
-    const undo = useCallback((recordOrId) => store.undo(recordOrId), [store]);
-    const redo = useCallback((recordOrId) => store.redo(recordOrId), [store]);
+    }, [store, channel]);
+    const undo = useCallback((recordOrId) => store.undo(recordOrId, channel), [store, channel]);
+    const redo = useCallback((recordOrId) => store.redo(recordOrId, channel), [store, channel]);
     return {
+        channel,
         canUndo: state.canUndo,
         canRedo: state.canRedo,
         undo,
         redo,
     };
 }
+/**
+ * Returns a typed dispatcher for registered intents.
+ */
 export function useIntent() {
     const store = useGraphite();
     const dispatch = useCallback((name, payload, options) => store.dispatchIntent(name, payload, options), [store]);
     return dispatch;
 }
+/**
+ * Attaches a persistence adapter for the current store lifecycle.
+ */
 export function useGraphitePersistence(options) {
     const store = useGraphite();
     const { adapter, strategy, debounceMs, maxCommits, hydrateOnMount = true, } = options;
@@ -94,6 +123,9 @@ export function useGraphitePersistence(options) {
         };
     }, [store, adapter, strategy, debounceMs, maxCommits, hydrateOnMount]);
 }
+/**
+ * Returns a rolling window of recent commit records.
+ */
 export function useCommitLog(limit = 50) {
     const store = useGraphite();
     const [records, setRecords] = useState(() => {
@@ -108,6 +140,9 @@ export function useCommitLog(limit = 50) {
     }, [store, limit]);
     return records;
 }
+/**
+ * Binds keyboard shortcuts to Graphite intents.
+ */
 export function useIntentShortcuts(shortcuts, options = {}) {
     const store = useGraphite();
     const dispatchIntent = useIntent();
@@ -122,6 +157,10 @@ export function useIntentShortcuts(shortcuts, options = {}) {
         if (!enabled)
             return;
         const onKeyDown = (event) => {
+            const alreadyHandledKey = '__graphiteShortcutHandled';
+            if (event[alreadyHandledKey]) {
+                return;
+            }
             for (const shortcut of shortcutsRef.current) {
                 if (!matchesShortcut(event, shortcut.shortcut)) {
                     continue;
@@ -148,20 +187,22 @@ export function useIntentShortcuts(shortcuts, options = {}) {
                 if (!shouldRun) {
                     continue;
                 }
-                if ((shortcut.preventDefault ?? preventDefault) && event.cancelable) {
+                if (shortcut.preventDefault ?? preventDefault) {
                     event.preventDefault();
+                    event.returnValue = false;
                 }
                 if (shortcut.stopPropagation ?? stopPropagation) {
                     event.stopPropagation();
                     event.stopImmediatePropagation();
                 }
-                dispatchIntent(shortcut.intent, payload);
+                event[alreadyHandledKey] = true;
+                dispatchIntent(shortcut.intent, payload, shortcut.dispatchOptions);
                 break;
             }
         };
-        window.addEventListener('keydown', onKeyDown, { capture });
+        document.addEventListener('keydown', onKeyDown, { capture });
         return () => {
-            window.removeEventListener('keydown', onKeyDown, { capture });
+            document.removeEventListener('keydown', onKeyDown, { capture });
         };
     }, [store, dispatchIntent, enabled, preventDefault, allowInEditable, stopPropagation, capture]);
 }
@@ -256,6 +297,9 @@ function formatPath(path) {
         return 'root';
     return path.map((segment) => String(segment)).join('.');
 }
+/**
+ * Lightweight inspector UI for commits, events, query runs, and invalidations.
+ */
 export function GraphiteInspector({ className, maxRows = 20 }) {
     const store = useGraphite();
     const commits = useCommitLog(maxRows);
@@ -291,6 +335,9 @@ export function GraphiteInspector({ className, maxRows = 20 }) {
                             fontSize: 12,
                         }, children: commits.length > 0 ? previewPatch(commits[commits.length - 1]) : 'No commits yet' })] }), _jsxs("section", { style: { marginTop: 12 }, children: [_jsxs("h3", { children: ["Events (", events.length, ")"] }), _jsx("div", { style: { maxHeight: 140, overflow: 'auto', border: '1px solid #d4d4d8', borderRadius: 8, padding: 8 }, children: events.length === 0 ? (_jsx("p", { style: { margin: 0, fontSize: 12 }, children: "No events emitted." })) : (events.map((event) => (_jsxs("p", { style: { margin: '2px 0', fontSize: 12 }, children: [_jsx("strong", { children: event.name }), " ", '->', " commit ", event.commitId] }, event.id)))) })] }), _jsxs("section", { style: { marginTop: 12 }, children: [_jsxs("h3", { children: ["Query Runs (", queryRuns.length, ")"] }), _jsx("div", { style: { maxHeight: 140, overflow: 'auto', border: '1px solid #d4d4d8', borderRadius: 8, padding: 8 }, children: queryRuns.length === 0 ? (_jsx("p", { style: { margin: 0, fontSize: 12 }, children: "No query runs yet." })) : (queryRuns.map((entry) => (_jsxs("p", { style: { margin: '2px 0', fontSize: 12 }, children: [entry.event.queryId, ": ", entry.event.reason, " (", entry.event.durationMs.toFixed(2), "ms)"] }, entry.id)))) })] }), _jsxs("section", { style: { marginTop: 12 }, children: [_jsxs("h3", { children: ["Invalidations (", invalidations.length, ")"] }), _jsx("div", { style: { maxHeight: 140, overflow: 'auto', border: '1px solid #d4d4d8', borderRadius: 8, padding: 8 }, children: invalidations.length === 0 ? (_jsx("p", { style: { margin: 0, fontSize: 12 }, children: "No invalidations yet." })) : (invalidations.map((entry) => (_jsxs("p", { style: { margin: '2px 0', fontSize: 12 }, children: [entry.event.queryId, ": ", entry.event.changedPaths.map((path) => formatPath(path)).join(', ')] }, entry.id)))) })] })] }));
 }
+/**
+ * Renders a table of intent shortcuts and can optionally bind them.
+ */
 export function GraphiteIntentBrowser({ shortcuts, bind = false, active, className, }) {
     useIntentShortcuts(shortcuts, { enabled: bind });
     const isActive = active ?? bind;

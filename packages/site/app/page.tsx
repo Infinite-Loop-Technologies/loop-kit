@@ -20,8 +20,8 @@ import { Separator } from '@/components/ui/separator';
 
 const BLOCKS = [
     {
-        title: 'Dockview Workbench',
-        description: 'Multi-panel workspace with shadcn-native controls and custom drop guides.',
+        title: 'Dynamic Panels Workbench',
+        description: 'Graphite-powered panel workspace with shadcn-native controls and custom drop guides.',
         href: '/docs/panel-system',
         icon: PanelsTopLeft,
     },
@@ -135,7 +135,7 @@ export default function Home() {
                         <div className='mb-8 space-y-2'>
                             <h2 className='text-2xl font-semibold tracking-tight sm:text-3xl'>Block Display</h2>
                             <p className='max-w-2xl text-sm text-muted-foreground sm:text-base'>
-                                Real registry blocks, wired together in a Dockview workspace. Code editor and outline editor
+                                Real registry blocks, wired together in a dynamic panels workspace. Code editor and outline editor
                                 are running inside panels below.
                             </p>
                         </div>
@@ -147,7 +147,7 @@ export default function Home() {
                                         Live Registry Workbench
                                     </CardTitle>
                                     <CardDescription>
-                                        Dockview panel system with registry-native editors mounted as panel content.
+                                        Dynamic panel system with registry-native editors mounted as panel content.
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
@@ -218,11 +218,11 @@ export default function Home() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <InstallSnippet itemName='dockview' />
+                                <InstallSnippet itemName='dock' />
                             </CardContent>
                             <CardFooter className='justify-between gap-2'>
                                 <p className='text-left text-xs text-muted-foreground'>
-                                    Tip: swap `@loop-cn/dockview` for the registry item you want.
+                                    Tip: swap `@loop-cn/dock` for the registry item you want.
                                 </p>
                                 <Button size='sm' variant='ghost' asChild>
                                     <Link href='/docs'>

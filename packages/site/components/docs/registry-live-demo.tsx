@@ -20,6 +20,9 @@ const DockviewDemo = dynamic(
         ssr: false,
     },
 );
+const DockDemo = dynamic(() => import('@/registry/new-york/blocks/dock/page'), {
+    ssr: false,
+});
 const PhysicsDemo = dynamic(
     () => import('@/registry/new-york/blocks/physics/page'),
     {
@@ -54,6 +57,7 @@ const GraphiteQueryTableDemo = dynamic(
 const registryDemos = {
     'block-editor': BlockEditorDemo,
     'code-editor': CodeEditorDemo,
+    dock: DockDemo,
     dockview: DockviewDemo,
     physics: PhysicsDemo,
     shadertoy: ShadertoyDemo,

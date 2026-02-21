@@ -54,6 +54,7 @@ export type {
 
 export type {
   CommitDiff,
+  CommitHistoryOptions,
   CommitIntentFrame,
   CommitListener,
   CommitOptions,
