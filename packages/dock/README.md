@@ -9,12 +9,16 @@ Headless docking layout engine on top of Graphite.
 - Interaction: pointer/drag state machine that emits intents
 - Debug DOM renderer + overlay helpers for rapid inspection
 
+The canonical state stores split weights (not pixel rects), so user-driven
+resizing remains stable across container/window size changes.
+
 ## Quick Start
 
 ```ts
 import { createGraphStore } from '@loop-kit/graphite';
 import {
   createDockStateFromPanels,
+  createDockInteractionController,
   registerDockIntents,
   createDockIntentNames,
 } from '@loop-kit/dock';
@@ -32,6 +36,8 @@ registerDockIntents(store, { path: ['dock'], intentPrefix: 'dock' });
 const intents = createDockIntentNames('dock');
 
 store.dispatchIntent(intents.addPanel, { title: 'Panel C' }, { history: 'dock' });
+
+const interaction = createDockInteractionController();
 ```
 
 ## Main Public APIs
@@ -41,12 +47,14 @@ store.dispatchIntent(intents.addPanel, { title: 'Panel C' }, { history: 'dock' }
 - `reduceDockIntent`: apply one semantic action in-memory.
 - `registerDockIntents`: wire dock domain intents to a Graphite store.
 - `computeLayoutRects` / `hitTest`: pure geometry + drop targeting.
+- `computeDropIndicator`: derive visual line/zone guides from the current drop target.
 - `createDockInteractionController`: drag/resize session machine emitting intents.
 - `createDockDebugRenderer`: DOM renderer with resize and drop overlays.
 
-## Demo
+## Demo Surface
 
-`packages/dock-demo` contains a React + Vite playground using this package end-to-end.
+The canonical interactive demo now lives in `packages/site` under the `dock`
+registry block and homepage preview.
 
 ## Build
 

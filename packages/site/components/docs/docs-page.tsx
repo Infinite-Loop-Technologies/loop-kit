@@ -1,4 +1,4 @@
-import { Prose } from '@/registry/new-york/ui/prose/prose';
+import { Prose } from '@loop-kit/ui/prose';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import { ReactNode } from 'react';

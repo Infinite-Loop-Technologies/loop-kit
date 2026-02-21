@@ -1,0 +1,12 @@
+$schema: ../../.moon/cache/schemas/template.json
+title: Vite + shadcn App
+description: React + Vite app with Tailwind, shadcn config, and @loop-kit/ui wired in.
+variables:
+    package_name:
+        type: string
+        prompt: Package name
+        default: my-vite-app
+    app_title:
+        type: string
+        prompt: App title
+        default: My Vite App

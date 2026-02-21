@@ -22,7 +22,9 @@
             "@/*": ["./*"],
             "@loop-kit/dock": ["../dock/src/index.ts"],
             "@loop-kit/graphite": ["../graphite/src/index.ts"],
-            "@loop-kit/graphite/react": ["../graphite/src/react.tsx"]
+            "@loop-kit/graphite/react": ["../graphite/src/react.tsx"],
+            "@loop-kit/ui": ["../ui/src/index.ts"],
+            "@loop-kit/ui/*": ["../ui/src/*"]
         }
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

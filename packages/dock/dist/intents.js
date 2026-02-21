@@ -1,4 +1,4 @@
-import { $set } from '@loop-kit/graphite';
+import { $set, } from '@loop-kit/graphite';
 import { applyDockPolicy, migrateDockState, reduceDockIntent, } from './model';
 function isRecord(value) {
     return typeof value === 'object' && value !== null;
@@ -18,7 +18,8 @@ function isMovePayload(value) {
     const target = value.target;
     if (!isRecord(target))
         return false;
-    if (typeof target.groupId !== 'string' || target.groupId.trim().length === 0)
+    if (typeof target.groupId !== 'string' ||
+        target.groupId.trim().length === 0)
         return false;
     if (target.zone !== 'center' &&
         target.zone !== 'tabbar' &&
@@ -76,6 +77,10 @@ function setPatchAtPath(path, value) {
     cursor[String(path[path.length - 1])] = $set(value);
     return root;
 }
+/**
+ * Returns the canonical intent names used by the dock domain.
+ * Keep these stable so command menus/shortcuts can reference them safely.
+ */
 export function createDockIntentNames(intentPrefix = 'dock') {
     return {
         activatePanel: `${intentPrefix}/activate-panel`,

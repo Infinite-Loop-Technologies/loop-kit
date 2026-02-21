@@ -270,11 +270,11 @@ export function DocInlineEditor({
                                     Use{' '}
                                     <code>
                                         {
-                                            '{{demo item="dockview" mode="iframe" size="large"}}'
+                                            '{{demo item="dock" mode="iframe" size="large"}}'
                                         }
                                     </code>{' '}
                                     <code>
-                                        {'{{registry-item-link item="dockview"}}'}
+                                        {'{{registry-item-link item="dock"}}'}
                                     </code>{' '}
                                     and{' '}
                                     <code>{'{{playground preset="starter"}}'}</code>.

@@ -48,3 +48,7 @@ next-env.d.ts
 
 # stash
 /vault
+
+# moon
+.moon/cache
+.moon/docker

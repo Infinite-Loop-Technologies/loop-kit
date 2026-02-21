@@ -62,6 +62,13 @@ export interface DockInteractionControllerOptions {
   hitTestOptions?: HitTestOptions;
   minWeight?: number;
   onDropTargetChange?: (target: DockDropTarget | null) => void;
+  resolveDropTarget?: (context: {
+    phase: 'move' | 'end';
+    point: Point;
+    layout: DockLayoutMap;
+    rawTarget: DockDropTarget | null;
+    previousTarget: DockDropTarget | null;
+  }) => DockDropTarget | null;
 }
 
 const EPSILON = 1e-6;
@@ -151,7 +158,15 @@ export function createDockInteractionController(
 
     updatePointer(point, layout) {
       if (!dragSession) return null;
-      const nextTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+      const rawTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+      const nextTarget =
+        options.resolveDropTarget?.({
+          phase: 'move',
+          point,
+          layout,
+          rawTarget,
+          previousTarget: dragSession.lastTarget,
+        }) ?? rawTarget;
       if (nextTarget?.groupId !== dragSession.lastTarget?.groupId || nextTarget?.zone !== dragSession.lastTarget?.zone || nextTarget?.index !== dragSession.lastTarget?.index) {
         dragSession.lastTarget = nextTarget;
         emitDropTarget(nextTarget);
@@ -161,7 +176,15 @@ export function createDockInteractionController(
 
     endPanelDrag(point, layout) {
       if (!dragSession) return null;
-      const target = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+      const rawTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+      const target =
+        options.resolveDropTarget?.({
+          phase: 'end',
+          point,
+          layout,
+          rawTarget,
+          previousTarget: dragSession.lastTarget,
+        }) ?? rawTarget;
       const panelId = dragSession.panelId;
       dragSession = null;
       emitDropTarget(null);

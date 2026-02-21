@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 type PackageManager = 'pnpm' | 'npm' | 'bun';
 
 const DEFAULT_NAMESPACE = '@loop-cn';
-const DEFAULT_ITEM = 'dockview';
+const DEFAULT_ITEM = 'dock';
 const QUICK_CONFIGURATION_DOCS_URL =
     'https://ui.shadcn.com/docs/registry/namespace#quick-configuration';
 

@@ -1,12 +1,19 @@
 {
     "private": true,
     "scripts": {
-        "build": "pnpm -r build",
+        "build": "moon run :build",
+        "ci": "moon ci :typecheck :build :lint",
+        "lint": "moon run :lint",
+        "typecheck": "moon run :typecheck",
         "release:patch": "pnpm -r version patch && pnpm -r publish --access public",
         "release:minor": "pnpm -r version minor && pnpm -r publish --access public"
     },
     "devDependencies": {
+        "@moonrepo/cli": "1.41.7",
         "typescript": "^5.9.3"
     },
-    "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67"
+    "packageManager": "pnpm@10.15.1",
+    "engines": {
+        "node": "~22"
+    }
 }

@@ -14,6 +14,10 @@ export interface DockIntentNames {
     removePanel: string;
     addPanel: string;
 }
+/**
+ * Returns the canonical intent names used by the dock domain.
+ * Keep these stable so command menus/shortcuts can reference them safely.
+ */
 export declare function createDockIntentNames(intentPrefix?: string): DockIntentNames;
 /**
  * Registers dock domain intents on a Graphite store. Each intent:

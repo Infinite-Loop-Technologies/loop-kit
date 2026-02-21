@@ -44,16 +44,20 @@ export {
 
 export type {
   ComputeLayoutOptions,
+  DockDropIndicator,
+  DockDropIndicatorKind,
   DockDropTarget,
   DockGroupLayout,
   DockLayoutMap,
   DockLayoutNodeRect,
   DockSplitHandleLayout,
+  DropIndicatorOptions,
   HitTestOptions,
   Point,
 } from './geometry';
 
 export {
+  computeDropIndicator,
   computeDropOverlay,
   computeLayoutRects,
   hitTest,

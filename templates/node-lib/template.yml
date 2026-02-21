@@ -1,0 +1,12 @@
+$schema: ../../.moon/cache/schemas/template.json
+title: Node Library
+description: TypeScript Node library scaffold (Graphite/Dock style).
+variables:
+    package_name:
+        type: string
+        prompt: npm package name
+        default: "@loop-kit/my-lib"
+    description:
+        type: string
+        prompt: Package description
+        default: A Node.js library.

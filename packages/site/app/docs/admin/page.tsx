@@ -238,8 +238,8 @@ export default async function DocsAdminPage({
                             <Label htmlFor='body'>Markdown + embeds</Label>
                             <p className='text-xs text-muted-foreground'>
                                 Supports{' '}
-                                <code>{'{{demo item="dockview" mode="iframe" size="large"}}'}</code>{' '}
-                                <code>{'{{registry-item-link item="dockview"}}'}</code>{' '}
+                                <code>{'{{demo item="dock" mode="iframe" size="large"}}'}</code>{' '}
+                                <code>{'{{registry-item-link item="dock"}}'}</code>{' '}
                                 and <code>{'{{playground preset="starter"}}'}</code>.
                             </p>
                             <MarkdownCodeEditorField

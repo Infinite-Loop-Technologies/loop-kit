@@ -714,6 +714,27 @@ function findFirstGroup(state: DockState, nodeId: DockNodeId, seen = new Set<str
   return null;
 }
 
+function findParentByChildMembership(
+  state: DockState,
+  childId: DockNodeId
+): DockNodeId | undefined {
+  const hintedParentId = nodeParentId(state.nodes[childId]);
+  if (hintedParentId) {
+    const hintedParent = state.nodes[hintedParentId];
+    if (hintedParent && nodeChildren(hintedParent).includes(childId)) {
+      return hintedParentId;
+    }
+  }
+
+  for (const node of Object.values(state.nodes)) {
+    if (nodeChildren(node).includes(childId)) {
+      return node.id;
+    }
+  }
+
+  return undefined;
+}
+
 function detachPanel(state: DockState, panelId: DockNodeId): DockGroupNode | null {
   const group = findGroupContainingPanel(state, panelId);
   if (!group) return null;
@@ -760,14 +781,18 @@ function applyMovePanel(state: DockState, payload: DockMovePanelIntent): boolean
     if (requestedIndex === null || payload.target.zone === 'center') {
       insertionIndex = targetChildren.length;
     } else {
-      insertionIndex = Math.max(0, Math.min(targetChildren.length, requestedIndex));
+      let normalizedRequestedIndex = requestedIndex;
       if (
         sourceGroup.id === targetGroup.id &&
         sourceIndexBefore >= 0 &&
         sourceIndexBefore < requestedIndex
       ) {
-        insertionIndex = Math.max(0, insertionIndex - 1);
+        normalizedRequestedIndex -= 1;
       }
+      insertionIndex = Math.max(
+        0,
+        Math.min(targetChildren.length, normalizedRequestedIndex)
+      );
     }
 
     targetChildren.splice(insertionIndex, 0, payload.panelId);
@@ -798,7 +823,7 @@ function applyMovePanel(state: DockState, payload: DockMovePanelIntent): boolean
 
   const direction: DockDirection =
     payload.target.zone === 'left' || payload.target.zone === 'right' ? 'row' : 'col';
-  const targetParentId = nodeParentId(targetGroup);
+  const targetParentId = findParentByChildMembership(state, targetGroup.id);
   const targetParent = targetParentId ? state.nodes[targetParentId] : undefined;
 
   if (targetParent && targetParent.kind === 'split' && targetParent.data.direction === direction) {
@@ -830,13 +855,14 @@ function applyMovePanel(state: DockState, payload: DockMovePanelIntent): boolean
     state.rootId = split.id;
   } else {
     const parent = state.nodes[targetParentId];
-    if (parent) {
-      const children = nodeChildren(parent);
-      const index = children.indexOf(targetGroup.id);
-      if (index >= 0) {
-        children[index] = split.id;
-        setNodeChildren(parent, children);
-      }
+    if (!parent) return false;
+    const children = nodeChildren(parent);
+    const index = children.indexOf(targetGroup.id);
+    if (index < 0) return false;
+    children[index] = split.id;
+    setNodeChildren(parent, children);
+    if (parent.kind === 'split') {
+      parent.data.weights = normalizeWeights(parent.data.weights, children.length, DEFAULT_EPSILON);
     }
   }
 

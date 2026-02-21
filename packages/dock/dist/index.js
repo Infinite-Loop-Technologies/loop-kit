@@ -1,5 +1,5 @@
 export { DOCK_SCHEMA_VERSION, applyDockPolicy, assertDockInvariants, cloneDockState, createDockState, createDockStateFromPanels, createFloatRootNode, createFloatWindowNode, createGroupNode, createPanelNode, createSplitNode, migrateDockState, normalizeDock, reduceDockIntent, } from './model';
-export { computeDropOverlay, computeLayoutRects, hitTest, rectToStyle, } from './geometry';
+export { computeDropIndicator, computeDropOverlay, computeLayoutRects, hitTest, rectToStyle, } from './geometry';
 export { createDockInteractionController } from './interaction';
 export { applyOverlayRect, describeDropOverlay } from './debugOverlay';
 export { createDockDebugRenderer } from './debugRenderer';

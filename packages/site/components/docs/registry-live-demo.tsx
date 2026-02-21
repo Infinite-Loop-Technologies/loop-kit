@@ -14,12 +14,6 @@ const CodeEditorDemo = dynamic(
     () => import('@/registry/new-york/blocks/code-editor/page'),
     { ssr: false },
 );
-const DockviewDemo = dynamic(
-    () => import('@/registry/new-york/blocks/dockview/dockview'),
-    {
-        ssr: false,
-    },
-);
 const DockDemo = dynamic(() => import('@/registry/new-york/blocks/dock/page'), {
     ssr: false,
 });
@@ -58,7 +52,6 @@ const registryDemos = {
     'block-editor': BlockEditorDemo,
     'code-editor': CodeEditorDemo,
     dock: DockDemo,
-    dockview: DockviewDemo,
     physics: PhysicsDemo,
     shadertoy: ShadertoyDemo,
     'graphite-studio': GraphiteStudioDemo,

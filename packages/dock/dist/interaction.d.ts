@@ -33,6 +33,13 @@ export interface DockInteractionControllerOptions {
     hitTestOptions?: HitTestOptions;
     minWeight?: number;
     onDropTargetChange?: (target: DockDropTarget | null) => void;
+    resolveDropTarget?: (context: {
+        phase: 'move' | 'end';
+        point: Point;
+        layout: DockLayoutMap;
+        rawTarget: DockDropTarget | null;
+        previousTarget: DockDropTarget | null;
+    }) => DockDropTarget | null;
 }
 export interface DockInteractionController {
     startPanelDrag(panelId: DockNodeId): void;

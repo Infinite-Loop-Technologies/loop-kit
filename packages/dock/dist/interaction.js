@@ -59,7 +59,14 @@ export function createDockInteractionController(options = {}) {
         updatePointer(point, layout) {
             if (!dragSession)
                 return null;
-            const nextTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+            const rawTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+            const nextTarget = options.resolveDropTarget?.({
+                phase: 'move',
+                point,
+                layout,
+                rawTarget,
+                previousTarget: dragSession.lastTarget,
+            }) ?? rawTarget;
             if (nextTarget?.groupId !== dragSession.lastTarget?.groupId || nextTarget?.zone !== dragSession.lastTarget?.zone || nextTarget?.index !== dragSession.lastTarget?.index) {
                 dragSession.lastTarget = nextTarget;
                 emitDropTarget(nextTarget);
@@ -69,7 +76,14 @@ export function createDockInteractionController(options = {}) {
         endPanelDrag(point, layout) {
             if (!dragSession)
                 return null;
-            const target = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+            const rawTarget = hitTest(point, layout, options.hitTestOptions, dragSession.lastTarget);
+            const target = options.resolveDropTarget?.({
+                phase: 'end',
+                point,
+                layout,
+                rawTarget,
+                previousTarget: dragSession.lastTarget,
+            }) ?? rawTarget;
             const panelId = dragSession.panelId;
             dragSession = null;
             emitDropTarget(null);

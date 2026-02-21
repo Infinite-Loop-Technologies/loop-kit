@@ -1,8 +1,7 @@
-import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
-import './prose.css';
 
-// TODO: Maybe cva stuff? Probably not needed.
+import { cn } from "@/lib/utils";
+import './prose.css';
 
 function Prose({
     className,

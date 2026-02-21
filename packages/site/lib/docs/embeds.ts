@@ -4,7 +4,6 @@ export const SUPPORTED_DEMO_ITEMS = [
     'block-editor',
     'code-editor',
     'dock',
-    'dockview',
     'physics',
     'shadertoy',
     'graphite-studio',

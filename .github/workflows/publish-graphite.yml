@@ -74,10 +74,10 @@ jobs:
           echo "Publishing @loop-kit/graphite@$next_version"
 
       - name: Typecheck
-        run: pnpm --filter @loop-kit/graphite typecheck
+        run: pnpm exec moon run graphite:typecheck
 
       - name: Build
-        run: pnpm --filter @loop-kit/graphite build
+        run: pnpm exec moon run graphite:build
 
       - name: Pack (dry run)
         if: ${{ github.event.inputs.dry_run == 'true' }}

@@ -569,8 +569,8 @@ export function GraphiteInspector({ className, maxRows = 20 }: GraphiteInspector
           {events.length === 0 ? (
             <p style={{ margin: 0, fontSize: 12 }}>No events emitted.</p>
           ) : (
-            events.map((event) => (
-              <p key={event.id} style={{ margin: '2px 0', fontSize: 12 }}>
+            events.map((event, index) => (
+              <p key={`${event.id}-${index}`} style={{ margin: '2px 0', fontSize: 12 }}>
                 <strong>{event.name}</strong> {'->'} commit {event.commitId}
               </p>
             ))
@@ -584,8 +584,10 @@ export function GraphiteInspector({ className, maxRows = 20 }: GraphiteInspector
           {queryRuns.length === 0 ? (
             <p style={{ margin: 0, fontSize: 12 }}>No query runs yet.</p>
           ) : (
-            queryRuns.map((entry) => (
-              <p key={entry.id} style={{ margin: '2px 0', fontSize: 12 }}>
+            queryRuns.map((entry, index) => (
+              <p
+                key={`${entry.id}-${entry.event.queryId}-${entry.event.reason}-${index}`}
+                style={{ margin: '2px 0', fontSize: 12 }}>
                 {entry.event.queryId}: {entry.event.reason} ({entry.event.durationMs.toFixed(2)}ms)
               </p>
             ))
@@ -599,8 +601,8 @@ export function GraphiteInspector({ className, maxRows = 20 }: GraphiteInspector
           {invalidations.length === 0 ? (
             <p style={{ margin: 0, fontSize: 12 }}>No invalidations yet.</p>
           ) : (
-            invalidations.map((entry) => (
-              <p key={entry.id} style={{ margin: '2px 0', fontSize: 12 }}>
+            invalidations.map((entry, index) => (
+              <p key={`${entry.id}-${entry.event.queryId}-${index}`} style={{ margin: '2px 0', fontSize: 12 }}>
                 {entry.event.queryId}: {entry.event.changedPaths.map((path) => formatPath(path)).join(', ')}
               </p>
             ))

@@ -36,6 +36,9 @@ export interface ComputeLayoutOptions {
 }
 export interface HitTestOptions {
     edgePx?: number;
+    edgeRatio?: number;
+    minEdgePx?: number;
+    maxEdgePx?: number;
     tabBarHeight?: number;
     hysteresisPx?: number;
 }
@@ -46,8 +49,31 @@ export interface DockDropTarget {
     score: number;
     index?: number;
 }
+export type DockDropIndicatorKind = 'zone' | 'line-vertical' | 'line-horizontal';
+export interface DockDropIndicator {
+    kind: DockDropIndicatorKind;
+    rect: Rect;
+    label: string;
+}
+export interface DropIndicatorOptions {
+    tabLineInsetPx?: number;
+    edgeLineInsetPx?: number;
+}
+/**
+ * Projects canonical dock structure into deterministic group/content/splitter rectangles.
+ * This function is pure and side-effect free.
+ */
 export declare function computeLayoutRects(state: DockState, bounds: Rect, options?: ComputeLayoutOptions): DockLayoutMap;
+/**
+ * Resolves the best dock drop target for a pointer point over the current layout map.
+ * Uses adaptive edge thickness and hysteresis to keep target selection stable.
+ */
 export declare function hitTest(point: Point, layout: DockLayoutMap, options?: HitTestOptions, previousTarget?: DockDropTarget | null): DockDropTarget | null;
 export declare function computeDropOverlay(target: DockDropTarget | null): Rect | null;
+/**
+ * Returns a concrete visual guide for the current drop target.
+ * Consumers can render either region highlights (`zone`) or thin insertion/split lines.
+ */
+export declare function computeDropIndicator(target: DockDropTarget | null, layout: DockLayoutMap, options?: DropIndicatorOptions): DockDropIndicator | null;
 export declare function rectToStyle(rect: Rect): Partial<CSSStyleDeclaration>;
 //# sourceMappingURL=geometry.d.ts.map
