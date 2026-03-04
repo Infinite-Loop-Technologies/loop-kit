@@ -1,6 +1,6 @@
 {
     "name": "@loop-kit/loop-cli",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Loop command line interface.",
     "type": "module",
     "sideEffects": false,
@@ -18,7 +18,10 @@
         },
         "./package.json": "./package.json"
     },
-    "files": ["dist", "README.md"],
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "scripts": {
         "build": "pnpm --filter @loop-kit/loop-contracts build && pnpm --filter @loop-kit/loop-kernel build && pnpm --filter @loop-kit/loopd build && pnpm --filter @loop-kit/loop-mcp build && pnpm --filter @loop-kit/loop-ai build && tsc -p tsconfig.build.json",
         "typecheck": "pnpm --filter @loop-kit/loop-contracts build && pnpm --filter @loop-kit/loop-kernel build && pnpm --filter @loop-kit/loopd build && pnpm --filter @loop-kit/loop-mcp build && pnpm --filter @loop-kit/loop-ai build && tsc -p tsconfig.json --noEmit",
