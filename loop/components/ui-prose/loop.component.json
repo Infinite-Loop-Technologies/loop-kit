@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1",
+  "kind": "component",
+  "id": "ui-prose",
+  "name": "UI Prose",
+  "version": "0.1.0",
+  "description": "Typography prose wrapper from @loop-kit/ui.",
+  "files": [
+    {
+      "source": "files/prose.tsx",
+      "target": "src/components/ui/prose.tsx"
+    },
+    {
+      "source": "files/prose.css",
+      "target": "src/components/ui/prose.css"
+    },
+    {
+      "source": "files/utils.ts",
+      "target": "src/components/ui/utils.ts"
+    }
+  ],
+  "patches": [],
+  "dependencies": [
+    {
+      "name": "@radix-ui/react-slot",
+      "version": "^1.2.4",
+      "type": "dependencies"
+    },
+    {
+      "name": "clsx",
+      "version": "^2.1.1",
+      "type": "dependencies"
+    },
+    {
+      "name": "tailwind-merge",
+      "version": "^3.3.1",
+      "type": "dependencies"
+    }
+  ],
+  "targets": ["app", "pkg"]
+}

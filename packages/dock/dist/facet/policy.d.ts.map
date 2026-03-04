@@ -1,0 +1,1 @@
+{"version":3,"file":"policy.d.ts","sourceRoot":"","sources":["../../src/facet/policy.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,yBAAyB,CAAC;AAE7D,KAAK,UAAU,GAAG;IACd,UAAU,EAAE,MAAM,CAAC;IACnB,KAAK,EAAE,MAAM,CAAC;CACjB,CAAC;AAWF,wBAAgB,mBAAmB,CAC/B,GAAG,EAAE,aAAa,GAAG,SAAS,EAC9B,KAAK,GAAE,SAAS,UAAU,EAAkB,GAC7C,MAAM,CAOR"}

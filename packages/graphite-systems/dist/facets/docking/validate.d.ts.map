@@ -1,0 +1,1 @@
+{"version":3,"file":"validate.d.ts","sourceRoot":"","sources":["../../../src/facets/docking/validate.ts"],"names":[],"mappings":"AAAA,OAAO,EAGH,KAAK,oBAAoB,EACzB,KAAK,eAAe,EACvB,MAAM,yBAAyB,CAAC;AAMjC,MAAM,MAAM,kBAAkB,GAAG;IAC7B,OAAO,EAAE,SAAS,MAAM,EAAE,CAAC;IAC3B,UAAU,EAAE,MAAM,CAAC;CACtB,CAAC;AAEF,wBAAgB,qBAAqB,CACjC,QAAQ,EAAE,oBAAoB,GAC/B,eAAe,CAAC,kBAAkB,CAAC,CAsBrC"}

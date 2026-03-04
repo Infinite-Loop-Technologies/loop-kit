@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "1",
+  "workspace": {
+    "name": "loop-kit",
+    "appsDir": "apps",
+    "packagesDir": "packages",
+    "assetsDir": "assets",
+    "toolsDir": "tools",
+    "loopDir": "loop"
+  },
+  "lanes": {
+    "workspace": {
+      "kind": "local",
+      "config": {
+        "root": "."
+      }
+    },
+    "shared": {
+      "kind": "file",
+      "config": {
+        "path": "../loop-lane"
+      }
+    },
+    "source": {
+      "kind": "git",
+      "config": {}
+    },
+    "official": {
+      "kind": "http",
+      "config": {
+        "url": "https://example.invalid"
+      }
+    }
+  },
+  "defaults": {
+    "componentLane": "workspace",
+    "moduleLane": "workspace",
+    "activeToolchainId": "typescript",
+    "ciPipeline": "ci",
+    "refKindMap": {
+      "local": "workspace",
+      "loop": "workspace",
+      "file": "shared",
+      "http": "official",
+      "git": "source"
+    }
+  },
+  "modules": [],
+  "toolchains": [
+    {
+      "id": "typescript",
+      "kind": "typescript",
+      "config": {}
+    }
+  ],
+  "components": {
+    "defaultTarget": ".",
+    "ignoreGlobs": []
+  },
+  "tasks": {
+    "build": {
+      "command": "pnpm",
+      "args": [
+        "-r",
+        "--if-present",
+        "run",
+        "build"
+      ]
+    },
+    "typecheck": {
+      "command": "pnpm",
+      "args": [
+        "-r",
+        "--if-present",
+        "run",
+        "typecheck"
+      ]
+    },
+    "test": {
+      "command": "pnpm",
+      "args": [
+        "-r",
+        "--if-present",
+        "run",
+        "test"
+      ]
+    },
+    "workbench:build": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@loop-kit/workbench",
+        "build"
+      ]
+    },
+    "dev:shell": {
+      "command": "pnpm",
+      "args": [
+        "run",
+        "dev:shell:local"
+      ]
+    }
+  },
+  "pipelines": {
+    "ci": {
+      "tasks": [
+        "typecheck",
+        "build",
+        "test",
+        "workbench:build"
+      ]
+    }
+  },
+  "overrides": {
+    "components": {},
+    "modules": {}
+  }
+}

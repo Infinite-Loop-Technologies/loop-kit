@@ -1,0 +1,1 @@
+{"version":3,"file":"DockView.d.ts","sourceRoot":"","sources":["../../src/react/DockView.tsx"],"names":[],"mappings":"AASA,OAAO,EAAwB,KAAK,IAAI,EAAE,MAAM,+BAA+B,CAAC;AAKhF,MAAM,MAAM,aAAa,GAAG;IACxB,aAAa,CAAC,EAAE,IAAI,CAAC;CACxB,CAAC;AASF,wBAAgB,QAAQ,CAAC,EAAE,aAAiC,EAAE,EAAE,aAAa,2CAuC5E"}

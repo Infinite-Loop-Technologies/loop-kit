@@ -1,64 +1,57 @@
 # @loop-kit/dock
 
-Headless docking layout engine on top of Graphite.
+Reference docking implementation built on Graphite runtime idioms.
 
-`dock` is split into a few focused pieces:
-- Structural model: canonical tree + strict normalization rules
-- Intents: semantic mutations registered on Graphite
-- Geometry: pure layout + hit-testing math
-- Interaction: pointer/drag state machine that emits intents
-- Debug DOM renderer + overlay helpers for rapid inspection
+## Concepts
 
-The canonical state stores split weights (not pixel rects), so user-driven
-resizing remains stable across container/window size changes.
+- Intent model nodes: `dock.root`, `dock.group`, `dock.tab`, `dock.panel`.
+- Ordered relations:
+  - `dock.tabs` (`group -> tabs`)
+  - `dock.childGroups` (`root/group -> child groups`)
+- Dock validator (`validateDock`) normalizes inconsistent intent into:
+  - normalized logical groups/tabs
+  - layout IR
+  - preview state (from overlay intent)
+  - diagnostics (invalid active tabs, cycles, invalid splits)
+- Drag recognizer (`dock.dragTab`) writes semantic preview overlay patches during move and commits durable move/split patches on pointer up.
+- Geometry and hit-test data stay ephemeral in `DockLayoutCache`, not in intent.
 
-## Quick Start
+## How To Use
 
-```ts
-import { createGraphStore } from '@loop-kit/graphite';
-import {
-  createDockStateFromPanels,
-  createDockInteractionController,
-  registerDockIntents,
-  createDockIntentNames,
-} from '@loop-kit/dock';
+```tsx
+import { GraphiteRuntime, asScopeId } from '@loop-kit/graphite-core';
+import { GraphiteProvider } from '@loop-kit/graphite-react';
+import { DockView, registerDockFacet } from '@loop-kit/dock';
 
-const store = createGraphStore({
-  initialState: {
-    dock: createDockStateFromPanels([
-      { id: 'panel-a', title: 'Panel A' },
-      { id: 'panel-b', title: 'Panel B' },
-    ]),
-  },
-});
+const runtime = new GraphiteRuntime({ enableHistory: true });
+registerDockFacet(runtime);
 
-registerDockIntents(store, { path: ['dock'], intentPrefix: 'dock' });
-const intents = createDockIntentNames('dock');
-
-store.dispatchIntent(intents.addPanel, { title: 'Panel C' }, { history: 'dock' });
-
-const interaction = createDockInteractionController();
+export function DockApp() {
+    return (
+        <GraphiteProvider runtime={runtime} scopeId={asScopeId('dock')}>
+            <DockView />
+        </GraphiteProvider>
+    );
+}
 ```
 
-## Main Public APIs
+## How Dock Demonstrates Graphite
 
-- `createDockState` / `createDockStateFromPanels`: create canonical dock state.
-- `migrateDockState` / `normalizeDock`: migrate and enforce structural invariants.
-- `reduceDockIntent`: apply one semantic action in-memory.
-- `registerDockIntents`: wire dock domain intents to a Graphite store.
-- `computeLayoutRects` / `hitTest`: pure geometry + drop targeting.
-- `computeDropIndicator`: derive visual line/zone guides from the current drop target.
-- `createDockInteractionController`: drag/resize session machine emitting intents.
-- `createDockDebugRenderer`: DOM renderer with resize and drop overlays.
+- `IntentStore` stores only semantic dock structure.
+- `OverlayLayer` previews drag targets without durable writes.
+- `Validators` produce a stable `StateView` for rendering and diagnostics.
+- `InteractionRuntime` + arena manages recognizer capture/conflict.
+- `History` boundaries are used for docking commits so undo/redo works.
 
-## Demo Surface
+## Add A New Facet/System
 
-The canonical interactive demo now lives in `packages/site` under the `dock`
-registry block and homepage preview.
+1. Add schema constants and patch builders in `src/facet/`.
+2. Extend validator output (`DockStateSlice`) and diagnostics.
+3. Update `layoutCache` + recognizers for new gesture semantics.
+4. Keep transient behavior in overlay patches and finalize with intent commits.
 
-## Build
+## Commands
 
-`@loop-kit/dock` uses a lightweight `tsx`-driven build script:
-
-- `pnpm --filter @loop-kit/dock typecheck`
-- `pnpm --filter @loop-kit/dock build`
+- `pnpm --filter @loop-kit/dock run typecheck`
+- `pnpm --filter @loop-kit/dock run test`
+- `pnpm --filter @loop-kit/dock run build`

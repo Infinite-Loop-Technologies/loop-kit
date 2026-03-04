@@ -1,0 +1,1 @@
+{"version":3,"file":"patchBuilders.js","sourceRoot":"","sources":["../../../src/facets/docking/patchBuilders.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,oBAAoB,EAAE,MAAM,aAAa,CAAC;AAEnD,MAAM,UAAU,sBAAsB,CAAC,OAAe,EAAE,KAAa;IACjE,OAAO;QACH,GAAG,EAAE;YACD;gBACI,IAAI,EAAE,SAAS;gBACf,MAAM,EAAE,OAAO;gBACf,GAAG,EAAE,oBAAoB;gBACzB,KAAK,EAAE,KAAK;aACf;SACJ;KACJ,CAAC;AACN,CAAC"}

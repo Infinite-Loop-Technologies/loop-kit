@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1",
+  "kind": "component",
+  "id": "ui-button",
+  "name": "UI Button",
+  "version": "0.1.0",
+  "description": "Button primitive from @loop-kit/ui.",
+  "files": [
+    {
+      "source": "files/button.tsx",
+      "target": "src/components/ui/button.tsx"
+    },
+    {
+      "source": "files/utils.ts",
+      "target": "src/components/ui/utils.ts"
+    }
+  ],
+  "patches": [],
+  "dependencies": [
+    {
+      "name": "@radix-ui/react-slot",
+      "version": "^1.2.4",
+      "type": "dependencies"
+    },
+    {
+      "name": "class-variance-authority",
+      "version": "^0.7.1",
+      "type": "dependencies"
+    },
+    {
+      "name": "clsx",
+      "version": "^2.1.1",
+      "type": "dependencies"
+    },
+    {
+      "name": "tailwind-merge",
+      "version": "^3.3.1",
+      "type": "dependencies"
+    }
+  ],
+  "targets": ["app", "pkg"]
+}

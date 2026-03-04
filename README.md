@@ -1,68 +1,61 @@
 # loop-kit
 
-Experimental full-stack toolkit for composing apps and games from WASM components, incremental effect systems, and capability-driven hosts.
+`loop-kit` is the dogfooding monorepo for Loop: contracts, kernel, CLI, UI workbench, and platform scaffolds.
 
-## Quick Start
+## Stable-First CLI
+
+The repository defaults to a pinned, published `@loop-kit/loop-cli`.
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Build all packages
-pnpm build
-
-# Run Rust CLI
-cargo run -p loop-cli -- --help
-
-# Dev mode (pick one)
-pnpm --filter @loop/cli dev            # TypeScript CLI
-pnpm --filter @loop-kit/registry dev   # Registry library
-pnpm --filter registry dev             # Next.js site
+pnpm run loop -- --help
+pnpm run loop:pin
 ```
 
-## Core Concepts
+### Command Modes
 
-- **WASM-first**: Components as the default unit of composition
-- **Capability-driven**: Pluggable providers for UI, GPU, storage, networking
-- **Incremental effects**: React-like reconciliation via `loop:fx`
-- **Tooling as code**: Workspaces ship their own CLIs and editors
+- Stable (default): `pnpm run loop -- <args>`
+- Stable (explicit): `pnpm run loop:stable -- <args>`
+- Dev (workspace CLI): `pnpm run loop:dev -- <args>`
+- Smoke (stable required, dev best-effort): `pnpm run loop:smoke -- --cwd .`
 
-## Project Structure
+Stable CLI pin file:
 
+- `tools/release/loop-cli-stable.json`
+- If pinned stable is missing `run/ci`, the stable runner uses `tools/release/run-loop-task-shim.mjs` so CI is not blocked by dev CLI failures.
+
+## Workspace Terms
+
+- `workspace`: the root Loop config (`loop.json`) that defines lanes, toolchains, tasks, and pipelines.
+- `component`: reusable file bundle with a `loop.component.json` manifest.
+- `module`: provider/plugin package loaded by the kernel.
+- `lane`: source of components/modules (local/file/git/http providers via lane instances).
+- `toolchain`: adapter that contributes diagnostics, fixes, and task defaults.
+
+## Repo Workflows
+
+All core workflows run via Loop CLI orchestration:
+
+```bash
+pnpm run build
+pnpm run typecheck
+pnpm run test
+pnpm run ci
 ```
-loop-kit/
-├── crates/          # Rust: Wasmtime host, CLI tools
-├── packages/        # TypeScript: CLI, registry, site
-├── wit/             # Component interface definitions (WIT)
-├── knowledge/       # Design docs and research notes
-└── .claude/         # Claude Code rules and guidelines
-```
 
-## Documentation
+These scripts resolve to `loop run <task>` and `loop ci` from `loop.json`.
 
-- **CLAUDE.md** - Comprehensive guide for AI assistants
-- **.claude/rules/** - Detailed development rules
-  - `architecture.md` - Core design principles
-  - `wit-syntax.md` - WIT syntax and validation
-  - `capabilities.md` - Capability system details
-  - `development.md` - Workflow and conventions
-  - `testing.md` - Testing guidelines
-- **knowledge/** - Research and design notes
-  - `capabilities-runtime.md` - Capability providers and transports
-  - `effect-system.md` - Incremental effect system (loop:fx)
-  - `wit-notes.md` - WIT usage and composition
-  - `wasm-tooling.md` - WASM/WIT toolchain cheatsheet
+## Publishing CLI
 
-## Current Focus
+- Local publish helper: `pnpm run release:publish:cli` (or `:dry`)
+- GitHub Actions: `Publish Loop CLI` (`workflow_dispatch`)
+  - Inputs: `tag`, `dry_run`, `skip_checks`
+  - Secret: `NPM_TOKEN`
 
-Building a local Rust Wasmtime host for running WASM components with:
-- Logging, filesystem, HTTP providers
-- UI/window capabilities via `loop:ui` and `loop:window`
-- CLI scaffolding for creating components and hosts
-- Example components demonstrating capabilities
+## Current Roadmap
 
-Remote capabilities (wRPC, wasmCloud, OCI) are backlogged until the local host loop is stable.
-
-## License
-
-MIT
+- Expand task runner and CI graph orchestration in kernel/CLI.
+- Finalize lane overrides, auth paths, lockfile safety, and persisted undo.
+- Grow workbench into the component development center (search, preview, adopt flows).
+- Ship reusable host-shell/bridge scaffolds (named-pipe IPC, CEF-ready).
+- Add `loopd`, MCP server, and safe AI doctor skeleton.

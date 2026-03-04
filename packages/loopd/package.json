@@ -1,0 +1,38 @@
+{
+  "name": "@loop-kit/loopd",
+  "version": "0.1.0",
+  "description": "Loop daemon JSON-RPC server skeleton.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "pnpm --filter @loop-kit/loop-contracts build && pnpm --filter @loop-kit/loop-kernel build && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm --filter @loop-kit/loop-contracts build && pnpm --filter @loop-kit/loop-kernel build && tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test ./test/**/*.test.ts",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "prepack": "pnpm run clean && pnpm run build"
+  },
+  "dependencies": {
+    "@loop-kit/loop-contracts": "workspace:*",
+    "@loop-kit/loop-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.17.0",
+    "fs-extra": "^11.3.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"actions.d.ts","sourceRoot":"","sources":["../../../src/facets/editing/actions.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,yBAAyB,CAAC;AACtD,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,iCAAiC,CAAC;AAKtE,MAAM,MAAM,iBAAiB,GAAG;IAC5B,MAAM,EAAE,MAAM,CAAC;CAClB,CAAC;AAEF,wBAAgB,sBAAsB,CAAC,cAAc,EAAE,cAAc,GAAG,MAAM,IAAI,CAYjF"}

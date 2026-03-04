@@ -1,4 +1,0 @@
-moon = "1.41.7"
-node = "~22"
-pnpm = "10.15.1"
-rust = "stable"

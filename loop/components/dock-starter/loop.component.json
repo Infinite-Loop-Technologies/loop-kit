@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1",
+  "kind": "component",
+  "id": "dock-starter",
+  "name": "Dock Starter",
+  "version": "0.1.0",
+  "description": "Starter dock integration using @loop-kit/dock and Graphite runtime.",
+  "files": [
+    {
+      "source": "files/DockStarter.tsx",
+      "target": "src/components/dock/DockStarter.tsx"
+    }
+  ],
+  "patches": [],
+  "dependencies": [
+    {
+      "name": "@loop-kit/dock",
+      "version": "workspace:*",
+      "type": "dependencies"
+    },
+    {
+      "name": "@loop-kit/graphite-core",
+      "version": "workspace:*",
+      "type": "dependencies"
+    },
+    {
+      "name": "@loop-kit/graphite-react",
+      "version": "workspace:*",
+      "type": "dependencies"
+    }
+  ],
+  "targets": ["app", "pkg"]
+}

@@ -1,8 +1,5 @@
-export { DOCK_SCHEMA_VERSION, applyDockPolicy, assertDockInvariants, cloneDockState, createDockState, createDockStateFromPanels, createFloatRootNode, createFloatWindowNode, createGroupNode, createPanelNode, createSplitNode, migrateDockState, normalizeDock, reduceDockIntent, } from './model';
-export { computeDropIndicator, computeDropOverlay, computeLayoutRects, hitTest, rectToStyle, } from './geometry';
-export { createDockInteractionController } from './interaction';
-export { applyOverlayRect, describeDropOverlay } from './debugOverlay';
-export { createDockDebugRenderer } from './debugRenderer';
-export { createDockFocusQuery, createDockLayoutQuery, createDockPanelQuery, } from './queries';
-export { createDockIntentNames, registerDockIntents, } from './intents';
+export * from './facet/index.js';
+export * from './interaction/index.js';
+export * from './react/index.js';
+export * from './register.js';
 //# sourceMappingURL=index.js.map

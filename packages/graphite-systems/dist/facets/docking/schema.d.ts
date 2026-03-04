@@ -1,0 +1,11 @@
+export declare const DOCK_NODE_ROOT = "dock.root";
+export declare const DOCK_NODE_GROUP = "dock.group";
+export declare const DOCK_NODE_TAB = "dock.tab";
+export declare const DOCK_NODE_PANEL = "dock.panel";
+export declare const DOCK_REL_TABS = "dock.tabs";
+export declare const DOCK_REL_CHILD_GROUPS = "dock.childGroups";
+export declare const DOCK_PROP_SPLIT_DIRECTION = "dock.splitDirection";
+export declare const DOCK_PROP_SPLIT_RATIOS = "dock.splitRatios";
+export declare const DOCK_PROP_ACTIVE_TAB = "dock.activeTab";
+export declare const DOCK_PROP_PREVIEW = "dock.preview";
+//# sourceMappingURL=schema.d.ts.map
