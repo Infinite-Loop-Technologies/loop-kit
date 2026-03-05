@@ -24,6 +24,7 @@
 # production
 /build
 /dist
+**/dist/
 /target
 apps/workbench/dist/
 

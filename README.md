@@ -4,25 +4,32 @@
 
 ## Stable-First CLI
 
-The repository defaults to a pinned, published `@loop-kit/loop-cli`.
+The repository defaults to a pinned, published `@loop-kit/loop-cli` via `pnpm dlx`.
 
 ```bash
 pnpm install
-pnpm run loop -- --help
-pnpm run loop:pin
+pnpm run loop --help
+pnpm run loop:version
 ```
 
 ### Command Modes
 
-- Stable (default): `pnpm run loop -- <args>`
-- Stable (explicit): `pnpm run loop:stable -- <args>`
-- Dev (workspace CLI): `pnpm run loop:dev -- <args>`
-- Smoke (stable required, dev best-effort): `pnpm run loop:smoke -- --cwd .`
+- Stable (default): `pnpm run loop <args>`
+- Stable (explicit): `pnpm run loop:stable <args>`
+- Dev (workspace CLI): `pnpm run loop:dev <args>`
+- Version (stable): `pnpm run loop:version`
+- Smoke (stable required, dev best-effort): `pnpm run loop:smoke --cwd .`
 
-Stable CLI pin file:
+Stable CLI pin:
 
-- `tools/release/loop-cli-stable.json`
-- If pinned stable is missing `run/ci`, the stable runner uses `tools/release/run-loop-task-shim.mjs` so CI is not blocked by dev CLI failures.
+- Defined once in `package.json` as:
+  - `scripts.loop:stable = pnpm dlx @loop-kit/loop-cli@0.1.0`
+
+Why this avoids being stranded:
+
+- Day-to-day commands run on a known-good published CLI.
+- If stable lags a new command or you need to test local changes, use the explicit dev path: `pnpm run loop:dev <args>`.
+- Core task scripts (`build`, `typecheck`, `test`, `ci`) run through explicit dev CLI so `run/ci` workflows stay available.
 
 ## Workspace Terms
 
@@ -43,7 +50,7 @@ pnpm run test
 pnpm run ci
 ```
 
-These scripts resolve to `loop run <task>` and `loop ci` from `loop.json`.
+These scripts resolve to `loop:dev run <task>` and `loop:dev ci` from `loop.json`.
 
 ## Publishing CLI
 

@@ -18,12 +18,12 @@ function main() {
 
     const doctorArgs = args.length > 0 ? args : ['--cwd', '.'];
 
-    const stable = run('pnpm', ['run', 'loop:stable', '--', 'doctor', ...doctorArgs]);
+    const stable = run('pnpm', ['run', 'loop:stable', 'doctor', ...doctorArgs]);
     if (stable.status !== 0) {
         process.exit(stable.status ?? 1);
     }
 
-    const dev = run('pnpm', ['run', 'loop:dev', '--', 'doctor', ...doctorArgs]);
+    const dev = run('pnpm', ['run', 'loop:dev', 'doctor', ...doctorArgs]);
     if (dev.status !== 0) {
         console.warn('warning: loop:dev smoke failed (stable CLI smoke passed).');
     }
