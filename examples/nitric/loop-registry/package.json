@@ -1,0 +1,20 @@
+{
+  "name": "@loop-kit/nitric-loop-registry-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nitric example registry service for loop-kit components, modules, and bundles",
+  "dependencies": {
+    "@nitric/sdk": "^1.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "dotenv": "^16.4.5",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev:services": "nodemon -r dotenv/config",
+    "typecheck": "tsc --noEmit"
+  }
+}

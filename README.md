@@ -1,68 +1,111 @@
 # loop-kit
 
-`loop-kit` is the dogfooding monorepo for Loop: contracts, kernel, CLI, UI workbench, and platform scaffolds.
+`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI workbench, and backend automation examples.
 
-## Stable-First CLI
+This repo is now:
 
-The repository defaults to a pinned, published `@loop-kit/loop-cli` via `pnpm dlx`.
+- Proto-first for pinned toolchains
+- Dagger-first for CI/build/test/publish/deploy orchestration
+- dotenvx-driven for local env-based automation
+- Nitric-enabled for local simulation and cloud deployment workflows
+
+## Quickstart
 
 ```bash
+proto install --yes
 pnpm install
-pnpm run loop --help
-pnpm run loop:version
-```
-
-### Command Modes
-
-- Stable (default): `pnpm run loop <args>`
-- Stable (explicit): `pnpm run loop:stable <args>`
-- Dev (workspace CLI): `pnpm run loop:dev <args>`
-- Version (stable): `pnpm run loop:version`
-- Smoke (stable required, dev best-effort): `pnpm run loop:smoke --cwd .`
-
-Stable CLI pin:
-
-- Defined once in `package.json` as:
-  - `scripts.loop:stable = pnpm dlx @loop-kit/loop-cli@0.1.0`
-
-Why this avoids being stranded:
-
-- Day-to-day commands run on a known-good published CLI.
-- If stable lags a new command or you need to test local changes, use the explicit dev path: `pnpm run loop:dev <args>`.
-- Core task scripts (`build`, `typecheck`, `test`, `ci`) run through explicit dev CLI so `run/ci` workflows stay available.
-
-## Workspace Terms
-
-- `workspace`: the root Loop config (`loop.json`) that defines lanes, toolchains, tasks, and pipelines.
-- `component`: reusable file bundle with a `loop.component.json` manifest.
-- `module`: provider/plugin package loaded by the kernel.
-- `lane`: source of components/modules (local/file/git/http providers via lane instances).
-- `toolchain`: adapter that contributes diagnostics, fixes, and task defaults.
-
-## Repo Workflows
-
-All core workflows run via Loop CLI orchestration:
-
-```bash
-pnpm run build
-pnpm run typecheck
-pnpm run test
 pnpm run ci
 ```
 
-These scripts resolve to `loop:dev run <task>` and `loop:dev ci` from `loop.json`.
+Prerequisites:
 
-## Publishing CLI
+- Docker Desktop (or another compatible Docker engine) running
 
-- Local publish helper: `pnpm run release:publish:cli` (or `:dry`)
-- GitHub Actions: `Publish Loop CLI` (`workflow_dispatch`)
-  - Inputs: `tag`, `dry_run`, `skip_checks`
-  - Secret: `NPM_TOKEN`
+## Pinned toolchain
 
-## Current Roadmap
+Tool versions are pinned in `.prototools`:
 
-- Expand task runner and CI graph orchestration in kernel/CLI.
-- Finalize lane overrides, auth paths, lockfile safety, and persisted undo.
-- Grow workbench into the component development center (search, preview, adopt flows).
-- Ship reusable host-shell/bridge scaffolds (named-pipe IPC, CEF-ready).
-- Add `loopd`, MCP server, and safe AI doctor skeleton.
+- `node` `22.20.0`
+- `pnpm` `10.15.1`
+- `rust` `1.90.0`
+- `go` `1.25.0`
+- `dagger` `0.20.1`
+- `dotenvx` `1.53.0`
+- `nitric` `1.61.1`
+
+Custom Proto plugin definitions:
+
+- `tools/proto/plugins/dotenvx.toml`
+- `tools/proto/plugins/nitric.toml`
+
+## Core automation commands
+
+```bash
+pnpm run dagger:functions
+pnpm run ci
+pnpm run build
+pnpm run typecheck
+pnpm run test
+```
+
+Direct Loop-debug variants are still available:
+
+```bash
+pnpm run ci:loop
+pnpm run build:loop
+pnpm run typecheck:loop
+pnpm run test:loop
+```
+
+## npm publishing
+
+Dry-run:
+
+```bash
+pnpm run release:publish:all:dry
+pnpm run release:publish:cli:dry
+```
+
+Real publish:
+
+```bash
+pnpm run release:publish:all
+pnpm run release:publish:cli
+```
+
+dotenvx-based publish:
+
+```bash
+cp .env.release.example .env.release
+pnpm run release:publish:all:env
+pnpm run release:publish:cli:env
+```
+
+## Nitric example: loop registry
+
+Example app:
+
+- `examples/nitric/loop-registry`
+
+It exposes a simple API registry for loop-kit artifacts (`component`, `module`, `bundle`).
+
+Dagger + Nitric commands:
+
+```bash
+pnpm run nitric:registry:spec
+pnpm run nitric:registry:build
+pnpm run nitric:registry:deploy -- --stack gcp-main --env-file .env.registry
+```
+
+dotenvx flow:
+
+```bash
+cp examples/nitric/loop-registry/.env.registry.example examples/nitric/loop-registry/.env.registry
+pnpm run nitric:registry:deploy:env
+```
+
+If no Nitric stack exists yet, initialize one interactively from the example directory:
+
+```bash
+proto run nitric -- stack new gcp-main gcp
+```

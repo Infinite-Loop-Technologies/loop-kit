@@ -1,0 +1,12 @@
+node = "22.20.0"
+pnpm = "10.15.1"
+rust = "1.90.0"
+go = "1.25.0"
+dagger = "0.20.1"
+dotenvx = "1.53.0"
+nitric = "1.61.1"
+
+[plugins.tools]
+dagger = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/dagger/plugin.toml"
+dotenvx = "file://./tools/proto/plugins/dotenvx.toml"
+nitric = "file://./tools/proto/plugins/nitric.toml"

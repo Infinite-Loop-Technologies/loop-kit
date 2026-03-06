@@ -1,0 +1,13 @@
+{
+  "name": "@loop-kit/dagger-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --pretty false --noEmit"
+  },
+  "devDependencies": {
+    "@dagger.io/dagger": "^0.20.1",
+    "@types/node": "^22.15.30",
+    "typescript": "^5.9.3"
+  }
+}
