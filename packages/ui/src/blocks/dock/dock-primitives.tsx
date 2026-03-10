@@ -62,6 +62,7 @@ function DockTab({
             aria-selected={active}
             data-dock-tab-id={panelId}
             data-dock-tab-group={groupId}
+            data-testid={`dock-tab-${panelId}`}
             style={style}
             className={cn(
                 'group relative inline-flex h-8 min-w-0 items-center gap-1 rounded-sm px-2 text-xs',
@@ -142,9 +143,12 @@ export function DockGroup({
             className='absolute overflow-hidden rounded-md border border-border/80 bg-card/90 shadow-sm'
             style={groupStyle}
             data-group-id={group.id}
+            data-testid={`dock-group-${group.id}`}
             data-panel-count={group.panelIds.length}
             data-layout-node={layout.nodes[group.id]?.kind}>
-            <header className='flex h-8 items-center gap-1 border-b border-border/70 bg-muted/25 px-1'>
+            <header
+                data-testid={`dock-group-header-${group.id}`}
+                className='flex h-8 items-center gap-1 border-b border-border/70 bg-muted/25 px-1'>
                 <SortableContext
                     items={group.panelIds}
                     strategy={horizontalListSortingStrategy}>
@@ -207,6 +211,7 @@ export function DockSplitHandle({
         <button
             type='button'
             data-handle-id={handle.id}
+            data-testid={`dock-split-handle-${handle.id}`}
             className={cn(
                 'group absolute z-20 rounded-sm bg-transparent',
                 vertical ? 'cursor-col-resize' : 'cursor-row-resize',
@@ -242,8 +247,11 @@ export function DockOverlay({ indicator, showLabel = false }: DockOverlayProps) 
                 'pointer-events-none absolute z-30',
                 indicator.kind === 'zone'
                     ? 'rounded-md border border-primary/80 bg-primary/15'
-                    : 'rounded-sm bg-primary shadow-[0_0_0_1px_hsl(var(--background))]',
+                    : 'rounded-sm bg-primary shadow-[0_0_0_1px_var(--background)]',
             )}
+            data-testid='dock-drop-indicator'
+            data-dock-indicator-kind={indicator.kind}
+            data-dock-indicator-label={indicator.label}
             style={{
                 left: indicator.rect.x,
                 top: indicator.rect.y,

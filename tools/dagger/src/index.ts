@@ -7,21 +7,9 @@ const NITRIC_VERSION = "1.61.1";
 const REGISTRY_APP_PATH = "/workspace/examples/nitric/loop-registry";
 
 @object()
-export class LoopkitAutomation {
+export class Loopkit {
   private workspaceDirectory(): Directory {
-    return dag.host().directory(".", {
-      exclude: [
-        ".git",
-        ".github",
-        ".idea",
-        ".vscode",
-        "node_modules",
-        "**/node_modules",
-        "target",
-        "**/dist",
-        "**/.nitric",
-      ],
-    });
+    return dag.env({ privileged: true }).workspace();
   }
 
   private nodeContainer(): Container {
@@ -32,6 +20,28 @@ export class LoopkitAutomation {
       .withWorkdir("/workspace")
       .withExec(["corepack", "enable"])
       .withExec(["corepack", "prepare", `pnpm@${PNPM_VERSION}`, "--activate"]);
+  }
+
+  private withInstall(container: Container): Container {
+    return container.withExec(["pnpm", "install", "--frozen-lockfile"]);
+  }
+
+  private withLoopCliRuntime(container: Container): Container {
+    return this.withInstall(container).withExec([
+      "pnpm",
+      "--filter",
+      "@loop-kit/loop-cli",
+      "build",
+    ]);
+  }
+
+  private withCiChecks(container: Container, includeSmoke = true): Container {
+    let next = container;
+    if (includeSmoke) {
+      next = next.withExec(["pnpm", "run", "loop:smoke", "--", "--cwd", "."]);
+    }
+
+    return next.withExec(["pnpm", "run", "loop:dev", "ci", "--cwd", "."]);
   }
 
   private withNitricTooling(container: Container): Container {
@@ -66,33 +76,26 @@ export class LoopkitAutomation {
 
   @func()
   async ci(): Promise<string> {
-    return this.nodeContainer()
-      .withExec(["pnpm", "install", "--frozen-lockfile"])
-      .withExec(["pnpm", "run", "loop:smoke", "--", "--cwd", "."])
-      .withExec(["pnpm", "run", "loop:dev", "ci", "--cwd", "."])
-      .stdout();
+    return this.withCiChecks(this.withLoopCliRuntime(this.nodeContainer())).stdout();
   }
 
   @func()
   async build(): Promise<string> {
-    return this.nodeContainer()
-      .withExec(["pnpm", "install", "--frozen-lockfile"])
+    return this.withLoopCliRuntime(this.nodeContainer())
       .withExec(["pnpm", "run", "loop:dev", "run", "build", "--cwd", "."])
       .stdout();
   }
 
   @func()
   async typecheck(): Promise<string> {
-    return this.nodeContainer()
-      .withExec(["pnpm", "install", "--frozen-lockfile"])
+    return this.withLoopCliRuntime(this.nodeContainer())
       .withExec(["pnpm", "run", "loop:dev", "run", "typecheck", "--cwd", "."])
       .stdout();
   }
 
   @func()
   async test(): Promise<string> {
-    return this.nodeContainer()
-      .withExec(["pnpm", "install", "--frozen-lockfile"])
+    return this.withLoopCliRuntime(this.nodeContainer())
       .withExec(["pnpm", "run", "loop:dev", "run", "test", "--cwd", "."])
       .stdout();
   }
@@ -117,9 +120,9 @@ export class LoopkitAutomation {
       args.push("--tag", tag);
     }
 
-    let container = this.nodeContainer().withExec(["pnpm", "install", "--frozen-lockfile"]);
+    let container = this.withLoopCliRuntime(this.nodeContainer());
     if (!skipChecks) {
-      container = container.withExec(["pnpm", "run", "loop:dev", "ci", "--cwd", "."]);
+      container = this.withCiChecks(container);
     }
     if (npmToken) {
       container = container.withEnvVariable("NODE_AUTH_TOKEN", npmToken);
@@ -148,9 +151,9 @@ export class LoopkitAutomation {
       args.push("--tag", tag);
     }
 
-    let container = this.nodeContainer().withExec(["pnpm", "install", "--frozen-lockfile"]);
+    let container = this.withLoopCliRuntime(this.nodeContainer());
     if (!skipChecks) {
-      container = container.withExec(["pnpm", "run", "loop:dev", "ci", "--cwd", "."]);
+      container = this.withCiChecks(container);
     }
     if (npmToken) {
       container = container.withEnvVariable("NODE_AUTH_TOKEN", npmToken);

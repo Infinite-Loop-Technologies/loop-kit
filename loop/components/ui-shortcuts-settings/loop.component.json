@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1",
+  "kind": "component",
+  "id": "ui-shortcuts-settings",
+  "name": "UI Shortcuts Settings",
+  "version": "0.1.0",
+  "description": "Graphite intent shortcut manager settings panel.",
+  "files": [
+    {
+      "source": "files/ShortcutSettingsPanel.tsx",
+      "target": "src/components/ui-demo/ShortcutSettingsPanel.tsx"
+    }
+  ],
+  "patches": [],
+  "dependencies": [
+    {
+      "name": "@loop-kit/ui",
+      "version": "workspace:*",
+      "type": "dependencies"
+    },
+    {
+      "name": "@loop-kit/graphite",
+      "version": "workspace:*",
+      "type": "dependencies"
+    }
+  ],
+  "targets": ["app", "pkg"],
+  "metadata": {
+    "tags": ["ui", "graphite", "shortcuts", "settings"],
+    "source": "packages/ui/src/blocks/shortcuts-settings",
+    "localCommands": {
+      "addDev": "pnpm run loop:dev add local:ui-shortcuts-settings --to apps/ui-demo --cwd .",
+      "addDist": "node packages/loop-cli/dist/cli.js add local:ui-shortcuts-settings --to apps/ui-demo --cwd .",
+      "show": "pnpm run loop:dev component show ui-shortcuts-settings --cwd ."
+    }
+  }
+}

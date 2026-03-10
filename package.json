@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {
         "setup:tools": "proto install --yes",
-        "dagger": "proto run dagger --",
+        "dagger": "node tools/automation/dagger-run.mjs",
         "dagger:functions": "proto run dagger -- functions",
         "build": "pnpm run dagger -- call build",
         "ci": "pnpm run dagger -- call ci",

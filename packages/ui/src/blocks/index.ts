@@ -5,6 +5,10 @@ export { default as OutlineEditorBlock } from './outline-editor/outline-editor';
 export { default as CodeEditorBlock } from './code-editor/code-editor';
 export { JsonInspector as JsonInspectorBlock } from './code-editor/json-inspector';
 export type { CodeEditorProps } from './code-editor/code-editor';
+export * from './dock/dock';
+export * from './theme-manager';
+export * from './token-editor';
+export * from './shortcuts-settings';
 
 export * from './systems/graphite-data-table';
 export * from './systems/graphite-dnd';

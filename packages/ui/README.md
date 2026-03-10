@@ -9,9 +9,9 @@ Canonical loop-kit UI package.
 - `icons`: swappable icon registry + default lucide pack.
 - `assets`: asset/texture registry + `asset://` resolver.
 - `primitives`: token-native `Panel`, `Button`, and `Text`.
-- `blocks`: extracted reusable product blocks (graphite/editor/outline).
+- `blocks`: extracted reusable product blocks (graphite/editor/outline/dock/theme tooling).
 - `legacy`: migrated shadcn-compatible surface from the retired site package.
-- `stories`: story manifest consumed by `apps/workbench`.
+- `stories`: story manifest consumed by `apps/ui-demo`.
 
 ## Public surfaces
 
@@ -43,13 +43,6 @@ Compatibility aliases are kept for existing consumers:
 
 ## Preview UI
 
-Use the Vite workbench app:
+Use the Vite UI demo app:
 
-- `pnpm --filter @loop-kit/workbench dev`
-- Routes: `/primitives`, `/blocks`, `/legacy`
-
-## Extraction note
-
-The legacy dock demo code was copied into `src/blocks/dock` but is not exported from
-`@loop-kit/ui/blocks` yet because its old API does not match the rewritten `@loop-kit/dock`
-surface.
+- `pnpm --filter @loop-kit/ui-demo dev`

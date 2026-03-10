@@ -118,6 +118,10 @@ export type ListedComponent = {
     version: string;
     description?: string;
     tags?: string[];
+    targets: Array<'app' | 'pkg'>;
+    dependencyCount: number;
+    fileCount: number;
+    metadata?: Record<string, unknown>;
 };
 
 export type RunTaskOptions = {

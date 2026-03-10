@@ -13,7 +13,6 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import {
     computeDropIndicator,
     computeLayoutRects,
@@ -32,16 +31,25 @@ import { panelTitle } from './dock-helpers';
 import {
     DOCK_INTENTS,
     DOCK_LAYOUT_DISPATCH_OPTIONS,
+    DOCK_UI_DISPATCH_OPTIONS,
     DockBlockState,
+    UI_INTENTS,
 } from './dock-store';
 import { useDockInteractions } from './use-dock-interactions';
 
 type DockCanvasProps = {
     className?: string;
     renderPanelBody?: (panelId: DockNodeId | null, groupId: DockNodeId) => React.ReactNode;
+    onDebugStateChange?: (debug: DockCanvasDebugState) => void;
 };
 
 const TAB_DROP_MARGIN_PX = 12;
+export type DockCanvasDebugState = {
+    dropTarget: DockDropTarget | null;
+    activeDragPanelId: string | null;
+    activeResizeHandleId: string | null;
+    layout: DockLayoutMap;
+};
 type HoveredTabTarget = {
     groupId: string;
     panelId: string;
@@ -149,9 +157,9 @@ function resolveTabbarTarget(
     let bestDistance = Number.POSITIVE_INFINITY;
 
     for (const group of layout.groups) {
-        const expanded = expandedRect(group.rect, marginPx);
+        const expanded = expandedRect(group.tabBarRect, marginPx);
         if (!containsPoint(expanded, point.x, point.y)) continue;
-        const distance = distanceToRectCenter(group.rect, point.x, point.y);
+        const distance = distanceToRectCenter(group.tabBarRect, point.x, point.y);
         if (distance < bestDistance) {
             bestDistance = distance;
             candidate = group;
@@ -213,7 +221,7 @@ function resolveHoveredTabTarget(
     };
 }
 
-export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
+export function DockCanvas({ className, renderPanelBody, onDebugStateChange }: DockCanvasProps) {
     const dispatchIntent = useIntent<DockBlockState>();
     const dockState = useQuery<DockBlockState, DockState>((state) => state.dock);
     const showOverlay = useQuery<DockBlockState, boolean>(
@@ -234,36 +242,6 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
         null,
     );
     const hoveredTabRef = React.useRef<HoveredTabTarget | null>(null);
-    const splitModeRef = React.useRef(false);
-    const [splitMode, setSplitMode] = React.useState(false);
-
-    React.useEffect(() => {
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== 'Shift' || splitModeRef.current) return;
-            splitModeRef.current = true;
-            setSplitMode(true);
-        };
-        const onKeyUp = (event: KeyboardEvent) => {
-            if (event.key !== 'Shift' || !splitModeRef.current) return;
-            splitModeRef.current = false;
-            setSplitMode(false);
-        };
-        const onBlur = () => {
-            if (!splitModeRef.current) return;
-            splitModeRef.current = false;
-            setSplitMode(false);
-        };
-
-        window.addEventListener('keydown', onKeyDown);
-        window.addEventListener('keyup', onKeyUp);
-        window.addEventListener('blur', onBlur);
-
-        return () => {
-            window.removeEventListener('keydown', onKeyDown);
-            window.removeEventListener('keyup', onKeyUp);
-            window.removeEventListener('blur', onBlur);
-        };
-    }, []);
 
     const interaction = React.useMemo(
         () =>
@@ -276,9 +254,6 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
                     hysteresisPx: 10,
                 },
                 resolveDropTarget: (context) => {
-                    if (splitModeRef.current) {
-                        return context.rawTarget;
-                    }
                     const hoveredTarget = resolveHoveredTabTarget(
                         hoveredTabRef.current,
                         context.layout,
@@ -292,9 +267,7 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
                         TAB_DROP_MARGIN_PX,
                     );
                     if (tabTarget) return tabTarget;
-                    return context.rawTarget?.zone === 'tabbar'
-                        ? context.rawTarget
-                        : null;
+                    return context.rawTarget;
                 },
                 onDropTargetChange: setDropTarget,
             }),
@@ -379,6 +352,11 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
                 { panelId, groupId },
                 { history: false },
             );
+            dispatchIntent(
+                UI_INTENTS.setActiveGroup,
+                { groupId },
+                DOCK_UI_DISPATCH_OPTIONS,
+            );
         },
         [dispatchIntent],
     );
@@ -412,17 +390,31 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
           })
         : null;
 
+    React.useEffect(() => {
+        onDebugStateChange?.({
+            dropTarget,
+            activeDragPanelId,
+            activeResizeHandleId,
+            layout,
+        });
+    }, [activeDragPanelId, activeResizeHandleId, dropTarget, layout, onDebugStateChange]);
+
     return (
         <DndContext
             sensors={sensors}
             collisionDetection={collisionDetection}
-            modifiers={[snapCenterToCursor]}
             onDragStart={onDragStart}
             onDragMove={onDragMove}
             onDragEnd={onDragEnd}
             onDragCancel={onDragCancel}>
             <div
                 ref={stageRef}
+                data-dock-stage='true'
+                data-testid='dock-stage'
+                data-dock-drop-zone={dropTarget?.zone ?? ''}
+                data-dock-drop-group={dropTarget?.groupId ?? ''}
+                data-dock-active-drag-panel={activeDragPanelId ?? ''}
+                data-dock-active-resize-handle={activeResizeHandleId ?? ''}
                 className={className ?? 'relative h-[620px] overflow-hidden rounded-xl border bg-muted/10'}>
                 {layout.groups.map((group) => {
                     const activePanelId =
@@ -456,13 +448,15 @@ export function DockCanvas({ className, renderPanelBody }: DockCanvasProps) {
 
                 <DockOverlay
                     indicator={indicator}
-                    showLabel={showOverlayLabels || splitMode}
+                    showLabel={showOverlayLabels}
                 />
             </div>
 
             <DragOverlay dropAnimation={null}>
                 {activeDragPanelId ? (
-                    <div className='rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-lg'>
+                    <div
+                        data-testid='dock-drag-preview'
+                        className='rounded-md border border-primary/60 bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-xl ring-1 ring-primary/25'>
                         {panelTitle(dockState, activeDragPanelId)}
                     </div>
                 ) : null}

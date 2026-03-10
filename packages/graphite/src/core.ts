@@ -1,4 +1,5 @@
 import { $delete, $set, isMutationCommand } from './dsl';
+import { GRAPHITE_MUTATION_SYMBOL } from './types';
 import type {
   CommitDiff,
   CommitListener,
@@ -139,13 +140,12 @@ function isUnknownGraphPath(value: unknown): value is GraphPath {
 
 function cloneValue<T>(value: T): T {
   if (!isObjectLike(value)) return value;
-  const structured = globalThis.structuredClone as (<U>(source: U) => U) | undefined;
-  if (typeof structured === 'function') {
-    try {
-      return structured(value);
-    } catch {
-      // Fall through.
-    }
+  if (isMutationCommand(value)) {
+    return {
+      [GRAPHITE_MUTATION_SYMBOL]: true,
+      kind: value.kind,
+      payload: cloneValue(value.payload),
+    } as T;
   }
 
   if (Array.isArray(value)) {
@@ -173,11 +173,21 @@ function cloneValue<T>(value: T): T {
   }
 
   if (isPlainObject(value)) {
-    const next: Record<string, unknown> = {};
-    for (const [key, entry] of Object.entries(value)) {
+    const next: Record<PropertyKey, unknown> = {};
+    for (const key of Reflect.ownKeys(value)) {
+      const entry = (value as Record<PropertyKey, unknown>)[key];
       next[key] = cloneValue(entry);
     }
     return next as T;
+  }
+
+  const structured = globalThis.structuredClone as (<U>(source: U) => U) | undefined;
+  if (typeof structured === 'function') {
+    try {
+      return structured(value);
+    } catch {
+      // Fall through.
+    }
   }
 
   return value;

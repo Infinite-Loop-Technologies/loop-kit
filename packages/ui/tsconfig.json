@@ -12,6 +12,5 @@
         "noEmit": true,
         "types": ["react", "react-dom", "node"]
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "test/**/*.ts"],
-    "exclude": ["src/blocks/dock/**/*"]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "test/**/*.ts"]
 }

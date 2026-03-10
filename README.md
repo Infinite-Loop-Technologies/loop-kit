@@ -1,6 +1,6 @@
 # loop-kit
 
-`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI workbench, and backend automation examples.
+`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI demo surfaces, and backend automation examples.
 
 This repo is now:
 

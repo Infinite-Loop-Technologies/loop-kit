@@ -58,6 +58,19 @@ type DragSession = {
     startClientPoint: Point | null;
 };
 
+function pointInRect(
+    point: Point,
+    rect: { left: number; top: number; width: number; height: number },
+    margin = 0,
+) {
+    return (
+        point.x >= rect.left - margin &&
+        point.x <= rect.left + rect.width + margin &&
+        point.y >= rect.top - margin &&
+        point.y <= rect.top + rect.height + margin
+    );
+}
+
 function clientPointFromActivator(
     event: Event | null | undefined,
 ): Point | null {
@@ -142,7 +155,8 @@ export function useDockInteractions({
                 overData?.type === 'panel' &&
                 typeof overData.panelId === 'string' &&
                 typeof overData.groupId === 'string' &&
-                overRect
+                overRect &&
+                pointInRect(point, overRect, 8)
             ) {
                 const centerX = overRect.left + overRect.width / 2;
                 onTabHoverChange?.({

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1",
+  "kind": "component",
+  "id": "ui-dock-workspace",
+  "name": "UI Dock Workspace",
+  "version": "0.1.0",
+  "description": "Graphite-first dynamic docking workspace block from @loop-kit/ui.",
+  "files": [
+    {
+      "source": "files/UiDockWorkspace.tsx",
+      "target": "src/components/ui-demo/UiDockWorkspace.tsx"
+    }
+  ],
+  "patches": [],
+  "dependencies": [
+    {
+      "name": "@loop-kit/ui",
+      "version": "workspace:*",
+      "type": "dependencies"
+    },
+    {
+      "name": "@loop-kit/dock",
+      "version": "workspace:*",
+      "type": "dependencies"
+    },
+    {
+      "name": "@loop-kit/graphite",
+      "version": "workspace:*",
+      "type": "dependencies"
+    }
+  ],
+  "targets": ["app", "pkg"],
+  "metadata": {
+    "tags": ["ui", "dock", "graphite", "demo"],
+    "source": "packages/ui/src/blocks/dock",
+    "localCommands": {
+      "addDev": "pnpm run loop:dev add local:ui-dock-workspace --to apps/ui-demo --cwd .",
+      "addDist": "node packages/loop-cli/dist/cli.js add local:ui-dock-workspace --to apps/ui-demo --cwd .",
+      "show": "pnpm run loop:dev component show ui-dock-workspace --cwd ."
+    }
+  }
+}

@@ -26,19 +26,19 @@ pnpm run dagger:functions
 ```
 
 - Default pipeline entrypoints:
-  - `pnpm run ci`
-  - `pnpm run build`
-  - `pnpm run typecheck`
-  - `pnpm run test`
+    - `pnpm run ci`
+    - `pnpm run build`
+    - `pnpm run typecheck`
+    - `pnpm run test`
 
 ## Loop CLI Policy
 
 - Loop CLI remains part of product dev/runtime behavior.
 - Use direct Loop scripts only when debugging a Loop-specific issue:
-  - `pnpm run ci:loop`
-  - `pnpm run build:loop`
-  - `pnpm run typecheck:loop`
-  - `pnpm run test:loop`
+    - `pnpm run ci:loop`
+    - `pnpm run build:loop`
+    - `pnpm run typecheck:loop`
+    - `pnpm run test:loop`
 
 ## dotenvx Policy
 
@@ -57,11 +57,11 @@ dotenvx-wired commands:
 ## npm Publishing
 
 - Dry-run publish:
-  - `pnpm run release:publish:all:dry`
-  - `pnpm run release:publish:cli:dry`
+    - `pnpm run release:publish:all:dry`
+    - `pnpm run release:publish:cli:dry`
 - Real publish:
-  - `pnpm run release:publish:all`
-  - `pnpm run release:publish:cli`
+    - `pnpm run release:publish:all`
+    - `pnpm run release:publish:cli`
 - For env-driven publishes, set `NODE_AUTH_TOKEN` in `.env.release` and use `*:env` scripts.
 
 ## Nitric Policy
@@ -87,3 +87,8 @@ proto run nitric -- stack new gcp-main gcp
 
 - Docker Desktop (or another supported Docker engine) must be running before using Dagger/Nitric automation.
 - Keep versions pinned in `.prototools`; update pins intentionally and commit them.
+
+## Rules for High Quality Responses
+
+- Test all web UIs with the Playwright MCP server. Consider even writing Playwright tests directly for highly complex situations. Make sure to always to do evaluations with Playwright to ensure that the web UI is working as it should.
+- Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.

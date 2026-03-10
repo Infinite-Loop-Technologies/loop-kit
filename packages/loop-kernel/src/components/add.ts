@@ -21,18 +21,10 @@ import {
     writeComponentLockfile,
 } from './lockfile.js';
 import { resolveComponentRef } from './resolve.js';
-
-function normalizeTargetPath(workspaceRoot: string, targetPath: string | undefined): string {
-    if (!targetPath || targetPath === '.') {
-        return '.';
-    }
-
-    if (path.isAbsolute(targetPath)) {
-        return path.relative(workspaceRoot, targetPath) || '.';
-    }
-
-    return targetPath;
-}
+import {
+    normalizeTargetPath,
+    validateComponentTargetCompatibility,
+} from './target.js';
 
 function fallbackWorkspaceConfig(): LoopWorkspaceConfig {
     return {
@@ -104,7 +96,15 @@ export async function addComponent(
         return resolved;
     }
 
-    const targetPath = normalizeTargetPath(workspaceRoot, options.targetPath);
+    const targetPath = normalizeTargetPath(workspaceRoot, options.targetPath, '.');
+    const targetValidation = validateComponentTargetCompatibility(
+        resolved.value.manifest,
+        targetPath,
+        workspaceConfig,
+    );
+    if (!targetValidation.ok) {
+        return targetValidation;
+    }
     const plan = await buildComponentInstallPlan(resolved.value.manifest, {
         componentBaseDir: resolved.value.baseDir,
         targetPath,

@@ -23,18 +23,10 @@ import {
     writeComponentLockfile,
 } from './lockfile.js';
 import { resolveComponentRef } from './resolve.js';
-
-function normalizeTargetPath(workspaceRoot: string, targetPath: string | undefined): string | undefined {
-    if (!targetPath || targetPath === '.') {
-        return targetPath ? '.' : undefined;
-    }
-
-    if (path.isAbsolute(targetPath)) {
-        return path.relative(workspaceRoot, targetPath) || '.';
-    }
-
-    return targetPath;
-}
+import {
+    normalizeTargetPath,
+    validateComponentTargetCompatibility,
+} from './target.js';
 
 function fallbackWorkspaceConfig(): LoopWorkspaceConfig {
     return {
@@ -108,7 +100,11 @@ export async function updateComponent(
     }
 
     const lockfile = await readComponentLockfile(workspaceRoot, fs);
-    const normalizedTarget = normalizeTargetPath(workspaceRoot, options.targetPath);
+    const normalizedTarget = normalizeTargetPath(
+        workspaceRoot,
+        options.targetPath,
+        options.targetPath ? '.' : '',
+    );
     const existing = findInstallRecord(lockfile, resolved.value.manifest.id, normalizedTarget);
 
     if (!existing) {
@@ -116,6 +112,15 @@ export async function updateComponent(
             code: 'component.update_not_installed',
             message: `Component ${resolved.value.manifest.id} is not installed in the target workspace.`,
         });
+    }
+
+    const targetValidation = validateComponentTargetCompatibility(
+        resolved.value.manifest,
+        existing.targetPath,
+        workspaceConfig,
+    );
+    if (!targetValidation.ok) {
+        return targetValidation;
     }
 
     if (existing.snapshotId === resolved.value.snapshotId) {

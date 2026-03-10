@@ -35,8 +35,13 @@ export function getRootGroup(dock: DockState): DockGroupNode | null {
 
 export function getActivePanelRef(
     dock: DockState,
+    preferredGroupId?: DockNodeId,
 ): { groupId: DockNodeId; panelId: DockNodeId } | null {
-    const group = getRootGroup(dock);
+    const preferred =
+        preferredGroupId && dock.nodes[preferredGroupId]?.kind === 'group'
+            ? (dock.nodes[preferredGroupId] as DockGroupNode)
+            : null;
+    const group = preferred ?? getRootGroup(dock);
     if (!group) return null;
 
     const panelId =

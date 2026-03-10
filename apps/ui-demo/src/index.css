@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "@loop-kit/ui/prose.css";
+
+@source "./**/*.{ts,tsx}";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--loop-typography-familySans, "Segoe UI", system-ui, sans-serif);
+    background:
+        radial-gradient(circle at 10% 10%, color-mix(in oklch, var(--accent) 12%, transparent), transparent 46%),
+        radial-gradient(circle at 90% 0%, color-mix(in oklch, var(--primary) 10%, transparent), transparent 40%),
+        var(--background);
+    color: var(--foreground);
+}
+
+.ui-demo-shell {
+    padding: 1rem;
+}

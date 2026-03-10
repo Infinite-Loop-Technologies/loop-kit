@@ -33,6 +33,10 @@ function toListedComponent(
         version: manifest.version,
         description: manifest.description,
         tags,
+        targets: manifest.targets,
+        dependencyCount: manifest.dependencies.length,
+        fileCount: manifest.files.length,
+        metadata: manifest.metadata,
     };
 }
 

@@ -4,11 +4,12 @@ import {
     type DispatchIntentOptions,
     type GraphState,
     type GraphiteRuntime,
+    type IntentCompilerContext,
 } from '@loop-kit/graphite';
 import {
     createDockIntentNames,
-    createDockState,
     createDockPanelQuery,
+    createDockState,
     createGroupNode,
     createPanelNode,
     createSplitNode,
@@ -17,6 +18,7 @@ import {
     type DockPanelSummary,
     type DockState,
 } from '@loop-kit/dock';
+import { ThemeModeSchema, type ThemeMode } from '../../theme';
 
 import type { GraphiteIntentEnvelope } from '../systems/graphite-dnd';
 import type { GraphiteIntentRegistryEntry } from '../systems/graphite-intent-registry';
@@ -26,12 +28,32 @@ import {
 } from '../systems/graphite-shortcut-manager';
 import type { QueryBuilderField } from '../systems/graphite-query-builder';
 import { getActivePanelRef } from './dock-helpers';
+import {
+    createDockThemePresets,
+    setThemeTokenValue,
+    validateThemeSetEntry,
+    type DockThemePresetMap,
+} from './theme-state';
+
+export type DockThemeState = {
+    mode: ThemeMode;
+    presetId: string;
+    presets: DockThemePresetMap;
+    validationMessage: string | null;
+};
+
+export type DockSettingsPanelSection = 'general' | 'overlay' | 'shortcuts';
+export const SETTINGS_PANEL_ID = 'panel-settings';
+export const SETTINGS_PANEL_TITLE = 'Workspace Settings';
 
 export type DockBlockState = GraphState & {
     dock: DockState;
+    theme: DockThemeState;
     ui: {
+        activeGroupId: string;
         shortcutsEnabled: boolean;
-        showShortcutManager: boolean;
+        settingsPanelSection: DockSettingsPanelSection;
+        settingsPanelOpenRequestId: number;
         showOverlay: boolean;
         showOverlayLabels: boolean;
     };
@@ -40,10 +62,15 @@ export type DockBlockState = GraphState & {
 export const DOCK_HISTORY_CHANNEL = 'dock';
 export const DOCK_INTENTS = createDockIntentNames('dock');
 export const UI_INTENTS = {
+    setActiveGroup: 'dock/ui/set-active-group',
     setShortcutsEnabled: 'dock/ui/set-shortcuts-enabled',
-    setShortcutManagerVisible: 'dock/ui/set-shortcut-manager-visible',
+    setSettingsPanelSection: 'dock/ui/set-settings-panel-section',
+    requestOpenSettingsPanel: 'dock/ui/request-open-settings-panel',
     setOverlayVisible: 'dock/ui/set-overlay-visible',
     setOverlayLabelsVisible: 'dock/ui/set-overlay-labels-visible',
+    setThemeMode: 'dock/theme/set-mode',
+    setThemePreset: 'dock/theme/set-preset',
+    setThemeToken: 'dock/theme/set-token',
     undoLayout: 'dock/ui/undo-layout',
     redoLayout: 'dock/ui/redo-layout',
 } as const;
@@ -73,49 +100,65 @@ export const SHORTCUT_CONTEXT_FIELDS: QueryBuilderField[] = [
     { key: 'canRedo', label: 'Can Redo', type: 'boolean' },
     { key: 'overlayVisible', label: 'Overlay Visible', type: 'boolean' },
     { key: 'shortcutsEnabled', label: 'Shortcuts Enabled', type: 'boolean' },
+    { key: 'themeMode', label: 'Theme Mode', type: 'string' },
+    { key: 'themePreset', label: 'Theme Preset', type: 'string' },
 ];
 
-function createDockFixture(): DockState {
-    const explorer = createPanelNode('panel-explorer', 'Explorer');
-    const editor = createPanelNode('panel-editor', 'Editor');
-    const preview = createPanelNode('panel-preview', 'Preview');
-    const consolePanel = createPanelNode('panel-console', 'Console');
+const DEFAULT_THEME_PRESET_ID = 'graphite';
 
-    const leftGroup = createGroupNode('group-left', [explorer.id], explorer.id);
+function createDockFixture(): DockState {
+    const componentCatalog = createPanelNode('panel-component-catalog', 'Component Catalog');
+    const preview = createPanelNode('panel-preview', 'Live Preview');
+    const themeManager = createPanelNode('panel-theme-manager', 'Theme Manager');
+    const tokenEditor = createPanelNode('panel-token-editor', 'Token Editor');
+    const shortcuts = createPanelNode('panel-shortcuts', 'Shortcut Status');
+    const settings = createPanelNode(SETTINGS_PANEL_ID, SETTINGS_PANEL_TITLE);
+    const consolePanel = createPanelNode('panel-console', 'Intent Console');
+
+    const leftGroup = createGroupNode(
+        'group-left',
+        [componentCatalog.id, consolePanel.id],
+        componentCatalog.id,
+    );
     const centerGroup = createGroupNode(
         'group-center',
-        [editor.id, preview.id],
-        editor.id,
+        [preview.id, themeManager.id],
+        preview.id,
     );
+    const rightGroup = createGroupNode('group-right', [tokenEditor.id], tokenEditor.id);
     const bottomGroup = createGroupNode(
         'group-bottom',
-        [consolePanel.id],
-        consolePanel.id,
+        [shortcuts.id, settings.id],
+        shortcuts.id,
     );
 
     const centerSplit = createSplitNode(
         'split-center',
         'col',
         [centerGroup.id, bottomGroup.id],
-        [0.72, 0.28],
+        [0.7, 0.3],
     );
     const rootSplit = createSplitNode(
         'split-root',
         'row',
-        [leftGroup.id, centerSplit.id],
-        [0.26, 0.74],
+        [leftGroup.id, centerSplit.id, rightGroup.id],
+        [0.24, 0.48, 0.28],
     );
 
     return createDockState({
         rootId: rootSplit.id,
         floatRootId: 'float-root-main',
         nodes: {
-            [explorer.id]: explorer,
-            [editor.id]: editor,
+            [componentCatalog.id]: componentCatalog,
             [preview.id]: preview,
+            [themeManager.id]: themeManager,
+            [tokenEditor.id]: tokenEditor,
+            [shortcuts.id]: shortcuts,
+            [settings.id]: settings,
             [consolePanel.id]: consolePanel,
             [leftGroup.id]: leftGroup,
             [centerGroup.id]: centerGroup,
+            [rightGroup.id]: rightGroup,
             [bottomGroup.id]: bottomGroup,
             [centerSplit.id]: centerSplit,
             [rootSplit.id]: rootSplit,
@@ -124,39 +167,58 @@ function createDockFixture(): DockState {
 }
 
 export function createPreviewDockFixture(): DockState {
-    const outline = createPanelNode('panel-outline', 'Outline');
-    const code = createPanelNode('panel-code', 'Code');
-    const notes = createPanelNode('panel-notes', 'Notes');
-
-    const leftGroup = createGroupNode(
-        'group-preview-left',
-        [outline.id, notes.id],
-        outline.id,
-    );
-    const rightGroup = createGroupNode(
-        'group-preview-right',
-        [code.id],
-        code.id,
-    );
-    const rootSplit = createSplitNode(
+    const preview = createPanelNode('panel-preview', 'Live Preview');
+    const tokens = createPanelNode('panel-token-editor', 'Token Editor');
+    const leftGroup = createGroupNode('group-preview-left', [preview.id], preview.id);
+    const rightGroup = createGroupNode('group-preview-right', [tokens.id], tokens.id);
+    const split = createSplitNode(
         'split-preview-root',
         'row',
         [leftGroup.id, rightGroup.id],
-        [0.45, 0.55],
+        [0.6, 0.4],
     );
 
     return createDockState({
-        rootId: rootSplit.id,
+        rootId: split.id,
         floatRootId: 'float-root-preview',
         nodes: {
-            [outline.id]: outline,
-            [code.id]: code,
-            [notes.id]: notes,
+            [preview.id]: preview,
+            [tokens.id]: tokens,
             [leftGroup.id]: leftGroup,
             [rightGroup.id]: rightGroup,
-            [rootSplit.id]: rootSplit,
+            [split.id]: split,
         },
     });
+}
+
+function createInitialThemeState(): DockThemeState {
+    const presets = createDockThemePresets();
+    const presetId = presets[DEFAULT_THEME_PRESET_ID]
+        ? DEFAULT_THEME_PRESET_ID
+        : Object.keys(presets)[0]!;
+    const mode: ThemeMode = 'dark';
+    const validationMessage = validateThemeSetEntry(presets[presetId], mode);
+
+    return {
+        mode,
+        presetId,
+        presets,
+        validationMessage,
+    };
+}
+
+function panelCount(state: Readonly<DockBlockState>) {
+    return Object.values(state.dock.nodes).filter((node) => node.kind === 'panel')
+        .length;
+}
+
+function nextPresetId(state: Readonly<DockBlockState>): string {
+    const ids = Object.keys(state.theme.presets);
+    if (ids.length <= 0) {
+        return state.theme.presetId;
+    }
+    const currentIndex = Math.max(0, ids.indexOf(state.theme.presetId));
+    return ids[(currentIndex + 1) % ids.length]!;
 }
 
 export function createDockStore(
@@ -165,9 +227,12 @@ export function createDockStore(
     const store = createGraphStore<DockBlockState>({
         initialState: {
             dock: dockFixture,
+            theme: createInitialThemeState(),
             ui: {
+                activeGroupId: 'group-center',
                 shortcutsEnabled: true,
-                showShortcutManager: false,
+                settingsPanelSection: 'general',
+                settingsPanelOpenRequestId: 0,
                 showOverlay: true,
                 showOverlayLabels: true,
             },
@@ -182,6 +247,15 @@ export function createDockStore(
     });
 
     store.registerIntent(
+        UI_INTENTS.setActiveGroup,
+        (payload: { groupId?: string }) => ({
+            ui: {
+                activeGroupId: $set(payload.groupId ?? ''),
+            },
+        }),
+    );
+
+    store.registerIntent(
         UI_INTENTS.setShortcutsEnabled,
         (payload: { enabled?: boolean }) => ({
             ui: {
@@ -191,10 +265,25 @@ export function createDockStore(
     );
 
     store.registerIntent(
-        UI_INTENTS.setShortcutManagerVisible,
-        (payload: { visible?: boolean }) => ({
+        UI_INTENTS.setSettingsPanelSection,
+        (payload: { section?: DockSettingsPanelSection }) => ({
             ui: {
-                showShortcutManager: $set(Boolean(payload.visible)),
+                settingsPanelSection: $set(payload.section ?? 'general'),
+            },
+        }),
+    );
+
+    store.registerIntent(
+        UI_INTENTS.requestOpenSettingsPanel,
+        (
+            payload: { section?: DockSettingsPanelSection },
+            context: IntentCompilerContext<DockBlockState>,
+        ) => ({
+            ui: {
+                settingsPanelSection: $set(payload.section ?? 'general'),
+                settingsPanelOpenRequestId: $set(
+                    context.state.ui.settingsPanelOpenRequestId + 1,
+                ),
             },
         }),
     );
@@ -217,6 +306,102 @@ export function createDockStore(
         }),
     );
 
+    store.registerIntent(
+        UI_INTENTS.setThemeMode,
+        (
+            payload: { mode?: ThemeMode },
+            context: IntentCompilerContext<DockBlockState>,
+        ) => {
+            const mode = ThemeModeSchema.safeParse(payload.mode);
+            if (!mode.success) {
+                return null;
+            }
+
+            const preset = context.state.theme.presets[context.state.theme.presetId];
+            if (!preset) {
+                return null;
+            }
+
+            return {
+                theme: {
+                    mode: $set(mode.data),
+                    validationMessage: $set(validateThemeSetEntry(preset, mode.data)),
+                },
+            };
+        },
+    );
+
+    store.registerIntent(
+        UI_INTENTS.setThemePreset,
+        (
+            payload: { presetId?: string },
+            context: IntentCompilerContext<DockBlockState>,
+        ) => {
+            const nextPresetIdValue = payload.presetId;
+            if (!nextPresetIdValue || !context.state.theme.presets[nextPresetIdValue]) {
+                return null;
+            }
+
+            const nextPreset = context.state.theme.presets[nextPresetIdValue];
+            return {
+                theme: {
+                    presetId: $set(nextPresetIdValue),
+                    validationMessage: $set(
+                        validateThemeSetEntry(nextPreset, context.state.theme.mode),
+                    ),
+                },
+            };
+        },
+    );
+
+    store.registerIntent(
+        UI_INTENTS.setThemeToken,
+        (
+            payload: { path?: string; value?: string },
+            context: IntentCompilerContext<DockBlockState>,
+        ) => {
+            const path = payload.path?.trim();
+            if (!path || typeof payload.value !== 'string') {
+                return null;
+            }
+
+            const state = context.state.theme;
+            const preset = state.presets[state.presetId];
+            if (!preset) {
+                return null;
+            }
+
+            const mode = state.mode;
+            const activeTheme = mode === 'dark' ? preset.themes.dark : preset.themes.light;
+            const updatedTheme = setThemeTokenValue(activeTheme, path, payload.value);
+            if (!updatedTheme) {
+                return {
+                    theme: {
+                        validationMessage: $set(`Invalid token path: ${path}`),
+                    },
+                };
+            }
+
+            const nextPreset = {
+                ...preset,
+                themes: {
+                    ...preset.themes,
+                    [mode]: updatedTheme,
+                },
+            };
+            const nextPresets = {
+                ...state.presets,
+                [preset.id]: nextPreset,
+            };
+            return {
+                theme: {
+                    presets: $set(nextPresets),
+                    validationMessage: $set(validateThemeSetEntry(nextPreset, mode)),
+                },
+            };
+        },
+    );
+
     store.registerIntent(UI_INTENTS.undoLayout, () => {
         store.undo(undefined, DOCK_HISTORY_CHANNEL);
         return null;
@@ -228,11 +413,6 @@ export function createDockStore(
     });
 
     return store;
-}
-
-function panelCount(state: Readonly<DockBlockState>) {
-    return Object.values(state.dock.nodes).filter((node) => node.kind === 'panel')
-        .length;
 }
 
 export function createDockIntentRegistry(
@@ -249,6 +429,7 @@ export function createDockIntentRegistry(
             dispatchOptions: DOCK_LAYOUT_DISPATCH_OPTIONS,
             payload: (state: Readonly<DockBlockState>) => ({
                 title: `Panel ${panelCount(state) + 1}`,
+                groupId: state.ui.activeGroupId,
             }),
         },
         {
@@ -260,7 +441,7 @@ export function createDockIntentRegistry(
             keywords: ['panel', 'close', 'tab'],
             dispatchOptions: DOCK_LAYOUT_DISPATCH_OPTIONS,
             payload: (state: Readonly<DockBlockState>) => {
-                const active = getActivePanelRef(state.dock);
+                const active = getActivePanelRef(state.dock, state.ui.activeGroupId);
                 return active ? { panelId: active.panelId } : undefined;
             },
         },
@@ -279,6 +460,39 @@ export function createDockIntentRegistry(
             description: 'Redo the last undone dock layout mutation.',
             category: 'History',
             dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
+        },
+        {
+            id: 'theme.toggle-mode',
+            intent: UI_INTENTS.setThemeMode,
+            title: 'Toggle Theme Mode',
+            description: 'Switch between light and dark modes.',
+            category: 'Theme',
+            dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
+            payload: (state: Readonly<DockBlockState>) => ({
+                mode: state.theme.mode === 'dark' ? 'light' : 'dark',
+            }),
+        },
+        {
+            id: 'theme.next-preset',
+            intent: UI_INTENTS.setThemePreset,
+            title: 'Next Theme Preset',
+            description: 'Cycle to the next theme preset.',
+            category: 'Theme',
+            dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
+            payload: (state: Readonly<DockBlockState>) => ({
+                presetId: nextPresetId(state),
+            }),
+        },
+        {
+            id: 'ui.open-settings-panel',
+            intent: UI_INTENTS.requestOpenSettingsPanel,
+            title: 'Open Settings Panel',
+            description: 'Focus dock settings and shortcut configuration panel.',
+            category: 'UI',
+            dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
+            payload: (state: Readonly<DockBlockState>) => ({
+                section: state.ui.settingsPanelSection,
+            }),
         },
     ];
 
@@ -320,17 +534,6 @@ export function createDockIntentRegistry(
                 enabled: !state.ui.shortcutsEnabled,
             }),
         },
-        {
-            id: 'dock.toggle-shortcut-manager',
-            intent: UI_INTENTS.setShortcutManagerVisible,
-            title: 'Toggle Shortcut Manager',
-            description: 'Open or close shortcut manager panel.',
-            category: 'Debug',
-            dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
-            payload: (state: Readonly<DockBlockState>) => ({
-                visible: !state.ui.showShortcutManager,
-            }),
-        },
     );
 
     return entries;
@@ -342,9 +545,11 @@ export function createDefaultShortcutBindings(): GraphiteShortcutBinding[] {
         createShortcutBinding('dock.remove-active-panel', 'alt+shift+w'),
         createShortcutBinding('dock.undo-layout', 'mod+z'),
         createShortcutBinding('dock.redo-layout', 'mod+shift+z'),
+        createShortcutBinding('theme.toggle-mode', 'alt+shift+t'),
+        createShortcutBinding('theme.next-preset', 'alt+shift+p'),
+        createShortcutBinding('ui.open-settings-panel', 'alt+,'),
         createShortcutBinding('dock.toggle-overlay', 'alt+shift+o'),
         createShortcutBinding('dock.toggle-overlay-labels', 'alt+shift+l'),
-        createShortcutBinding('dock.toggle-shortcut-manager', 'alt+shift+k'),
     ].map((binding) => ({
         ...binding,
         enabled: true,
@@ -379,4 +584,3 @@ export const DOCK_PANEL_QUERY = createDockPanelQuery<DockBlockState>({
 });
 
 export type DockPanelList = DockPanelSummary[];
-

@@ -85,11 +85,11 @@
         "test"
       ]
     },
-    "workbench:build": {
+    "ui-demo:build": {
       "command": "pnpm",
       "args": [
         "--filter",
-        "@loop-kit/workbench",
+        "@loop-kit/ui-demo",
         "build"
       ]
     },
@@ -107,7 +107,7 @@
         "typecheck",
         "build",
         "test",
-        "workbench:build"
+        "ui-demo:build"
       ]
     }
   },

@@ -1,5 +1,8 @@
 {
   "name": "loopkit",
   "sdk": "typescript",
-  "source": "tools/dagger"
+  "source": "tools/dagger",
+  "include": [
+    "."
+  ]
 }

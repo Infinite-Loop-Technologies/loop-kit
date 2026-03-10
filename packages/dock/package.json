@@ -24,6 +24,7 @@
         "prepack": "pnpm run clean && pnpm run build"
     },
     "dependencies": {
+        "@loop-kit/graphite": "workspace:*",
         "@loop-kit/graphite-core": "workspace:*",
         "@loop-kit/graphite-react": "workspace:*",
         "@loop-kit/graphite-systems": "workspace:*"

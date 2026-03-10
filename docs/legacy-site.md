@@ -6,23 +6,21 @@
 
 - The legacy Next.js registry app is retired.
 - Reusable UI was extracted into `packages/ui`.
-- `apps/workbench` now provides local UI preview for primitives, blocks, and legacy surfaces.
+- `apps/ui-demo` now provides the canonical local UI preview and dock/token demo.
 - Vercel site deployment workflow (`.github/workflows/vercel-site.yml`) was removed.
 
 ## New preview workflow
 
 ```bash
-pnpm --filter @loop-kit/workbench dev
+pnpm --filter @loop-kit/ui-demo dev
 ```
 
-Workbench routes:
+The UI demo is a single docked workspace showing:
 
-- `/primitives` - token-native foundation primitives
-- `/blocks` - extracted graphite/editor/outline blocks
-- `/legacy` - migrated shadcn-compatible catalog
-
-Note: the old dock demo implementation was copied for follow-up work but is not exported yet because
-it targets a pre-refactor dock API.
+- local Loop CLI component workflows
+- graphite-first dynamic docking
+- theme switching and full design-token reskinning
+- shortcut settings in a modal
 
 ## Why
 
