@@ -1,11 +1,13 @@
 # Codex
 
+##
+
 ## Toolchain Policy
 
 - Proto is the required toolchain manager for this repo.
 - Use `.prototools` as the single source of pinned tool versions.
 - Do not install ad-hoc global CLIs for repo workflows when a Proto-managed tool exists.
-- Installed through Proto (pinned): `node`, `pnpm`, `rust`, `go`, `dagger`, `dotenvx`, `nitric`.
+- Installed through Proto (pinned): `node`, `pnpm`, `rust`, `go`, `dagger`, `dotenvx`
 - Local custom Proto plugins live in `tools/proto/plugins/`.
 
 ## Bootstrap
@@ -63,25 +65,6 @@ dotenvx-wired commands:
     - `pnpm run release:publish:all`
     - `pnpm run release:publish:cli`
 - For env-driven publishes, set `NODE_AUTH_TOKEN` in `.env.release` and use `*:env` scripts.
-
-## Nitric Policy
-
-- Nitric powers backend/cloud automation examples.
-- Reference implementation: `examples/nitric/loop-registry`.
-- Keep Dagger as the outer automation layer; Nitric commands run inside Dagger functions.
-- Preferred starter cloud provider: GCP (`gcp-main`) for low-cost Cloud Run-style workflows and broad free-tier coverage.
-
-Common Nitric flows through Dagger:
-
-- `pnpm run nitric:registry:spec`
-- `pnpm run nitric:registry:build`
-- `pnpm run nitric:registry:deploy -- --stack gcp-main --env-file .env.registry`
-
-If stack configuration is not initialized yet, create it once interactively from the example directory:
-
-```bash
-proto run nitric -- stack new gcp-main gcp
-```
 
 ## Operational Guardrails
 
