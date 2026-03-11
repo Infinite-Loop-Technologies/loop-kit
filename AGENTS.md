@@ -1,94 +1,143 @@
-# Codex
+# AGENTS.md
 
-## Toolchain Policy
+## Purpose
 
-- Proto is the required toolchain manager for this repo.
-- Use `.prototools` as the single source of pinned tool versions.
-- Do not install ad-hoc global CLIs for repo workflows when a Proto-managed tool exists.
-- Installed through Proto (pinned): `node`, `pnpm`, `rust`, `go`, `dagger`, `dotenvx`, `nitric`.
-- Local custom Proto plugins live in `tools/proto/plugins/`.
+This repository is the **loop-kit monorepo**. It contains the core loop-kit packages, shared tooling, supporting infrastructure, and **Forge**, the agentic development environment being built on top of loop-kit.
 
-## Bootstrap
+This repo is both **product code** and **platform code**. Changes here must optimize for:
 
-```bash
-proto install --yes
-pnpm install
-```
+- narrow, reviewable slices
+- deterministic automation
+- clear repository history
+- explicit policy over implicit convention
+- future migration flexibility
 
-## Automation Policy
+Agents working in this repository must preserve clarity, minimize blast radius, and avoid “helpful” scope creep.
 
-- Dagger is the orchestration layer for build/test/ci/publish/deploy workflows.
-- Do not add or rely on GitHub Actions for core pipelines in this repo.
-- Discover available automation functions:
+---
 
-```bash
-pnpm run dagger:functions
-```
+## Non-negotiable rules
 
-- Default pipeline entrypoints:
-    - `pnpm run ci`
-    - `pnpm run build`
-    - `pnpm run typecheck`
-    - `pnpm run test`
+1. **Do not push directly to `main`.**
+2. **Do not merge your own PRs into `main` unless explicitly instructed.**
+3. **Prefer one issue or one coherent goal per branch.**
+4. **Open Draft PRs early for work in progress.**
+5. **Keep commits small, logical, and easy to review.**
+6. **Do not mix unrelated refactors with the main task.**
+7. **Do not expand scope unless you document why.**
+8. **Run the relevant checks before asking for review.**
+9. **Use feature flags for unfinished runtime behavior instead of long-lived hidden branches.**
+10. **If blocked by missing context, state the constraint clearly instead of guessing.**
 
-## Loop CLI Policy
+---
 
-- Loop CLI remains part of product dev/runtime behavior.
-- Use direct Loop scripts only when debugging a Loop-specific issue:
-    - `pnpm run ci:loop`
-    - `pnpm run build:loop`
-    - `pnpm run typecheck:loop`
-    - `pnpm run test:loop`
+## Branching rules
 
-## dotenvx Policy
+Branch names should be narrow and descriptive.
 
-- Use dotenvx for environment-driven local automation.
-- Release env template: `.env.release.example` -> `.env.release`
-- Nitric env template: `examples/nitric/loop-registry/.env.registry.example` -> `.env.registry`
+Good examples:
 
-dotenvx-wired commands:
+- `feat/forge-preview-shell`
+- `chore/ci-release-flow`
+- `refactor/remove-nitric`
 
-- `pnpm run release:publish:all:env`
-- `pnpm run release:publish:cli:env`
-- `pnpm run nitric:registry:spec:env`
-- `pnpm run nitric:registry:build:env`
-- `pnpm run nitric:registry:deploy:env`
+Avoid vague or oversized branch names such as:
 
-## npm Publishing
+- `new-forge`
+- `big-refactor`
+- `cleanup-everything`
 
-- Dry-run publish:
-    - `pnpm run release:publish:all:dry`
-    - `pnpm run release:publish:cli:dry`
-- Real publish:
-    - `pnpm run release:publish:all`
-    - `pnpm run release:publish:cli`
-- For env-driven publishes, set `NODE_AUTH_TOKEN` in `.env.release` and use `*:env` scripts.
+Branch scope should match the actual unit of review. If the branch description stops being precise, the branch is probably too large.
 
-## Nitric Policy
+---
 
-- Nitric powers backend/cloud automation examples.
-- Reference implementation: `examples/nitric/loop-registry`.
-- Keep Dagger as the outer automation layer; Nitric commands run inside Dagger functions.
-- Preferred starter cloud provider: GCP (`gcp-main`) for low-cost Cloud Run-style workflows and broad free-tier coverage.
+## Pull request rules
 
-Common Nitric flows through Dagger:
+- Default to a **Draft PR** first.
+- Use Draft PRs for visibility, early CI, and incremental discussion.
+- Mark a PR ready for review only when the slice is coherent.
+- PR descriptions should include:
+    - **purpose**
+    - **scope**
+    - **risks**
+    - **linked issue(s)**
+    - **rollout / feature-flag notes**
+- Keep PRs focused. A reviewer should be able to explain the purpose of the PR in one or two sentences.
 
-- `pnpm run nitric:registry:spec`
-- `pnpm run nitric:registry:build`
-- `pnpm run nitric:registry:deploy -- --stack gcp-main --env-file .env.registry`
+---
 
-If stack configuration is not initialized yet, create it once interactively from the example directory:
+## CI rules
 
-```bash
-proto run nitric -- stack new gcp-main gcp
-```
+- PRs must pass the relevant **affected** checks.
+- Production deployments must be **manual or tag-triggered only**.
+- Do not change CI/CD behavior unless the task is explicitly about CI/CD.
+- Do not weaken checks just to get a branch through.
+- Prefer explicit scripts and task definitions over ad hoc CI logic.
 
-## Operational Guardrails
+---
 
-- Docker Desktop (or another supported Docker engine) must be running before using Dagger/Nitric automation.
-- Keep versions pinned in `.prototools`; update pins intentionally and commit them.
+## Deployment rules
 
-## Rules for High Quality Responses
+- Preview deployments from PR workflows are allowed.
+- Production deployments must go through the release workflow.
+- Do not auto-enable unfinished user-facing behavior without an explicit flag or approval.
+- Deployment automation must remain deliberate and inspectable.
 
-- Test all web UIs with the Playwright MCP server. Consider even writing Playwright tests directly for highly complex situations. Make sure to always to do evaluations with Playwright to ensure that the web UI is working as it should.
-- Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+---
+
+## Refactor rules
+
+- Separate **mechanical changes** from **behavioral changes** when practical.
+- If a migration is large, split groundwork from behavior changes.
+- Prefer extracting reusable groundwork first, then consuming it in follow-up changes.
+- Do not hide structural rewrites inside feature work.
+
+---
+
+## Recovery rules
+
+If a branch becomes messy, stop and summarize:
+
+- what is safe
+- what is risky
+- what should be split
+- what should be cherry-picked
+- what should be discarded
+
+Favor salvageable commits over forcing a giant merge. Preserve useful work, but restore reviewability.
+
+---
+
+## Human collaboration rules
+
+- Link work to GitHub Issues whenever possible.
+- Use Draft PRs to expose current state early.
+- Leave concise notes when assumptions are made.
+- When tradeoffs are introduced, document them clearly.
+- Prefer clarity for the next human over cleverness for the current agent.
+
+---
+
+## Tooling posture
+
+- The current repository direction is **Moonrepo + GitHub Actions**.
+- Prefer explicit Moon tasks and repository scripts over orchestration sprawl.
+- Do not introduce or reintroduce Dagger unless the task explicitly requires it.
+- Local Git hooks may be used as guardrails, but they are not a replacement for CI or branch protection.
+
+---
+
+## Forge and loop-kit philosophy
+
+This repository is moving toward stronger **policy-driven development**.
+
+For now:
+
+- **Git** is the storage and collaboration layer.
+- **CI** is the enforcement layer.
+- **Scripts, checks, and documented rules** are preferred over vague agent instructions.
+- Future loop-kit and Forge semantics must be implemented through explicit tooling, policy, and code—not implied by prompts alone.
+
+Agents should not pretend that future platform semantics already exist. If a rule is not enforced yet, either implement the enforcement or describe the gap plainly.
+
+The goal is not just to make the repo pass today. The goal is to leave behind a system that remains understandable, enforceable, and evolvable.
