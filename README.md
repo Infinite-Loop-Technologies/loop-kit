@@ -4,57 +4,71 @@
 
 This repo is now:
 
+- Moonrepo-first for workspace orchestration and CI task execution
 - Proto-first for pinned toolchains
-- Dagger-first for CI/build/test/publish/deploy orchestration
+- GitHub Actions-first for CI orchestration
 - dotenvx-driven for local env-based automation
-- Nitric-enabled for local simulation and cloud deployment workflows
+- Dagger-free in repository automation
 
 ## Quickstart
 
-```bash
+```powershell
+irm https://moonrepo.dev/install/proto.ps1 | iex
 proto install --yes
-pnpm install
-pnpm run ci
+proto run pnpm -- install --frozen-lockfile
+proto run moon -- ci
 ```
 
-Prerequisites:
+Moon is pinned to `2.0.4`, and Proto is pinned to `0.55.4` through `.moon/toolchains.yml`.
 
-- Docker Desktop (or another compatible Docker engine) running
+More detailed usage notes live in `docs/moon-proto.md`.
 
 ## Pinned toolchain
 
 Tool versions are pinned in `.prototools`:
 
+- `moon` `2.0.4`
 - `node` `22.20.0`
 - `pnpm` `10.15.1`
 - `rust` `1.90.0`
-- `go` `1.25.0`
-- `dagger` `0.20.1`
 - `dotenvx` `1.53.0`
-- `nitric` `1.61.1`
 
 Custom Proto plugin definitions:
 
 - `tools/proto/plugins/dotenvx.toml`
-- `tools/proto/plugins/nitric.toml`
 
 ## Core automation commands
 
 ```bash
-pnpm run dagger:functions
 pnpm run ci
 pnpm run build
+pnpm run lint
 pnpm run typecheck
 pnpm run test
 ```
 
-Direct Loop-debug variants are still available:
+Moon infers project tasks directly from `package.json` scripts, so app/package targets like `moon run ui-demo:dev` and `moon run loop-cli:test` work without per-project boilerplate.
+
+CI runs through GitHub Actions and Moon:
+
+- GitHub Actions uses `moonrepo/setup-toolchain@v0`
+- Proto installs the pinned binary toolchain from `.prototools`, including Moon
+- `proto run moon -- ci :build :typecheck :test` is the CI entrypoint
+
+Manual publish flows:
 
 ```bash
-pnpm run ci:loop
-pnpm run build:loop
-pnpm run typecheck:loop
-pnpm run test:loop
+pnpm run release:publish:all:dry
+pnpm run release:publish:cli:dry
+```
+
+The CLI stack is also publishable through a manual GitHub Actions workflow dispatch.
+
+## Loop CLI helpers
+
+```bash
+pnpm run loop
+pnpm run loop:smoke
 ```
 
 ## npm publishing
@@ -79,33 +93,4 @@ dotenvx-based publish:
 cp .env.release.example .env.release
 pnpm run release:publish:all:env
 pnpm run release:publish:cli:env
-```
-
-## Nitric example: loop registry
-
-Example app:
-
-- `examples/nitric/loop-registry`
-
-It exposes a simple API registry for loop-kit artifacts (`component`, `module`, `bundle`).
-
-Dagger + Nitric commands:
-
-```bash
-pnpm run nitric:registry:spec
-pnpm run nitric:registry:build
-pnpm run nitric:registry:deploy -- --stack gcp-main --env-file .env.registry
-```
-
-dotenvx flow:
-
-```bash
-cp examples/nitric/loop-registry/.env.registry.example examples/nitric/loop-registry/.env.registry
-pnpm run nitric:registry:deploy:env
-```
-
-If no Nitric stack exists yet, initialize one interactively from the example directory:
-
-```bash
-proto run nitric -- stack new gcp-main gcp
 ```

@@ -1,7 +1,6 @@
 packages:
   - packages/*
   - apps/*
-  - tools/dagger
 
 onlyBuiltDependencies:
   - '@rolldown/browser'
