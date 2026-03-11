@@ -92,13 +92,6 @@
         "@loop-kit/ui-demo",
         "build"
       ]
-    },
-    "dev:shell": {
-      "command": "pnpm",
-      "args": [
-        "run",
-        "dev:shell:local"
-      ]
     }
   },
   "pipelines": {

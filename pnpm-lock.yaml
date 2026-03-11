@@ -12,37 +12,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  apps/shell-ui:
-    dependencies:
-      '@loop-kit/bridge':
-        specifier: workspace:*
-        version: link:../../packages/bridge
-      '@loop-kit/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      react:
-        specifier: ^19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.1.0(react@19.1.0)
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.2
-        version: 19.1.2
-      '@types/react-dom':
-        specifier: ^19.1.2
-        version: 19.1.2(@types/react@19.1.2)
-      '@vitejs/plugin-react':
-        specifier: ^5.0.0
-        version: 5.1.4(vite@7.2.2(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      vite:
-        specifier: ^7.0.0
-        version: 7.2.2(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2)
-
   apps/ui-demo:
     dependencies:
       '@loop-kit/ui':
@@ -82,22 +51,6 @@ importers:
       vite:
         specifier: ^7.0.0
         version: 7.2.2(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/bridge:
-    dependencies:
-      zod:
-        specifier: ^4.1.11
-        version: 4.1.11
-    devDependencies:
-      '@types/node':
-        specifier: ^22.17.0
-        version: 22.19.11
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
 
   packages/dock:
     dependencies:
