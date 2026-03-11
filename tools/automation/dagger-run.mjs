@@ -8,14 +8,17 @@ while (args[0] === "--") {
   args.shift();
 }
 
-const commandArgs =
-  args.length > 0 ? ["run", "dagger", "--", ...args] : ["run", "dagger"];
-
-const result = spawnSync("proto", commandArgs, {
+const result = spawnSync("dagger", args, {
   stdio: "inherit",
-  shell: process.platform === "win32",
   env: process.env,
 });
+
+if (result.error?.code === "ENOENT") {
+  console.error(
+    "The Dagger CLI was not found on PATH. Install Dagger separately if you still need the legacy release flows.",
+  );
+  process.exit(1);
+}
 
 if (result.status !== 0) {
   process.exit(result.status ?? 1);

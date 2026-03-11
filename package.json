@@ -3,7 +3,7 @@
     "scripts": {
         "setup:tools": "proto install --yes",
         "dagger": "node tools/automation/dagger-run.mjs",
-        "dagger:functions": "proto run dagger -- functions",
+        "dagger:functions": "pnpm run dagger -- functions",
         "build": "moon run :build",
         "ci": "moon ci :build :typecheck :test",
         "lint": "pnpm -r --if-present run lint",

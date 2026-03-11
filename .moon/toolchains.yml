@@ -1,9 +1,14 @@
 $schema: 'https://moonrepo.dev/schemas/toolchain.json'
 
-node:
-  version: '22.20.0'
+proto:
+  version: '0.55.4'
+
+javascript:
   packageManager: 'pnpm'
   syncPackageManagerField: true
+
+node:
+  version: '22.20.0'
 
 pnpm:
   version: '10.15.1'
