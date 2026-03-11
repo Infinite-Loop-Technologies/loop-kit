@@ -17,6 +17,18 @@ Agents working in this repository must preserve clarity, minimize risk, and avoi
 
 ---
 
+## Repository identity
+
+The canonical GitHub repository for this workspace is `Infinite-Loop-Technologies/loop-kit`.
+
+Important:
+
+- This repository is owned by the `Infinite-Loop-Technologies` organization.
+- Do not assume the authenticated GitHub user owns the repository.
+- When using GitHub MCP tools, prefer `owner = "Infinite-Loop-Technologies"` and `repo = "loop-kit"` unless the task explicitly targets another repository.
+
+---
+
 ## Non-negotiable rules
 
 1. **Do not push directly to `main`.**
@@ -57,6 +69,8 @@ When available, use the **GitHub MCP server** or equivalent repository tooling t
 
 If GitHub MCP or another required MCP is unavailable or misconfigured, **stop immediately** and report the constraint. Do **not** improvise around missing repository visibility, and do **not** start “fixing the MCP” unless explicitly instructed.
 
+If a branch has not been pushed yet and its scope is no longer accurate, rename it.
+
 ---
 
 ## MCP and tooling rules
@@ -74,74 +88,70 @@ If GitHub MCP or another required MCP is unavailable or misconfigured, **stop im
 
 ## Branching and PR workflow
 
-Default to:
+Default to a **serial slice workflow**.
 
-- **one branch**
-- **one Draft PR**
-- **one coherent slice**
-- **base branch = `main`**
+For this repository, the default is:
 
-Branch names should be narrow and descriptive.
+- one active implementation branch
+- one Draft PR to `main`
+- one coherent slice
+- merge that slice before starting the next dependent slice
 
-Good examples:
-
-- `feat/forge-preview-shell`
-- `chore/ci-release-flow`
-- `refactor/remove-nitric`
-
-Avoid vague or oversized branch names such as:
-
-- `new-forge`
-- `big-refactor`
-- `cleanup-everything`
-
-Branch scope should match the actual unit of review. If the branch description stops being precise, the branch is probably too large.
+This is the default, not a prohibition on multiple active branches.
 
 ### Default workflow
 
-Use a single task-specific branch from `main`, open a Draft PR to `main`, and keep pushing commits to that same branch until the slice is coherent.
-
-This is the normal workflow.
+1. Start from updated `main`.
+2. Create a narrow task-specific branch.
+3. Open a Draft PR to `main` early for visibility and CI.
+4. Keep pushing commits to that same branch until the slice is coherent.
+5. Run the relevant checks.
+6. Mark ready for review only when the slice is reviewable.
+7. Merge the slice.
+8. Start the next dependent slice from the new `main`.
 
 ### Large initiative workflow
 
-For a larger initiative, do **not** create a long-lived dumping-ground branch.
+For a larger initiative, create an umbrella issue or planning note, then execute the work as a **sequence of coherent slices**.
 
-Instead:
-
-- create an umbrella issue or planning note
-- split the work into a small number of coherent slices
-- create separate branches from `main`
-- open separate Draft PRs to `main`
-
-Prefer this shape:
+Example:
 
 - `chore/repo-policy-and-agents`
-- `chore/add-moonrepo-baseline`
-- `chore/migrate-gha-release-flow`
+- `chore/repo-automation-moon-migration`
+- `chore/release-workflow-hardening`
 
-Do **not** silently accumulate unrelated work into one branch just because it is already open.
+The default should be to merge enabling slices first, then branch the next slice from updated `main`.
 
-### Stacked branch workflow
+### Side-by-side branches
 
-Use stacked branches **only** when one slice truly depends on another and stacking materially improves reviewability.
+Use multiple active branches only when:
+
+- the work is truly independent, or
+- one slice is blocked and another unrelated slice can proceed safely, or
+- there is a deliberate short dependency chain that is still manageable
+
+Do not create multiple overlapping branches by default.
+
+### Stacked branches
+
+Use stacked branches only when one slice truly depends on another and merging the lower slice first is not practical.
 
 Rules for stacked branches:
 
 - keep the stack shallow
-- prefer 2 levels, avoid going beyond 3
+- prefer 2 levels
+- avoid going beyond 3
 - document the dependency clearly in the PR description
-- rebase or restack when the lower branch changes significantly
 
-Do **not** use stacked branches as the default workflow.
+Do not use stacked branches as the default workflow.
 
 ### Draft PR rules
 
 - Default to a **Draft PR** first.
-- Use Draft PRs for visibility, early CI, and incremental discussion.
-- Mark a PR ready for review only when the slice is coherent.
-- A Draft PR is still a PR for a single branch; it is not a container for multiple branches.
-- If commits from another branch are needed, merge, rebase, or cherry-pick them onto the PR branch intentionally.
+- Use Draft PRs for visibility, CI, self-review, and incremental discussion.
+- A Draft PR is still a PR for a single head branch against a single base branch.
+- If commits from another branch are needed, merge, rebase, or cherry-pick them intentionally onto the PR branch.
+- Do not treat a Draft PR as a container for multiple branches.
 
 PR descriptions should include:
 
@@ -153,6 +163,33 @@ PR descriptions should include:
 - **dependency notes** for stacked work, if applicable
 
 Keep PRs focused. A reviewer should be able to explain the purpose of the PR in one or two sentences.
+
+### Tiny unrelated changes
+
+- If a tiny docs or README fix is directly related to the current task, it may be included in the same branch.
+- If it is unrelated, prefer a short-lived focused docs/chore branch.
+- Do not accumulate random unrelated cleanup in a long-lived catch-all branch.
+
+### Expected task completion posture
+
+For repository code changes, the default goal is to end with:
+
+- a task-appropriate branch
+- clear commits
+- relevant checks run
+- a Draft PR opened or updated
+
+If a task is research, planning, triage, or another non-code activity, a PR is not required.
+
+### Recovery tools
+
+When a branch becomes messy, prefer repair by:
+
+- cherry-picking clean commits into a fresh branch
+- rebasing or merging from `main` when needed
+- using worktrees for parallel work only when useful
+
+If cleanup is cheaper than continuing, stop and create a fresh branch from `main`.
 
 ---
 
@@ -184,6 +221,41 @@ Keep PRs focused. A reviewer should be able to explain the purpose of the PR in 
 
 ---
 
+## Testing and TDD rules
+
+Tests must prove behavior, not create noise.
+
+### Default testing strategy
+
+- Use **Vitest** by default for JavaScript / TypeScript unit and integration tests.
+- Use **Playwright** for end-to-end testing, complex UI behavior, and fragile browser flows.
+- For non-trivial UI work, prefer real interaction testing over visual guessing.
+- Add durable selectors such as `data-testid`, other `data-*` attributes, or stable IDs when needed for reliable automation.
+
+### TDD posture
+
+Prefer test-first or test-nearby development for:
+
+- bug fixes
+- parsers
+- planners
+- graph logic
+- transforms
+- CI / release logic
+- other code with a crisp contract
+
+For UI-heavy work, tests may be added immediately after implementation if that is more practical, but the final change must still include meaningful validation.
+
+### Test quality rules
+
+- Prefer focused assertions over broad brittle snapshots.
+- Avoid tests that only restate implementation details.
+- Prefer tests that exercise observable behavior and failure modes.
+- After conflict resolution, rebasing, merging, or cherry-picking, rerun the relevant tests.
+- Use fuzzing or property-based testing selectively for code that benefits from wide-input validation, such as parsers, patch logic, and graph transformations.
+
+---
+
 ## Recovery rules
 
 If a branch becomes messy, stop and summarize:
@@ -196,13 +268,6 @@ If a branch becomes messy, stop and summarize:
 
 Favor salvageable commits over forcing a giant merge. Preserve useful work, but restore reviewability.
 
-If needed, use:
-
-- **worktrees** for parallel branch work
-- **cherry-pick** to salvage clean commits
-- **rebase** to keep long-lived branches current
-- **fresh branches from `main`** when cleanup is cheaper than repair
-
 ---
 
 ## Human collaboration rules
@@ -212,6 +277,18 @@ If needed, use:
 - Leave concise notes when assumptions are made.
 - When tradeoffs are introduced, document them clearly.
 - Prefer clarity for the next human over cleverness for the current agent.
+
+---
+
+## Issue and task management rules
+
+- Use **GitHub Issues** as the default task system for repository work unless explicitly instructed otherwise.
+- Prefer one coherent problem, feature, bug, or migration slice per issue.
+- Use umbrella issues for large initiatives and smaller linked issues for execution slices.
+- Link branches and PRs to issues whenever practical.
+- If an issue already exists for the requested task, use it.
+- If no issue exists and the task is substantial, create or suggest creating one before or during the work.
+- Do not create issue spam for trivial one-line edits unless tracking them is genuinely useful.
 
 ---
 
