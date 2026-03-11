@@ -2,17 +2,30 @@
 
 ## Purpose
 
-This repository is the **loop-kit monorepo**. It contains the core loop-kit packages, shared tooling, supporting infrastructure, and **Forge**, the agentic development environment being built on top of loop-kit.
+This repository is the **loop-kit monorepo**. It contains the core loop-kit packages, shared tooling, repository automation, and **Forge**, the agentic development environment being built on top of loop-kit.
 
 This repo is both **product code** and **platform code**. Changes here must optimize for:
 
 - narrow, reviewable slices
 - deterministic automation
+- explicit policy over vague convention
 - clear repository history
-- explicit policy over implicit convention
 - future migration flexibility
+- minimal blast radius
 
-Agents working in this repository must preserve clarity, minimize blast radius, and avoid “helpful” scope creep.
+Agents working in this repository must preserve clarity, minimize risk, and avoid “helpful” scope expansion.
+
+---
+
+## Repository identity
+
+The canonical GitHub repository for this workspace is `Infinite-Loop-Technologies/loop-kit`.
+
+Important:
+
+- This repository is owned by the `Infinite-Loop-Technologies` organization.
+- Do not assume the authenticated GitHub user owns the repository.
+- When using GitHub MCP tools, prefer `owner = "Infinite-Loop-Technologies"` and `repo = "loop-kit"` unless the task explicitly targets another repository.
 
 ---
 
@@ -28,41 +41,155 @@ Agents working in this repository must preserve clarity, minimize blast radius, 
 8. **Run the relevant checks before asking for review.**
 9. **Use feature flags for unfinished runtime behavior instead of long-lived hidden branches.**
 10. **If blocked by missing context, state the constraint clearly instead of guessing.**
+11. **Always verify Git state before making changes. Never assume the current branch is correct for the task.**
+12. **Always prefer existing MCP tools and repository automation over ad hoc manual guessing.**
+13. **Do not attempt to repair broken MCP/tooling setup unless the task is explicitly about fixing that setup. Stop, report the missing capability clearly, and have the human fix the environment first.**
 
 ---
 
-## Branching rules
+## Git responsibility rules
 
-Branch names should be narrow and descriptive.
+Before starting work, always:
 
-Good examples:
+- inspect the current branch
+- inspect working tree status
+- inspect local uncommitted changes
+- confirm whether there is already an open PR for the branch
+- confirm whether the branch actually matches the requested task
+- create or switch to a narrow task-specific branch if needed
 
-- `feat/forge-preview-shell`
-- `chore/ci-release-flow`
-- `refactor/remove-nitric`
+Never assume:
 
-Avoid vague or oversized branch names such as:
+- that the current branch is correct
+- that uncommitted changes are safe to reuse
+- that an existing branch is still the right place for new work
+- that a PR already exists or is in the correct state
 
-- `new-forge`
-- `big-refactor`
-- `cleanup-everything`
+When available, use the **GitHub MCP server** or equivalent repository tooling to inspect PR state, branch context, checks, related issues, and repository metadata instead of guessing from partial local state.
 
-Branch scope should match the actual unit of review. If the branch description stops being precise, the branch is probably too large.
+If GitHub MCP or another required MCP is unavailable or misconfigured, **stop immediately** and report the constraint. Do **not** improvise around missing repository visibility, and do **not** start “fixing the MCP” unless explicitly instructed.
+
+If a branch has not been pushed yet and its scope is no longer accurate, rename it.
 
 ---
 
-## Pull request rules
+## MCP and tooling rules
+
+- Use **Context7 MCP by default** whenever library/API documentation, setup steps, configuration details, or code-generation guidance is needed.
+- Use **Playwright MCP** for validating complex or fragile web UI behavior.
+- For non-trivial UI work, prefer **real validation** over visual guessing:
+    - use Playwright MCP
+    - add or improve automated tests where appropriate
+    - add stable selectors such as `data-testid`, `data-*` attributes, or durable IDs when needed for reliable automation
+- Use direct MCP integrations such as GitHub whenever available instead of recreating their capabilities manually.
+- If a task depends on an MCP integration that is not available, state that clearly and stop rather than faking confidence.
+
+---
+
+## Branching and PR workflow
+
+Default to a **serial slice workflow**.
+
+For this repository, the default is:
+
+- one active implementation branch
+- one Draft PR to `main`
+- one coherent slice
+- merge that slice before starting the next dependent slice
+
+This is the default, not a prohibition on multiple active branches.
+
+### Default workflow
+
+1. Start from updated `main`.
+2. Create a narrow task-specific branch.
+3. Open a Draft PR to `main` early for visibility and CI.
+4. Keep pushing commits to that same branch until the slice is coherent.
+5. Run the relevant checks.
+6. Mark ready for review only when the slice is reviewable.
+7. Merge the slice.
+8. Start the next dependent slice from the new `main`.
+
+### Large initiative workflow
+
+For a larger initiative, create an umbrella issue or planning note, then execute the work as a **sequence of coherent slices**.
+
+Example:
+
+- `chore/repo-policy-and-agents`
+- `chore/repo-automation-moon-migration`
+- `chore/release-workflow-hardening`
+
+The default should be to merge enabling slices first, then branch the next slice from updated `main`.
+
+### Side-by-side branches
+
+Use multiple active branches only when:
+
+- the work is truly independent, or
+- one slice is blocked and another unrelated slice can proceed safely, or
+- there is a deliberate short dependency chain that is still manageable
+
+Do not create multiple overlapping branches by default.
+
+### Stacked branches
+
+Use stacked branches only when one slice truly depends on another and merging the lower slice first is not practical.
+
+Rules for stacked branches:
+
+- keep the stack shallow
+- prefer 2 levels
+- avoid going beyond 3
+- document the dependency clearly in the PR description
+
+Do not use stacked branches as the default workflow.
+
+### Draft PR rules
 
 - Default to a **Draft PR** first.
-- Use Draft PRs for visibility, early CI, and incremental discussion.
-- Mark a PR ready for review only when the slice is coherent.
-- PR descriptions should include:
-    - **purpose**
-    - **scope**
-    - **risks**
-    - **linked issue(s)**
-    - **rollout / feature-flag notes**
-- Keep PRs focused. A reviewer should be able to explain the purpose of the PR in one or two sentences.
+- Use Draft PRs for visibility, CI, self-review, and incremental discussion.
+- A Draft PR is still a PR for a single head branch against a single base branch.
+- If commits from another branch are needed, merge, rebase, or cherry-pick them intentionally onto the PR branch.
+- Do not treat a Draft PR as a container for multiple branches.
+
+PR descriptions should include:
+
+- **purpose**
+- **scope**
+- **risks**
+- **linked issue(s)**
+- **rollout / feature-flag notes**
+- **dependency notes** for stacked work, if applicable
+
+Keep PRs focused. A reviewer should be able to explain the purpose of the PR in one or two sentences.
+
+### Tiny unrelated changes
+
+- If a tiny docs or README fix is directly related to the current task, it may be included in the same branch.
+- If it is unrelated, prefer a short-lived focused docs/chore branch.
+- Do not accumulate random unrelated cleanup in a long-lived catch-all branch.
+
+### Expected task completion posture
+
+For repository code changes, the default goal is to end with:
+
+- a task-appropriate branch
+- clear commits
+- relevant checks run
+- a Draft PR opened or updated
+
+If a task is research, planning, triage, or another non-code activity, a PR is not required.
+
+### Recovery tools
+
+When a branch becomes messy, prefer repair by:
+
+- cherry-picking clean commits into a fresh branch
+- rebasing or merging from `main` when needed
+- using worktrees for parallel work only when useful
+
+If cleanup is cheaper than continuing, stop and create a fresh branch from `main`.
 
 ---
 
@@ -94,6 +221,41 @@ Branch scope should match the actual unit of review. If the branch description s
 
 ---
 
+## Testing and TDD rules
+
+Tests must prove behavior, not create noise.
+
+### Default testing strategy
+
+- Use **Vitest** by default for JavaScript / TypeScript unit and integration tests.
+- Use **Playwright** for end-to-end testing, complex UI behavior, and fragile browser flows.
+- For non-trivial UI work, prefer real interaction testing over visual guessing.
+- Add durable selectors such as `data-testid`, other `data-*` attributes, or stable IDs when needed for reliable automation.
+
+### TDD posture
+
+Prefer test-first or test-nearby development for:
+
+- bug fixes
+- parsers
+- planners
+- graph logic
+- transforms
+- CI / release logic
+- other code with a crisp contract
+
+For UI-heavy work, tests may be added immediately after implementation if that is more practical, but the final change must still include meaningful validation.
+
+### Test quality rules
+
+- Prefer focused assertions over broad brittle snapshots.
+- Avoid tests that only restate implementation details.
+- Prefer tests that exercise observable behavior and failure modes.
+- After conflict resolution, rebasing, merging, or cherry-picking, rerun the relevant tests.
+- Use fuzzing or property-based testing selectively for code that benefits from wide-input validation, such as parsers, patch logic, and graph transformations.
+
+---
+
 ## Recovery rules
 
 If a branch becomes messy, stop and summarize:
@@ -118,12 +280,26 @@ Favor salvageable commits over forcing a giant merge. Preserve useful work, but 
 
 ---
 
+## Issue and task management rules
+
+- Use **GitHub Issues** as the default task system for repository work unless explicitly instructed otherwise.
+- Prefer one coherent problem, feature, bug, or migration slice per issue.
+- Use umbrella issues for large initiatives and smaller linked issues for execution slices.
+- Link branches and PRs to issues whenever practical.
+- If an issue already exists for the requested task, use it.
+- If no issue exists and the task is substantial, create or suggest creating one before or during the work.
+- Do not create issue spam for trivial one-line edits unless tracking them is genuinely useful.
+
+---
+
 ## Tooling posture
 
 - The current repository direction is **Moonrepo + GitHub Actions**.
 - Prefer explicit Moon tasks and repository scripts over orchestration sprawl.
 - Do not introduce or reintroduce Dagger unless the task explicitly requires it.
 - Local Git hooks may be used as guardrails, but they are not a replacement for CI or branch protection.
+- Keep tool versions pinned in **`.prototools`**.
+- Update tool pins intentionally and commit those pin changes as part of the relevant work.
 
 ---
 
@@ -135,9 +311,9 @@ For now:
 
 - **Git** is the storage and collaboration layer.
 - **CI** is the enforcement layer.
-- **Scripts, checks, and documented rules** are preferred over vague agent instructions.
-- Future loop-kit and Forge semantics must be implemented through explicit tooling, policy, and code—not implied by prompts alone.
+- **Scripts, checks, tests, and documented rules** are preferred over vague agent instructions.
+- Future loop-kit and Forge semantics must be implemented through explicit tooling, policy, and code — not implied by prompts alone.
 
-Agents should not pretend that future platform semantics already exist. If a rule is not enforced yet, either implement the enforcement or describe the gap plainly.
+Agents must not pretend that future platform semantics already exist. If a rule is not enforced yet, either implement the enforcement or describe the gap plainly.
 
-The goal is not just to make the repo pass today. The goal is to leave behind a system that remains understandable, enforceable, and evolvable.
+The goal is not merely to make the repo pass today. The goal is to leave behind a system that remains understandable, enforceable, and evolvable.
