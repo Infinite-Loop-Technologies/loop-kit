@@ -10,6 +10,10 @@ function run(command, args) {
     });
 }
 
+function runPnpm(args) {
+    return run('proto', ['run', 'pnpm', '--', ...args]);
+}
+
 function main() {
     const args = process.argv.slice(2);
     while (args[0] === '--') {
@@ -18,12 +22,12 @@ function main() {
 
     const doctorArgs = args.length > 0 ? args : ['--cwd', '.'];
 
-    const stable = run('pnpm', ['run', 'loop:stable', 'doctor', ...doctorArgs]);
+    const stable = runPnpm(['run', 'loop:stable', 'doctor', ...doctorArgs]);
     if (stable.status !== 0) {
         process.exit(stable.status ?? 1);
     }
 
-    const dev = run('pnpm', ['run', 'loop:dev', 'doctor', ...doctorArgs]);
+    const dev = runPnpm(['run', 'loop:dev', 'doctor', ...doctorArgs]);
     if (dev.status !== 0) {
         console.warn('warning: loop:dev smoke failed (stable CLI smoke passed).');
     }
