@@ -8,28 +8,30 @@ This repo is now:
 - Proto-first for pinned toolchains
 - GitHub Actions-first for CI orchestration
 - dotenvx-driven for local env-based automation
-- Dagger-retained for transitional release automation only
+- Dagger-minimized and no longer provisioned through Proto
 
 ## Quickstart
 
-```bash
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/moonrepo/moon/releases/download/v2.0.0/moon_cli-installer.ps1 | iex"
+```powershell
+irm https://moonrepo.dev/install/proto.ps1 | iex
 proto install --yes
-pnpm install
-pnpm run ci
+proto run pnpm -- install --frozen-lockfile
+proto run moon -- ci
 ```
 
-Moon is pinned to `2.0.0` for this baseline.
+Moon is pinned to `2.0.4`, and Proto is pinned to `0.55.4` through `.moon/toolchains.yml`.
+
+More detailed usage notes live in `docs/moon-proto.md`.
 
 ## Pinned toolchain
 
 Tool versions are pinned in `.prototools`:
 
+- `moon` `2.0.4`
 - `node` `22.20.0`
 - `pnpm` `10.15.1`
 - `rust` `1.90.0`
 - `go` `1.25.0`
-- `dagger` `0.20.1`
 - `dotenvx` `1.53.0`
 
 Custom Proto plugin definitions:
@@ -47,11 +49,11 @@ pnpm run test
 
 CI runs through GitHub Actions and Moon:
 
-- GitHub Actions installs Moon `2.0.0`
-- Proto installs the pinned binary toolchain from `.prototools`
-- `moon ci :build :typecheck :test` is the CI entrypoint
+- GitHub Actions uses `moonrepo/setup-toolchain@v0`
+- Proto installs the pinned binary toolchain from `.prototools`, including Moon
+- `proto run moon -- ci :build :typecheck :test` is the CI entrypoint
 
-Transitional Dagger commands remain available for release flows:
+Legacy Dagger commands remain available for release flows, but require a separately installed `dagger` CLI:
 
 ```bash
 pnpm run dagger:functions
