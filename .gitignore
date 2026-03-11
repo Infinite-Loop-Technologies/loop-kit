@@ -65,8 +65,6 @@ loop/auth.json
 packages/loop-cli/dist/
 packages/loop-kernel/dist/
 packages/loop-contracts/dist/
-packages/bridge/dist/
 packages/loopd/dist/
 packages/loop-mcp/dist/
 packages/loop-ai/dist/
-apps/shell-ui/dist/

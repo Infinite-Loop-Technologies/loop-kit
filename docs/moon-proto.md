@@ -4,7 +4,7 @@
 
 ## Source of truth
 
-- `.prototools` pins repository-scoped binary tools such as `moon`, `node`, `pnpm`, `rust`, and `dotenvx`.
+- `.prototools` pins repository-scoped binary tools such as `moon`, `node`, `pnpm`, and `dotenvx`.
 - `.moon/toolchains.yml` configures Moon's toolchain behavior and pins the Proto version Moon should expect in CI.
 - `.github/workflows/ci.yml` uses `moonrepo/setup-toolchain@v0` so CI restores the Proto cache and installs the pinned toolchain automatically.
 - Moon infers project tasks directly from `package.json` scripts through `javascript.inferTasksFromScripts`, so project targets like `ui-demo:dev` do not need hand-written wrapper tasks.

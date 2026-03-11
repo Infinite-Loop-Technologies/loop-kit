@@ -30,7 +30,6 @@ Tool versions are pinned in `.prototools`:
 - `moon` `2.0.4`
 - `node` `22.20.0`
 - `pnpm` `10.15.1`
-- `rust` `1.90.0`
 - `dotenvx` `1.53.0`
 
 Custom Proto plugin definitions:
