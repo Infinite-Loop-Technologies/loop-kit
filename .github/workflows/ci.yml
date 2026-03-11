@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  moon-ci:
+    name: Moon CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Moon and Proto
+        uses: moonrepo/setup-moon-action@v1
+        with:
+          version: '2.0.0'
+          proto-version: '0.55.4'
+
+      - name: Install pinned Proto tools
+        run: proto install --yes
+
+      - name: Install workspace dependencies
+        run: proto run pnpm -- install --frozen-lockfile
+
+      - name: Resolve comparison range
+        id: range
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+            echo "head=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+            echo "head=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Moon CI
+        run: moon ci :build :typecheck :test --base "${{ steps.range.outputs.base }}" --head "${{ steps.range.outputs.head }}"

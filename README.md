@@ -4,22 +4,22 @@
 
 This repo is now:
 
+- Moonrepo-first for workspace orchestration and CI task execution
 - Proto-first for pinned toolchains
-- Dagger-first for CI/build/test/publish/deploy orchestration
+- GitHub Actions-first for CI orchestration
 - dotenvx-driven for local env-based automation
-- Nitric-enabled for local simulation and cloud deployment workflows
+- Dagger-retained for transitional release automation only
 
 ## Quickstart
 
 ```bash
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/moonrepo/moon/releases/download/v2.0.0/moon_cli-installer.ps1 | iex"
 proto install --yes
 pnpm install
 pnpm run ci
 ```
 
-Prerequisites:
-
-- Docker Desktop (or another compatible Docker engine) running
+Moon is pinned to `2.0.0` for this baseline.
 
 ## Pinned toolchain
 
@@ -31,21 +31,30 @@ Tool versions are pinned in `.prototools`:
 - `go` `1.25.0`
 - `dagger` `0.20.1`
 - `dotenvx` `1.53.0`
-- `nitric` `1.61.1`
 
 Custom Proto plugin definitions:
 
 - `tools/proto/plugins/dotenvx.toml`
-- `tools/proto/plugins/nitric.toml`
 
 ## Core automation commands
 
 ```bash
-pnpm run dagger:functions
 pnpm run ci
 pnpm run build
 pnpm run typecheck
 pnpm run test
+```
+
+CI runs through GitHub Actions and Moon:
+
+- GitHub Actions installs Moon `2.0.0`
+- Proto installs the pinned binary toolchain from `.prototools`
+- `moon ci :build :typecheck :test` is the CI entrypoint
+
+Transitional Dagger commands remain available for release flows:
+
+```bash
+pnpm run dagger:functions
 ```
 
 Direct Loop-debug variants are still available:

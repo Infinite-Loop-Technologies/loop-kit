@@ -1,0 +1,50 @@
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
+
+tasks:
+  build:
+    command: 'pnpm'
+    args:
+      - 'run'
+      - '--if-present'
+      - 'build'
+    toolchain:
+      - 'node'
+      - 'pnpm'
+    options:
+      runInCI: true
+
+  typecheck:
+    command: 'pnpm'
+    args:
+      - 'run'
+      - '--if-present'
+      - 'typecheck'
+    toolchain:
+      - 'node'
+      - 'pnpm'
+    options:
+      runInCI: true
+
+  test:
+    command: 'pnpm'
+    args:
+      - 'run'
+      - '--if-present'
+      - 'test'
+    toolchain:
+      - 'node'
+      - 'pnpm'
+    options:
+      runInCI: true
+
+  lint:
+    command: 'pnpm'
+    args:
+      - 'run'
+      - '--if-present'
+      - 'lint'
+    toolchain:
+      - 'node'
+      - 'pnpm'
+    options:
+      runInCI: true

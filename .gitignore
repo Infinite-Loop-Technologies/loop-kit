@@ -54,8 +54,9 @@ next-env.d.ts
 # stash
 /vault
 
-# moon (legacy cache)
-.moon/
+# moon
+.moon/cache/
+.moon/docker/
 
 # loop auth material
 loop/auth.json
