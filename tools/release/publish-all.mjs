@@ -75,7 +75,7 @@ function parseArgs(argv) {
                 '',
                 'Options:',
                 '  --dry-run      Pack only, do not publish',
-                '  --skip-checks  Skip loop ci gate',
+                '  --skip-checks  Skip Moon verification',
                 '  --tag <tag>    Publish dist-tag (for example next)',
             ].join('\n'));
             process.exit(0);
@@ -103,6 +103,14 @@ function run(command, args) {
     }
 }
 
+function runPnpm(args) {
+    run('proto', ['run', 'pnpm', '--', ...args]);
+}
+
+function runMoonTask(target) {
+    run('proto', ['run', 'moon', '--', 'run', target]);
+}
+
 function setupNpmAuthUserConfig() {
     const token = process.env.NODE_AUTH_TOKEN ?? process.env.NPM_TOKEN;
     if (!token) {
@@ -127,7 +135,11 @@ function setupNpmAuthUserConfig() {
 }
 
 function runChecks() {
-    run('pnpm', ['run', 'loop', '--', 'ci', '--cwd', '.']);
+    for (const item of PUBLISH_ORDER) {
+        for (const task of item.tasks) {
+            runMoonTask(`${item.moonProject}:${task}`);
+        }
+    }
 }
 
 function publishOne(item, options) {
@@ -148,7 +160,7 @@ function publishOne(item, options) {
         args.push('--tag', options.tag);
     }
 
-    run('pnpm', args);
+    runPnpm(args);
 }
 
 function main() {

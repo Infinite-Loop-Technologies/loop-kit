@@ -4,6 +4,8 @@ proto:
   version: '0.55.4'
 
 javascript:
+  dedupeOnLockfileChange: false
+  inferTasksFromScripts: true
   packageManager: 'pnpm'
   syncPackageManagerField: true
 

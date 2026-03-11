@@ -7,12 +7,36 @@ import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const PUBLISH_ORDER = [
-    '@loop-kit/loop-contracts',
-    '@loop-kit/loop-kernel',
-    '@loop-kit/loopd',
-    '@loop-kit/loop-mcp',
-    '@loop-kit/loop-ai',
-    '@loop-kit/loop-cli',
+    {
+        moonProject: 'loop-contracts',
+        packageName: '@loop-kit/loop-contracts',
+        tasks: ['typecheck', 'build', 'test'],
+    },
+    {
+        moonProject: 'loop-kernel',
+        packageName: '@loop-kit/loop-kernel',
+        tasks: ['typecheck', 'build', 'test'],
+    },
+    {
+        moonProject: 'loopd',
+        packageName: '@loop-kit/loopd',
+        tasks: ['typecheck', 'build', 'test'],
+    },
+    {
+        moonProject: 'loop-mcp',
+        packageName: '@loop-kit/loop-mcp',
+        tasks: ['typecheck', 'build', 'test'],
+    },
+    {
+        moonProject: 'loop-ai',
+        packageName: '@loop-kit/loop-ai',
+        tasks: ['typecheck', 'build', 'test'],
+    },
+    {
+        moonProject: 'loop-cli',
+        packageName: '@loop-kit/loop-cli',
+        tasks: ['typecheck', 'build', 'test'],
+    },
 ];
 
 function parseArgs(argv) {
@@ -49,7 +73,7 @@ function parseArgs(argv) {
                     '',
                     'Options:',
                     '  --dry-run      Pack only, do not publish',
-                    '  --skip-checks  Skip loop ci gate',
+                    '  --skip-checks  Skip Moon verification',
                     '  --tag <tag>    Publish dist-tag (default: latest)',
                 ].join('\n'),
             );
@@ -74,6 +98,14 @@ function run(command, args) {
     }
 }
 
+function runPnpm(args) {
+    run('proto', ['run', 'pnpm', '--', ...args]);
+}
+
+function runMoonTask(target) {
+    run('proto', ['run', 'moon', '--', 'run', target]);
+}
+
 function setupNpmAuthUserConfig() {
     const token = process.env.NODE_AUTH_TOKEN ?? process.env.NPM_TOKEN;
     if (!token) {
@@ -93,11 +125,15 @@ function setupNpmAuthUserConfig() {
 }
 
 function runChecks() {
-    run('pnpm', ['run', 'loop', '--', 'ci', '--cwd', '.']);
+    for (const item of PUBLISH_ORDER) {
+        for (const task of item.tasks) {
+            runMoonTask(`${item.moonProject}:${task}`);
+        }
+    }
 }
 
-function publishOne(packageName, options) {
-    const args = ['--filter', packageName, 'publish', '--access', 'public', '--no-git-checks'];
+function publishOne(item, options) {
+    const args = ['--filter', item.packageName, 'publish', '--access', 'public', '--no-git-checks'];
     if (options.dryRun) {
         args.push('--dry-run');
     }
@@ -105,7 +141,7 @@ function publishOne(packageName, options) {
         args.push('--tag', options.tag);
     }
 
-    run('pnpm', args);
+    runPnpm(args);
 }
 
 function main() {
@@ -117,9 +153,9 @@ function main() {
             runChecks();
         }
 
-        for (const packageName of PUBLISH_ORDER) {
-            console.log(`\n>>> Publishing ${packageName}`);
-            publishOne(packageName, options);
+        for (const item of PUBLISH_ORDER) {
+            console.log(`\n>>> Publishing ${item.packageName}`);
+            publishOne(item, options);
         }
     } finally {
         if (tempUserConfigPath) {

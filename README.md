@@ -8,7 +8,7 @@ This repo is now:
 - Proto-first for pinned toolchains
 - GitHub Actions-first for CI orchestration
 - dotenvx-driven for local env-based automation
-- Dagger-minimized and no longer provisioned through Proto
+- Dagger-free in repository automation
 
 ## Quickstart
 
@@ -31,7 +31,6 @@ Tool versions are pinned in `.prototools`:
 - `node` `22.20.0`
 - `pnpm` `10.15.1`
 - `rust` `1.90.0`
-- `go` `1.25.0`
 - `dotenvx` `1.53.0`
 
 Custom Proto plugin definitions:
@@ -43,9 +42,12 @@ Custom Proto plugin definitions:
 ```bash
 pnpm run ci
 pnpm run build
+pnpm run lint
 pnpm run typecheck
 pnpm run test
 ```
+
+Moon infers project tasks directly from `package.json` scripts, so app/package targets like `moon run ui-demo:dev` and `moon run loop-cli:test` work without per-project boilerplate.
 
 CI runs through GitHub Actions and Moon:
 
@@ -53,19 +55,20 @@ CI runs through GitHub Actions and Moon:
 - Proto installs the pinned binary toolchain from `.prototools`, including Moon
 - `proto run moon -- ci :build :typecheck :test` is the CI entrypoint
 
-Legacy Dagger commands remain available for release flows, but require a separately installed `dagger` CLI:
+Manual publish flows:
 
 ```bash
-pnpm run dagger:functions
+pnpm run release:publish:all:dry
+pnpm run release:publish:cli:dry
 ```
 
-Direct Loop-debug variants are still available:
+The CLI stack is also publishable through a manual GitHub Actions workflow dispatch.
+
+## Loop CLI helpers
 
 ```bash
-pnpm run ci:loop
-pnpm run build:loop
-pnpm run typecheck:loop
-pnpm run test:loop
+pnpm run loop
+pnpm run loop:smoke
 ```
 
 ## npm publishing
@@ -90,33 +93,4 @@ dotenvx-based publish:
 cp .env.release.example .env.release
 pnpm run release:publish:all:env
 pnpm run release:publish:cli:env
-```
-
-## Nitric example: loop registry
-
-Example app:
-
-- `examples/nitric/loop-registry`
-
-It exposes a simple API registry for loop-kit artifacts (`component`, `module`, `bundle`).
-
-Dagger + Nitric commands:
-
-```bash
-pnpm run nitric:registry:spec
-pnpm run nitric:registry:build
-pnpm run nitric:registry:deploy -- --stack gcp-main --env-file .env.registry
-```
-
-dotenvx flow:
-
-```bash
-cp examples/nitric/loop-registry/.env.registry.example examples/nitric/loop-registry/.env.registry
-pnpm run nitric:registry:deploy:env
-```
-
-If no Nitric stack exists yet, initialize one interactively from the example directory:
-
-```bash
-proto run nitric -- stack new gcp-main gcp
 ```
