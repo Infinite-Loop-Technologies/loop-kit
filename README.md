@@ -67,10 +67,15 @@ The first Forge application shells now live in:
 
 - `packages/contracts`
 - `packages/forge-app`
+- `packages/forge-api`
 - `apps/forge-web`
 - `apps/forge-desktop`
 
 The shared `@loop-kit/forge-app` package owns the route table, shell layout, and placeholder panel host. The web and desktop apps stay thin and only provide runtime-specific bootstrapping.
+
+`@loop-kit/forge-contracts` owns the Forge control-plane OpenAPI and AsyncAPI source documents plus the generated TypeScript client/types that other Forge packages consume.
+
+`@loop-kit/forge-api` is the Fastify control-plane backend foundation. It keeps WorkOS, Polar, and agent execution behind explicit service seams while Neon + Drizzle own the app query model and migration baseline.
 
 Useful commands:
 
@@ -78,14 +83,17 @@ Useful commands:
 pnpm --filter @loop-kit/forge-contracts validate
 pnpm --filter @loop-kit/forge-contracts build
 pnpm --filter @loop-kit/forge-contracts test
+pnpm --filter @loop-kit/forge-api dev
+pnpm --filter @loop-kit/forge-api build
+pnpm --filter @loop-kit/forge-api test
+pnpm --filter @loop-kit/forge-api db:generate
+pnpm --filter @loop-kit/forge-api db:check
 pnpm --filter @loop-kit/forge-web dev
 pnpm --filter @loop-kit/forge-web build
 pnpm --filter @loop-kit/forge-desktop dev
 pnpm --filter @loop-kit/forge-desktop build
 pnpm --filter @loop-kit/forge-desktop check:native
 ```
-
-`@loop-kit/forge-contracts` owns the Forge control-plane OpenAPI and AsyncAPI source documents plus the generated TypeScript client/types that other Forge packages consume.
 
 Moon also infers these package scripts directly, so `moon run forge-web:dev` and `moon run forge-desktop:dev` work without extra project config.
 
