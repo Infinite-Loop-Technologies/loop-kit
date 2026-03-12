@@ -20,8 +20,7 @@
         "typecheck": "proto run moon -- run :typecheck",
         "test": "proto run moon -- run :test",
         "release:patch": "pnpm -r version patch",
-        "release:minor": "pnpm -r version minor",
-        "dev:shell:local": "node tools/shell/dev-shell-local.mjs"
+        "release:minor": "pnpm -r version minor"
     },
     "devDependencies": {
         "typescript": "^5.9.3"
