@@ -2,5 +2,8 @@
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "buildCommand": "pnpm -r --filter @loop-kit/forge-web... --if-present build",
     "installCommand": "pnpm install",
-    "outputDirectory": "dist"
+    "outputDirectory": "dist",
+    "github": {
+        "autoAlias": false
+    }
 }
