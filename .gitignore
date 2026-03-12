@@ -72,3 +72,4 @@ packages/loop-contracts/dist/
 packages/loopd/dist/
 packages/loop-mcp/dist/
 packages/loop-ai/dist/
+packages/contracts/.openapi-ts.lock
