@@ -1,6 +1,6 @@
 # loop-kit
 
-`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI demo surfaces, and backend automation examples.
+`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI demo surfaces, backend automation examples, and the first Forge shell applications.
 
 This repo is now:
 
@@ -60,6 +60,28 @@ Manual publish flows:
 pnpm run release:publish:all:dry
 pnpm run release:publish:cli:dry
 ```
+
+## Forge shells
+
+The first Forge application shells now live in:
+
+- `packages/forge-app`
+- `apps/forge-web`
+- `apps/forge-desktop`
+
+The shared `@loop-kit/forge-app` package owns the route table, shell layout, and placeholder panel host. The web and desktop apps stay thin and only provide runtime-specific bootstrapping.
+
+Useful commands:
+
+```bash
+pnpm --filter @loop-kit/forge-web dev
+pnpm --filter @loop-kit/forge-web build
+pnpm --filter @loop-kit/forge-desktop dev
+pnpm --filter @loop-kit/forge-desktop build
+pnpm --filter @loop-kit/forge-desktop check:native
+```
+
+Moon also infers these package scripts directly, so `moon run forge-web:dev` and `moon run forge-desktop:dev` work without extra project config.
 
 The CLI stack is also publishable through a manual GitHub Actions workflow dispatch.
 
