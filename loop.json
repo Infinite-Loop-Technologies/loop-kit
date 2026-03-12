@@ -85,6 +85,30 @@
         "test"
       ]
     },
+    "forge-web:build": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@loop-kit/forge-web",
+        "build"
+      ]
+    },
+    "forge-desktop:build": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@loop-kit/forge-desktop",
+        "build"
+      ]
+    },
+    "forge-desktop:check:native": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@loop-kit/forge-desktop",
+        "check:native"
+      ]
+    },
     "ui-demo:build": {
       "command": "pnpm",
       "args": [
