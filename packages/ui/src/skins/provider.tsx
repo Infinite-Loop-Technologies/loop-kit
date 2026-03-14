@@ -8,6 +8,8 @@ import {
 } from 'react';
 
 import { compileThemeToCssVars } from '../theme/compile';
+import { createUiExtensionRegistry } from '../extensions/registry';
+import type { UiExtensionDefinition, UiExtensionRegistry } from '../extensions/types';
 import { ThemeModeSchema, type ThemeMode } from '../theme/schema';
 import {
     createSkinAssetResolver,
@@ -22,6 +24,8 @@ export type UiProviderProps = PropsWithChildren<{
     mode?: ThemeMode;
     target?: HTMLElement | null;
     registry?: UiSkinRegistry;
+    extensions?: readonly UiExtensionDefinition[];
+    enabledExtensionIds?: readonly string[];
 }>;
 
 type UiContextValue = {
@@ -31,6 +35,7 @@ type UiContextValue = {
     activeTheme: ResolvedUiSkin['themes']['light'] | ResolvedUiSkin['themes']['dark'];
     assetResolver: ReturnType<typeof createSkinAssetResolver>;
     iconRegistry: ReturnType<typeof createSkinIconRegistry>;
+    extensionRegistry: UiExtensionRegistry;
 };
 
 const UiContext = createContext<UiContextValue | undefined>(undefined);
@@ -52,6 +57,8 @@ export function UiProvider({
     mode,
     target,
     registry,
+    extensions,
+    enabledExtensionIds,
 }: UiProviderProps) {
     const resolvedSkin = useMemo(
         () => resolveProviderSkin(skin, registry),
@@ -83,6 +90,14 @@ export function UiProvider({
         () => createSkinIconRegistry(resolvedSkin),
         [resolvedSkin],
     );
+    const extensionRegistry = useMemo(
+        () =>
+            createUiExtensionRegistry({
+                enabledExtensionIds,
+                extensions,
+            }),
+        [enabledExtensionIds, extensions],
+    );
 
     useEffect(() => {
         const root =
@@ -109,8 +124,9 @@ export function UiProvider({
             activeTheme,
             assetResolver,
             iconRegistry,
+            extensionRegistry,
         }),
-        [activeTheme, assetResolver, currentMode, iconRegistry, resolvedSkin],
+        [activeTheme, assetResolver, currentMode, extensionRegistry, iconRegistry, resolvedSkin],
     );
 
     return <UiContext.Provider value={contextValue}>{children}</UiContext.Provider>;

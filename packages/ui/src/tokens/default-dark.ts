@@ -1,19 +1,34 @@
 import type { Tokens } from './schema';
+import { createSemanticColors } from './semantic-colors';
 
 export const defaultDarkTokens: Tokens = {
-    colors: {
+    colors: createSemanticColors({
         background: 'oklch(0.145 0 0)',
         foreground: 'oklch(0.985 0 0)',
-        surface: 'oklch(0.2 0 0)',
-        surfaceForeground: 'oklch(0.985 0 0)',
-        border: 'oklch(1 0 0 / 14%)',
-        accent: 'oklch(0.922 0 0)',
-        accentForeground: 'oklch(0.205 0 0)',
+        card: 'oklch(0.19 0 0)',
+        cardForeground: 'oklch(0.985 0 0)',
+        popover: 'oklch(0.21 0 0)',
+        popoverForeground: 'oklch(0.985 0 0)',
+        primary: 'oklch(0.922 0 0)',
+        primaryForeground: 'oklch(0.205 0 0)',
+        secondary: 'oklch(0.27 0 0)',
+        secondaryForeground: 'oklch(0.985 0 0)',
         muted: 'oklch(0.26 0 0)',
         mutedForeground: 'oklch(0.71 0 0)',
-        danger: 'oklch(0.704 0.191 22.2)',
-        dangerForeground: 'oklch(0.985 0 0)',
-    },
+        accent: 'oklch(0.28 0 0)',
+        accentForeground: 'oklch(0.985 0 0)',
+        destructive: 'oklch(0.704 0.191 22.2)',
+        destructiveForeground: 'oklch(0.985 0 0)',
+        border: 'oklch(1 0 0 / 14%)',
+        input: 'oklch(0.3 0 0)',
+        ring: 'oklch(0.78 0 0)',
+        sidebar: 'oklch(0.17 0 0)',
+        sidebarForeground: 'oklch(0.985 0 0)',
+        sidebarAccent: 'oklch(0.24 0 0)',
+        sidebarAccentForeground: 'oklch(0.985 0 0)',
+        sidebarBorder: 'oklch(0.32 0 0)',
+        sidebarRing: 'oklch(0.78 0 0)',
+    }),
     radius: {
         sm: '0.375rem',
         md: '0.625rem',

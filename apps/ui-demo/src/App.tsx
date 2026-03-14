@@ -1,3 +1,4 @@
+import atelierPanelSurfaceExtension from '@loop-kit/ui-atelier-extension';
 import { DockWorkspaceDemo } from '@loop-kit/ui/blocks';
 
 export function App() {
@@ -22,7 +23,13 @@ export function App() {
             </section>
 
             <section className='ui-demo-stage'>
-                <DockWorkspaceDemo mode='full' initialSkinId='atelier' initialMode='light' />
+                <DockWorkspaceDemo
+                    mode='full'
+                    initialSkinId='atelier'
+                    initialMode='light'
+                    extensions={[atelierPanelSurfaceExtension]}
+                    enabledExtensionIds={['atelier-panel-surface']}
+                />
             </section>
         </main>
     );

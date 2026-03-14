@@ -146,12 +146,22 @@ export function GraphiteDataTable<TRow>({
     return (
         <div
             className={cn(
-                'overflow-hidden rounded-[var(--loop-radius-lg)] border border-border/80 bg-card/55 shadow-[var(--loop-elevation-level1)]',
+                'overflow-hidden rounded-[var(--loop-radius-lg)] border shadow-[var(--loop-elevation-level1)] backdrop-blur-[var(--loop-fx-glassBlur)]',
                 className,
-            )}>
+            )}
+            style={{
+                background:
+                    'linear-gradient(180deg, color-mix(in oklch, var(--card) 94%, transparent) 0%, color-mix(in oklch, var(--secondary) 18%, var(--card)) 100%)',
+                borderColor:
+                    'color-mix(in oklch, var(--border) 85%, transparent)',
+            }}>
             <Table aria-label={ariaLabel}>
                 <TableHeader>
-                    <TableRow className='bg-background/75'>
+                    <TableRow
+                        style={{
+                            background:
+                                'color-mix(in oklch, var(--sidebar) 72%, var(--card))',
+                        }}>
                         {columns.map((column) => {
                             const isActive =
                                 activeSort?.columnKey === column.key;
@@ -210,7 +220,11 @@ export function GraphiteDataTable<TRow>({
                                             (renderRowActions ? 1 : 0),
                                     )
                                 }
-                                className='h-20 text-center text-sm text-muted-foreground'>
+                                className='h-20 text-center text-sm text-muted-foreground'
+                                style={{
+                                    background:
+                                        'color-mix(in oklch, var(--secondary) 54%, var(--card))',
+                                }}>
                                 {emptyState ?? emptyMessage}
                             </TableCell>
                         </TableRow>
@@ -220,8 +234,15 @@ export function GraphiteDataTable<TRow>({
                                 key={rowKey(row, index)}
                                 className={cn(
                                     onRowClick && 'cursor-pointer',
+                                    'transition-colors',
                                     rowClassName?.(row, index),
                                 )}
+                                style={{
+                                    background:
+                                        index % 2 === 0
+                                            ? 'transparent'
+                                            : 'color-mix(in oklch, var(--accent) 46%, transparent)',
+                                }}
                                 onClick={
                                     onRowClick
                                         ? () => onRowClick(row, index)

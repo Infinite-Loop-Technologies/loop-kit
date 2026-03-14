@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { GraphiteProvider, useQuery } from '@loop-kit/graphite/react';
+import type { UiExtensionDefinition } from '../../extensions';
 import { UiProvider } from '../../skins';
 
 import { DockWorkbench, type DockWorkbenchMode } from './dock-workbench';
@@ -21,9 +22,19 @@ type DockWorkspaceDemoProps = {
     mode?: DockWorkbenchMode;
     initialSkinId?: string;
     initialMode?: DockStoreOptions['initialMode'];
+    extensions?: readonly UiExtensionDefinition[];
+    enabledExtensionIds?: readonly string[];
 };
 
-function DockThemeBridge({ children }: { children: React.ReactNode }) {
+function DockThemeBridge({
+    children,
+    enabledExtensionIds,
+    extensions,
+}: {
+    children: React.ReactNode;
+    extensions?: readonly UiExtensionDefinition[];
+    enabledExtensionIds?: readonly string[];
+}) {
     const mode = useQuery<DockBlockState, DockBlockState['skin']['mode']>(
         (state) => state.skin.mode,
     );
@@ -42,7 +53,11 @@ function DockThemeBridge({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <UiProvider skin={skin} mode={mode}>
+        <UiProvider
+            skin={skin}
+            mode={mode}
+            extensions={extensions}
+            enabledExtensionIds={enabledExtensionIds}>
             {children}
         </UiProvider>
     );
@@ -52,6 +67,8 @@ export function DockWorkspaceDemo({
     mode = 'full',
     initialSkinId,
     initialMode,
+    extensions,
+    enabledExtensionIds,
 }: DockWorkspaceDemoProps) {
     const store = React.useMemo(
         () =>
@@ -69,7 +86,9 @@ export function DockWorkspaceDemo({
 
     return (
         <GraphiteProvider store={store}>
-            <DockThemeBridge>
+            <DockThemeBridge
+                extensions={extensions}
+                enabledExtensionIds={enabledExtensionIds}>
                 <DockWorkbench mode={mode} />
             </DockThemeBridge>
         </GraphiteProvider>
