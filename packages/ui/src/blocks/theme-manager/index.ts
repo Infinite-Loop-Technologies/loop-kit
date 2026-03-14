@@ -1,5 +1,5 @@
 export {
     ThemeManagerBlock,
     type ThemeManagerBlockProps,
-    type ThemeManagerPreset,
+    type ThemeManagerSkin,
 } from './theme-manager';
