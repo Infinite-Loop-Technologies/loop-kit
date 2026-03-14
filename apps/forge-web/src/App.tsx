@@ -8,6 +8,8 @@ const webShell: ForgeShellConfig = {
     workspaceName: 'loop-kit',
     environmentLabel: 'Vite web shell',
     navigationMode: 'history',
+    skinId: 'forge',
+    skinMode: 'dark',
     capabilitySummary: [
         'Browser-native deep links for shell routes',
         'Preview-deploy friendly static build output',
