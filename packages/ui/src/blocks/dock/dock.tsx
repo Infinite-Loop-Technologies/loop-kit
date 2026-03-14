@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { GraphiteProvider, useQuery } from '@loop-kit/graphite/react';
-import { ThemeProvider } from '../../theme';
+import { UiProvider } from '../../skins';
 
 import { DockWorkbench, type DockWorkbenchMode } from './dock-workbench';
 import {
@@ -16,32 +16,27 @@ type DockWorkspaceDemoProps = {
 };
 
 function DockThemeBridge({ children }: { children: React.ReactNode }) {
-    const mode = useQuery<DockBlockState, DockBlockState['theme']['mode']>(
-        (state) => state.theme.mode,
+    const mode = useQuery<DockBlockState, DockBlockState['skin']['mode']>(
+        (state) => state.skin.mode,
     );
-    const presetId = useQuery<DockBlockState, DockBlockState['theme']['presetId']>(
-        (state) => state.theme.presetId,
+    const skinId = useQuery<DockBlockState, DockBlockState['skin']['skinId']>(
+        (state) => state.skin.skinId,
     );
-    const presets = useQuery<DockBlockState, DockBlockState['theme']['presets']>(
-        (state) => state.theme.presets,
+    const skins = useQuery<DockBlockState, DockBlockState['skin']['skins']>(
+        (state) => state.skin.skins,
     );
-    const activePreset = presets[presetId];
-    const fallbackPreset = Object.values(presets)[0];
-    const preset = activePreset ?? fallbackPreset;
+    const activeSkin = skins[skinId];
+    const fallbackSkin = Object.values(skins)[0];
+    const skin = activeSkin ?? fallbackSkin;
 
-    if (!preset) {
+    if (!skin) {
         return <>{children}</>;
     }
 
     return (
-        <ThemeProvider
-            theme={{
-                light: preset.themes.light,
-                dark: preset.themes.dark,
-            }}
-            mode={mode}>
+        <UiProvider skin={skin} mode={mode}>
             {children}
-        </ThemeProvider>
+        </UiProvider>
     );
 }
 

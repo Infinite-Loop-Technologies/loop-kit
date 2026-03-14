@@ -19,3 +19,11 @@ test('blocks barrel smoke import', async () => {
     assert.equal(typeof blocks.ColorPicker, 'function');
     assert.equal(typeof blocks.ShortcutSettingsBlock, 'function');
 });
+
+test('skins barrel smoke import', async () => {
+    const skins = await import('@loop-kit/ui/skins');
+
+    assert.equal(typeof skins.UiProvider, 'function');
+    assert.equal(typeof skins.resolveUiSkin, 'function');
+    assert.equal(typeof skins.defaultUiSkinRegistry.resolve, 'function');
+});

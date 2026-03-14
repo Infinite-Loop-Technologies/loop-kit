@@ -1,19 +1,10 @@
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-    type PropsWithChildren,
-} from 'react';
+import { type PropsWithChildren } from 'react';
 
-import { compileThemeToCssVars } from './compile';
 import {
-    ThemeModeSchema,
-    type ThemeDefinition,
-    type ThemeMode,
-} from './schema';
+    UiProvider,
+    useUiProviderState,
+} from '../skins';
+import { type ThemeDefinition, type ThemeMode } from './schema';
 
 export type ThemeSet = {
     light: ThemeDefinition;
@@ -26,16 +17,50 @@ export type ThemeProviderProps = PropsWithChildren<{
     target?: HTMLElement | null;
 }>;
 
-type ThemeContextValue = {
+export type ThemeContextValue = {
     mode: ThemeMode;
     setMode: (mode: ThemeMode) => void;
     activeTheme: ThemeDefinition;
 };
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
 function isThemeSet(value: ThemeDefinition | ThemeSet): value is ThemeSet {
     return 'light' in value && 'dark' in value;
+}
+
+function toThemeBackedSkin(theme: ThemeDefinition | ThemeSet) {
+    if (isThemeSet(theme)) {
+        return {
+            id: 'theme-provider-skin',
+            label: 'Theme Provider Skin',
+            themes: {
+                light: theme.light,
+                dark: theme.dark,
+            },
+        };
+    }
+
+    return {
+        id: `${theme.id}-skin`,
+        label: theme.id,
+        themes: {
+            light:
+                theme.mode === 'light'
+                    ? theme
+                    : {
+                          ...theme,
+                          id: `${theme.id}-light`,
+                          mode: 'light' as const,
+                      },
+            dark:
+                theme.mode === 'dark'
+                    ? theme
+                    : {
+                          ...theme,
+                          id: `${theme.id}-dark`,
+                          mode: 'dark' as const,
+                      },
+        },
+    };
 }
 
 export function ThemeProvider({
@@ -44,64 +69,31 @@ export function ThemeProvider({
     mode,
     target,
 }: ThemeProviderProps) {
-    const [currentMode, setCurrentMode] = useState<ThemeMode>(() => {
-        const selected = mode ?? (isThemeSet(theme) ? 'light' : theme.mode);
-        return ThemeModeSchema.parse(selected);
-    });
+    const resolvedMode = mode ?? (isThemeSet(theme) ? 'light' : theme.mode);
 
-    useEffect(() => {
-        if (!mode) {
-            return;
-        }
-        setCurrentMode(ThemeModeSchema.parse(mode));
-    }, [mode]);
-
-    const activeTheme = useMemo<ThemeDefinition>(() => {
-        if (isThemeSet(theme)) {
-            return currentMode === 'dark' ? theme.dark : theme.light;
-        }
-
-        return theme;
-    }, [currentMode, theme]);
-
-    useEffect(() => {
-        const root = target ?? (typeof document === 'undefined' ? null : document.documentElement);
-        if (!root) {
-            return;
-        }
-
-        const compiled = compileThemeToCssVars(activeTheme);
-        for (const [name, value] of Object.entries(compiled.vars)) {
-            root.style.setProperty(name, value);
-        }
-        root.setAttribute('data-loop-theme', activeTheme.id);
-        root.setAttribute('data-loop-mode', currentMode);
-    }, [activeTheme, currentMode, target]);
-
-    const contextValue = useMemo<ThemeContextValue>(
-        () => ({
-            mode: currentMode,
-            setMode: (next) => setCurrentMode(ThemeModeSchema.parse(next)),
-            activeTheme,
-        }),
-        [activeTheme, currentMode],
+    return (
+        <UiProvider
+            skin={toThemeBackedSkin(theme)}
+            mode={resolvedMode}
+            target={target}>
+            {children}
+        </UiProvider>
     );
-
-    return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }
 
 export function useThemeProviderState(): ThemeContextValue {
-    const context = useContext(ThemeContext);
-    if (!context) {
-        throw new Error('useThemeProviderState must be used within a ThemeProvider.');
-    }
-    return context;
+    const context = useUiProviderState();
+    return {
+        mode: context.mode,
+        setMode: context.setMode,
+        activeTheme: context.activeTheme,
+    };
 }
 
 export function useToggleThemeMode(): () => void {
     const { mode, setMode } = useThemeProviderState();
 
-    return useCallback(() => {
+    return () => {
         setMode(mode === 'dark' ? 'light' : 'dark');
-    }, [mode, setMode]);
+    };
 }

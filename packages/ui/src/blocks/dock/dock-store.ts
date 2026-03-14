@@ -19,6 +19,7 @@ import {
     type DockState,
 } from '@loop-kit/dock';
 import { ThemeModeSchema, type ThemeMode } from '../../theme';
+import { DEFAULT_UI_SKIN_ID } from '../../skins';
 
 import type { GraphiteIntentEnvelope } from '../systems/graphite-dnd';
 import type { GraphiteIntentRegistryEntry } from '../systems/graphite-intent-registry';
@@ -29,16 +30,17 @@ import {
 import type { QueryBuilderField } from '../systems/graphite-query-builder';
 import { getActivePanelRef } from './dock-helpers';
 import {
-    createDockThemePresets,
-    setThemeTokenValue,
-    validateThemeSetEntry,
-    type DockThemePresetMap,
+    createDockSkins,
+    parseUiSkinDraft,
+    setSkinTokenValue,
+    validateUiSkinEntry,
+    type DockSkinMap,
 } from './theme-state';
 
-export type DockThemeState = {
+export type DockSkinState = {
     mode: ThemeMode;
-    presetId: string;
-    presets: DockThemePresetMap;
+    skinId: string;
+    skins: DockSkinMap;
     validationMessage: string | null;
 };
 
@@ -48,7 +50,7 @@ export const SETTINGS_PANEL_TITLE = 'Workspace Settings';
 
 export type DockBlockState = GraphState & {
     dock: DockState;
-    theme: DockThemeState;
+    skin: DockSkinState;
     ui: {
         activeGroupId: string;
         shortcutsEnabled: boolean;
@@ -68,9 +70,10 @@ export const UI_INTENTS = {
     requestOpenSettingsPanel: 'dock/ui/request-open-settings-panel',
     setOverlayVisible: 'dock/ui/set-overlay-visible',
     setOverlayLabelsVisible: 'dock/ui/set-overlay-labels-visible',
-    setThemeMode: 'dock/theme/set-mode',
-    setThemePreset: 'dock/theme/set-preset',
-    setThemeToken: 'dock/theme/set-token',
+    setSkinMode: 'dock/skin/set-mode',
+    setSkinId: 'dock/skin/set-id',
+    setSkinToken: 'dock/skin/set-token',
+    importSkin: 'dock/skin/import',
     undoLayout: 'dock/ui/undo-layout',
     redoLayout: 'dock/ui/redo-layout',
 } as const;
@@ -100,16 +103,14 @@ export const SHORTCUT_CONTEXT_FIELDS: QueryBuilderField[] = [
     { key: 'canRedo', label: 'Can Redo', type: 'boolean' },
     { key: 'overlayVisible', label: 'Overlay Visible', type: 'boolean' },
     { key: 'shortcutsEnabled', label: 'Shortcuts Enabled', type: 'boolean' },
-    { key: 'themeMode', label: 'Theme Mode', type: 'string' },
-    { key: 'themePreset', label: 'Theme Preset', type: 'string' },
+    { key: 'skinMode', label: 'Skin Mode', type: 'string' },
+    { key: 'skinId', label: 'Skin', type: 'string' },
 ];
-
-const DEFAULT_THEME_PRESET_ID = 'graphite';
 
 function createDockFixture(): DockState {
     const componentCatalog = createPanelNode('panel-component-catalog', 'Component Catalog');
     const preview = createPanelNode('panel-preview', 'Live Preview');
-    const themeManager = createPanelNode('panel-theme-manager', 'Theme Manager');
+    const themeManager = createPanelNode('panel-theme-manager', 'Skin Manager');
     const tokenEditor = createPanelNode('panel-token-editor', 'Token Editor');
     const shortcuts = createPanelNode('panel-shortcuts', 'Shortcut Status');
     const settings = createPanelNode(SETTINGS_PANEL_ID, SETTINGS_PANEL_TITLE);
@@ -191,18 +192,18 @@ export function createPreviewDockFixture(): DockState {
     });
 }
 
-function createInitialThemeState(): DockThemeState {
-    const presets = createDockThemePresets();
-    const presetId = presets[DEFAULT_THEME_PRESET_ID]
-        ? DEFAULT_THEME_PRESET_ID
-        : Object.keys(presets)[0]!;
+function createInitialSkinState(): DockSkinState {
+    const skins = createDockSkins();
+    const skinId = skins[DEFAULT_UI_SKIN_ID]
+        ? DEFAULT_UI_SKIN_ID
+        : Object.keys(skins)[0]!;
     const mode: ThemeMode = 'dark';
-    const validationMessage = validateThemeSetEntry(presets[presetId], mode);
+    const validationMessage = validateUiSkinEntry(skins[skinId]!, mode);
 
     return {
         mode,
-        presetId,
-        presets,
+        skinId,
+        skins,
         validationMessage,
     };
 }
@@ -212,12 +213,12 @@ function panelCount(state: Readonly<DockBlockState>) {
         .length;
 }
 
-function nextPresetId(state: Readonly<DockBlockState>): string {
-    const ids = Object.keys(state.theme.presets);
+function nextSkinId(state: Readonly<DockBlockState>): string {
+    const ids = Object.keys(state.skin.skins);
     if (ids.length <= 0) {
-        return state.theme.presetId;
+        return state.skin.skinId;
     }
-    const currentIndex = Math.max(0, ids.indexOf(state.theme.presetId));
+    const currentIndex = Math.max(0, ids.indexOf(state.skin.skinId));
     return ids[(currentIndex + 1) % ids.length]!;
 }
 
@@ -227,7 +228,7 @@ export function createDockStore(
     const store = createGraphStore<DockBlockState>({
         initialState: {
             dock: dockFixture,
-            theme: createInitialThemeState(),
+            skin: createInitialSkinState(),
             ui: {
                 activeGroupId: 'group-center',
                 shortcutsEnabled: true,
@@ -307,7 +308,7 @@ export function createDockStore(
     );
 
     store.registerIntent(
-        UI_INTENTS.setThemeMode,
+        UI_INTENTS.setSkinMode,
         (
             payload: { mode?: ThemeMode },
             context: IntentCompilerContext<DockBlockState>,
@@ -317,37 +318,37 @@ export function createDockStore(
                 return null;
             }
 
-            const preset = context.state.theme.presets[context.state.theme.presetId];
-            if (!preset) {
+            const skin = context.state.skin.skins[context.state.skin.skinId];
+            if (!skin) {
                 return null;
             }
 
             return {
-                theme: {
+                skin: {
                     mode: $set(mode.data),
-                    validationMessage: $set(validateThemeSetEntry(preset, mode.data)),
+                    validationMessage: $set(validateUiSkinEntry(skin, mode.data)),
                 },
             };
         },
     );
 
     store.registerIntent(
-        UI_INTENTS.setThemePreset,
+        UI_INTENTS.setSkinId,
         (
-            payload: { presetId?: string },
+            payload: { skinId?: string },
             context: IntentCompilerContext<DockBlockState>,
         ) => {
-            const nextPresetIdValue = payload.presetId;
-            if (!nextPresetIdValue || !context.state.theme.presets[nextPresetIdValue]) {
+            const nextSkinIdValue = payload.skinId;
+            if (!nextSkinIdValue || !context.state.skin.skins[nextSkinIdValue]) {
                 return null;
             }
 
-            const nextPreset = context.state.theme.presets[nextPresetIdValue];
+            const nextSkin = context.state.skin.skins[nextSkinIdValue];
             return {
-                theme: {
-                    presetId: $set(nextPresetIdValue),
+                skin: {
+                    skinId: $set(nextSkinIdValue),
                     validationMessage: $set(
-                        validateThemeSetEntry(nextPreset, context.state.theme.mode),
+                        validateUiSkinEntry(nextSkin, context.state.skin.mode),
                     ),
                 },
             };
@@ -355,7 +356,7 @@ export function createDockStore(
     );
 
     store.registerIntent(
-        UI_INTENTS.setThemeToken,
+        UI_INTENTS.setSkinToken,
         (
             payload: { path?: string; value?: string },
             context: IntentCompilerContext<DockBlockState>,
@@ -365,40 +366,69 @@ export function createDockStore(
                 return null;
             }
 
-            const state = context.state.theme;
-            const preset = state.presets[state.presetId];
-            if (!preset) {
+            const state = context.state.skin;
+            const skin = state.skins[state.skinId];
+            if (!skin) {
                 return null;
             }
 
-            const mode = state.mode;
-            const activeTheme = mode === 'dark' ? preset.themes.dark : preset.themes.light;
-            const updatedTheme = setThemeTokenValue(activeTheme, path, payload.value);
-            if (!updatedTheme) {
+            const nextSkin = setSkinTokenValue(skin, state.mode, path, payload.value);
+            if (!nextSkin) {
                 return {
-                    theme: {
+                    skin: {
                         validationMessage: $set(`Invalid token path: ${path}`),
                     },
                 };
             }
 
-            const nextPreset = {
-                ...preset,
-                themes: {
-                    ...preset.themes,
-                    [mode]: updatedTheme,
-                },
+            const nextSkins = {
+                ...state.skins,
+                [skin.id]: nextSkin,
             };
-            const nextPresets = {
-                ...state.presets,
-                [preset.id]: nextPreset,
-            };
+
             return {
-                theme: {
-                    presets: $set(nextPresets),
-                    validationMessage: $set(validateThemeSetEntry(nextPreset, mode)),
+                skin: {
+                    skins: $set(nextSkins),
+                    validationMessage: $set(validateUiSkinEntry(nextSkin, state.mode)),
                 },
             };
+        },
+    );
+
+    store.registerIntent(
+        UI_INTENTS.importSkin,
+        (
+            payload: { skinText?: string },
+            context: IntentCompilerContext<DockBlockState>,
+        ) => {
+            const raw = payload.skinText?.trim();
+            if (!raw) {
+                return null;
+            }
+
+            try {
+                const importedSkin = parseUiSkinDraft(raw, context.state.skin.skins);
+                const nextSkins = {
+                    ...context.state.skin.skins,
+                    [importedSkin.id]: importedSkin,
+                };
+
+                return {
+                    skin: {
+                        skins: $set(nextSkins),
+                        skinId: $set(importedSkin.id),
+                        validationMessage: $set(
+                            validateUiSkinEntry(importedSkin, context.state.skin.mode),
+                        ),
+                    },
+                };
+            } catch (error) {
+                return {
+                    skin: {
+                        validationMessage: $set(String(error)),
+                    },
+                };
+            }
         },
     );
 
@@ -462,25 +492,25 @@ export function createDockIntentRegistry(
             dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
         },
         {
-            id: 'theme.toggle-mode',
-            intent: UI_INTENTS.setThemeMode,
-            title: 'Toggle Theme Mode',
+            id: 'skin.toggle-mode',
+            intent: UI_INTENTS.setSkinMode,
+            title: 'Toggle Skin Mode',
             description: 'Switch between light and dark modes.',
-            category: 'Theme',
+            category: 'Skin',
             dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
             payload: (state: Readonly<DockBlockState>) => ({
-                mode: state.theme.mode === 'dark' ? 'light' : 'dark',
+                mode: state.skin.mode === 'dark' ? 'light' : 'dark',
             }),
         },
         {
-            id: 'theme.next-preset',
-            intent: UI_INTENTS.setThemePreset,
-            title: 'Next Theme Preset',
-            description: 'Cycle to the next theme preset.',
-            category: 'Theme',
+            id: 'skin.next',
+            intent: UI_INTENTS.setSkinId,
+            title: 'Next Skin',
+            description: 'Cycle to the next shared skin.',
+            category: 'Skin',
             dispatchOptions: DOCK_UI_DISPATCH_OPTIONS,
             payload: (state: Readonly<DockBlockState>) => ({
-                presetId: nextPresetId(state),
+                skinId: nextSkinId(state),
             }),
         },
         {
@@ -545,8 +575,8 @@ export function createDefaultShortcutBindings(): GraphiteShortcutBinding[] {
         createShortcutBinding('dock.remove-active-panel', 'alt+shift+w'),
         createShortcutBinding('dock.undo-layout', 'mod+z'),
         createShortcutBinding('dock.redo-layout', 'mod+shift+z'),
-        createShortcutBinding('theme.toggle-mode', 'alt+shift+t'),
-        createShortcutBinding('theme.next-preset', 'alt+shift+p'),
+        createShortcutBinding('skin.toggle-mode', 'alt+shift+t'),
+        createShortcutBinding('skin.next', 'alt+shift+p'),
         createShortcutBinding('ui.open-settings-panel', 'alt+,'),
         createShortcutBinding('dock.toggle-overlay', 'alt+shift+o'),
         createShortcutBinding('dock.toggle-overlay-labels', 'alt+shift+l'),
