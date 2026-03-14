@@ -8,6 +8,7 @@ import {
     ThemeManagerBlock,
     TokenEditorBlock,
 } from '../../blocks';
+import { defaultUiSkin } from '../../skins';
 import { defaultThemeSet } from '../../theme';
 import { listDesignTokenEntries } from '../../blocks/dock/theme-state';
 import type { UiStory } from '../types';
@@ -16,16 +17,16 @@ function ThemeManagerStory() {
     return (
         <ThemeManagerBlock
             mode='light'
-            presetId='default'
-            presets={[
+            skinId='forge'
+            skins={[
                 {
-                    id: 'default',
-                    label: 'Default',
-                    description: 'Default loop theme set',
+                    id: defaultUiSkin.id,
+                    label: defaultUiSkin.label,
+                    description: defaultUiSkin.description,
                 },
             ]}
             onModeChange={() => undefined}
-            onPresetChange={() => undefined}
+            onSkinChange={() => undefined}
         />
     );
 }
@@ -85,9 +86,9 @@ export const blockStories: UiStory[] = [
     },
     {
         id: 'blocks.theme-manager',
-        title: 'Theme Manager',
+        title: 'Skin Manager',
         section: 'blocks',
-        tags: ['theme', 'tokens'],
+        tags: ['skin', 'tokens'],
         render: () => <ThemeManagerStory />,
     },
     {

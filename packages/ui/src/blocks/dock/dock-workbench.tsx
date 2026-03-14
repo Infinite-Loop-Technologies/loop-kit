@@ -40,7 +40,11 @@ import {
     SETTINGS_PANEL_TITLE,
     UI_INTENTS,
 } from './dock-store';
-import { listDesignTokenEntries } from './theme-state';
+import {
+    listDesignTokenEntries,
+    parseUiSkinDraft,
+    serializeUiSkin,
+} from './theme-state';
 
 export type DockWorkbenchMode = 'full' | 'preview';
 
@@ -65,8 +69,8 @@ const UI_DEMO_COMPONENTS: DemoCatalogEntry[] = [
     },
     {
         id: 'ui-theme-manager',
-        title: 'Theme Manager',
-        description: 'Preset + mode selector to switch and reskin tokens live.',
+        title: 'Skin Manager',
+        description: 'Skin + mode selector to switch and reskin tokens live.',
         targetHint: 'apps/ui-demo',
     },
     {
@@ -161,15 +165,15 @@ function ComponentCatalogPanel() {
 
 function PreviewPanel({
     mode,
-    presetLabel,
+    skinLabel,
 }: {
     mode: string;
-    presetLabel: string;
+    skinLabel: string;
 }) {
     return (
         <div className='space-y-3'>
             <div className='flex items-center gap-2'>
-                <Badge variant='outline'>preset: {presetLabel}</Badge>
+                <Badge variant='outline'>skin: {skinLabel}</Badge>
                 <Badge variant='outline'>mode: {mode}</Badge>
             </div>
             <Card className='bg-background/70'>
@@ -385,7 +389,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
 
     const ui = useQuery<DockBlockState, DockBlockState['ui']>((state) => state.ui);
     const dockState = useQuery<DockBlockState, DockBlockState['dock']>((state) => state.dock);
-    const theme = useQuery<DockBlockState, DockBlockState['theme']>((state) => state.theme);
+    const skin = useQuery<DockBlockState, DockBlockState['skin']>((state) => state.skin);
     const panels = useQuery<DockBlockState, ReturnType<typeof DOCK_PANEL_QUERY>>(
         DOCK_PANEL_QUERY,
     );
@@ -396,6 +400,8 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
         canRedo: store.canRedo(DOCK_HISTORY_CHANNEL),
     }));
     const [intentLogs, setIntentLogs] = React.useState<string[]>([]);
+    const [skinImportValue, setSkinImportValue] = React.useState('');
+    const [skinImportStatus, setSkinImportStatus] = React.useState<string | null>(null);
 
     const includeDebug = mode === 'full';
     const intentRegistry = React.useMemo(
@@ -403,24 +409,28 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
         [includeDebug],
     );
 
-    const activePreset = theme.presets[theme.presetId];
-    const activeTheme = activePreset
-        ? theme.mode === 'dark'
-            ? activePreset.themes.dark
-            : activePreset.themes.light
+    const activeSkin = skin.skins[skin.skinId];
+    const activeTheme = activeSkin
+        ? skin.mode === 'dark'
+            ? activeSkin.themes.dark
+            : activeSkin.themes.light
         : undefined;
     const tokenEntries = React.useMemo(
         () => (activeTheme ? listDesignTokenEntries(activeTheme) : []),
         [activeTheme],
     );
-    const presetOptions = React.useMemo(
+    const skinOptions = React.useMemo(
         () =>
-            Object.values(theme.presets).map((preset) => ({
-                id: preset.id,
-                label: preset.label,
-                description: preset.description,
+            Object.values(skin.skins).map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                description: entry.description,
             })),
-        [theme.presets],
+        [skin.skins],
+    );
+    const exportedSkinValue = React.useMemo(
+        () => (activeSkin ? serializeUiSkin(activeSkin) : ''),
+        [activeSkin],
     );
 
     useGraphiteShortcutBindings<DockBlockState>({
@@ -434,8 +444,8 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
             canRedo: store.canRedo(DOCK_HISTORY_CHANNEL),
             overlayVisible: state.ui.showOverlay,
             shortcutsEnabled: state.ui.shortcutsEnabled,
-            themeMode: state.theme.mode,
-            themePreset: state.theme.presetId,
+            skinMode: state.skin.mode,
+            skinId: state.skin.skinId,
         }),
     });
 
@@ -517,6 +527,20 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
         handledSettingsRequestIdRef.current = ui.settingsPanelOpenRequestId;
         openSettingsPanel(ui.settingsPanelSection);
     }, [openSettingsPanel, ui.settingsPanelOpenRequestId, ui.settingsPanelSection]);
+
+    const applySkinImport = React.useCallback(() => {
+        try {
+            const imported = parseUiSkinDraft(skinImportValue, skin.skins);
+            dispatchIntent(
+                UI_INTENTS.importSkin,
+                { skinText: skinImportValue },
+                DOCK_UI_DISPATCH_OPTIONS,
+            );
+            setSkinImportStatus(`Imported skin ${imported.label}.`);
+        } catch (error) {
+            setSkinImportStatus(String(error));
+        }
+    }, [dispatchIntent, skin.skins, skinImportValue]);
 
     return (
         <div className={className ?? 'space-y-3'}>
@@ -635,29 +659,38 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                             if (panelId === 'panel-preview') {
                                 return (
                                     <PreviewPanel
-                                        mode={theme.mode}
-                                        presetLabel={activePreset?.label ?? theme.presetId}
+                                        mode={skin.mode}
+                                        skinLabel={activeSkin?.label ?? skin.skinId}
                                     />
                                 );
                             }
                             if (panelId === 'panel-theme-manager') {
                                 return (
                                     <ThemeManagerBlock
-                                        mode={theme.mode}
-                                        presetId={theme.presetId}
-                                        presets={presetOptions}
-                                        validationMessage={theme.validationMessage}
+                                        mode={skin.mode}
+                                        skinId={skin.skinId}
+                                        skins={skinOptions}
+                                        validationMessage={skin.validationMessage}
+                                        exportValue={exportedSkinValue}
+                                        onCopyExport={() => {
+                                            void copyToClipboard(exportedSkinValue);
+                                            setSkinImportStatus('Copied current skin JSON.');
+                                        }}
+                                        importValue={skinImportValue}
+                                        onImportValueChange={setSkinImportValue}
+                                        onImportApply={applySkinImport}
+                                        importStatus={skinImportStatus}
                                         onModeChange={(nextMode) =>
                                             dispatchIntent(
-                                                UI_INTENTS.setThemeMode,
+                                                UI_INTENTS.setSkinMode,
                                                 { mode: nextMode },
                                                 DOCK_UI_DISPATCH_OPTIONS,
                                             )
                                         }
-                                        onPresetChange={(presetId) =>
+                                        onSkinChange={(skinId) =>
                                             dispatchIntent(
-                                                UI_INTENTS.setThemePreset,
-                                                { presetId },
+                                                UI_INTENTS.setSkinId,
+                                                { skinId },
                                                 DOCK_UI_DISPATCH_OPTIONS,
                                             )
                                         }
@@ -668,10 +701,10 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                                 return (
                                     <TokenEditorBlock
                                         entries={tokenEntries}
-                                        validationMessage={theme.validationMessage}
+                                        validationMessage={skin.validationMessage}
                                         onTokenChange={(path, value) =>
                                             dispatchIntent(
-                                                UI_INTENTS.setThemeToken,
+                                                UI_INTENTS.setSkinToken,
                                                 { path, value },
                                                 DOCK_UI_DISPATCH_OPTIONS,
                                             )
@@ -761,8 +794,8 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                                     <CardContent className='space-y-1 text-xs'>
                                         <p>panels: {panels.length}</p>
                                         <p>active panel: {activePanelRef?.panelId ?? 'none'}</p>
-                                        <p>theme: {theme.presetId}</p>
-                                        <p>mode: {theme.mode}</p>
+                                        <p>skin: {skin.skinId}</p>
+                                        <p>mode: {skin.mode}</p>
                                         <p>settings: {ui.settingsPanelSection}</p>
                                     </CardContent>
                                 </Card>
