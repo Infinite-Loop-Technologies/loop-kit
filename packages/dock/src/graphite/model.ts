@@ -7,6 +7,7 @@ import {
 } from '@loop-kit/graphite';
 import type { GraphiteStore } from '@loop-kit/graphite';
 import type {
+    DockAddPanelIntentPayload,
     DockGroupNode,
     DockMovePanelIntentPayload,
     DockNode,
@@ -389,7 +390,7 @@ function inferTargetGroupForAdd(
 
 function applyAddPanel(
     dockState: DockState,
-    payload: { title?: string; groupId?: DockNodeId } | undefined,
+    payload: DockAddPanelIntentPayload | undefined,
 ): DockState | null {
     const targetGroup = inferTargetGroupForAdd(dockState, payload?.groupId);
     if (!targetGroup) {
@@ -398,7 +399,13 @@ function applyAddPanel(
 
     const next = cloneDockState(dockState);
     const title = payload?.title?.trim() || `Panel ${Object.keys(next.nodes).length + 1}`;
-    const panelId = uniqueNodeId(next, 'panel', Object.keys(next.nodes).length + 1);
+    const requestedPanelId = payload?.panelId?.trim();
+    if (requestedPanelId && next.nodes[requestedPanelId]) {
+        return null;
+    }
+    const panelId =
+        requestedPanelId ||
+        uniqueNodeId(next, 'panel', Object.keys(next.nodes).length + 1);
     const panelNode = createPanelNode(panelId, title);
     next.nodes[panelNode.id] = panelNode;
 
@@ -559,7 +566,8 @@ function applyMovePanel(
     const zone = payload.zone ?? 'tabbar';
     if (
         sourceGroup.id === targetGroup.id &&
-        (zone === 'left' || zone === 'right' || zone === 'top' || zone === 'bottom')
+        (zone === 'left' || zone === 'right' || zone === 'top' || zone === 'bottom') &&
+        sourceGroup.links.children.length <= 1
     ) {
         return null;
     }
@@ -630,7 +638,7 @@ function applyDockIntent(
     if (intent === 'addPanel') {
         return applyAddPanel(
             dockState,
-            payload as { title?: string; groupId?: DockNodeId } | undefined,
+            payload as DockAddPanelIntentPayload | undefined,
         );
     }
     if (intent === 'removePanel') {

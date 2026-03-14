@@ -6,6 +6,7 @@ export {
     createDockInteractionController,
     computeDropIndicator,
     computeLayoutRects,
+    type DockAddPanelIntentPayload,
     createDockIntentNames,
     createDockPanelQuery,
     createDockState,
