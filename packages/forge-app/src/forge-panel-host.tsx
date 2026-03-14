@@ -1,5 +1,6 @@
 import { Panel, cn } from '@loop-kit/ui';
 
+import { ForgeWorkspaceShell } from './forge-workspace-shell';
 import type { ForgeRouteDefinition, ForgeRouteId, ForgeShellConfig } from './types';
 
 type ForgePanelHostProps = {
@@ -185,183 +186,12 @@ function createRouteSurfaceCards(
     }
 }
 
-function WorkspacePanelHost({ shell }: { shell: ForgeShellConfig }) {
-    return (
-        <div className='grid gap-4 xl:grid-cols-[18rem,minmax(0,1fr),20rem]'>
-            <SurfaceCard
-                id='workspace-navigator'
-                eyebrow='navigator'
-                title='Workspace switchboard'
-                body='Static shell-side structure for organization, repo, and environment context.'
-                tone='muted'
-                className='min-h-[22rem]'
-            />
-
-            <Panel variant='accent' className='min-h-[34rem] p-5'>
-                <div className='flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-4'>
-                    <div>
-                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                            panel system baseline
-                        </p>
-                        <h3
-                            className='mt-2 text-2xl font-semibold text-foreground'
-                            style={{
-                                fontFamily:
-                                    '"Bahnschrift SemiBold", "Aptos Display", "Segoe UI", system-ui, sans-serif',
-                            }}>
-                            Shared work surface
-                        </h3>
-                    </div>
-                    <div className='flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
-                        <span className='rounded-full border border-border/70 bg-background/60 px-3 py-1'>
-                            dock adapter pending
-                        </span>
-                        <span className='rounded-full border border-border/70 bg-background/60 px-3 py-1'>
-                            {shell.platform} shell
-                        </span>
-                    </div>
-                </div>
-
-                <div className='mt-4 grid gap-3 xl:grid-cols-[14rem,minmax(0,1fr),17rem]'>
-                    <Panel variant='muted' className='p-4'>
-                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                            left rail
-                        </p>
-                        <div className='mt-4 space-y-3 text-sm text-muted-foreground'>
-                            <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                Repo graph
-                            </div>
-                            <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                Workspace tree
-                            </div>
-                            <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                Connected agents
-                            </div>
-                        </div>
-                    </Panel>
-
-                    <div className='grid gap-3 xl:grid-rows-[auto,minmax(0,1fr),9rem]'>
-                        <div className='flex flex-wrap gap-2'>
-                            {['Activity', 'Workspace', 'Agents', 'Preview'].map((tab, index) => (
-                                <span
-                                    key={tab}
-                                    className={cn(
-                                        'rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em]',
-                                        index === 1
-                                            ? 'border-primary/60 bg-primary/15 text-foreground'
-                                            : 'border-border/70 bg-background/70 text-muted-foreground',
-                                    )}>
-                                    {tab}
-                                </span>
-                            ))}
-                        </div>
-
-                        <Panel className='p-5'>
-                            <div className='grid gap-3 lg:grid-cols-[minmax(0,1fr),18rem]'>
-                                <div className='rounded-2xl border border-border/70 bg-background/80 p-4'>
-                                    <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                                        main panel group
-                                    </p>
-                                    <h4 className='mt-3 text-lg font-semibold text-foreground'>
-                                        {shell.organizationName} / {shell.workspaceName}
-                                    </h4>
-                                    <p className='mt-2 text-sm leading-6 text-muted-foreground'>
-                                        This center panel is where repository context, active conversations,
-                                        and orchestration views can converge without changing the outer shell.
-                                    </p>
-                                    <div className='mt-4 grid gap-3 md:grid-cols-2'>
-                                        <div className='rounded-xl border border-border/70 bg-background/70 p-3 text-sm text-muted-foreground'>
-                                            Command palette
-                                        </div>
-                                        <div className='rounded-xl border border-border/70 bg-background/70 p-3 text-sm text-muted-foreground'>
-                                            Run detail inspector
-                                        </div>
-                                        <div className='rounded-xl border border-border/70 bg-background/70 p-3 text-sm text-muted-foreground md:col-span-2'>
-                                            Route-aware panel host with future dock state wiring.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className='rounded-2xl border border-border/70 bg-background/80 p-4'>
-                                    <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                                        shell posture
-                                    </p>
-                                    <div className='mt-3'>
-                                        <ShellBulletList
-                                            items={[
-                                                'Shared frontend package mounted by both shells',
-                                                'Static route shells keep navigation cheap to review',
-                                                'Platform bridges stay shell-owned until real capabilities are needed',
-                                            ]}
-                                            emptyLabel='Shell posture is not configured yet.'
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </Panel>
-
-                        <Panel variant='muted' className='p-4'>
-                            <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                                command journal
-                            </p>
-                            <div className='mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-3'>
-                                <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                    route mount
-                                </div>
-                                <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                    workspace hydrate
-                                </div>
-                                <div className='rounded-xl border border-border/70 bg-background/70 p-3'>
-                                    bridge attach
-                                </div>
-                            </div>
-                        </Panel>
-                    </div>
-
-                    <Panel className='p-4'>
-                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                            inspector
-                        </p>
-                        <div className='mt-4 space-y-4'>
-                            <div className='rounded-2xl border border-border/70 bg-background/80 p-4'>
-                                <p className='text-xs uppercase tracking-[0.18em] text-muted-foreground'>
-                                    environment
-                                </p>
-                                <p className='mt-2 text-sm text-foreground'>{shell.environmentLabel}</p>
-                            </div>
-                            <div className='rounded-2xl border border-border/70 bg-background/80 p-4'>
-                                <p className='text-xs uppercase tracking-[0.18em] text-muted-foreground'>
-                                    capabilities
-                                </p>
-                                <div className='mt-3'>
-                                    <ShellBulletList
-                                        items={shell.capabilitySummary}
-                                        emptyLabel='Capability wiring remains intentionally thin.'
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </Panel>
-                </div>
-            </Panel>
-
-            <Panel className='min-h-[22rem] p-4'>
-                <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                    operator notes
-                </p>
-                <div className='mt-4'>
-                    <ShellBulletList
-                        items={shell.notes}
-                        emptyLabel='No shell notes have been configured yet.'
-                    />
-                </div>
-            </Panel>
-        </div>
-    );
-}
-
 export function ForgePanelHost({ route, shell }: ForgePanelHostProps) {
     const cards = createRouteSurfaceCards(route.id, shell);
+
+    if (route.id === 'workspace') {
+        return <ForgeWorkspaceShell routeId={route.id} shell={shell} />;
+    }
 
     return (
         <section className='space-y-4'>
@@ -371,49 +201,45 @@ export function ForgePanelHost({ route, shell }: ForgePanelHostProps) {
                 ))}
             </div>
 
-            {route.id === 'workspace' ? (
-                <WorkspacePanelHost shell={shell} />
-            ) : (
-                <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr),20rem]'>
-                    <Panel variant='surface' className='p-5'>
-                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                            route briefing
-                        </p>
-                        <h3
-                            className='mt-3 text-2xl font-semibold text-foreground'
-                            style={{
-                                fontFamily:
-                                    '"Bahnschrift SemiBold", "Aptos Display", "Segoe UI", system-ui, sans-serif',
-                            }}>
-                            {route.title}
-                        </h3>
-                        <p className='mt-3 max-w-3xl text-sm leading-7 text-muted-foreground'>
-                            {route.description}
-                        </p>
-                        <div className='mt-6 grid gap-3 md:grid-cols-3'>
-                            {['shell route', 'shared app', 'future platform'].map((label) => (
-                                <div
-                                    key={label}
-                                    className='rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground'>
-                                    {label}
-                                </div>
-                            ))}
-                        </div>
-                    </Panel>
+            <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr),20rem]'>
+                <Panel variant='surface' className='p-5'>
+                    <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
+                        route briefing
+                    </p>
+                    <h3
+                        className='mt-3 text-2xl font-semibold text-foreground'
+                        style={{
+                            fontFamily:
+                                '"Bahnschrift SemiBold", "Aptos Display", "Segoe UI", system-ui, sans-serif',
+                        }}>
+                        {route.title}
+                    </h3>
+                    <p className='mt-3 max-w-3xl text-sm leading-7 text-muted-foreground'>
+                        {route.description}
+                    </p>
+                    <div className='mt-6 grid gap-3 md:grid-cols-3'>
+                        {['shell route', 'shared app', 'future platform'].map((label) => (
+                            <div
+                                key={label}
+                                className='rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground'>
+                                {label}
+                            </div>
+                        ))}
+                    </div>
+                </Panel>
 
-                    <Panel variant='muted' className='p-4'>
-                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                            shell notes
-                        </p>
-                        <div className='mt-4'>
-                            <ShellBulletList
-                                items={shell.notes}
-                                emptyLabel='Shell notes are intentionally sparse for this scaffold.'
-                            />
-                        </div>
-                    </Panel>
-                </div>
-            )}
+                <Panel variant='muted' className='p-4'>
+                    <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
+                        shell notes
+                    </p>
+                    <div className='mt-4'>
+                        <ShellBulletList
+                            items={shell.notes}
+                            emptyLabel='Shell notes are intentionally sparse for this scaffold.'
+                        />
+                    </div>
+                </Panel>
+            </div>
         </section>
     );
 }
