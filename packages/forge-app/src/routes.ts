@@ -6,45 +6,45 @@ export const forgeRoutes: readonly ForgeRouteDefinition[] = [
         path: '/',
         navLabel: 'Home',
         title: 'Forge Home',
-        kicker: 'shell control surface',
+        kicker: 'operator overview',
         description:
-            'Shared entry surface for shell status, workspace context, and the next product slices.',
+            'Overview surface for the shared Forge shell, active organizations, and the next operator workflows.',
     },
     {
         id: 'workspace',
         path: '/organization/workspace',
         navLabel: 'Workspace',
         title: 'Organization Workspace',
-        kicker: 'panel-ready workbench shell',
+        kicker: 'organization cockpit',
         description:
-            'Workbench route for the first shared panel host, team context, and future agent surfaces.',
+            'GTD-style workspace for organizations, runs, inbox review, and the first Forge operator surfaces.',
     },
     {
         id: 'runs',
         path: '/runs',
         navLabel: 'Runs',
         title: 'Runs',
-        kicker: 'execution queue placeholder',
+        kicker: 'execution activity',
         description:
-            'Thin shell route for queued, active, and historical runs without committing to product workflows yet.',
+            'Review run state, recent failures, and the execution queue without leaving the shared Forge shell.',
     },
     {
         id: 'settings',
         path: '/settings',
         navLabel: 'Settings',
         title: 'Settings',
-        kicker: 'policy and bridge controls',
+        kicker: 'account and workspace posture',
         description:
-            'Configuration surface for shell policy, platform bridge posture, and operator preferences.',
+            'Adjust workspace defaults, account posture, and shell-owned bridge behavior.',
     },
     {
         id: 'billing',
         path: '/billing',
         navLabel: 'Billing',
         title: 'Billing',
-        kicker: 'commercial placeholder',
+        kicker: 'billing and quota',
         description:
-            'Commercial shell for seats, automation usage, and contract checkpoints.',
+            'Inspect plan state, usage posture, and the entitlement data feeding Forge decisions.',
     },
 ] as const;
 

@@ -32,13 +32,16 @@ export interface GraphiteDataTableColumn<TRow> {
     value?: (row: TRow) => ReactNode;
 }
 
-type GraphiteDataTableProps<TRow> = {
+export type GraphiteDataTableProps<TRow> = {
     rows: readonly TRow[];
     columns: readonly GraphiteDataTableColumn<TRow>[];
     rowKey: (row: TRow, index: number) => string;
+    ariaLabel?: string;
     className?: string;
+    emptyState?: ReactNode;
     emptyMessage?: string;
     rowClassName?: (row: TRow, index: number) => string | undefined;
+    renderRowActions?: (row: TRow, index: number) => ReactNode;
     onRowClick?: (row: TRow, index: number) => void;
     sortState?: GraphiteDataTableSortState | null;
     onSortStateChange?: (next: GraphiteDataTableSortState | null) => void;
@@ -65,13 +68,59 @@ function comparePrimitive(left: unknown, right: unknown): number {
     return leftText < rightText ? -1 : 1;
 }
 
+export function getNextGraphiteDataTableSortState(
+    columnKey: string,
+    activeSort: GraphiteDataTableSortState | null | undefined,
+): GraphiteDataTableSortState | null {
+    if (!activeSort || activeSort.columnKey !== columnKey) {
+        return {
+            columnKey,
+            direction: 'asc',
+        };
+    }
+
+    if (activeSort.direction === 'asc') {
+        return {
+            columnKey,
+            direction: 'desc',
+        };
+    }
+
+    return null;
+}
+
+export function sortGraphiteDataTableRows<TRow>(
+    rows: readonly TRow[],
+    columns: readonly GraphiteDataTableColumn<TRow>[],
+    sortState: GraphiteDataTableSortState | null | undefined,
+): readonly TRow[] {
+    if (!sortState) {
+        return rows;
+    }
+
+    const column = columns.find((entry) => entry.key === sortState.columnKey);
+    if (!column || !column.sortable || !column.sortValue) {
+        return rows;
+    }
+
+    const direction = sortState.direction === 'desc' ? -1 : 1;
+    return [...rows].sort((left, right) => {
+        const leftValue = column.sortValue?.(left);
+        const rightValue = column.sortValue?.(right);
+        return comparePrimitive(leftValue, rightValue) * direction;
+    });
+}
+
 export function GraphiteDataTable<TRow>({
     rows,
     columns,
     rowKey,
+    ariaLabel,
     className,
+    emptyState,
     emptyMessage = 'No rows.',
     rowClassName,
+    renderRowActions,
     onRowClick,
     sortState,
     onSortStateChange,
@@ -81,22 +130,10 @@ export function GraphiteDataTable<TRow>({
 
     const activeSort = sortState ?? uncontrolledSort;
 
-    const sortedRows = useMemo(() => {
-        if (!activeSort) return rows;
-        const column = columns.find(
-            (entry) => entry.key === activeSort.columnKey,
-        );
-        if (!column || !column.sortable || !column.sortValue) {
-            return rows;
-        }
-
-        const direction = activeSort.direction === 'desc' ? -1 : 1;
-        return [...rows].sort((left, right) => {
-            const leftValue = column.sortValue?.(left);
-            const rightValue = column.sortValue?.(right);
-            return comparePrimitive(leftValue, rightValue) * direction;
-        });
-    }, [rows, columns, activeSort]);
+    const sortedRows = useMemo(
+        () => sortGraphiteDataTableRows(rows, columns, activeSort),
+        [rows, columns, activeSort],
+    );
 
     const setSort = (next: GraphiteDataTableSortState | null) => {
         if (onSortStateChange) {
@@ -107,10 +144,14 @@ export function GraphiteDataTable<TRow>({
     };
 
     return (
-        <div className={cn('rounded-xl border bg-card/40', className)}>
-            <Table>
+        <div
+            className={cn(
+                'overflow-hidden rounded-[var(--loop-radius-lg)] border border-border/80 bg-card/55 shadow-[var(--loop-elevation-level1)]',
+                className,
+            )}>
+            <Table aria-label={ariaLabel}>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className='bg-background/75'>
                         {columns.map((column) => {
                             const isActive =
                                 activeSort?.columnKey === column.key;
@@ -131,26 +172,12 @@ export function GraphiteDataTable<TRow>({
                                             type='button'
                                             className='inline-flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground'
                                             onClick={() => {
-                                                if (!isActive) {
-                                                    setSort({
-                                                        columnKey: column.key,
-                                                        direction: 'asc',
-                                                    });
-                                                    return;
-                                                }
-
-                                                if (
-                                                    activeSort.direction ===
-                                                    'asc'
-                                                ) {
-                                                    setSort({
-                                                        columnKey: column.key,
-                                                        direction: 'desc',
-                                                    });
-                                                    return;
-                                                }
-
-                                                setSort(null);
+                                                setSort(
+                                                    getNextGraphiteDataTableSortState(
+                                                        column.key,
+                                                        activeSort,
+                                                    ),
+                                                );
                                             }}>
                                             {column.header}
                                             <span className='text-[10px]'>
@@ -165,15 +192,26 @@ export function GraphiteDataTable<TRow>({
                                 </TableHead>
                             );
                         })}
+                        {renderRowActions ? (
+                            <TableHead className='w-px text-right'>
+                                <span className='sr-only'>Actions</span>
+                            </TableHead>
+                        ) : null}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {sortedRows.length === 0 ? (
                         <TableRow>
                             <TableCell
-                                colSpan={Math.max(1, columns.length)}
+                                colSpan={
+                                    Math.max(
+                                        1,
+                                        columns.length +
+                                            (renderRowActions ? 1 : 0),
+                                    )
+                                }
                                 className='h-20 text-center text-sm text-muted-foreground'>
-                                {emptyMessage}
+                                {emptyState ?? emptyMessage}
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -200,6 +238,17 @@ export function GraphiteDataTable<TRow>({
                                               : null}
                                     </TableCell>
                                 ))}
+                                {renderRowActions ? (
+                                    <TableCell className='w-px text-right'>
+                                        <div
+                                            className='flex justify-end gap-2'
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                            }}>
+                                            {renderRowActions(row, index)}
+                                        </div>
+                                    </TableCell>
+                                ) : null}
                             </TableRow>
                         ))
                     )}
