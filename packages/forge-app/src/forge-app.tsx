@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Panel, ThemeProvider, cn, defaultThemeSet } from '@loop-kit/ui';
+import { Panel, UiProvider, cn, resolveDefaultUiSkin } from '@loop-kit/ui';
 
 import { useForgeNavigation } from './navigation';
 import { forgeRoutes, resolveForgeHref } from './routes';
@@ -235,9 +235,11 @@ function ShellHeader({
 export function ForgeApp({ shell, initialPath = '/' }: ForgeAppProps) {
     const mode = shell.navigationMode ?? 'history';
     const { route, navigate } = useForgeNavigation(mode, initialPath);
+    const skin = resolveDefaultUiSkin(shell.skinId);
+    const skinMode = shell.skinMode ?? 'dark';
 
     return (
-        <ThemeProvider theme={defaultThemeSet} mode='dark'>
+        <UiProvider skin={skin} mode={skinMode}>
             <div className='min-h-screen'>
                 <div className='mx-auto flex min-h-screen w-full max-w-[1760px] gap-4 p-4 md:p-6'>
                     <ShellAside shell={shell} activeRoute={route} onNavigate={navigate} />
@@ -248,6 +250,6 @@ export function ForgeApp({ shell, initialPath = '/' }: ForgeAppProps) {
                     </main>
                 </div>
             </div>
-        </ThemeProvider>
+        </UiProvider>
     );
 }
