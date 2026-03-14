@@ -1,5 +1,7 @@
 import type { ThemeMode } from '@loop-kit/ui';
 
+import type { ForgeShellDataSource } from './data-source';
+
 export type ForgeRouteId =
     | 'home'
     | 'workspace'
@@ -29,6 +31,7 @@ export type ForgeShellConfig = {
     navigationMode?: ForgeNavigationMode;
     skinId?: string;
     skinMode?: ThemeMode;
+    dataSource?: ForgeShellDataSource;
     capabilitySummary?: readonly string[];
     notes?: readonly string[];
 };

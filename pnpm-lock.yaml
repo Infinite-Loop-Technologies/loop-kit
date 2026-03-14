@@ -221,6 +221,9 @@ importers:
 
   packages/forge-app:
     dependencies:
+      '@loop-kit/forge-contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@loop-kit/ui':
         specifier: workspace:*
         version: link:../ui

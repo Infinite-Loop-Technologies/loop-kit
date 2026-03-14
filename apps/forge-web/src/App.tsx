@@ -1,4 +1,21 @@
-import { ForgeApp, type ForgeShellConfig } from '@loop-kit/forge-app';
+import {
+    ForgeApp,
+    createForgeApiDataSource,
+    createForgeStubDataSource,
+    type ForgeShellConfig,
+} from '@loop-kit/forge-app';
+
+const forgeApiBaseUrl = import.meta.env.VITE_FORGE_API_BASE_URL?.trim();
+const forgeApiToken = import.meta.env.VITE_FORGE_API_TOKEN?.trim();
+
+const webDataSource = forgeApiBaseUrl
+    ? createForgeApiDataSource({
+          authToken: forgeApiToken || undefined,
+          baseUrl: forgeApiBaseUrl,
+      })
+    : createForgeStubDataSource({
+          label: 'web preview stub',
+      });
 
 const webShell: ForgeShellConfig = {
     id: 'forge-web',
@@ -10,6 +27,7 @@ const webShell: ForgeShellConfig = {
     navigationMode: 'history',
     skinId: 'forge',
     skinMode: 'dark',
+    dataSource: webDataSource,
     capabilitySummary: [
         'Browser-native deep links for shell routes',
         'Preview-deploy friendly static build output',

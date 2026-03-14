@@ -1,4 +1,21 @@
-import { ForgeApp, type ForgeShellConfig } from '@loop-kit/forge-app';
+import {
+    ForgeApp,
+    createForgeApiDataSource,
+    createForgeStubDataSource,
+    type ForgeShellConfig,
+} from '@loop-kit/forge-app';
+
+const forgeApiBaseUrl = import.meta.env.VITE_FORGE_API_BASE_URL?.trim();
+const forgeApiToken = import.meta.env.VITE_FORGE_API_TOKEN?.trim();
+
+const desktopDataSource = forgeApiBaseUrl
+    ? createForgeApiDataSource({
+          authToken: forgeApiToken || undefined,
+          baseUrl: forgeApiBaseUrl,
+      })
+    : createForgeStubDataSource({
+          label: 'desktop preview stub',
+      });
 
 const desktopShell: ForgeShellConfig = {
     id: 'forge-desktop',
@@ -10,6 +27,7 @@ const desktopShell: ForgeShellConfig = {
     navigationMode: 'hash',
     skinId: 'forge',
     skinMode: 'dark',
+    dataSource: desktopDataSource,
     capabilitySummary: [
         'Tauri v2 native shell around the shared Forge frontend package',
         'Hash-safe route handling for local desktop bootstrapping',
