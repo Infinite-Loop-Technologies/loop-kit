@@ -16,6 +16,7 @@ import type {
 } from '@loop-kit/dock';
 import { GripVertical, X } from 'lucide-react';
 
+import { PanelSurfaceFrame } from '../../primitives/panel-surface';
 import { cn } from '../../utils';
 
 type DockTabProps = {
@@ -139,16 +140,23 @@ export function DockGroup({
     };
 
     return (
-        <section
-            className='absolute overflow-hidden rounded-md border border-border/80 bg-card/90 shadow-sm'
-            style={groupStyle}
+        <PanelSurfaceFrame
+            className='absolute'
+            contentClassName='flex min-h-0 flex-1 flex-col'
             data-group-id={group.id}
-            data-testid={`dock-group-${group.id}`}
+            data-layout-node={layout.nodes[group.id]?.kind}
             data-panel-count={group.panelIds.length}
-            data-layout-node={layout.nodes[group.id]?.kind}>
+            data-testid={`dock-group-${group.id}`}
+            style={groupStyle}>
             <header
                 data-testid={`dock-group-header-${group.id}`}
-                className='flex h-8 items-center gap-1 border-b border-border/70 bg-muted/25 px-1'>
+                className='flex h-9 shrink-0 items-center gap-1 border-b px-1'
+                style={{
+                    background:
+                        'color-mix(in oklch, var(--sidebar) 78%, var(--card))',
+                    borderColor:
+                        'color-mix(in oklch, var(--sidebar-border) 78%, transparent)',
+                }}>
                 <SortableContext
                     items={group.panelIds}
                     strategy={horizontalListSortingStrategy}>
@@ -166,7 +174,12 @@ export function DockGroup({
                 </SortableContext>
             </header>
 
-            <div className='h-[calc(100%-2rem)] overflow-hidden p-3 text-xs text-muted-foreground'>
+            <div
+                className='min-h-0 flex flex-1 flex-col overflow-auto p-3 text-xs text-muted-foreground'
+                style={{
+                    background:
+                        'linear-gradient(180deg, color-mix(in oklch, var(--card) 94%, transparent) 0%, color-mix(in oklch, var(--secondary) 14%, var(--card)) 100%)',
+                }}>
                 {renderPanelBody ? (
                     renderPanelBody(activePanelId, group.id)
                 ) : activePanelId ? (
@@ -180,7 +193,7 @@ export function DockGroup({
                     <p>Empty group</p>
                 )}
             </div>
-        </section>
+        </PanelSurfaceFrame>
     );
 }
 

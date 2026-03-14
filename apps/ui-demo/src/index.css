@@ -4,6 +4,38 @@
 @source "./**/*.{ts,tsx}";
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --radius-sm: var(--loop-radius-sm);
+    --radius-md: var(--loop-radius-md);
+    --radius-lg: var(--loop-radius-lg);
+    --radius-xl: var(--loop-radius-xl);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -19,13 +51,13 @@ body {
     margin: 0;
     font-family: var(--loop-typography-familySans, "Segoe UI", system-ui, sans-serif);
     background:
-        radial-gradient(circle at 8% 8%, color-mix(in oklch, var(--accent) 16%, transparent), transparent 36%),
+        radial-gradient(circle at 8% 8%, color-mix(in oklch, var(--accent) 20%, transparent), transparent 36%),
         radial-gradient(circle at 88% 0%, color-mix(in oklch, var(--primary) 14%, transparent), transparent 34%),
         linear-gradient(
             180deg,
-            color-mix(in oklch, var(--background) 92%, white) 0%,
+            color-mix(in oklch, var(--background) 90%, white) 0%,
             var(--background) 42%,
-            color-mix(in oklch, var(--background) 88%, oklch(0.92 0.02 85)) 100%
+            color-mix(in oklch, var(--sidebar) 16%, var(--background)) 100%
         );
     color: var(--foreground);
 }

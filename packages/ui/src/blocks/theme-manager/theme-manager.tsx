@@ -1,6 +1,7 @@
 'use client';
 
 import type { ThemeMode } from '../../theme';
+import { cn } from '../../utils';
 import { Badge } from '../../legacy/ui/badge';
 import { Button } from '../../legacy/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../legacy/ui/card';
@@ -48,7 +49,7 @@ export function ThemeManagerBlock({
     const activeSkin = skins.find((skin) => skin.id === skinId) ?? skins[0];
 
     return (
-        <Card className={className}>
+        <Card className={cn('flex h-full min-h-0 flex-col bg-card/82 backdrop-blur-md', className)}>
             <CardHeader className='pb-3'>
                 <CardTitle className='flex items-center justify-between text-sm'>
                     <span>Skin Manager</span>
@@ -56,7 +57,7 @@ export function ThemeManagerBlock({
                 </CardTitle>
             </CardHeader>
 
-            <CardContent className='space-y-3 text-xs'>
+            <CardContent className='flex min-h-0 flex-1 flex-col space-y-3 text-xs'>
                 <div className='grid gap-1.5'>
                     <Label htmlFor='theme-skin'>Skin</Label>
                     <select
@@ -118,7 +119,7 @@ export function ThemeManagerBlock({
                                 id='skin-export'
                                 readOnly
                                 value={exportValue}
-                                className='min-h-28 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
+                                className='max-h-36 min-h-28 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
                             />
                         </div>
                     </>
@@ -138,7 +139,7 @@ export function ThemeManagerBlock({
                             id='skin-import'
                             value={importValue ?? ''}
                             onChange={(event) => onImportValueChange(event.target.value)}
-                            className='min-h-24 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
+                            className='max-h-32 min-h-24 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
                             placeholder='Paste a skin JSON payload'
                         />
                         {importStatus ? (

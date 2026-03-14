@@ -13,15 +13,15 @@ export type PrimitiveButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 function toneToStyles(tone: PrimitiveButtonProps['tone']): CSSProperties {
     if (tone === 'outline') {
         return {
-            background: 'transparent',
+            background: 'color-mix(in oklch, var(--card) 88%, transparent)',
             color: 'var(--foreground)',
-            borderColor: 'var(--border)',
+            borderColor: 'var(--input)',
         };
     }
 
     if (tone === 'ghost') {
         return {
-            background: 'transparent',
+            background: 'color-mix(in oklch, var(--accent) 54%, transparent)',
             color: 'var(--foreground)',
             borderColor: 'transparent',
         };
@@ -38,7 +38,7 @@ function toneToStyles(tone: PrimitiveButtonProps['tone']): CSSProperties {
     return {
         background: 'var(--primary)',
         color: 'var(--primary-foreground)',
-        borderColor: 'transparent',
+        borderColor: 'color-mix(in oklch, var(--primary) 40%, transparent)',
     };
 }
 
@@ -65,7 +65,8 @@ export const Button = forwardRef<HTMLButtonElement, PrimitiveButtonProps>(
                     lineHeight: 1,
                     minHeight: '2.25rem',
                     padding: '0 0.875rem',
-                    transition: 'filter 120ms ease',
+                    transition:
+                        'filter 120ms ease, transform 120ms ease, background-color 120ms ease',
                     ...toneToStyles(tone),
                     ...style,
                 }}

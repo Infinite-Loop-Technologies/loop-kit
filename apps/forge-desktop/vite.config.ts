@@ -27,6 +27,11 @@ export default defineConfig({
         },
     },
     envPrefix: ['VITE_', 'TAURI_ENV_*'],
+    preview: {
+        host: '127.0.0.1',
+        port: 4175,
+        strictPort: true,
+    },
     build: {
         target:
             process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
@@ -34,6 +39,7 @@ export default defineConfig({
         sourcemap: !!process.env.TAURI_ENV_DEBUG,
     },
     resolve: {
+        dedupe: ['react', 'react-dom'],
         alias: {
             '@': path.resolve(__dirname, './src'),
         },

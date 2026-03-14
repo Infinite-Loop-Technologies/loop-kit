@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { cn } from '../../utils';
 import { Badge } from '../../legacy/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../legacy/ui/card';
 import { Input } from '../../legacy/ui/input';
@@ -42,14 +43,14 @@ export function TokenEditorBlock({
         entry.group === 'colors' || entry.path.startsWith('colors.');
 
     return (
-        <Card className={className}>
+        <Card className={cn('flex h-full min-h-0 flex-col bg-card/82 backdrop-blur-md', className)}>
             <CardHeader className='pb-3'>
                 <CardTitle className='flex items-center justify-between text-sm'>
                     <span>Design Tokens</span>
                     <Badge variant='outline'>{entries.length}</Badge>
                 </CardTitle>
             </CardHeader>
-            <CardContent className='space-y-3'>
+            <CardContent className='flex min-h-0 flex-1 flex-col space-y-3'>
                 <div className='space-y-1.5'>
                     <Label htmlFor='token-filter' className='text-xs text-muted-foreground'>
                         Filter tokens
@@ -69,12 +70,12 @@ export function TokenEditorBlock({
                     </p>
                 ) : null}
 
-                <div className='max-h-[360px] space-y-2 overflow-auto pr-1'>
+                <div className='min-h-0 flex-1 space-y-2 overflow-auto pr-1'>
                     {filteredEntries.map((entry) => (
                         <label
                             key={entry.path}
                             data-testid={`token-row-${entry.path}`}
-                            className='grid gap-1 rounded border border-border/60 bg-background/60 p-2 text-[11px]'>
+                            className='grid gap-1 rounded border border-border/60 bg-secondary/55 p-2 text-[11px]'>
                             <span className='flex items-center justify-between gap-2'>
                                 <span className='font-medium text-foreground'>{entry.path}</span>
                                 <span className='flex items-center gap-1.5'>

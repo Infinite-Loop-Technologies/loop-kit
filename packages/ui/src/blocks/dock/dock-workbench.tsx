@@ -111,7 +111,7 @@ function ComponentCatalogPanel() {
                     return (
                         <div
                             key={component.id}
-                            className='space-y-2 rounded-[1rem] border border-border/60 bg-background/70 p-3'>
+                            className='space-y-2 rounded-[1rem] border border-border/60 bg-secondary/55 p-3'>
                             <div className='flex items-center justify-between gap-2'>
                                 <div className='min-w-0'>
                                     <p className='truncate text-sm font-semibold text-foreground'>
@@ -149,12 +149,12 @@ function PreviewPanel({
                 <Badge variant='outline'>skin: {skinLabel}</Badge>
                 <Badge variant='outline'>mode: {mode}</Badge>
             </div>
-            <Card className='overflow-hidden bg-background/75'>
+            <Card className='overflow-hidden bg-card/88 shadow-[var(--loop-elevation-level1)]'>
                 <CardHeader className='pb-2'>
                     <CardTitle className='text-sm'>Hero surface</CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
-                    <div className='rounded-[1.35rem] border border-border/60 bg-background/70 p-4'>
+                    <div className='rounded-[1.35rem] border border-border/60 bg-accent/60 p-4'>
                         <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
                             Editorial rhythm
                         </p>
@@ -167,19 +167,19 @@ function PreviewPanel({
                         </p>
                     </div>
                     <div className='grid gap-3 md:grid-cols-3 text-xs'>
-                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                        <div className='rounded-[1rem] border border-border/60 bg-secondary/60 p-3'>
                             <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
                                 Texture
                             </p>
                             <p className='mt-2 text-sm text-foreground'>Softer overlays, richer material.</p>
                         </div>
-                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                        <div className='rounded-[1rem] border border-border/60 bg-secondary/50 p-3'>
                             <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
                                 Contrast
                             </p>
                             <p className='mt-2 text-sm text-foreground'>Readable without looking severe.</p>
                         </div>
-                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                        <div className='rounded-[1rem] border border-border/60 bg-sidebar/45 p-3'>
                             <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
                                 Motion
                             </p>
@@ -219,11 +219,11 @@ function ShortcutStatusPanel({
                 polished, not bolted on after the visuals.
             </p>
             <div className='grid grid-cols-2 gap-2 text-xs'>
-                <div className='rounded border bg-background/70 p-2'>
+                <div className='rounded border bg-secondary/60 p-2'>
                     <p className='text-[11px] text-muted-foreground'>Shortcuts</p>
                     <p className='font-semibold text-foreground'>{shortcutsEnabled ? 'on' : 'off'}</p>
                 </div>
-                <div className='rounded border bg-background/70 p-2'>
+                <div className='rounded border bg-secondary/50 p-2'>
                     <p className='text-[11px] text-muted-foreground'>Bindings</p>
                     <p className='font-semibold text-foreground'>{activeCount}</p>
                 </div>
@@ -287,7 +287,7 @@ function DockSettingsPanel({
             </div>
 
             {section === 'general' ? (
-                <Card className='bg-background/60'>
+                <Card className='bg-card/80'>
                     <CardHeader className='pb-2'>
                         <CardTitle className='text-sm'>Workspace Settings</CardTitle>
                     </CardHeader>
@@ -301,12 +301,12 @@ function DockSettingsPanel({
             ) : null}
 
             {section === 'overlay' ? (
-                <Card className='bg-background/60'>
+                <Card className='bg-card/80'>
                     <CardHeader className='pb-2'>
                         <CardTitle className='text-sm'>Drop Overlay</CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-3 text-xs'>
-                        <label className='flex items-center justify-between rounded border bg-muted/20 px-2 py-1.5'>
+                        <label className='flex items-center justify-between rounded border bg-secondary/35 px-2 py-1.5'>
                             <span>Show overlay guides</span>
                             <Switch
                                 data-testid='dock-settings-overlay-visible'
@@ -314,7 +314,7 @@ function DockSettingsPanel({
                                 onCheckedChange={onOverlayVisibleChange}
                             />
                         </label>
-                        <label className='flex items-center justify-between rounded border bg-muted/20 px-2 py-1.5'>
+                        <label className='flex items-center justify-between rounded border bg-secondary/35 px-2 py-1.5'>
                             <span>Show overlay labels</span>
                             <Switch
                                 data-testid='dock-settings-overlay-labels-visible'
@@ -328,7 +328,7 @@ function DockSettingsPanel({
 
             {section === 'shortcuts' ? (
                 <div className='space-y-3'>
-                    <label className='flex items-center justify-between rounded border bg-muted/20 px-2 py-1.5 text-xs'>
+                    <label className='flex items-center justify-between rounded border bg-secondary/35 px-2 py-1.5 text-xs'>
                         <span>Enable shortcuts</span>
                         <Switch
                             data-testid='dock-settings-shortcuts-enabled'
@@ -351,7 +351,7 @@ function DockSettingsPanel({
 function IntentConsolePanel({ logs }: { logs: readonly string[] }) {
     return (
         <div className='space-y-3'>
-            <div className='rounded-[1rem] border border-border/60 bg-background/70 p-3'>
+            <div className='rounded-[1rem] border border-border/60 bg-accent/48 p-3'>
                 <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
                     Current direction
                 </p>
@@ -361,7 +361,7 @@ function IntentConsolePanel({ logs }: { logs: readonly string[] }) {
                 </p>
             </div>
 
-            <div className='space-y-1 rounded-[1rem] border border-border/60 bg-background/70 p-3 font-mono text-[11px]'>
+            <div className='space-y-1 rounded-[1rem] border border-border/60 bg-sidebar/52 p-3 font-mono text-[11px]'>
                 <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
                     Recent activity
                 </p>
@@ -563,7 +563,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
         <div className={className ?? 'space-y-3'}>
             <GraphiteIntentCommandMenu intents={intentRegistry} enabled />
 
-            <Card className='bg-card/90'>
+            <Card className='bg-card/88 shadow-[var(--loop-elevation-level2)]'>
                 <CardHeader className='pb-3'>
                     <CardTitle className='flex items-center justify-between text-base'>
                         <span className='flex items-center gap-2'>
@@ -662,8 +662,8 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                     <DockCanvas
                         className={
                             mode === 'preview'
-                                ? 'relative h-[520px] overflow-hidden rounded-xl border bg-muted/10'
-                                : 'relative h-[680px] overflow-hidden rounded-xl border bg-muted/10'
+                                ? 'relative h-[520px] overflow-hidden rounded-xl border border-sidebar-border/70 bg-sidebar/24'
+                                : 'relative h-[680px] overflow-hidden rounded-xl border border-sidebar-border/70 bg-sidebar/24'
                         }
                         renderPanelBody={(panelId, groupId) => {
                             if (!panelId) {
@@ -684,6 +684,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                             if (panelId === 'panel-theme-manager') {
                                 return (
                                     <ThemeManagerBlock
+                                        className='h-full min-h-0'
                                         mode={skin.mode}
                                         skinId={skin.skinId}
                                         skins={skinOptions}
@@ -717,6 +718,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                             if (panelId === 'panel-token-editor') {
                                 return (
                                     <TokenEditorBlock
+                                        className='h-full min-h-0'
                                         entries={tokenEntries}
                                         validationMessage={skin.validationMessage}
                                         onTokenChange={(path, value) =>
@@ -802,7 +804,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                     {mode === 'full' ? (
                         <>
                             <div className='grid gap-3 md:grid-cols-2'>
-                                <Card className='bg-muted/20'>
+                                <Card className='bg-sidebar/22'>
                                     <CardHeader className='pb-2'>
                                         <CardTitle className='text-xs uppercase tracking-wide text-muted-foreground'>
                                             Surface Balance
@@ -817,7 +819,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                                     </CardContent>
                                 </Card>
 
-                                <Card className='bg-muted/20'>
+                                <Card className='bg-secondary/30'>
                                     <CardHeader className='pb-2'>
                                         <CardTitle className='text-xs uppercase tracking-wide text-muted-foreground'>
                                             Skin Snapshot
@@ -833,7 +835,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
 
                             <Separator />
 
-                            <Card className='bg-muted/20'>
+                            <Card className='bg-accent/22'>
                                 <CardContent className='space-y-2 pt-4 text-sm leading-7 text-muted-foreground'>
                                     <p>
                                         The workbench still exposes the real dock and token system,

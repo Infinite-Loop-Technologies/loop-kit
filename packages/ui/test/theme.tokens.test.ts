@@ -31,6 +31,29 @@ test('setThemeTokenValue updates a token and compiles through Theme compiler', (
     assert.equal(compiled.vars['--accent'], 'oklch(0.71 0.23 190)');
 });
 
+test('setThemeTokenValue updates sidebar tokens through the Theme compiler', () => {
+    const skins = createDockSkins();
+    const skin = skins.command;
+    assert.ok(skin);
+    if (!skin) {
+        return;
+    }
+
+    const updated = setThemeTokenValue(
+        skin.themes.dark,
+        'colors.sidebar',
+        'oklch(0.18 0.02 220)',
+    );
+    assert.ok(updated);
+    if (!updated) {
+        return;
+    }
+
+    const compiled = compileThemeToCssVars(updated);
+    assert.equal(compiled.vars['--loop-colors-sidebar'], 'oklch(0.18 0.02 220)');
+    assert.equal(compiled.vars['--sidebar'], 'oklch(0.18 0.02 220)');
+});
+
 test('setThemeTokenValue rejects unknown token paths', () => {
     const skins = createDockSkins();
     const skin = skins.classic;

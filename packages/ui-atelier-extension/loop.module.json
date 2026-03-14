@@ -1,0 +1,28 @@
+{
+    "schemaVersion": "1",
+    "kind": "module",
+    "id": "atelier-panel-surface",
+    "name": "atelier-panel-surface",
+    "version": "0.1.0",
+    "entry": "./src/index.tsx",
+    "browser": {
+        "entry": "./src/index.tsx",
+        "uiExtensions": [
+            {
+                "slot": "panel.surface",
+                "export": "atelierPanelSurfaceExtension"
+            }
+        ]
+    },
+    "provides": [
+        {
+            "kind": "ui-extension",
+            "id": "atelier-panel-surface",
+            "description": "Trusted panel chrome override for atelier surfaces."
+        }
+    ],
+    "permissions": [],
+    "metadata": {
+        "trusted": true
+    }
+}

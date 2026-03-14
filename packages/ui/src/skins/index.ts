@@ -31,3 +31,5 @@ export type {
     UiSkinDefinition,
     UiSkinThemes,
 } from './schema';
+export { createUiExtensionRegistry } from '../extensions';
+export type { UiExtensionDefinition, UiExtensionRegistry } from '../extensions';
