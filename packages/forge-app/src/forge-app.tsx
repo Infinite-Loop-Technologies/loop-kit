@@ -90,10 +90,10 @@ function ShellAside({
                         fontFamily:
                             '"Bahnschrift SemiBold", "Aptos Display", "Segoe UI", system-ui, sans-serif',
                     }}>
-                    Application Shell
+                    Harness Console
                 </h1>
                 <p className='mt-3 text-sm leading-6 text-muted-foreground'>
-                    Shared frontend package mounted in both Vite web and Tauri desktop shells.
+                    Operator shell for organizations, runs, settings, and the emerging AI harness workflow.
                 </p>
             </Panel>
 
@@ -133,7 +133,7 @@ function ShellAside({
                     </div>
                     <div>
                         <p className='text-xs uppercase tracking-[0.16em] text-muted-foreground'>
-                            runtime
+                            environment
                         </p>
                         <p className='mt-1 text-foreground'>{shell.environmentLabel}</p>
                     </div>
@@ -165,7 +165,7 @@ function ShellHeader({
             <Panel className='p-5 md:p-6'>
                 <div className='flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground'>
                     <span className='rounded-full border border-border/70 bg-background/65 px-3 py-1'>
-                        shared app package
+                        shared frontend
                     </span>
                     <span className='rounded-full border border-border/70 bg-background/65 px-3 py-1'>
                         {shell.platform} shell
@@ -202,7 +202,7 @@ function ShellHeader({
 
             <Panel variant='muted' className='p-5'>
                 <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
-                    shell bridge
+                    platform bridge
                 </p>
                 <h3
                     className='mt-3 text-xl font-semibold text-foreground'

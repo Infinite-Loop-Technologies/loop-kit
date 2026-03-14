@@ -13,6 +13,7 @@
         "test": "node --import tsx --test ./test/**/*.test.ts"
     },
     "dependencies": {
+        "@loop-kit/forge-contracts": "workspace:*",
         "@loop-kit/ui": "workspace:*",
         "tailwindcss": "^4.1.16"
     },
