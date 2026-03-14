@@ -8,6 +8,8 @@ const desktopShell: ForgeShellConfig = {
     workspaceName: 'loop-kit',
     environmentLabel: 'Tauri desktop shell',
     navigationMode: 'hash',
+    skinId: 'forge',
+    skinMode: 'dark',
     capabilitySummary: [
         'Tauri v2 native shell around the shared Forge frontend package',
         'Hash-safe route handling for local desktop bootstrapping',
