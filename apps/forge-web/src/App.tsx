@@ -19,11 +19,11 @@ const webDataSource = forgeApiBaseUrl
 
 const webShell: ForgeShellConfig = {
     id: 'forge-web',
-    title: 'Forge Web',
+    title: 'Forge',
     platform: 'web',
     organizationName: 'Infinite Loop Technologies',
     workspaceName: 'loop-kit',
-    environmentLabel: 'Vite web shell',
+    environmentLabel: 'Web preview',
     navigationMode: 'history',
     skinId: 'forge',
     skinMode: 'dark',

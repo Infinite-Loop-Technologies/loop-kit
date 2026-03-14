@@ -19,11 +19,11 @@ const desktopDataSource = forgeApiBaseUrl
 
 const desktopShell: ForgeShellConfig = {
     id: 'forge-desktop',
-    title: 'Forge Desktop',
+    title: 'Forge',
     platform: 'desktop',
     organizationName: 'Infinite Loop Technologies',
     workspaceName: 'loop-kit',
-    environmentLabel: 'Tauri desktop shell',
+    environmentLabel: 'Desktop shell',
     navigationMode: 'hash',
     skinId: 'forge',
     skinMode: 'dark',

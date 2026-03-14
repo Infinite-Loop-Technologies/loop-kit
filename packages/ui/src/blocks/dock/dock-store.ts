@@ -48,6 +48,16 @@ export type DockSettingsPanelSection = 'general' | 'overlay' | 'shortcuts';
 export const SETTINGS_PANEL_ID = 'panel-settings';
 export const SETTINGS_PANEL_TITLE = 'Workspace Settings';
 
+export type DockStoreOptions = {
+    activeGroupId?: string;
+    initialMode?: ThemeMode;
+    initialSkinId?: string;
+    settingsPanelSection?: DockSettingsPanelSection;
+    shortcutsEnabled?: boolean;
+    showOverlay?: boolean;
+    showOverlayLabels?: boolean;
+};
+
 export type DockBlockState = GraphState & {
     dock: DockState;
     skin: DockSkinState;
@@ -108,13 +118,13 @@ export const SHORTCUT_CONTEXT_FIELDS: QueryBuilderField[] = [
 ];
 
 function createDockFixture(): DockState {
-    const componentCatalog = createPanelNode('panel-component-catalog', 'Component Catalog');
-    const preview = createPanelNode('panel-preview', 'Live Preview');
+    const componentCatalog = createPanelNode('panel-component-catalog', 'Spatial Library');
+    const preview = createPanelNode('panel-preview', 'Hero Preview');
     const themeManager = createPanelNode('panel-theme-manager', 'Skin Manager');
-    const tokenEditor = createPanelNode('panel-token-editor', 'Token Editor');
-    const shortcuts = createPanelNode('panel-shortcuts', 'Shortcut Status');
+    const tokenEditor = createPanelNode('panel-token-editor', 'Token Studio');
+    const shortcuts = createPanelNode('panel-shortcuts', 'Interaction Model');
     const settings = createPanelNode(SETTINGS_PANEL_ID, SETTINGS_PANEL_TITLE);
-    const consolePanel = createPanelNode('panel-console', 'Intent Console');
+    const consolePanel = createPanelNode('panel-console', 'Studio Notes');
 
     const leftGroup = createGroupNode(
         'group-left',
@@ -192,12 +202,13 @@ export function createPreviewDockFixture(): DockState {
     });
 }
 
-function createInitialSkinState(): DockSkinState {
+function createInitialSkinState(options: DockStoreOptions = {}): DockSkinState {
     const skins = createDockSkins();
-    const skinId = skins[DEFAULT_UI_SKIN_ID]
-        ? DEFAULT_UI_SKIN_ID
-        : Object.keys(skins)[0]!;
-    const mode: ThemeMode = 'dark';
+    const requestedSkinId = options.initialSkinId?.trim();
+    const skinId =
+        (requestedSkinId && skins[requestedSkinId] ? requestedSkinId : undefined) ??
+        (skins[DEFAULT_UI_SKIN_ID] ? DEFAULT_UI_SKIN_ID : Object.keys(skins)[0]!);
+    const mode = options.initialMode ?? 'dark';
     const validationMessage = validateUiSkinEntry(skins[skinId]!, mode);
 
     return {
@@ -223,19 +234,20 @@ function nextSkinId(state: Readonly<DockBlockState>): string {
 }
 
 export function createDockStore(
-    dockFixture: DockState = createDockFixture(),
+    dockFixture?: DockState,
+    options: DockStoreOptions = {},
 ): GraphiteRuntime<DockBlockState> {
     const store = createGraphStore<DockBlockState>({
         initialState: {
-            dock: dockFixture,
-            skin: createInitialSkinState(),
+            dock: dockFixture ?? createDockFixture(),
+            skin: createInitialSkinState(options),
             ui: {
-                activeGroupId: 'group-center',
-                shortcutsEnabled: true,
-                settingsPanelSection: 'general',
+                activeGroupId: options.activeGroupId ?? 'group-center',
+                shortcutsEnabled: options.shortcutsEnabled ?? true,
+                settingsPanelSection: options.settingsPanelSection ?? 'general',
                 settingsPanelOpenRequestId: 0,
-                showOverlay: true,
-                showOverlayLabels: true,
+                showOverlay: options.showOverlay ?? true,
+                showOverlayLabels: options.showOverlayLabels ?? true,
             },
         },
         eventMode: 'when-observed',
