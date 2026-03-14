@@ -13,7 +13,7 @@ This repo is both **product code** and **platform code**. Changes here must opti
 - future migration flexibility
 - minimal blast radius
 
-Agents working in this repository must preserve clarity, minimize risk, and avoid “helpful” scope expansion.
+Agents working in this repository must preserve clarity, minimize risk, and avoid "helpful" scope expansion.
 
 ---
 
@@ -51,12 +51,16 @@ Important:
 
 Before starting work, always:
 
+- run `git fetch origin`
+- switch to `main` with `git switch main` unless intentionally continuing an already-correct branch
+- fast-forward local `main` with `git pull --ff-only`
 - inspect the current branch
 - inspect working tree status
 - inspect local uncommitted changes
 - confirm whether there is already an open PR for the branch
 - confirm whether the branch actually matches the requested task
-- create or switch to a narrow task-specific branch if needed
+- confirm whether the working tree is intentionally clean or intentionally dirty for the task
+- create or switch to a narrow task-specific branch from updated `main` if needed
 
 Never assume:
 
@@ -67,7 +71,7 @@ Never assume:
 
 When available, use the **GitHub MCP server** or equivalent repository tooling to inspect PR state, branch context, checks, related issues, and repository metadata instead of guessing from partial local state.
 
-If GitHub MCP or another required MCP is unavailable or misconfigured, **stop immediately** and report the constraint. Do **not** improvise around missing repository visibility, and do **not** start “fixing the MCP” unless explicitly instructed.
+If GitHub MCP or another required MCP is unavailable or misconfigured, **stop immediately** and report the constraint. Do **not** improvise around missing repository visibility, and do **not** start "fixing the MCP" unless explicitly instructed.
 
 If a branch has not been pushed yet and its scope is no longer accurate, rename it.
 
@@ -77,6 +81,7 @@ If a branch has not been pushed yet and its scope is no longer accurate, rename 
 
 - Use **Context7 MCP by default** whenever library/API documentation, setup steps, configuration details, or code-generation guidance is needed.
 - Use **Playwright MCP** for validating complex or fragile web UI behavior.
+- Before browser automation, use the reserved local app ports and verify the app identity at the target URL. Never attach Playwright to an arbitrary existing server just because a port responds.
 - For non-trivial UI work, prefer **real validation** over visual guessing:
     - use Playwright MCP
     - add or improve automated tests where appropriate
@@ -109,6 +114,24 @@ This is the default, not a prohibition on multiple active branches.
 6. Mark ready for review only when the slice is reviewable.
 7. Merge the slice.
 8. Start the next dependent slice from the new `main`.
+
+### Local server identity workflow
+
+When launching or validating local web apps, use the reserved ports below and fail fast on mismatches:
+
+- `forge-web`: `4173`
+- `ui-demo`: `4174`
+- `forge-desktop` preview shell: `4175`
+- `forge-desktop` Tauri dev shell: `1420` with HMR on `1421`
+
+Before running Playwright or any browser-driven validation:
+
+1. Confirm which app should be running.
+2. Start that app on its reserved port only.
+3. Verify the responding page identity with the repo-local verification helper and the expected `data-loop-app` marker.
+4. Only then point Playwright at the verified URL.
+
+Do not reuse an unknown hanging terminal or a random responding localhost port without verifying that it serves the intended app.
 
 ### Large initiative workflow
 
@@ -312,7 +335,7 @@ For now:
 - **Git** is the storage and collaboration layer.
 - **CI** is the enforcement layer.
 - **Scripts, checks, tests, and documented rules** are preferred over vague agent instructions.
-- Future loop-kit and Forge semantics must be implemented through explicit tooling, policy, and code — not implied by prompts alone.
+- Future loop-kit and Forge semantics must be implemented through explicit tooling, policy, and code - not implied by prompts alone.
 
 Agents must not pretend that future platform semantics already exist. If a rule is not enforced yet, either implement the enforcement or describe the gap plainly.
 

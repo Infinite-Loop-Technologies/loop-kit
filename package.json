@@ -17,6 +17,8 @@
         "release:publish:cli": "node tools/release/publish-loop-cli-stack.mjs",
         "release:publish:cli:dry": "node tools/release/publish-loop-cli-stack.mjs --dry-run",
         "release:publish:cli:env": "proto run dotenvx -- run --env-file .env.release -- node tools/release/publish-loop-cli-stack.mjs",
+        "verify:web-app": "node tools/dev/verify-web-app.mjs",
+        "test:dev-tools": "node --test ./tools/dev/test/**/*.test.mjs",
         "typecheck": "proto run moon -- run :typecheck",
         "test": "proto run moon -- run :test",
         "release:patch": "pnpm -r version patch",
