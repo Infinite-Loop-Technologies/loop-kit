@@ -9,6 +9,7 @@
         ".": "./src/index.ts",
         "./tokens": "./src/tokens/index.ts",
         "./theme": "./src/theme/index.ts",
+        "./skins": "./src/skins/index.ts",
         "./icons": "./src/icons/index.ts",
         "./assets": "./src/assets/index.ts",
         "./primitives": "./src/primitives/index.ts",

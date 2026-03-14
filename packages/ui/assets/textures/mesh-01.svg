@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" fill="none">
+  <defs>
+    <linearGradient id="mesh-base" x1="20" y1="18" x2="294" y2="302" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF1D3"/>
+      <stop offset="0.48" stop-color="#FFD7B0"/>
+      <stop offset="1" stop-color="#F6B58E"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="40" fill="url(#mesh-base)"/>
+  <circle cx="92" cy="84" r="86" fill="#FFF7EA" fill-opacity="0.76"/>
+  <circle cx="252" cy="70" r="84" fill="#FFE5C7" fill-opacity="0.62"/>
+  <circle cx="82" cy="246" r="90" fill="#FFD2AE" fill-opacity="0.72"/>
+  <circle cx="252" cy="244" r="104" fill="#FFB98A" fill-opacity="0.64"/>
+  <g opacity="0.22" stroke="#FFF9EF" stroke-width="2">
+    <path d="M0 90H320"/>
+    <path d="M0 160H320"/>
+    <path d="M0 230H320"/>
+    <path d="M90 0V320"/>
+    <path d="M160 0V320"/>
+    <path d="M230 0V320"/>
+  </g>
+</svg>

@@ -3,21 +3,21 @@ import test from 'node:test';
 
 import { compileThemeToCssVars } from '../src/theme';
 import {
-    createDockThemePresets,
+    createDockSkins,
     setThemeTokenValue,
-    validateThemeSetEntry,
+    validateUiSkinEntry,
 } from '../src/blocks/dock/theme-state';
 
 test('setThemeTokenValue updates a token and compiles through Theme compiler', () => {
-    const presets = createDockThemePresets();
-    const preset = presets.graphite;
-    assert.ok(preset);
-    if (!preset) {
+    const skins = createDockSkins();
+    const skin = skins.graphite;
+    assert.ok(skin);
+    if (!skin) {
         return;
     }
 
     const updated = setThemeTokenValue(
-        preset.themes.light,
+        skin.themes.light,
         'colors.accent',
         'oklch(0.71 0.23 190)',
     );
@@ -32,29 +32,29 @@ test('setThemeTokenValue updates a token and compiles through Theme compiler', (
 });
 
 test('setThemeTokenValue rejects unknown token paths', () => {
-    const presets = createDockThemePresets();
-    const preset = presets.classic;
-    assert.ok(preset);
-    if (!preset) {
+    const skins = createDockSkins();
+    const skin = skins.classic;
+    assert.ok(skin);
+    if (!skin) {
         return;
     }
 
     const updated = setThemeTokenValue(
-        preset.themes.dark,
+        skin.themes.dark,
         'colors.missingToken',
         'oklch(0.5 0.2 40)',
     );
     assert.equal(updated, null);
 });
 
-test('validateThemeSetEntry reports valid preset as null message', () => {
-    const presets = createDockThemePresets();
-    const preset = presets.sunset;
-    assert.ok(preset);
-    if (!preset) {
+test('validateUiSkinEntry reports valid skin as null message', () => {
+    const skins = createDockSkins();
+    const skin = skins.sunset;
+    assert.ok(skin);
+    if (!skin) {
         return;
     }
 
-    assert.equal(validateThemeSetEntry(preset, 'light'), null);
-    assert.equal(validateThemeSetEntry(preset, 'dark'), null);
+    assert.equal(validateUiSkinEntry(skin, 'light'), null);
+    assert.equal(validateUiSkinEntry(skin, 'dark'), null);
 });

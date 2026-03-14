@@ -8,7 +8,7 @@ import { Label } from '../../legacy/ui/label';
 import { Separator } from '../../legacy/ui/separator';
 import { Switch } from '../../legacy/ui/switch';
 
-export type ThemeManagerPreset = {
+export type ThemeManagerSkin = {
     id: string;
     label: string;
     description?: string;
@@ -16,51 +16,63 @@ export type ThemeManagerPreset = {
 
 export type ThemeManagerBlockProps = {
     mode: ThemeMode;
-    presetId: string;
-    presets: ThemeManagerPreset[];
+    skinId: string;
+    skins: ThemeManagerSkin[];
     onModeChange: (mode: ThemeMode) => void;
-    onPresetChange: (presetId: string) => void;
+    onSkinChange: (skinId: string) => void;
     validationMessage?: string | null;
+    exportValue?: string;
+    onCopyExport?: () => void;
+    importValue?: string;
+    onImportValueChange?: (value: string) => void;
+    onImportApply?: () => void;
+    importStatus?: string | null;
     className?: string;
 };
 
 export function ThemeManagerBlock({
     mode,
-    presetId,
-    presets,
+    skinId,
+    skins,
     onModeChange,
-    onPresetChange,
+    onSkinChange,
     validationMessage,
+    exportValue,
+    onCopyExport,
+    importValue,
+    onImportValueChange,
+    onImportApply,
+    importStatus,
     className,
 }: ThemeManagerBlockProps) {
-    const activePreset = presets.find((preset) => preset.id === presetId) ?? presets[0];
+    const activeSkin = skins.find((skin) => skin.id === skinId) ?? skins[0];
 
     return (
         <Card className={className}>
             <CardHeader className='pb-3'>
                 <CardTitle className='flex items-center justify-between text-sm'>
-                    <span>Theme Manager</span>
+                    <span>Skin Manager</span>
                     <Badge variant='outline'>{mode}</Badge>
                 </CardTitle>
             </CardHeader>
 
             <CardContent className='space-y-3 text-xs'>
                 <div className='grid gap-1.5'>
-                    <Label htmlFor='theme-preset'>Preset</Label>
+                    <Label htmlFor='theme-skin'>Skin</Label>
                     <select
-                        id='theme-preset'
-                        value={presetId}
+                        id='theme-skin'
+                        value={skinId}
                         className='h-8 rounded border border-input bg-background px-2 text-xs'
-                        onChange={(event) => onPresetChange(event.target.value)}>
-                        {presets.map((preset) => (
-                            <option key={preset.id} value={preset.id}>
-                                {preset.label}
+                        onChange={(event) => onSkinChange(event.target.value)}>
+                        {skins.map((skin) => (
+                            <option key={skin.id} value={skin.id}>
+                                {skin.label}
                             </option>
                         ))}
                     </select>
-                    {activePreset?.description ? (
+                    {activeSkin?.description ? (
                         <p className='text-[11px] text-muted-foreground'>
-                            {activePreset.description}
+                            {activeSkin.description}
                         </p>
                     ) : null}
                 </div>
@@ -90,13 +102,60 @@ export function ThemeManagerBlock({
                     </Button>
                 </div>
 
+                {exportValue ? (
+                    <>
+                        <Separator />
+                        <div className='space-y-1.5'>
+                            <div className='flex items-center justify-between gap-2'>
+                                <Label htmlFor='skin-export'>Export Skin</Label>
+                                {onCopyExport ? (
+                                    <Button size='sm' variant='outline' onClick={onCopyExport}>
+                                        Copy JSON
+                                    </Button>
+                                ) : null}
+                            </div>
+                            <textarea
+                                id='skin-export'
+                                readOnly
+                                value={exportValue}
+                                className='min-h-28 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
+                            />
+                        </div>
+                    </>
+                ) : null}
+
+                {onImportValueChange ? (
+                    <div className='space-y-1.5'>
+                        <div className='flex items-center justify-between gap-2'>
+                            <Label htmlFor='skin-import'>Import Skin</Label>
+                            {onImportApply ? (
+                                <Button size='sm' variant='outline' onClick={onImportApply}>
+                                    Apply Import
+                                </Button>
+                            ) : null}
+                        </div>
+                        <textarea
+                            id='skin-import'
+                            value={importValue ?? ''}
+                            onChange={(event) => onImportValueChange(event.target.value)}
+                            className='min-h-24 w-full rounded border border-input bg-background px-2 py-2 font-mono text-[11px]'
+                            placeholder='Paste a skin JSON payload'
+                        />
+                        {importStatus ? (
+                            <p className='rounded border border-border/70 bg-muted/20 px-2 py-1 text-[11px] text-muted-foreground'>
+                                {importStatus}
+                            </p>
+                        ) : null}
+                    </div>
+                ) : null}
+
                 {validationMessage ? (
                     <p className='rounded border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-700'>
                         {validationMessage}
                     </p>
                 ) : (
                     <p className='rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-700'>
-                        Token schema valid.
+                        Skin schema valid.
                     </p>
                 )}
             </CardContent>
