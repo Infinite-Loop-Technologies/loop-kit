@@ -2,12 +2,11 @@
 
 import * as React from 'react';
 import {
-    GraphiteInspector,
     useGraphite,
     useIntent,
     useQuery,
 } from '@loop-kit/graphite/react';
-import { Copy, Plus, Redo2, Settings2, Undo2, Wrench, X } from 'lucide-react';
+import { Plus, Redo2, Settings2, Undo2, Wrench, X } from 'lucide-react';
 
 import { Badge } from '../../legacy/ui/badge';
 import { Button } from '../../legacy/ui/button';
@@ -57,39 +56,39 @@ type DemoCatalogEntry = {
     id: string;
     title: string;
     description: string;
-    targetHint: string;
+    accent: string;
 };
 
 const UI_DEMO_COMPONENTS: DemoCatalogEntry[] = [
     {
-        id: 'ui-dock-workspace',
-        title: 'Dock Workspace',
-        description: 'Graphite-first draggable tab/split dock workspace block.',
-        targetHint: 'apps/ui-demo',
+        id: 'signal-rail',
+        title: 'Signal Rail',
+        description: 'Slim navigation surfaces for GTD-style work that still feel editorial instead of toolish.',
+        accent: 'navigation',
     },
     {
-        id: 'ui-theme-manager',
-        title: 'Skin Manager',
-        description: 'Skin + mode selector to switch and reskin tokens live.',
-        targetHint: 'apps/ui-demo',
+        id: 'hero-panels',
+        title: 'Hero Panels',
+        description: 'Large atmospheric cards with calmer borders, softer blur, and more intentional spacing.',
+        accent: 'surfaces',
     },
     {
-        id: 'ui-token-editor',
-        title: 'Token Editor',
-        description: 'Editable design token matrix with schema validation.',
-        targetHint: 'apps/ui-demo',
+        id: 'texture-story',
+        title: 'Texture Story',
+        description: 'Panels should feel material, not flat. Textures and overlays are part of the language.',
+        accent: 'texture',
     },
     {
-        id: 'ui-shortcuts-settings',
-        title: 'Shortcuts Settings',
-        description: 'Graphite-powered shortcut-to-intent settings panel.',
-        targetHint: 'apps/ui-demo',
+        id: 'interaction-grammar',
+        title: 'Interaction Grammar',
+        description: 'Keyboard hints, panel gestures, and skin authoring should all read as one coherent system.',
+        accent: 'motion',
     },
     {
-        id: 'ui-demo-starter',
-        title: 'UI Demo Starter',
-        description: 'Optional bundle to scaffold the complete demo shell.',
-        targetHint: 'apps/ui-demo',
+        id: 'brand-voice',
+        title: 'Brand Voice',
+        description: 'A demo should sell an interface direction, not just prove that a set of blocks exists.',
+        accent: 'direction',
     },
 ];
 
@@ -100,61 +99,35 @@ function copyToClipboard(value: string): Promise<void> {
     return Promise.resolve();
 }
 
-function CommandCopyButton({ command }: { command: string }) {
-    const [copied, setCopied] = React.useState(false);
-
-    return (
-        <Button
-            size='sm'
-            variant='outline'
-            className='h-7 px-2 text-[11px]'
-            onClick={async () => {
-                await copyToClipboard(command);
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1000);
-            }}>
-            <Copy className='mr-1 h-3 w-3' />
-            {copied ? 'copied' : 'copy'}
-        </Button>
-    );
-}
-
 function ComponentCatalogPanel() {
     return (
         <div className='space-y-3'>
             <p className='text-xs text-muted-foreground'>
-                Use repo-local CLI only. These commands run against this workspace and never use
-                the published stable binary.
+                A glamorous demo needs a clear spatial story. These are the surfaces this workbench
+                is trying to prove out right now.
             </p>
             <div className='space-y-2'>
                 {UI_DEMO_COMPONENTS.map((component) => {
-                    const devCommand = `pnpm run loop:dev add local:${component.id} --to ${component.targetHint} --cwd . --dry-run`;
-                    const distCommand = `node packages/loop-cli/dist/cli.js add local:${component.id} --to ${component.targetHint} --cwd . --dry-run`;
                     return (
                         <div
                             key={component.id}
-                            className='space-y-1 rounded-md border border-border/60 bg-background/70 p-2'>
+                            className='space-y-2 rounded-[1rem] border border-border/60 bg-background/70 p-3'>
                             <div className='flex items-center justify-between gap-2'>
                                 <div className='min-w-0'>
-                                    <p className='truncate text-xs font-semibold text-foreground'>
+                                    <p className='truncate text-sm font-semibold text-foreground'>
                                         {component.title}
                                     </p>
-                                    <p className='truncate text-[11px] text-muted-foreground'>
-                                        local:{component.id}
+                                    <p className='truncate text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                                        {component.id}
                                     </p>
                                 </div>
                                 <Badge variant='outline' className='shrink-0 text-[10px]'>
-                                    {component.targetHint}
+                                    {component.accent}
                                 </Badge>
                             </div>
-                            <p className='text-[11px] text-muted-foreground'>{component.description}</p>
-                            <div className='rounded border bg-muted/25 p-2 font-mono text-[10px] text-foreground/90'>
-                                {devCommand}
-                            </div>
-                            <div className='flex items-center gap-2'>
-                                <CommandCopyButton command={devCommand} />
-                                <CommandCopyButton command={distCommand} />
-                            </div>
+                            <p className='text-xs leading-6 text-muted-foreground'>
+                                {component.description}
+                            </p>
                         </div>
                     );
                 })}
@@ -171,30 +144,58 @@ function PreviewPanel({
     skinLabel: string;
 }) {
     return (
-        <div className='space-y-3'>
+        <div className='space-y-4'>
             <div className='flex items-center gap-2'>
                 <Badge variant='outline'>skin: {skinLabel}</Badge>
                 <Badge variant='outline'>mode: {mode}</Badge>
             </div>
-            <Card className='bg-background/70'>
+            <Card className='overflow-hidden bg-background/75'>
                 <CardHeader className='pb-2'>
-                    <CardTitle className='text-sm'>Live Skin Preview</CardTitle>
+                    <CardTitle className='text-sm'>Hero surface</CardTitle>
                 </CardHeader>
-                <CardContent className='space-y-2 text-xs'>
+                <CardContent className='space-y-4'>
+                    <div className='rounded-[1.35rem] border border-border/60 bg-background/70 p-4'>
+                        <p className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
+                            Editorial rhythm
+                        </p>
+                        <h3 className='mt-3 text-xl font-semibold text-foreground'>
+                            Build a docked system that still feels composed.
+                        </h3>
+                        <p className='mt-2 text-sm leading-7 text-muted-foreground'>
+                            The preview should show layered surfaces, calmer typography, and a more
+                            intentional hierarchy than the old programmer-first demo.
+                        </p>
+                    </div>
+                    <div className='grid gap-3 md:grid-cols-3 text-xs'>
+                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                            <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                                Texture
+                            </p>
+                            <p className='mt-2 text-sm text-foreground'>Softer overlays, richer material.</p>
+                        </div>
+                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                            <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                                Contrast
+                            </p>
+                            <p className='mt-2 text-sm text-foreground'>Readable without looking severe.</p>
+                        </div>
+                        <div className='rounded-[1rem] border border-border/60 bg-background/65 p-3'>
+                            <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                                Motion
+                            </p>
+                            <p className='mt-2 text-sm text-foreground'>Panels should glide, not clatter.</p>
+                        </div>
+                    </div>
                     <div className='flex flex-wrap gap-2'>
                         <Button size='sm'>Primary</Button>
                         <Button size='sm' variant='outline'>
-                            Outline
-                        </Button>
-                        <Button size='sm' variant='secondary'>
                             Secondary
                         </Button>
+                        <Button size='sm' variant='secondary'>
+                            Subtle
+                        </Button>
                     </div>
-                    <Input className='h-8 text-xs' defaultValue='Token-driven form control' />
-                    <p className='rounded border border-border/60 bg-muted/20 px-2 py-1 text-[11px] text-muted-foreground'>
-                        Edit tokens in the Token Editor panel to fully reskin this surface in real
-                        time.
-                    </p>
+                    <Input className='h-9 text-sm' defaultValue='Token-driven control, but with better atmosphere.' />
                 </CardContent>
             </Card>
         </div>
@@ -214,15 +215,16 @@ function ShortcutStatusPanel({
     return (
         <div className='space-y-3'>
             <p className='text-xs text-muted-foreground'>
-                Shortcuts dispatch Graphite intents and stay active while the command menu is open.
+                Keyboard support is part of the surface language. The interaction model should feel
+                polished, not bolted on after the visuals.
             </p>
             <div className='grid grid-cols-2 gap-2 text-xs'>
                 <div className='rounded border bg-background/70 p-2'>
-                    <p className='text-[11px] text-muted-foreground'>Enabled</p>
-                    <p className='font-semibold text-foreground'>{shortcutsEnabled ? 'yes' : 'no'}</p>
+                    <p className='text-[11px] text-muted-foreground'>Shortcuts</p>
+                    <p className='font-semibold text-foreground'>{shortcutsEnabled ? 'on' : 'off'}</p>
                 </div>
                 <div className='rounded border bg-background/70 p-2'>
-                    <p className='text-[11px] text-muted-foreground'>Active bindings</p>
+                    <p className='text-[11px] text-muted-foreground'>Bindings</p>
                     <p className='font-semibold text-foreground'>{activeCount}</p>
                 </div>
             </div>
@@ -348,16 +350,31 @@ function DockSettingsPanel({
 
 function IntentConsolePanel({ logs }: { logs: readonly string[] }) {
     return (
-        <div className='space-y-1 font-mono text-[11px]'>
-            {logs.length <= 0 ? (
-                <p className='text-muted-foreground'>No intents yet.</p>
-            ) : (
-                logs.map((line, index) => (
-                    <p key={`${line}-${index}`} className='truncate text-muted-foreground'>
-                        {line}
-                    </p>
-                ))
-            )}
+        <div className='space-y-3'>
+            <div className='rounded-[1rem] border border-border/60 bg-background/70 p-3'>
+                <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                    Current direction
+                </p>
+                <p className='mt-2 text-sm leading-7 text-muted-foreground'>
+                    The demo should feel like a skin atelier: fewer raw commands, more curation,
+                    better hierarchy, and surfaces that actually sell the UI system.
+                </p>
+            </div>
+
+            <div className='space-y-1 rounded-[1rem] border border-border/60 bg-background/70 p-3 font-mono text-[11px]'>
+                <p className='text-[11px] uppercase tracking-[0.18em] text-muted-foreground'>
+                    Recent activity
+                </p>
+                {logs.length <= 0 ? (
+                    <p className='pt-2 text-muted-foreground'>No layout intents yet.</p>
+                ) : (
+                    logs.map((line, index) => (
+                        <p key={`${line}-${index}`} className='truncate text-muted-foreground'>
+                            {line}
+                        </p>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
@@ -551,12 +568,12 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                     <CardTitle className='flex items-center justify-between text-base'>
                         <span className='flex items-center gap-2'>
                             <Wrench className='h-4 w-4 text-primary' />
-                            UI Demo Workspace
+                            Loop UI Atelier
                         </span>
                         <div className='flex items-center gap-2 text-xs font-normal text-muted-foreground'>
-                            <Badge variant='outline'>graphite-first</Badge>
-                            <Badge variant='outline'>dynamic dock</Badge>
-                            <Badge variant='outline'>token reskin</Badge>
+                            <Badge variant='outline'>skin authoring</Badge>
+                            <Badge variant='outline'>dock composition</Badge>
+                            <Badge variant='outline'>token studio</Badge>
                         </div>
                     </CardTitle>
                 </CardHeader>
@@ -565,7 +582,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                     <div className='flex flex-wrap items-center gap-2'>
                         <Button size='sm' data-testid='dock-add-panel' onClick={addPanel}>
                             <Plus className='mr-1 h-4 w-4' />
-                            Add Panel
+                            New Panel
                         </Button>
                         <Button
                             size='sm'
@@ -574,7 +591,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                             data-testid='dock-remove-active-panel'
                             onClick={removeActivePanel}>
                             <X className='mr-1 h-4 w-4' />
-                            Remove Active
+                            Remove Focused
                         </Button>
                         <Button
                             size='sm'
@@ -614,7 +631,7 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                                 className='h-7 px-2 text-[11px]'
                                 data-testid='dock-open-overlay-settings'
                                 onClick={() => openSettingsPanel('overlay')}>
-                                overlay
+                                overlays
                                 <span className='ml-1 text-[10px]'>
                                     {ui.showOverlay ? 'on' : 'off'}
                                 </span>
@@ -788,31 +805,28 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                                 <Card className='bg-muted/20'>
                                     <CardHeader className='pb-2'>
                                         <CardTitle className='text-xs uppercase tracking-wide text-muted-foreground'>
-                                            Workspace State
+                                            Surface Balance
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className='space-y-1 text-xs'>
                                         <p>panels: {panels.length}</p>
-                                        <p>active panel: {activePanelRef?.panelId ?? 'none'}</p>
+                                        <p>focused: {activePanelRef?.panelId ?? 'none'}</p>
                                         <p>skin: {skin.skinId}</p>
                                         <p>mode: {skin.mode}</p>
-                                        <p>settings: {ui.settingsPanelSection}</p>
+                                        <p>token entries: {tokenEntries.length}</p>
                                     </CardContent>
                                 </Card>
 
                                 <Card className='bg-muted/20'>
                                     <CardHeader className='pb-2'>
                                         <CardTitle className='text-xs uppercase tracking-wide text-muted-foreground'>
-                                            Installed Flow Commands
+                                            Skin Snapshot
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className='space-y-1 text-xs'>
-                                        <p className='rounded border bg-background/60 p-1.5 font-mono text-[11px]'>
-                                            pnpm run loop:dev component list --cwd .
-                                        </p>
-                                        <p className='rounded border bg-background/60 p-1.5 font-mono text-[11px]'>
-                                            node packages/loop-cli/dist/cli.js component show ui-demo-starter --cwd .
-                                        </p>
+                                    <CardContent className='space-y-2 text-xs text-muted-foreground'>
+                                        <p>Validation: {skin.validationMessage ?? 'schema valid'}</p>
+                                        <p>Overlay guides: {ui.showOverlay ? 'visible' : 'hidden'}</p>
+                                        <p>Settings panel: {ui.settingsPanelSection}</p>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -820,8 +834,16 @@ export function DockWorkbench({ mode = 'full', className }: DockWorkbenchProps) 
                             <Separator />
 
                             <Card className='bg-muted/20'>
-                                <CardContent className='pt-4'>
-                                    <GraphiteInspector maxRows={12} />
+                                <CardContent className='space-y-2 pt-4 text-sm leading-7 text-muted-foreground'>
+                                    <p>
+                                        The workbench still exposes the real dock and token system,
+                                        but the default presentation now aims to demonstrate a visual
+                                        direction instead of a pile of internal knobs.
+                                    </p>
+                                    <p>
+                                        Keep the authoring power. Lose the programmer-dashboard
+                                        vibe.
+                                    </p>
                                 </CardContent>
                             </Card>
                         </>

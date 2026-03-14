@@ -151,7 +151,7 @@ test('same-group tab move reorders tabs at the intended index', () => {
     ]);
 });
 
-test('forbidden same-group edge split drops are rejected cleanly', () => {
+test('same-group edge split is allowed when moving one tab out of a populated group', () => {
     const fixture = createGraphiteDockFixture();
     const store = createGraphStore<DockTestState>({
         initialState: {
@@ -162,8 +162,43 @@ test('forbidden same-group edge split drops are rejected cleanly', () => {
         path: ['dock'],
         intentPrefix: 'dock',
     });
-    const before = normalizeDockState(store.getState().dock);
+    const commit = store.dispatchIntent(intents.movePanel, {
+        panelId: fixture.ids.panelEditor,
+        sourceGroupId: fixture.ids.groupCenter,
+        targetGroupId: fixture.ids.groupCenter,
+        zone: 'left',
+    });
+    assert.ok(commit);
 
+    const dock = normalizeDockState(store.getState().dock);
+    const createdGroup = (Object.values(dock.nodes) as Array<(typeof dock.nodes)[string]>).find(
+        (node) =>
+            node.kind === 'group' &&
+            node.id !== fixture.ids.groupLeft &&
+            node.id !== fixture.ids.groupCenter &&
+            node.id !== fixture.ids.groupBottom &&
+            node.links.children.includes(fixture.ids.panelEditor),
+    );
+    assert.ok(createdGroup);
+});
+
+test('same-group edge split is rejected when there is only one panel in the source group', () => {
+    const fixture = createGraphiteDockFixture();
+    const store = createGraphStore<DockTestState>({
+        initialState: {
+            dock: fixture.dock,
+        },
+    });
+    const intents = registerDockIntents(store, {
+        path: ['dock'],
+        intentPrefix: 'dock',
+    });
+
+    store.dispatchIntent(intents.removePanel, {
+        panelId: fixture.ids.panelPreview,
+    });
+
+    const before = normalizeDockState(store.getState().dock);
     const commit = store.dispatchIntent(intents.movePanel, {
         panelId: fixture.ids.panelEditor,
         sourceGroupId: fixture.ids.groupCenter,
@@ -172,6 +207,35 @@ test('forbidden same-group edge split drops are rejected cleanly', () => {
     });
     assert.equal(commit, null);
     assert.deepEqual(normalizeDockState(store.getState().dock), before);
+});
+
+test('addPanel accepts a stable panelId payload', () => {
+    const fixture = createGraphiteDockFixture();
+    const store = createGraphStore<DockTestState>({
+        initialState: {
+            dock: fixture.dock,
+        },
+    });
+    const intents = registerDockIntents(store, {
+        path: ['dock'],
+        intentPrefix: 'dock',
+    });
+
+    const commit = store.dispatchIntent(intents.addPanel, {
+        groupId: fixture.ids.groupCenter,
+        panelId: 'collection-inbox',
+        title: 'Inbox',
+    });
+    assert.ok(commit);
+
+    const dock = store.getState().dock;
+    const panel = dock.nodes['collection-inbox'];
+    assert.equal(panel?.kind, 'panel');
+    if (!panel || panel.kind !== 'panel') {
+        return;
+    }
+
+    assert.equal(panel.data.title, 'Inbox');
 });
 
 test('removing the last tab collapses empty groups and redundant splits', () => {

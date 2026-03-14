@@ -221,9 +221,15 @@ importers:
 
   packages/forge-app:
     dependencies:
+      '@loop-kit/dock':
+        specifier: workspace:*
+        version: link:../dock
       '@loop-kit/forge-contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@loop-kit/graphite':
+        specifier: workspace:*
+        version: link:../graphite
       '@loop-kit/ui':
         specifier: workspace:*
         version: link:../ui

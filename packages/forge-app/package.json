@@ -13,7 +13,9 @@
         "test": "node --import tsx --test ./test/**/*.test.ts"
     },
     "dependencies": {
+        "@loop-kit/dock": "workspace:*",
         "@loop-kit/forge-contracts": "workspace:*",
+        "@loop-kit/graphite": "workspace:*",
         "@loop-kit/ui": "workspace:*",
         "tailwindcss": "^4.1.16"
     },
