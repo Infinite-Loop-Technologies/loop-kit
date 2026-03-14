@@ -5,6 +5,7 @@ import {
 } from 'react';
 
 import { createAssetResolver, type AssetResolver } from '../assets';
+import { useOptionalUiProviderState } from '../skins';
 import { cn } from '../utils';
 
 export type PanelProps = HTMLAttributes<HTMLDivElement> & {
@@ -35,17 +36,19 @@ export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
     {
         className,
         children,
-        resolver = createAssetResolver(),
         style,
         texture,
         variant = 'surface',
+        resolver,
         ...props
     },
     ref,
 ) {
-    const textureUrl = resolver.resolve(
-        texture ?? 'asset://texture/panel/noise-01',
-    );
+    const ui = useOptionalUiProviderState();
+    const activeResolver = resolver ?? ui?.assetResolver ?? createAssetResolver();
+    const activeTexture =
+        texture ?? ui?.activeTheme.tokens.fx.panelTexture ?? 'asset://texture/panel/noise-01';
+    const textureUrl = activeResolver.resolve(activeTexture);
 
     return (
         <div
@@ -55,6 +58,8 @@ export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--loop-radius-lg)',
                 boxShadow: 'var(--loop-elevation-level1)',
+                backdropFilter: 'blur(var(--loop-fx-glassBlur))',
+                WebkitBackdropFilter: 'blur(var(--loop-fx-glassBlur))',
                 color: 'var(--card-foreground)',
                 overflow: 'hidden',
                 position: 'relative',
