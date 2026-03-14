@@ -237,18 +237,25 @@ export function ForgeApp({ shell, initialPath = '/' }: ForgeAppProps) {
     const { route, navigate } = useForgeNavigation(mode, initialPath);
     const skin = resolveDefaultUiSkin(shell.skinId);
     const skinMode = shell.skinMode ?? 'dark';
+    const isWorkspaceRoute = route.id === 'workspace';
 
     return (
         <UiProvider skin={skin} mode={skinMode}>
             <div className='min-h-screen'>
-                <div className='mx-auto flex min-h-screen w-full max-w-[1760px] gap-4 p-4 md:p-6'>
-                    <ShellAside shell={shell} activeRoute={route} onNavigate={navigate} />
-
-                    <main className='flex min-w-0 flex-1 flex-col gap-4'>
-                        <ShellHeader shell={shell} route={route} onNavigate={navigate} />
+                {isWorkspaceRoute ? (
+                    <main className='mx-auto flex min-h-screen w-full max-w-[1840px] flex-col p-3 md:p-4'>
                         <ForgePanelHost route={route} shell={shell} />
                     </main>
-                </div>
+                ) : (
+                    <div className='mx-auto flex min-h-screen w-full max-w-[1760px] gap-4 p-4 md:p-6'>
+                        <ShellAside shell={shell} activeRoute={route} onNavigate={navigate} />
+
+                        <main className='flex min-w-0 flex-1 flex-col gap-4'>
+                            <ShellHeader shell={shell} route={route} onNavigate={navigate} />
+                            <ForgePanelHost route={route} shell={shell} />
+                        </main>
+                    </div>
+                )}
             </div>
         </UiProvider>
     );

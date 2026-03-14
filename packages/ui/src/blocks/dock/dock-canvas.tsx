@@ -41,6 +41,7 @@ type DockCanvasProps = {
     className?: string;
     renderPanelBody?: (panelId: DockNodeId | null, groupId: DockNodeId) => React.ReactNode;
     onDebugStateChange?: (debug: DockCanvasDebugState) => void;
+    onPanelActivate?: (panelId: DockNodeId, groupId: DockNodeId) => void;
 };
 
 const TAB_DROP_MARGIN_PX = 12;
@@ -221,7 +222,12 @@ function resolveHoveredTabTarget(
     };
 }
 
-export function DockCanvas({ className, renderPanelBody, onDebugStateChange }: DockCanvasProps) {
+export function DockCanvas({
+    className,
+    renderPanelBody,
+    onDebugStateChange,
+    onPanelActivate,
+}: DockCanvasProps) {
     const dispatchIntent = useIntent<DockBlockState>();
     const dockState = useQuery<DockBlockState, DockState>((state) => state.dock);
     const showOverlay = useQuery<DockBlockState, boolean>(
@@ -357,8 +363,9 @@ export function DockCanvas({ className, renderPanelBody, onDebugStateChange }: D
                 { groupId },
                 DOCK_UI_DISPATCH_OPTIONS,
             );
+            onPanelActivate?.(panelId, groupId);
         },
-        [dispatchIntent],
+        [dispatchIntent, onPanelActivate],
     );
 
     const onClosePanel = React.useCallback(

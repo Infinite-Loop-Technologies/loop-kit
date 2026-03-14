@@ -122,6 +122,12 @@ export type DockMovePanelIntentPayload = {
     index?: number;
 };
 
+export type DockAddPanelIntentPayload = {
+    title?: string;
+    groupId?: DockNodeId;
+    panelId?: DockNodeId;
+};
+
 export type DockResizeIntentPayload = {
     splitId: DockNodeId;
     handleIndex: number;
