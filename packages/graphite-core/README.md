@@ -57,3 +57,10 @@ scope.commitIntentPatch({
 - `pnpm --filter @loop-kit/graphite-core run test`
 - `pnpm --filter @loop-kit/graphite-core run bench`
 - `pnpm --filter @loop-kit/graphite-core run build`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+- [docs/ref/tech-stacks/sleek.md](../../docs/ref/tech-stacks/sleek.md)
+<!-- markdown-backlinks:end -->

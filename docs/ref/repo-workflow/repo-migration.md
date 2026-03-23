@@ -22,3 +22,9 @@ Steps:
 - Dev CLI stays explicit (`pnpm run loop:dev <args>`).
 - This keeps dogfooding on a known-good release while preserving an explicit escape hatch to dev CLI when stable is behind.
 - Core `run/ci` task scripts (`pnpm run build|typecheck|test|ci`) currently route through explicit dev CLI.
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- None.
+<!-- markdown-backlinks:end -->
