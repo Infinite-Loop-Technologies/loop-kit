@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Output Hygiene"
+  short_description: "Repair source-adjacent TS emits safely"
+  default_prompt: "Use this skill to diagnose and repair source-adjacent TypeScript build artifacts in isaacs-devkit. Check the non-emitting tsconfigs, run the cleanup script in dry-run or apply mode as appropriate, and verify generated output is no longer beside source files."

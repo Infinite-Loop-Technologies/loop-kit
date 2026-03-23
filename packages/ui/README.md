@@ -46,3 +46,10 @@ Compatibility aliases are kept for existing consumers:
 Use the Vite UI demo app:
 
 - `pnpm --filter @loop-kit/ui-demo dev`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+- [docs/ref/tech-stacks/sleek.md](../../docs/ref/tech-stacks/sleek.md)
+<!-- markdown-backlinks:end -->

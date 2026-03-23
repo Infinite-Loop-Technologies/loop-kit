@@ -18,3 +18,9 @@ Forge Fastify control-plane API foundation with Neon + Drizzle persistence seams
 - `pnpm --filter @loop-kit/forge-api test`
 - `pnpm --filter @loop-kit/forge-api db:generate`
 - `pnpm --filter @loop-kit/forge-api db:check`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

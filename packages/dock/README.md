@@ -55,3 +55,9 @@ export function DockApp() {
 - `pnpm --filter @loop-kit/dock run typecheck`
 - `pnpm --filter @loop-kit/dock run test`
 - `pnpm --filter @loop-kit/dock run build`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

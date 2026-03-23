@@ -28,3 +28,9 @@ const ref = parseLoopRef('local:ui-button');
 - `pnpm build`
 - `pnpm typecheck`
 - `pnpm test`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

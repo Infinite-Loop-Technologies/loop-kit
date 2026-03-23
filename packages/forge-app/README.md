@@ -17,3 +17,9 @@ Shared Forge frontend shell package for loop-kit.
 
 - `pnpm --filter @loop-kit/forge-app typecheck`
 - `pnpm --filter @loop-kit/forge-app test`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->
