@@ -86,9 +86,9 @@ This vision is a strategic direction above individual project plans. It supersed
 
 <!-- markdown-backlinks:start -->
 - [architecture.md](../../../architecture.md)
-- [docs/next-actions/active/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/active/007-loop-rewrite-inventory-and-cut-line.md)
-- [docs/next-actions/active/008-oci-registry-foundation.md](../../next-actions/active/008-oci-registry-foundation.md)
-- [docs/next-actions/active/012-host-kernel-boundary-discipline.md](../../next-actions/active/012-host-kernel-boundary-discipline.md)
+- [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
+- [docs/next-actions/active/010-oci-lab-container-and-executable-dispatch.md](../../next-actions/active/010-oci-lab-container-and-executable-dispatch.md)
+- [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
 - [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](../../ref/loop-kit-fundamentals/index.md)
 - [docs/visions/active/001-agentic-development-workflow.md](001-agentic-development-workflow.md)

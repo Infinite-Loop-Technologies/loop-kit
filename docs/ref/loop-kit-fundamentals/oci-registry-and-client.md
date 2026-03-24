@@ -11,6 +11,16 @@ The registry is not optional in the new Loop model. It is the distribution backb
 - Expose an MCP-facing registry surface for discovery, fetch, inspection, and operator workflows.
 - Support digest-pinned resolution, reproducible fetches, and explicit provenance checks.
 
+## Practical Baseline
+
+For the current rewrite branch, use two local modes and one later hosted mode:
+
+- Persistent local dev registry: `distribution/distribution:edge` with a named Docker volume
+- Ephemeral test registry: the same server with `--rm` for e2e and integration tests
+- Hosted later: GHCR is the first reasonable shared target unless a stronger self-hosted need appears
+
+This keeps local development fast while avoiding the mistake of making hosted auth a blocker for the first runtime experiments.
+
 ## Artifact Classes
 
 The registry should be able to carry:
@@ -43,16 +53,22 @@ The first custom registry client should handle:
 
 ## Near-Term Open Questions
 
-- Which hosted registry baseline should be the first target: GHCR, self-hosted distribution, or a custom service from day one?
+- Which hosted registry baseline should be the first target after localhost: GHCR or self-hosted distribution?
 - Which artifact metadata belongs in OCI manifests versus sidecar Loop metadata?
 - How much of the MCP surface should proxy the registry directly versus operating through the host daemon?
+
+## Auth Direction
+
+- Localhost registries can stay anonymous at first.
+- The client should support Docker credential helpers as the first practical credential source for authenticated registries.
+- Hosted registry auth should follow standard OCI bearer-token challenge flows instead of bespoke Loop-specific login behavior.
 
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/008-oci-registry-foundation.md](../../next-actions/active/008-oci-registry-foundation.md)
-- [docs/next-actions/active/009-registry-client-and-cache-package.md](../../next-actions/active/009-registry-client-and-cache-package.md)
-- [docs/next-actions/active/015-workspace-and-install-model.md](../../next-actions/active/015-workspace-and-install-model.md)
+- [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
+- [docs/next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md](../../next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md)
+- [docs/next-actions/active/011-wasm-package-client-and-wit-track.md](../../next-actions/active/011-wasm-package-client-and-wit-track.md)
 - [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

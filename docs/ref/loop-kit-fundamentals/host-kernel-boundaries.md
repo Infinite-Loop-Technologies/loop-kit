@@ -34,10 +34,5 @@ The new Loop host should be a simple runtime shell that assembles providers, man
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/009-registry-client-and-cache-package.md](../../next-actions/active/009-registry-client-and-cache-package.md)
-- [docs/next-actions/active/012-host-kernel-boundary-discipline.md](../../next-actions/active/012-host-kernel-boundary-discipline.md)
-- [docs/next-actions/active/013-grant-manager-and-enforcement.md](../../next-actions/active/013-grant-manager-and-enforcement.md)
-- [docs/next-actions/active/016-loopx-and-operator-surface.md](../../next-actions/active/016-loopx-and-operator-surface.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->
