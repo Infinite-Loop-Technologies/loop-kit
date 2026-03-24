@@ -8,7 +8,7 @@ This repo is now:
 - Proto-first for pinned toolchains
 - GitHub Actions-first for CI orchestration
 - dotenvx-driven for local env-based automation
-- Dagger-free in repository automation
+- Dagger-planned for local agentic orchestration and operator tooling
 
 ## Quickstart
 
@@ -21,7 +21,8 @@ proto run moon -- ci
 
 Moon is pinned to `2.0.4`, and Proto is pinned to `0.55.4` through `.moon/toolchains.yml`.
 
-More detailed usage notes live in `docs/moon-proto.md`.
+More detailed usage notes live in `docs/ref/repo-workflow/moon-proto.md`.
+The repo knowledge-system and agent workflow live in `docs/ref/repo-workflow/index.md` and `docs/ref/repo-workflow/agentic-dev-workflow.md`.
 
 ## Pinned toolchain
 
@@ -129,3 +130,9 @@ cp .env.release.example .env.release
 pnpm run release:publish:all:env
 pnpm run release:publish:cli:env
 ```
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- None.
+<!-- markdown-backlinks:end -->

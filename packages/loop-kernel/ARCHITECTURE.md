@@ -28,3 +28,9 @@
 - Loop patch IR is filesystem/workspace-centric and remains independent in v0.
 - Provider and precondition boundaries are JSON-safe and contract-based, so guard/policy systems can be adapted later.
 - Selector/query targeting can be bridged in a future adapter package without changing CLI/kernel command contracts.
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

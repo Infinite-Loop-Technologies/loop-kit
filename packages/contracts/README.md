@@ -15,3 +15,9 @@ Forge control-plane contracts, generated TypeScript types, and the generated fet
 - `pnpm --filter @loop-kit/forge-contracts build`
 - `pnpm --filter @loop-kit/forge-contracts typecheck`
 - `pnpm --filter @loop-kit/forge-contracts test`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

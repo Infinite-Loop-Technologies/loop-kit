@@ -1,0 +1,37 @@
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+personality = "pragmatic"
+
+[windows]
+sandbox = "elevated"
+
+[projects.'C:\Users\ijhar\Desktop\isaacs-devkit']
+trust_level = "trusted"
+
+[mcp_servers.ckb]
+command = "cmd"
+args = ["/c", "npx", "-y", "@tastehub/ckb", "mcp", "--preset=core"]
+startup_timeout_sec = 45.0
+tool_timeout_sec = 180.0
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PAT_TOKEN"
+required = true
+
+[mcp_servers.persistproc]
+url = "http://127.0.0.1:8947"
+
+[mcp_servers.engram]
+command = 'C:\Users\ijhar\go\bin\engram.exe'
+args = ["mcp", "--tools=agent"]
+
+[mcp_servers.moon]
+command = "moon"
+args = ["mcp"]
+env = { MOON_WORKSPACE_ROOT = "C:\\Users\\ijhar\\Desktop\\loop-kit" }
+cwd = "C:\\Users\\ijhar\\Desktop\\loop-kit"

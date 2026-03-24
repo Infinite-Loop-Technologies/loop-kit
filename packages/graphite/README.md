@@ -187,3 +187,10 @@ await host.connect(todosConnector, undefined);
 - `graphite.onEvent(listener)`
 
 These are intended for inspectors, profiling, benchmarking, and external systems.
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+- [docs/ref/tech-stacks/sleek.md](../../docs/ref/tech-stacks/sleek.md)
+<!-- markdown-backlinks:end -->
