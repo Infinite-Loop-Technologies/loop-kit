@@ -4,6 +4,8 @@
         "setup:tools": "proto install --yes",
         "build": "proto run moon -- run :build",
         "ci": "proto run moon -- ci :build :typecheck :test",
+        "forge:dev": "node tools/forge-dev/stack.mjs up",
+        "forge:dev:plan": "node tools/forge-dev/stack.mjs plan",
         "lint": "proto run moon -- run :lint",
         "exp:oci-lab": "cargo run --manifest-path experiments/oci-lab/Cargo.toml --",
         "typecheck": "proto run moon -- run :typecheck",

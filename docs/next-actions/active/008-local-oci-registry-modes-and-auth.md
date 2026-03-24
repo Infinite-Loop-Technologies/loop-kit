@@ -6,7 +6,7 @@ Lock the first registry posture down so implementation work stops stalling on va
 
 ## Links
 
-- Project plan: [../../project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- Project plan: [../../project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - Vision: [../../visions/active/000-forge-local-oci-capability-platform.md](../../visions/active/000-forge-local-oci-capability-platform.md)
 - Support material: [../../ref/loop-kit-fundamentals/oci-registry-and-client.md](../../ref/loop-kit-fundamentals/oci-registry-and-client.md)
 - Experiment code: [../../../experiments/oci-lab/README.md](../../../experiments/oci-lab/README.md)
@@ -25,5 +25,5 @@ Lock the first registry posture down so implementation work stops stalling on va
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->

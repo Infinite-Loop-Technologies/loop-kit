@@ -91,7 +91,7 @@ Not every useful helper needs to become a Dagger function immediately. For examp
 - [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
 - [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](../../next-actions/active/006-agentic-knowledge-automation-boundaries.md)
 - [docs/next-actions/completed/001-dagger-agent-control-loop-spike.md](../../next-actions/completed/001-dagger-agent-control-loop-spike.md)
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/index.md](index.md)
 - [docs/ref/repo-workflow/validation-and-verification.md](validation-and-verification.md)
 <!-- markdown-backlinks:end -->

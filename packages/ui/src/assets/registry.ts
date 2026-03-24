@@ -7,9 +7,12 @@ const noise01 = new URL('../../assets/textures/noise-01.svg', import.meta.url).t
 const noise02 = new URL('../../assets/textures/noise-02.svg', import.meta.url).toString();
 const noise03 = new URL('../../assets/textures/noise-03.svg', import.meta.url).toString();
 const mesh01 = new URL('../../assets/textures/mesh-01.svg', import.meta.url).toString();
+const frame01 = new URL('../../assets/textures/frame-01.svg', import.meta.url).toString();
 
 export const defaultAssetRegistry: AssetRegistry = {
-    assets: {},
+    assets: {
+        'frame/ornate-01': frame01,
+    },
     textures: {
         'panel/noise-01': noise01,
         'panel/noise-02': noise02,

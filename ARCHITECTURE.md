@@ -23,7 +23,7 @@ The immediate architectural posture is:
 
 - Rewrite direction:
   [docs/visions/active/000-forge-local-oci-capability-platform.md](./docs/visions/active/000-forge-local-oci-capability-platform.md),
-  [docs/project-plans/active/003-loop-refactor.md](./docs/project-plans/active/003-loop-refactor.md),
+  [docs/project-plans/on-hold/003-loop-refactor.md](./docs/project-plans/on-hold/003-loop-refactor.md),
   [docs/ref/loop-kit-fundamentals/index.md](./docs/ref/loop-kit-fundamentals/index.md)
 - Current OCI experiment track:
   [experiments/oci-lab/README.md](./experiments/oci-lab/README.md),
@@ -62,5 +62,5 @@ These were removed deliberately on the current branch:
 
 <!-- markdown-backlinks:start -->
 - [agents.md](agents.md)
-- [docs/project-plans/active/003-loop-refactor.md](docs/project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](docs/project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->

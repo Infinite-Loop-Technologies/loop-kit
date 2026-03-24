@@ -130,14 +130,18 @@ export function createSkinAssetResolver(
 
 export function createSkinIconRegistry(
     skin: ResolvedUiSkin,
+    sourceRegistry: IconRegistry = defaultIconRegistry,
 ): IconRegistry {
     const icons = Object.fromEntries(
-        defaultIconRegistry
+        sourceRegistry
             .ids()
             .map((iconId) => {
                 const targetId = skin.iconAliases[iconId] ?? iconId;
                 const component =
-                    defaultIconRegistry.get(targetId) ?? defaultIconRegistry.get(iconId);
+                    sourceRegistry.get(targetId) ??
+                    sourceRegistry.get(iconId) ??
+                    defaultIconRegistry.get(targetId) ??
+                    defaultIconRegistry.get(iconId);
                 return component ? [iconId, component] : null;
             })
             .filter(

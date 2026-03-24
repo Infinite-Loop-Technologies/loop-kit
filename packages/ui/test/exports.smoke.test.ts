@@ -27,3 +27,11 @@ test('skins barrel smoke import', async () => {
     assert.equal(typeof skins.resolveUiSkin, 'function');
     assert.equal(typeof skins.defaultUiSkinRegistry.resolve, 'function');
 });
+
+test('packs barrel smoke import', async () => {
+    const packs = await import('@loop-kit/ui/packs');
+
+    assert.equal(typeof packs.ThemePackProvider, 'function');
+    assert.equal(typeof packs.ThemedPanel, 'function');
+    assert.equal(typeof packs.resolveDefaultThemePack, 'function');
+});
