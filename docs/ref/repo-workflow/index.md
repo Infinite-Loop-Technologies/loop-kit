@@ -159,11 +159,9 @@ Keep next actions actionable and substantial. If a task is so small it clearly f
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [agents.md](../../../agents.md)
 - [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
 - [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](../../next-actions/active/006-agentic-knowledge-automation-boundaries.md)
 - [docs/next-actions/completed/002-knowledge-workflow-hygiene.md](../../next-actions/completed/002-knowledge-workflow-hygiene.md)
 - [docs/ref/repo-workflow/agentic-dev-workflow.md](agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/validation-and-verification.md](validation-and-verification.md)
-- [plans.md](../../../plans.md)
 <!-- markdown-backlinks:end -->
