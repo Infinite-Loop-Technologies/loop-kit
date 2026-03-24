@@ -13,17 +13,18 @@ Strengthen the repo's GTD-style knowledge system so autonomous work stays review
 
 ## Next Actions
 
-- Clean up remaining terminology drift across docs, especially where old slice language still leaks through.
-- Identify the first useful knowledge-automation helpers, such as stale-doc scans, review-date automation, or inbox processors.
-- Tighten glossary and workflow references so agents can infer the right habits with less prompt overhead.
+- Captured the main knowledge-hygiene direction in the repo workflow and agentic workflow references.
+- Reframed the next useful work around explicit automation boundaries instead of generic cleanup language.
+- Promoted the remaining execution work into a dedicated next action about what Dagger should orchestrate versus what should remain a script or skill.
 
 ## Notes
 
 - Automate metadata only if automation will keep it current.
 - Keep next actions substantial; do not let the system degrade into tiny fragmented tasks.
+- Knowledge hygiene remains active work, but this foundation action has served its purpose and should no longer be the live planning surface.
 
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- None.
 <!-- markdown-backlinks:end -->

@@ -63,8 +63,14 @@ Validation is required before you are done. Use [docs/ref/repo-workflow/validati
 
 Write human-blocked items to `docs/human-inbox/` as new files. Put agent handoffs, mind-sweep captures, or follow-up prompts in `docs/agent-inbox/` as new files until they are processed. Keep notes short and easy to triage.
 
+## Skill Registry
+
+| Skill | Scope | Trigger / Use When | Runtime | Location | Notes |
+| ----- | ----- | ------------------ | ------- | -------- | ----- |
+| `loop-wit-wasm-authoring` | local | Creating or updating loop-kit WIT packages, WIT interfaces/worlds, WASM Components, or wRPC boundary designs tied to the new standard surface and OCI artifact model. | Markdown guidance + local tools | `.codex/skills/loop-wit-wasm-authoring` | Align with `docs/ref/loop-kit-fundamentals/standard-surface-and-wit.md` and the active loop rewrite plan. |
+
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- None.
+- [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md)
 <!-- markdown-backlinks:end -->

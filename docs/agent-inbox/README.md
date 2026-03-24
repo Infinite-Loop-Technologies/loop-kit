@@ -12,5 +12,5 @@ Process this inbox regularly:
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/001-dagger-agent-control-loop-spike.md](../next-actions/active/001-dagger-agent-control-loop-spike.md)
+- [docs/next-actions/completed/001-dagger-agent-control-loop-spike.md](../next-actions/completed/001-dagger-agent-control-loop-spike.md)
 <!-- markdown-backlinks:end -->

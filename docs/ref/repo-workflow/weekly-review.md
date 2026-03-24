@@ -26,7 +26,8 @@ The goal is not just cleanliness. The goal is to keep the next useful action obv
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/002-knowledge-workflow-hygiene.md](../../next-actions/active/002-knowledge-workflow-hygiene.md)
+- [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
+- [docs/next-actions/completed/002-knowledge-workflow-hygiene.md](../../next-actions/completed/002-knowledge-workflow-hygiene.md)
 - [docs/ref/repo-workflow/agentic-dev-workflow.md](agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/index.md](index.md)
 - [docs/ref/repo-workflow/validation-and-verification.md](validation-and-verification.md)

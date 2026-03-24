@@ -51,7 +51,9 @@ This repo also keeps a Codex MCP entry in [/.codex/config.toml](../../../.codex/
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/000-moon-mcp-workflow-baseline.md](../../next-actions/active/000-moon-mcp-workflow-baseline.md)
+- [docs/next-actions/active/003-dagger-codex-runner-foundation.md](../../next-actions/active/003-dagger-codex-runner-foundation.md)
+- [docs/next-actions/active/005-moon-dagger-operator-surface.md](../../next-actions/active/005-moon-dagger-operator-surface.md)
+- [docs/next-actions/completed/000-moon-mcp-workflow-baseline.md](../../next-actions/completed/000-moon-mcp-workflow-baseline.md)
 - [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/agentic-dev-workflow.md](agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/index.md](index.md)

@@ -48,5 +48,5 @@ A still-useful reference/distribution concept from earlier Loop work, but no lon
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/002-knowledge-workflow-hygiene.md](docs/next-actions/active/002-knowledge-workflow-hygiene.md)
+- [docs/next-actions/completed/002-knowledge-workflow-hygiene.md](docs/next-actions/completed/002-knowledge-workflow-hygiene.md)
 <!-- markdown-backlinks:end -->

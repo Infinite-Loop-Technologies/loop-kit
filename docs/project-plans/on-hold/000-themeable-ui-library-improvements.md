@@ -12,5 +12,5 @@ In fact, that is why Graphite exists, that's exactly what it's for.
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/visions/active/000-forge-local-oci-capability-platform.md](../../visions/active/000-forge-local-oci-capability-platform.md)
+- None.
 <!-- markdown-backlinks:end -->
