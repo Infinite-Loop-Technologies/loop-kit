@@ -2,10 +2,8 @@ moon = "2.0.4"
 node = "22.20.0"
 pnpm = "10.15.1"
 dotenvx = "1.53.0"
-dagger = "0.20.3"
 rust = "1.94.0"
+bun = "1.3.11"
 
 [plugins.tools]
 dotenvx = "file://./tools/proto/plugins/dotenvx.toml"
-dagger = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/dagger/plugin.toml"
-wasmtime = "https://raw.githubusercontent.com/isaac10334/wasmtime-proto/master/wasmtime.toml"

@@ -11,6 +11,7 @@ Use Proto for pinned tools and Moon for workspace task execution.
 ```bash
 proto install --yes
 proto run pnpm -- install --frozen-lockfile
+cd tools && bun install
 proto run moon -- sync
 proto run moon -- run :build
 proto run moon -- run :typecheck
@@ -46,6 +47,7 @@ This repo also keeps a Codex MCP entry in [/.codex/config.toml](../../../.codex/
 - Tool versions are pinned in [/.prototools](../../../.prototools).
 - Root convenience scripts live in [/package.json](../../../package.json).
 - Prefer explicit Moon targets and Proto-managed tooling over ad hoc global installs.
+- The `tools/` project is a Bun package; Moon discovers its scripts as tasks, and those scripts delegate to Bun directly.
 - Prefer Moon query output over handwritten task-discovery scripts when you need structured workspace information.
 
 ## Backlinks

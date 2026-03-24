@@ -85,7 +85,6 @@ This vision is a strategic direction above individual project plans. It supersed
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [architecture.md](../../../architecture.md)
 - [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
 - [docs/next-actions/active/010-oci-lab-container-and-executable-dispatch.md](../../next-actions/active/010-oci-lab-container-and-executable-dispatch.md)
 - [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
