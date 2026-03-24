@@ -50,6 +50,26 @@ Run a container through the same lab:
 cargo run --manifest-path experiments/oci-lab/Cargo.toml -- run-container --image hello-world
 ```
 
+## Moon Tasks
+
+`oci-lab` is now a first-class Moon project under `experiments/*`.
+
+Useful targets:
+
+```powershell
+proto run moon -- project oci-lab
+proto run moon -- run oci-lab:check
+proto run moon -- run oci-lab:typecheck
+proto run moon -- run oci-lab:test
+proto run moon -- run oci-lab:test-e2e
+```
+
+For experiment-tagged projects, query by tag:
+
+```powershell
+proto run moon -- query projects "tag=experiment"
+```
+
 ## Notes
 
 - The WASM flow currently targets OCI-stored `.wasm` binaries first. WIT packages and component-specific publishing should build on this instead of replacing it with another speculative package tree.

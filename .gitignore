@@ -25,7 +25,8 @@
 /build
 /dist
 **/dist/
-/target
+**/target/
+**/tmp/
 **/src-tauri/target/
 **/src-tauri/gen/
 **/src-tauri/icons/android/

@@ -1533,6 +1533,7 @@ dependencies = [
  "clap",
  "docker_credential",
  "oci-client",
+ "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",

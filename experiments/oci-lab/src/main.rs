@@ -1,29 +1,12 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
-use docker_credential::{CredentialRetrievalError, DockerCredential};
-use oci_client::{
-    Client, Reference, annotations,
-    client::{ClientConfig, ClientProtocol, Config, ImageLayer},
-    manifest,
-    secrets::RegistryAuth,
+use oci_lab::{
+    DEFAULT_REGISTRY_NAME, DEFAULT_REGISTRY_PORT, EXECUTABLE_LAYER_MEDIA_TYPE, WASM_EXPORT,
+    build_auth, build_client, demo_wasm, init_tracing, parse_reference, pull_blob, pull_wasm,
+    push_blob, push_wasm, registry_down_default, registry_logs, registry_up_default,
+    run_container, run_executable, run_wasm,
 };
-use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
-use std::process::Stdio;
-use tokio::fs;
-use tokio::process::Command;
-use tokio::time::{Duration, sleep};
-use tracing::{debug, warn};
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
-use wasmtime::{Engine, Instance, Module, Store};
-
-const REGISTRY_NAME: &str = "loop-registry";
-const REGISTRY_IMAGE: &str = "distribution/distribution:edge";
-const REGISTRY_VOLUME: &str = "loop-registry-data";
-const DEFAULT_REGISTRY_PORT: u16 = 5000;
-const WASM_EXPORT: &str = "run";
-const EXECUTABLE_LAYER_MEDIA_TYPE: &str = "application/vnd.loop.executable.v1+binary";
-const BLOB_CONFIG_MEDIA_TYPE: &str = "application/vnd.oci.image.config.v1+json";
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "OCI and WASM experiment harness for the loop rewrite")]
@@ -147,31 +130,44 @@ async fn main() -> Result<()> {
 
     match &cli.command {
         Commands::Registry(args) => handle_registry(args).await,
-        Commands::DemoWasm(args) => demo_wasm(&args.output).await,
+        Commands::DemoWasm(args) => {
+            demo_wasm(&args.output).await?;
+            println!("demo wasm written to {}", args.output.display());
+            Ok(())
+        }
         Commands::PushWasm(args) => {
             let reference = parse_reference(&args.image)?;
             let auth = build_auth(&reference, cli.anonymous);
             let mut client = build_client(cli.insecure);
-            push_wasm(&mut client, &auth, &reference, &args.module).await
+            let url = push_wasm(&mut client, &auth, &reference, &args.module).await?;
+            println!("pushed wasm artifact to {url}");
+            Ok(())
         }
         Commands::PullWasm(args) => {
             let reference = parse_reference(&args.image)?;
             let auth = build_auth(&reference, cli.anonymous);
             let mut client = build_client(cli.insecure);
-            pull_wasm(&mut client, &auth, &reference, &args.output).await
+            pull_wasm(&mut client, &auth, &reference, &args.output).await?;
+            println!("pulled wasm artifact to {}", args.output.display());
+            Ok(())
         }
         Commands::PullRunWasm(args) => {
             let reference = parse_reference(&args.image)?;
             let auth = build_auth(&reference, cli.anonymous);
             let mut client = build_client(cli.insecure);
             pull_wasm(&mut client, &auth, &reference, &args.output).await?;
-            run_wasm(&args.output, &args.export)
+            println!("pulled wasm artifact to {}", args.output.display());
+            let result = run_wasm(&args.output, &args.export)?;
+            println!("wasm export `{}` returned {result}", args.export);
+            Ok(())
         }
         Commands::PushBlob(args) => {
             let reference = parse_reference(&args.image)?;
             let auth = build_auth(&reference, cli.anonymous);
             let mut client = build_client(cli.insecure);
-            push_blob(&mut client, &auth, &reference, &args.file, &args.media_type).await
+            let url = push_blob(&mut client, &auth, &reference, &args.file, &args.media_type).await?;
+            println!("pushed blob artifact to {url}");
+            Ok(())
         }
         Commands::PullBlob(args) => {
             let reference = parse_reference(&args.image)?;
@@ -184,7 +180,9 @@ async fn main() -> Result<()> {
                 &args.media_type,
                 &args.output,
             )
-            .await
+            .await?;
+            println!("pulled blob artifact to {}", args.output.display());
+            Ok(())
         }
         Commands::RunExecutable(args) => {
             let reference = parse_reference(&args.image)?;
@@ -198,344 +196,52 @@ async fn main() -> Result<()> {
                 &args.output,
             )
             .await?;
-            run_executable(&args.output).await
+            println!("pulled blob artifact to {}", args.output.display());
+            let output = run_executable(&args.output).await?;
+            if !output.is_empty() {
+                print!("{output}");
+            }
+            Ok(())
         }
-        Commands::RunContainer(args) => run_container(&args.image, &args.args).await,
-    }
-}
-
-fn init_tracing(verbose: bool) {
-    let filter = if verbose { "debug" } else { "info" };
-    tracing_subscriber::registry()
-        .with(EnvFilter::new(filter))
-        .with(fmt::layer().with_writer(std::io::stderr))
-        .init();
-}
-
-fn build_client(insecure: bool) -> Client {
-    let protocol = if insecure {
-        ClientProtocol::Http
-    } else {
-        ClientProtocol::Https
-    };
-
-    Client::new(ClientConfig {
-        protocol,
-        ..Default::default()
-    })
-}
-
-fn parse_reference(image: &str) -> Result<Reference> {
-    image
-        .parse()
-        .with_context(|| format!("invalid OCI reference: {image}"))
-}
-
-fn build_auth(reference: &Reference, anonymous: bool) -> RegistryAuth {
-    if anonymous {
-        return RegistryAuth::Anonymous;
-    }
-
-    let server = reference
-        .resolve_registry()
-        .strip_suffix('/')
-        .unwrap_or_else(|| reference.resolve_registry());
-
-    match docker_credential::get_credential(server) {
-        Err(CredentialRetrievalError::ConfigNotFound) => RegistryAuth::Anonymous,
-        Err(CredentialRetrievalError::NoCredentialConfigured) => RegistryAuth::Anonymous,
-        Err(error) => {
-            warn!(?error, "failed to load docker credentials, falling back to anonymous auth");
-            RegistryAuth::Anonymous
-        }
-        Ok(DockerCredential::UsernamePassword(username, password)) => {
-            debug!("using docker credential helper auth");
-            RegistryAuth::Basic(username, password)
-        }
-        Ok(DockerCredential::IdentityToken(_)) => {
-            warn!("identity tokens are not supported here, falling back to anonymous auth");
-            RegistryAuth::Anonymous
+        Commands::RunContainer(args) => {
+            let output = run_container(&args.image, &args.args).await?;
+            if !output.is_empty() {
+                print!("{output}");
+            }
+            Ok(())
         }
     }
 }
 
 async fn handle_registry(args: &RegistryArgs) -> Result<()> {
     match &args.command {
-        RegistryCommand::Up(options) => registry_up(options).await,
-        RegistryCommand::Down => registry_down().await,
-        RegistryCommand::Logs => docker(["logs", REGISTRY_NAME]).await.map(|_| ()),
-    }
-}
-
-async fn registry_up(args: &RegistryUpArgs) -> Result<()> {
-    let _ = docker(["rm", "-f", REGISTRY_NAME]).await;
-
-    let port = format!("{}:5000", args.port);
-    if args.ephemeral {
-        docker([
-            "run",
-            "-d",
-            "--rm",
-            "--name",
-            REGISTRY_NAME,
-            "-p",
-            &port,
-            REGISTRY_IMAGE,
-        ])
-        .await?;
-        println!("ephemeral OCI registry is running on localhost:{}", args.port);
-        return Ok(());
-    }
-
-    docker(["volume", "create", REGISTRY_VOLUME]).await?;
-    let volume = format!("{REGISTRY_VOLUME}:/var/lib/registry");
-    docker([
-        "run",
-        "-d",
-        "--name",
-        REGISTRY_NAME,
-        "-p",
-        &port,
-        "-v",
-        &volume,
-        REGISTRY_IMAGE,
-    ])
-    .await?;
-    println!(
-        "persistent OCI registry is running on localhost:{} with volume {}",
-        args.port, REGISTRY_VOLUME
-    );
-    Ok(())
-}
-
-async fn registry_down() -> Result<()> {
-    docker(["rm", "-f", REGISTRY_NAME]).await?;
-    println!("registry stopped");
-    Ok(())
-}
-
-async fn demo_wasm(output: &Path) -> Result<()> {
-    if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent).await?;
-    }
-
-    let bytes = wat::parse_str(
-        r#"
-        (module
-          (func (export "run") (result i32)
-            i32.const 7))
-        "#,
-    )?;
-    fs::write(output, bytes).await?;
-    println!("demo wasm written to {}", output.display());
-    Ok(())
-}
-
-async fn push_wasm(
-    client: &mut Client,
-    auth: &RegistryAuth,
-    reference: &Reference,
-    module_path: &Path,
-) -> Result<()> {
-    let data = fs::read(module_path)
-        .await
-        .with_context(|| format!("failed to read wasm module {}", module_path.display()))?;
-
-    let mut annotations = BTreeMap::new();
-    annotations.insert(
-        annotations::ORG_OPENCONTAINERS_IMAGE_TITLE.to_string(),
-        module_path
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("module.wasm")
-            .to_string(),
-    );
-
-    let layers = vec![ImageLayer::new(
-        data,
-        manifest::WASM_LAYER_MEDIA_TYPE.to_string(),
-        None,
-    )];
-    let config = Config {
-        data: bytes::Bytes::from_static(b"{}"),
-        media_type: manifest::WASM_CONFIG_MEDIA_TYPE.to_string(),
-        annotations: None,
-    };
-    let image_manifest = manifest::OciImageManifest::build(&layers, &config, Some(annotations));
-
-    let response = client
-        .push(reference, &layers, config, auth, Some(image_manifest))
-        .await?;
-    println!("pushed wasm artifact to {}", response.manifest_url);
-    Ok(())
-}
-
-async fn pull_wasm(
-    client: &mut Client,
-    auth: &RegistryAuth,
-    reference: &Reference,
-    output: &Path,
-) -> Result<()> {
-    let mut last_error = None;
-    let mut image = None;
-
-    for _attempt in 0..5 {
-        match client
-            .pull(reference, auth, vec![manifest::WASM_LAYER_MEDIA_TYPE])
-            .await
-        {
-            Ok(result) => {
-                image = Some(result);
-                break;
+        RegistryCommand::Up(options) => {
+            if options.port != DEFAULT_REGISTRY_PORT {
+                anyhow::bail!("the CLI currently reserves custom-port registries for tests; use the library helpers for non-default ports");
             }
-            Err(error) => {
-                last_error = Some(error);
-                sleep(Duration::from_millis(250)).await;
+
+            let registry = registry_up_default(options.ephemeral).await?;
+            if options.ephemeral {
+                println!("ephemeral OCI registry is running on localhost:{}", registry.port);
+            } else {
+                println!(
+                    "persistent OCI registry is running on localhost:{} with volume loop-registry-data",
+                    registry.port
+                );
             }
+            Ok(())
+        }
+        RegistryCommand::Down => {
+            registry_down_default().await?;
+            println!("registry stopped");
+            Ok(())
+        }
+        RegistryCommand::Logs => {
+            let logs = registry_logs(DEFAULT_REGISTRY_NAME).await?;
+            if !logs.is_empty() {
+                println!("{logs}");
+            }
+            Ok(())
         }
     }
-
-    let image = image.ok_or_else(|| {
-        anyhow!(
-            "failed to pull wasm artifact after retries: {}",
-            last_error
-                .map(|error| error.to_string())
-                .unwrap_or_else(|| "unknown pull error".to_string())
-        )
-    })?;
-    let layer = image
-        .layers
-        .into_iter()
-        .next()
-        .ok_or_else(|| anyhow!("registry response contained no wasm layer"))?;
-    write_file(output, &layer.data).await?;
-    println!("pulled wasm artifact to {}", output.display());
-    Ok(())
-}
-
-async fn push_blob(
-    client: &mut Client,
-    auth: &RegistryAuth,
-    reference: &Reference,
-    file: &Path,
-    media_type: &str,
-) -> Result<()> {
-    let data = fs::read(file)
-        .await
-        .with_context(|| format!("failed to read blob {}", file.display()))?;
-
-    let layer = ImageLayer::new(data, media_type.to_string(), None);
-    let config = Config::new(
-        bytes::Bytes::from_static(b"{}"),
-        BLOB_CONFIG_MEDIA_TYPE.to_string(),
-        None,
-    );
-    let image_manifest = manifest::OciImageManifest::build(&[layer.clone()], &config, None);
-
-    let response = client
-        .push(reference, &[layer], config, auth, Some(image_manifest))
-        .await?;
-    println!("pushed blob artifact to {}", response.manifest_url);
-    Ok(())
-}
-
-async fn pull_blob(
-    client: &mut Client,
-    auth: &RegistryAuth,
-    reference: &Reference,
-    media_type: &str,
-    output: &Path,
-) -> Result<()> {
-    let image = client.pull(reference, auth, vec![media_type]).await?;
-    let layer = image
-        .layers
-        .into_iter()
-        .next()
-        .ok_or_else(|| anyhow!("registry response contained no matching blob layer"))?;
-    write_file(output, &layer.data).await?;
-    println!("pulled blob artifact to {}", output.display());
-    Ok(())
-}
-
-fn run_wasm(module_path: &Path, export_name: &str) -> Result<()> {
-    let engine = Engine::default();
-    let module = Module::from_file(&engine, module_path)
-        .with_context(|| format!("failed to load wasm module {}", module_path.display()))?;
-    let mut store = Store::new(&engine, ());
-    let instance = Instance::new(&mut store, &module, &[])?;
-    let function = instance
-        .get_typed_func::<(), i32>(&mut store, export_name)
-        .with_context(|| format!("failed to find i32 -> () export `{export_name}`"))?;
-    let result = function.call(&mut store, ())?;
-    println!("wasm export `{export_name}` returned {result}");
-    Ok(())
-}
-
-async fn run_executable(path: &Path) -> Result<()> {
-    if cfg!(windows) {
-        let status = Command::new(path)
-            .stdin(Stdio::null())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()
-            .await?;
-        if !status.success() {
-            bail!("executable exited with status {status}");
-        }
-        return Ok(());
-    }
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-
-        let metadata = std::fs::metadata(path)?;
-        let mut permissions = metadata.permissions();
-        permissions.set_mode(0o755);
-        std::fs::set_permissions(path, permissions)?;
-    }
-
-    let status = Command::new(path)
-        .stdin(Stdio::null())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()
-        .await?;
-    if !status.success() {
-        bail!("executable exited with status {status}");
-    }
-    Ok(())
-}
-
-async fn run_container(image: &str, args: &[String]) -> Result<()> {
-    let mut command = Command::new("docker");
-    command.arg("run").arg("--rm").arg(image);
-    command.args(args);
-    command.stdin(Stdio::null());
-    command.stdout(Stdio::inherit());
-    command.stderr(Stdio::inherit());
-
-    let status = command.status().await?;
-    if !status.success() {
-        bail!("container exited with status {status}");
-    }
-    Ok(())
-}
-
-async fn write_file(path: &Path, contents: &[u8]) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).await?;
-    }
-    fs::write(path, contents).await?;
-    Ok(())
-}
-
-async fn docker<const N: usize>(args: [&str; N]) -> Result<String> {
-    let output = Command::new("docker").args(args).output().await?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("docker {} failed: {}", args.join(" "), stderr.trim());
-    }
-
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
