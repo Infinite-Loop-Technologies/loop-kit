@@ -41,7 +41,6 @@ The first useful version should support multiple Dagger entrypoints:
 - [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
 - [docs/next-actions/active/005-moon-dagger-operator-surface.md](../../next-actions/active/005-moon-dagger-operator-surface.md)
 - [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](../../next-actions/active/006-agentic-knowledge-automation-boundaries.md)
-- [docs/next-actions/active/019-automation-workflows-and-surface-providers.md](../../next-actions/active/019-automation-workflows-and-surface-providers.md)
 - [docs/next-actions/completed/000-moon-mcp-workflow-baseline.md](../../next-actions/completed/000-moon-mcp-workflow-baseline.md)
 - [docs/next-actions/completed/001-dagger-agent-control-loop-spike.md](../../next-actions/completed/001-dagger-agent-control-loop-spike.md)
 - [docs/next-actions/completed/002-knowledge-workflow-hygiene.md](../../next-actions/completed/002-knowledge-workflow-hygiene.md)

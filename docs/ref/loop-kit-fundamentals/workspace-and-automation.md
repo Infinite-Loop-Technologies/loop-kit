@@ -31,11 +31,5 @@ A Loop workspace should feel like a place where projects build artifacts, instal
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/015-workspace-and-install-model.md](../../next-actions/active/015-workspace-and-install-model.md)
-- [docs/next-actions/active/016-loopx-and-operator-surface.md](../../next-actions/active/016-loopx-and-operator-surface.md)
-- [docs/next-actions/active/017-typescript-importer-and-bindings.md](../../next-actions/active/017-typescript-importer-and-bindings.md)
-- [docs/next-actions/active/018-artifact-builders-and-toolchains.md](../../next-actions/active/018-artifact-builders-and-toolchains.md)
-- [docs/next-actions/active/019-automation-workflows-and-surface-providers.md](../../next-actions/active/019-automation-workflows-and-surface-providers.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

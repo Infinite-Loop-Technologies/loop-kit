@@ -16,3 +16,6 @@ pnpm:
   version: '10.15.1'
   installArgs:
     - '--frozen-lockfile'
+
+rust:
+  version: '1.94.0'
