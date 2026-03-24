@@ -47,11 +47,8 @@ The rewrite should establish a WIT workflow that covers:
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/010-standard-surface-wit-package-map.md](../../next-actions/active/010-standard-surface-wit-package-map.md)
-- [docs/next-actions/active/011-wit-tooling-and-linting.md](../../next-actions/active/011-wit-tooling-and-linting.md)
-- [docs/next-actions/active/014-component-provider-composition.md](../../next-actions/active/014-component-provider-composition.md)
-- [docs/next-actions/active/017-typescript-importer-and-bindings.md](../../next-actions/active/017-typescript-importer-and-bindings.md)
-- [docs/next-actions/active/018-artifact-builders-and-toolchains.md](../../next-actions/active/018-artifact-builders-and-toolchains.md)
+- [docs/next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md](../../next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md)
+- [docs/next-actions/active/011-wasm-package-client-and-wit-track.md](../../next-actions/active/011-wasm-package-client-and-wit-track.md)
 - [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

@@ -34,8 +34,5 @@ Capability composition is only useful if the runtime can decide who may call wha
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/013-grant-manager-and-enforcement.md](../../next-actions/active/013-grant-manager-and-enforcement.md)
-- [docs/next-actions/active/014-component-provider-composition.md](../../next-actions/active/014-component-provider-composition.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

@@ -1,135 +1,79 @@
 # loop-kit
 
-`loop-kit` is the Loop monorepo for contracts, kernel, CLI, UI demo surfaces, backend automation examples, and the first Forge shell applications.
+`loop-kit` is being reset around a smaller core: Graphite, Dock, UI, and a new OCI/WASM experiment track for the next Loop and Forge rewrite.
 
-This repo is now:
+The legacy `loop-*` packages, Forge shells, Forge app packages, and the old `loop.json` workspace model have been removed on purpose. The current direction is to prove the platform with direct experiments first, especially:
 
-- Moonrepo-first for workspace orchestration and CI task execution
-- Proto-first for pinned toolchains
-- GitHub Actions-first for CI orchestration
-- dotenvx-driven for local env-based automation
-- Dagger-planned for local agentic orchestration and operator tooling
+- a local OCI registry
+- Rust-first artifact fetch/push tooling
+- WASM loading and execution
+- container and executable dispatch paths
+- WIT-first interface design after the runtime path is real
+
+## Current Repo Shape
+
+- `apps/ui-demo`: retained UI demo surface
+- `packages/graphite*`: retained Graphite runtime work
+- `packages/dock`: retained Dock work
+- `packages/ui`: retained UI primitives and blocks
+- `experiments/oci-lab`: new Rust lab for local OCI artifact experiments
+- `docs/`: plans, references, and rewrite direction
 
 ## Quickstart
 
 ```powershell
-irm https://moonrepo.dev/install/proto.ps1 | iex
 proto install --yes
 proto run pnpm -- install --frozen-lockfile
 proto run moon -- ci
 ```
 
-Moon is pinned to `2.0.4`, and Proto is pinned to `0.55.4` through `.moon/toolchains.yml`.
+Run the Rust OCI lab:
 
-More detailed usage notes live in `docs/ref/repo-workflow/moon-proto.md`.
-The repo knowledge-system and agent workflow live in `docs/ref/repo-workflow/index.md` and `docs/ref/repo-workflow/agentic-dev-workflow.md`.
+```powershell
+cargo run --manifest-path experiments/oci-lab/Cargo.toml -- --help
+```
 
-## Pinned toolchain
+Or through the root script:
 
-Tool versions are pinned in `.prototools`:
+```powershell
+pnpm run exp:oci-lab -- --help
+```
 
-- `moon` `2.0.4`
-- `node` `22.20.0`
-- `pnpm` `10.15.1`
-- `dotenvx` `1.53.0`
+## Local OCI Registry
 
-Custom Proto plugin definitions:
+Use Docker Distribution (`registry:2`) as the first local registry baseline. It is the simplest standards-aligned choice for localhost experiments and works cleanly with direct OCI clients.
 
-- `tools/proto/plugins/dotenvx.toml`
+Start it:
 
-## Core automation commands
+```powershell
+docker run -d -p 5000:5000 --restart unless-stopped --name loop-registry registry:2
+```
+
+Then target references like:
+
+```text
+localhost:5000/loop/hello-wasm:dev
+localhost:5000/loop/tool-runner:dev
+localhost:5000/loop/shell-container:dev
+```
+
+## Core Commands
 
 ```bash
 pnpm run ci
 pnpm run build
-pnpm run lint
 pnpm run typecheck
 pnpm run test
+pnpm run exp:oci-lab -- --help
 ```
 
-Moon infers project tasks directly from `package.json` scripts, so app/package targets like `moon run ui-demo:dev` and `moon run loop-cli:test` work without per-project boilerplate.
+## Planning
 
-CI runs through GitHub Actions and Moon:
+The rewrite direction lives in:
 
-- GitHub Actions uses `moonrepo/setup-toolchain@v0`
-- Proto installs the pinned binary toolchain from `.prototools`, including Moon
-- `proto run moon -- ci :build :typecheck :test` is the CI entrypoint
-
-Manual publish flows:
-
-```bash
-pnpm run release:publish:all:dry
-pnpm run release:publish:cli:dry
-```
-
-## Forge shells
-
-The first Forge application shells now live in:
-
-- `packages/contracts`
-- `packages/forge-app`
-- `packages/forge-api`
-- `apps/forge-web`
-- `apps/forge-desktop`
-
-The shared `@loop-kit/forge-app` package owns the route table, shell layout, and placeholder panel host. The web and desktop apps stay thin and only provide runtime-specific bootstrapping.
-
-`@loop-kit/forge-contracts` owns the Forge control-plane OpenAPI and AsyncAPI source documents plus the generated TypeScript client/types that other Forge packages consume.
-
-`@loop-kit/forge-api` is the Fastify control-plane backend foundation. It keeps WorkOS, Polar, and agent execution behind explicit service seams while Neon + Drizzle own the app query model and migration baseline.
-
-Useful commands:
-
-```bash
-pnpm --filter @loop-kit/forge-contracts validate
-pnpm --filter @loop-kit/forge-contracts build
-pnpm --filter @loop-kit/forge-contracts test
-pnpm --filter @loop-kit/forge-api dev
-pnpm --filter @loop-kit/forge-api build
-pnpm --filter @loop-kit/forge-api test
-pnpm --filter @loop-kit/forge-api db:generate
-pnpm --filter @loop-kit/forge-api db:check
-pnpm --filter @loop-kit/forge-web dev
-pnpm --filter @loop-kit/forge-web build
-pnpm --filter @loop-kit/forge-desktop dev
-pnpm --filter @loop-kit/forge-desktop build
-pnpm --filter @loop-kit/forge-desktop check:native
-```
-
-Moon also infers these package scripts directly, so `moon run forge-web:dev` and `moon run forge-desktop:dev` work without extra project config.
-
-The CLI stack is also publishable through a manual GitHub Actions workflow dispatch.
-
-## Loop CLI helpers
-
-```bash
-pnpm run loop
-pnpm run loop:smoke
-```
-
-## npm publishing
-
-Dry-run:
-
-```bash
-pnpm run release:publish:all:dry
-pnpm run release:publish:cli:dry
-```
-
-Real publish:
-
-```bash
-pnpm run release:publish:all
-pnpm run release:publish:cli
-```
-
-dotenvx-based publish:
-
-```bash
-cp .env.release.example .env.release
-pnpm run release:publish:all:env
-pnpm run release:publish:cli:env
-```
+- `docs/visions/active/000-forge-local-oci-capability-platform.md`
+- `docs/project-plans/active/003-loop-refactor.md`
+- `docs/ref/loop-kit-fundamentals/index.md`
 
 ## Backlinks
 
