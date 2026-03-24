@@ -6,7 +6,7 @@ Make Moon the standard trigger surface for Dagger-based agent workflows so human
 
 ## Links
 
-- Project plan: [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- Project plan: [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/moon-proto.md](../../ref/repo-workflow/moon-proto.md)
 - Support material: [../../../.moon/workspace.yml](../../../.moon/workspace.yml)
 
@@ -25,5 +25,5 @@ Make Moon the standard trigger surface for Dagger-based agent workflows so human
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 <!-- markdown-backlinks:end -->

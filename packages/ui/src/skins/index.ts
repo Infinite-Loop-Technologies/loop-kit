@@ -18,6 +18,7 @@ export {
     useOptionalUiProviderState,
     useUiProviderState,
 } from './provider';
+export type { UiProviderProps } from './provider';
 export {
     PartialUiSkinThemesSchema,
     ResolvedUiSkinSchema,

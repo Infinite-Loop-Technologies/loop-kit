@@ -6,7 +6,7 @@ Make Moon the reliable task and query backbone for this repo's agentic workflow,
 
 ## Links
 
-- Project plan: [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- Project plan: [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/moon-proto.md](../../ref/repo-workflow/moon-proto.md)
 - Support material: [../../../.codex/config.toml](../../../.codex/config.toml)
 

@@ -22,7 +22,7 @@ This vision is intentionally short-to-medium term: it should improve how work ge
 
 ## Linked Project Plans
 
-- [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - [000-forge-local-oci-capability-platform.md](./000-forge-local-oci-capability-platform.md): related longer-term platform vision that this workflow should help bootstrap.
 
 ## Open Research Themes
@@ -35,5 +35,5 @@ This vision is intentionally short-to-medium term: it should improve how work ge
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 <!-- markdown-backlinks:end -->

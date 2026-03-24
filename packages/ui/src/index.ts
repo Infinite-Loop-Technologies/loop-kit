@@ -4,6 +4,7 @@ export * from './icons';
 export * from './assets';
 export * from './skins';
 export * from './primitives';
+export * from './packs';
 export * from './blocks';
 export * from './stories';
 export { cn } from './utils';

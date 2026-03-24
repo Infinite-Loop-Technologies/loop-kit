@@ -49,6 +49,6 @@ The rewrite should establish a WIT workflow that covers:
 <!-- markdown-backlinks:start -->
 - [docs/next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md](../../next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md)
 - [docs/next-actions/active/011-wasm-package-client-and-wit-track.md](../../next-actions/active/011-wasm-package-client-and-wit-track.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

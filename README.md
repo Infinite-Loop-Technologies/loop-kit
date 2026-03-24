@@ -72,7 +72,7 @@ pnpm run exp:oci-lab -- --help
 The rewrite direction lives in:
 
 - `docs/visions/active/000-forge-local-oci-capability-platform.md`
-- `docs/project-plans/active/003-loop-refactor.md`
+- `docs/project-plans/on-hold/003-loop-refactor.md`
 - `docs/ref/loop-kit-fundamentals/index.md`
 
 ## Backlinks

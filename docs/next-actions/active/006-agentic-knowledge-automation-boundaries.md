@@ -6,7 +6,7 @@ Decide which knowledge-work helpers belong inside the Dagger-driven agent workfl
 
 ## Links
 
-- Project plan: [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- Project plan: [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/index.md](../../ref/repo-workflow/index.md)
 - Support material: [../../ref/repo-workflow/agentic-dev-workflow.md](../../ref/repo-workflow/agentic-dev-workflow.md)
 - Support material: [../../../AGENTS.md](../../../AGENTS.md)
@@ -26,5 +26,5 @@ Decide which knowledge-work helpers belong inside the Dagger-driven agent workfl
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 <!-- markdown-backlinks:end -->

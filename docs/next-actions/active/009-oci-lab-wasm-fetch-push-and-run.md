@@ -6,7 +6,7 @@ Make the Rust lab prove the minimum WASM path end to end: generate a demo module
 
 ## Links
 
-- Project plan: [../../project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- Project plan: [../../project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - Support material: [../../ref/loop-kit-fundamentals/oci-registry-and-client.md](../../ref/loop-kit-fundamentals/oci-registry-and-client.md)
 - Support material: [../../ref/loop-kit-fundamentals/standard-surface-and-wit.md](../../ref/loop-kit-fundamentals/standard-surface-and-wit.md)
 - Experiment code: [../../../experiments/oci-lab/src/main.rs](../../../experiments/oci-lab/src/main.rs)
@@ -24,5 +24,5 @@ Make the Rust lab prove the minimum WASM path end to end: generate a demo module
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->
