@@ -50,5 +50,5 @@ Read [references/wit-authoring-guide.md](./references/wit-authoring-guide.md) be
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/next-actions/active/011-wit-tooling-and-linting.md](../../../docs/next-actions/active/011-wit-tooling-and-linting.md)
+- None.
 <!-- markdown-backlinks:end -->
