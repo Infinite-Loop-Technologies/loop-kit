@@ -20,8 +20,11 @@ Use Dagger, Moon, MCP servers, repo knowledge docs, and inbox-driven GTD habits 
 - Moon as the structured task and query layer.
 - Moon MCP as a first-class workspace inspection tool for agents.
 - Dagger as the short-term orchestration substrate for local agent runs, review loops, event-driven triggers, and operator tooling.
+- Codex as the primary execution agent inside that loop, ideally controlled through the Codex SDK when structured thread control matters.
 - Custom MCP servers and utility scripts as controllable building blocks that run alongside agent sessions.
 - A lightweight operator surface, initially CLI-first and optionally later a lightweight web UI, for prompting agents, inspecting MCP output, and supervising runs.
+
+The first Dagger automation home should likely live outside `packages/`, because this is operational workflow code rather than product runtime code. `tools/dagger` or `tools/agentic` are the best current candidates, with Moon expanded to track the chosen directory.
 
 ## Operating Loop
 
@@ -49,10 +52,19 @@ This queue-based model is a major part of how the repo can support a durable aut
 
 - Better Moon task coverage and documentation, including useful query-driven workflows.
 - A working Moon MCP setup that points at the actual workspace.
-- Dagger functions/modules for agent launch, verification, review, and recurring maintenance loops.
+- Dagger functions/modules for prompt-driven agent launch, verification, review, and recurring maintenance loops.
 - Knowledge-management tools for inbox processing, next-action hygiene, stale-doc detection, and review-date automation.
 - Repo hygiene checks that catch floating junk, stale structure, and architectural drift.
 - Skills and tools that agents can improve over time instead of repeatedly improvising the same workflows.
+
+## Initial Dagger Entrypoints
+
+- `prompt-run`: operator supplies the prompt and optional scope, and the workflow manages setup, Codex execution, verification, and reviewable output.
+- `weekly-review`: no-prompt recurring workflow for inbox scan, active-plan review, repo-health checks, and follow-up capture.
+- `inbox-sweep`: no-prompt or lightly-configured workflow that turns captured work into next actions, project plans, or human-blocked items.
+- `verification-review`: run targeted checks and produce a summarized operator-facing review artifact.
+
+Not every useful helper needs to become a Dagger function immediately. For example, markdown backlink generation is a good utility for Dagger to call as part of a broader workflow, but not an especially good first candidate to rewrite into Dagger itself.
 
 ## Guardrails
 
@@ -75,7 +87,10 @@ This queue-based model is a major part of how the repo can support a durable aut
 
 <!-- markdown-backlinks:start -->
 - [agents.md](../../../agents.md)
-- [docs/next-actions/active/001-dagger-agent-control-loop-spike.md](../../next-actions/active/001-dagger-agent-control-loop-spike.md)
+- [docs/next-actions/active/003-dagger-codex-runner-foundation.md](../../next-actions/active/003-dagger-codex-runner-foundation.md)
+- [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
+- [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](../../next-actions/active/006-agentic-knowledge-automation-boundaries.md)
+- [docs/next-actions/completed/001-dagger-agent-control-loop-spike.md](../../next-actions/completed/001-dagger-agent-control-loop-spike.md)
 - [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/index.md](index.md)
 - [docs/ref/repo-workflow/validation-and-verification.md](validation-and-verification.md)

@@ -378,5 +378,7 @@ High-priority missing coverage:
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- None.
+- [docs/next-actions/active/007-loop-rewrite-inventory-and-cut-line.md](../next-actions/active/007-loop-rewrite-inventory-and-cut-line.md)
+- [docs/project-plans/active/003-loop-refactor.md](../project-plans/active/003-loop-refactor.md)
+- [docs/ref/loop-kit-fundamentals/index.md](../ref/loop-kit-fundamentals/index.md)
 <!-- markdown-backlinks:end -->

@@ -12,17 +12,18 @@ Design and prototype the first Dagger-driven control loop for local agent work i
 
 ## Next Actions
 
-- Define the smallest useful Dagger-driven run loop: prompt input, repo context loading, verification, and reviewable output.
-- Decide what the first operator surface should expose, even if it is only CLI-based initially.
-- Identify the first follow-up automation hooks, such as review runs, inbox generation, or local event triggers.
+- Defined the smallest useful control-loop shape at the planning level: prompt-driven run, repo context loading, verification, and reviewable outputs.
+- Chose a CLI-first operator surface and split the work into distinct next actions instead of one oversized spike.
+- Identified the first follow-up hooks: recurring review runs, inbox-oriented flows, Moon-triggered operator commands, and knowledge-automation boundaries.
 
 ## Notes
 
 - One reliable agent loop is more valuable than premature multi-agent orchestration.
 - Keep the first spike inspectable and easy to debug.
+- The next step is execution: build the Codex-backed Dagger module and its first operator entrypoints.
 
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- None.
 <!-- markdown-backlinks:end -->
