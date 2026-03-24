@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop WIT/WASM Authoring"
+  short_description: "Author loop-kit WIT packages, worlds, and WASM component plans."
+  default_prompt: "Use this skill to create or update loop-kit WIT packages, interfaces, worlds, and WASM component authoring plans."

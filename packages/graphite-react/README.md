@@ -54,3 +54,9 @@ export function App() {
 
 - `pnpm --filter @loop-kit/graphite-react run typecheck`
 - `pnpm --filter @loop-kit/graphite-react run build`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Bootstrap"
+  short_description: "Initialize memory and repo health checks"
+  default_prompt: "Use $project-bootstrap to initialize project memory, check repo/tool health, and capture durable context."

@@ -39,3 +39,9 @@ editingFacet.registerEditingActions(actions);
 
 - `pnpm --filter @loop-kit/graphite-systems run typecheck`
 - `pnpm --filter @loop-kit/graphite-systems run build`
+
+## Backlinks
+
+<!-- markdown-backlinks:start -->
+- [architecture.md](../../architecture.md)
+<!-- markdown-backlinks:end -->
