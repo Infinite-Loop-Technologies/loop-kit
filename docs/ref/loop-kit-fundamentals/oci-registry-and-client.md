@@ -69,6 +69,6 @@ The first custom registry client should handle:
 - [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
 - [docs/next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md](../../next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md)
 - [docs/next-actions/active/011-wasm-package-client-and-wit-track.md](../../next-actions/active/011-wasm-package-client-and-wit-track.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](index.md)
 <!-- markdown-backlinks:end -->

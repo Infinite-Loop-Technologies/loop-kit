@@ -39,14 +39,13 @@ The rewrite has now cut away:
 ## Planning Links
 
 - Vision: [../../visions/active/000-forge-local-oci-capability-platform.md](../../visions/active/000-forge-local-oci-capability-platform.md)
-- Project plan: [../../project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- Project plan: [../../project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - Audit input: [../../agent-inbox/loop-audit-report.md](../../agent-inbox/loop-audit-report.md)
 - Experiment code: [../../../experiments/oci-lab/README.md](../../../experiments/oci-lab/README.md)
 
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [architecture.md](../../../architecture.md)
 - [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->

@@ -62,9 +62,9 @@ This vision is a strategic direction above individual project plans. It supersed
 
 ## Related Existing Project Plans
 
-- [003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md): primary execution plan for the Loop rewrite.
-- [004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md): related operator workflow that should help bootstrap the new platform and its automation units.
-- [001-forge-prototype.md](../../project-plans/on-hold/001-forge-prototype.md): older Forge seed material that this vision supersedes directionally.
+- [003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md): primary execution plan for the Loop rewrite.
+- [004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md): related operator workflow that should help bootstrap the new platform and its automation units.
+- [001-forge-prototype.md](../../project-plans/active/001-forge-prototype.md): older Forge seed material that this vision supersedes directionally.
 - [002-graphite-improvements.md](../../project-plans/on-hold/002-graphite-improvements.md): still useful, but not part of the Loop core rewrite.
 
 ## Open Research Themes
@@ -85,11 +85,10 @@ This vision is a strategic direction above individual project plans. It supersed
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [architecture.md](../../../architecture.md)
 - [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
 - [docs/next-actions/active/010-oci-lab-container-and-executable-dispatch.md](../../next-actions/active/010-oci-lab-container-and-executable-dispatch.md)
 - [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](../../ref/loop-kit-fundamentals/index.md)
 - [docs/visions/active/001-agentic-development-workflow.md](001-agentic-development-workflow.md)
 <!-- markdown-backlinks:end -->

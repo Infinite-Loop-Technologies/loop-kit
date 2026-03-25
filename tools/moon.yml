@@ -1,0 +1,11 @@
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+language: 'javascript'
+tags:
+  - 'tools'
+  - 'bun'
+
+toolchains:
+  default:
+    - 'bun'
+    - 'javascript'

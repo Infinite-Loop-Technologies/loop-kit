@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="forge-accent" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8FB8FF"/>
+      <stop offset="1" stop-color="#55F1FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#111318"/>
+  <path d="M30 30h68v20H58v18h30v20H58v10H30V30Z" fill="url(#forge-accent)"/>
+  <path d="M76 58h22l-14 40H62l14-40Z" fill="#EEF4FF"/>
+</svg>

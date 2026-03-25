@@ -81,6 +81,6 @@ proto run moon -- query projects "tag=experiment"
 - [architecture.md](../../architecture.md)
 - [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../docs/next-actions/active/008-local-oci-registry-modes-and-auth.md)
 - [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
-- [docs/project-plans/active/003-loop-refactor.md](../../docs/project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../docs/project-plans/on-hold/003-loop-refactor.md)
 - [docs/ref/loop-kit-fundamentals/index.md](../../docs/ref/loop-kit-fundamentals/index.md)
 <!-- markdown-backlinks:end -->

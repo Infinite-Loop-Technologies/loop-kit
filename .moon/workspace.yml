@@ -4,6 +4,7 @@ projects:
   - 'apps/*'
   - 'experiments/*'
   - 'packages/*'
+  - 'tools'
 
 vcs:
   defaultBranch: 'main'

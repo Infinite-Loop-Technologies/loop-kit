@@ -38,6 +38,7 @@ If the task is knowledge-management-heavy, always review [docs/ref/repo-workflow
 - Preserve user work. Do not reset, stash, clean, overwrite, or rewrite history without explicit approval.
 - Prefer existing automation and MCP integrations when available; if a required tool is unavailable, say so plainly.
 - Keep changes narrow, reviewable, and documented when assumptions or tradeoffs matter.
+- Jazz docs are available via the `jazz-docs` MCP server. Use `search_docs` and `get_doc` to look up APIs before answering Jazz questions.
 
 ## Knowledge Management Workflow
 

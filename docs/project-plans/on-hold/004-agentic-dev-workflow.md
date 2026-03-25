@@ -2,9 +2,9 @@
 
 ## Desired Outcome
 
-Establish a practical, controllable agentic development workflow for this repo using Dagger, Moon, Codex, MCP tools, and the GTD-inspired knowledge system so work can be executed asynchronously without degrading repo quality.
+Establish a practical, controllable agentic development workflow for this repo using Bun-based repo automation, Moon, Codex, MCP tools, and the GTD-inspired knowledge system so work can be executed asynchronously without degrading repo quality.
 
-The first useful version should support multiple Dagger entrypoints:
+The first useful version should support multiple automation entrypoints:
 
 - a prompt-driven Codex run for operator-invoked engineering work
 - one or more no-prompt recurring runs, such as weekly review or inbox triage
@@ -20,12 +20,12 @@ The first useful version should support multiple Dagger entrypoints:
 
 ## Potential Steps
 
-- Put operational Dagger code in a dedicated automation home, likely `tools/dagger` or `tools/agentic`, instead of mixing it with product packages.
-- Build a TypeScript Dagger module that treats Codex as the execution agent and Dagger as the orchestration layer around it.
+- Put operational automation code in the Bun-powered `tools/` package instead of mixing it with product packages.
+- Build a TypeScript automation surface that treats Codex as the execution agent and the Bun tools package as the orchestration layer around it.
 - Start with the Codex SDK for structured thread control and keep Codex CLI as a fallback or operator-facing escape hatch.
-- Expose multiple Dagger entrypoints instead of one monolithic loop: prompt-driven runs, weekly review, inbox sweep, verification review, and other recurring flows.
-- Use Moon as the human and agent trigger surface for those Dagger entrypoints.
-- Keep narrow repo scripts where they are strongest, and let Dagger orchestrate them instead of rewriting every utility into Dagger immediately.
+- Expose multiple automation entrypoints instead of one monolithic loop: prompt-driven runs, weekly review, inbox sweep, verification review, and other recurring flows.
+- Use Moon as the human and agent trigger surface for those Bun-backed entrypoints.
+- Keep narrow repo scripts where they are strongest, and let the `tools/` package orchestrate them instead of rewriting every utility into a larger framework immediately.
 
 ## Linked Next Actions
 
