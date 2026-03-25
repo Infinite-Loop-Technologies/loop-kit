@@ -6,7 +6,7 @@ Design and prototype the first Dagger-driven control loop for local agent work i
 
 ## Links
 
-- Project plan: [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- Project plan: [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/agentic-dev-workflow.md](../../ref/repo-workflow/agentic-dev-workflow.md)
 - Support material: [../../agent-inbox/README.md](../../agent-inbox/README.md)
 

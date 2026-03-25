@@ -13,6 +13,7 @@
         "./icons": "./src/icons/index.ts",
         "./assets": "./src/assets/index.ts",
         "./primitives": "./src/primitives/index.ts",
+        "./packs": "./src/packs/index.ts",
         "./blocks": "./src/blocks/index.ts",
         "./legacy": "./src/legacy/index.ts",
         "./stories": "./src/stories/index.ts",

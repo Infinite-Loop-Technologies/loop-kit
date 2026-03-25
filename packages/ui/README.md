@@ -9,6 +9,7 @@ Canonical loop-kit UI package.
 - `icons`: swappable icon registry + default lucide pack.
 - `assets`: asset/texture registry + `asset://` resolver.
 - `primitives`: token-native `Panel`, `Button`, and `Text`.
+- `packs`: higher-level theme packs that can swap primitives, skins, and icon registries together.
 - `blocks`: extracted reusable product blocks (graphite/editor/outline/dock/theme tooling).
 - `legacy`: migrated shadcn-compatible surface from the retired site package.
 - `stories`: story manifest consumed by `apps/ui-demo`.
@@ -21,6 +22,7 @@ Canonical loop-kit UI package.
 - `@loop-kit/ui/icons`
 - `@loop-kit/ui/assets`
 - `@loop-kit/ui/primitives`
+- `@loop-kit/ui/packs`
 - `@loop-kit/ui/blocks`
 - `@loop-kit/ui/legacy`
 - `@loop-kit/ui/stories`

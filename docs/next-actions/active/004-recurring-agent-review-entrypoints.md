@@ -2,11 +2,11 @@
 
 ## Outcome
 
-Define the first no-prompt Dagger entrypoints for recurring repo review work so the operator can trigger useful maintenance loops without authoring a new prompt each time.
+Define the first no-prompt Bun automation entrypoints for recurring repo review work so the operator can trigger useful maintenance loops without authoring a new prompt each time.
 
 ## Links
 
-- Project plan: [../../project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- Project plan: [../../project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/agentic-dev-workflow.md](../../ref/repo-workflow/agentic-dev-workflow.md)
 - Support material: [../../ref/repo-workflow/index.md](../../ref/repo-workflow/index.md)
 - Support material: [../../ref/repo-workflow/weekly-review.md](../../ref/repo-workflow/weekly-review.md)
@@ -26,5 +26,5 @@ Define the first no-prompt Dagger entrypoints for recurring repo review work so 
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/004-agentic-dev-workflow.md](../../project-plans/active/004-agentic-dev-workflow.md)
+- [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 <!-- markdown-backlinks:end -->

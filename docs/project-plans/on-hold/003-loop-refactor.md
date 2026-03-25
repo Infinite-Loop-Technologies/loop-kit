@@ -68,7 +68,6 @@ This plan is intentionally narrower than the prior decomposition. The old packag
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [architecture.md](../../../architecture.md)
 - [docs/next-actions/active/008-local-oci-registry-modes-and-auth.md](../../next-actions/active/008-local-oci-registry-modes-and-auth.md)
 - [docs/next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md](../../next-actions/active/009-oci-lab-wasm-fetch-push-and-run.md)
 - [docs/next-actions/active/010-oci-lab-container-and-executable-dispatch.md](../../next-actions/active/010-oci-lab-container-and-executable-dispatch.md)

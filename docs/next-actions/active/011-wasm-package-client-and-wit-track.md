@@ -6,7 +6,7 @@ Decide how the generic OCI lab should intersect with Bytecode Alliance tooling s
 
 ## Links
 
-- Project plan: [../../project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- Project plan: [../../project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 - Support material: [../../ref/loop-kit-fundamentals/standard-surface-and-wit.md](../../ref/loop-kit-fundamentals/standard-surface-and-wit.md)
 - Support material: [../../ref/loop-kit-fundamentals/oci-registry-and-client.md](../../ref/loop-kit-fundamentals/oci-registry-and-client.md)
 - Support material: [https://github.com/bytecodealliance/wasm-pkg-tools/tree/main/crates/wasm-pkg-client](https://github.com/bytecodealliance/wasm-pkg-tools/tree/main/crates/wasm-pkg-client)
@@ -24,5 +24,5 @@ Decide how the generic OCI lab should intersect with Bytecode Alliance tooling s
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [docs/project-plans/active/003-loop-refactor.md](../../project-plans/active/003-loop-refactor.md)
+- [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->

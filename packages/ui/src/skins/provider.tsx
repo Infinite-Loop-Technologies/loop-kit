@@ -16,12 +16,14 @@ import {
     type UiSkinRegistry,
 } from './registry';
 import type { ResolvedUiSkin, UiSkinDefinition } from './schema';
+import type { IconRegistry } from '../icons/types';
 
 export type UiProviderProps = PropsWithChildren<{
     skin: UiSkinDefinition | ResolvedUiSkin;
     mode?: ThemeMode;
     target?: HTMLElement | null;
     registry?: UiSkinRegistry;
+    iconRegistry?: IconRegistry;
 }>;
 
 type UiContextValue = {
@@ -52,6 +54,7 @@ export function UiProvider({
     mode,
     target,
     registry,
+    iconRegistry: sourceIconRegistry,
 }: UiProviderProps) {
     const resolvedSkin = useMemo(
         () => resolveProviderSkin(skin, registry),
@@ -80,8 +83,8 @@ export function UiProvider({
         [resolvedSkin],
     );
     const iconRegistry = useMemo(
-        () => createSkinIconRegistry(resolvedSkin),
-        [resolvedSkin],
+        () => createSkinIconRegistry(resolvedSkin, sourceIconRegistry),
+        [resolvedSkin, sourceIconRegistry],
     );
 
     useEffect(() => {
