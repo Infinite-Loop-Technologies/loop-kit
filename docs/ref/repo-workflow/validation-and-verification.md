@@ -35,7 +35,6 @@ For non-trivial UI work, use Playwright MCP for real interaction validation inst
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [agents.md](../../../agents.md)
 - [docs/project-plans/on-hold/004-agentic-dev-workflow.md](../../project-plans/on-hold/004-agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/agentic-dev-workflow.md](agentic-dev-workflow.md)
 - [docs/ref/repo-workflow/index.md](index.md)

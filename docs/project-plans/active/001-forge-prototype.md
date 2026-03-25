@@ -43,7 +43,7 @@ Forge needs an opinionated grants layer before it needs a broad permissions matr
 ## Local Dev Environment
 
 - Script a local Forge stack that can bring up the persistent OCI registry, the Forge app, and local workflow/dev helpers from one entrypoint.
-- Use Dagger as the direction for orchestrating the local development environment, but keep the first iteration pragmatic and easy to run while the Dagger automation surface is still being established.
+- Keep local orchestration in the repo-owned Bun `tools` package so it stays inspectable, scriptable through Moon, and easy to evolve without introducing a second automation framework.
 - Make the local registry durable across restarts.
 - Keep room for a self-hosted Jazz sync service later, but allow the prototype to point at a development Jazz environment initially.
 

@@ -46,7 +46,6 @@ The rewrite has now cut away:
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [architecture.md](../../../architecture.md)
 - [docs/next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md](../../next-actions/completed/007-loop-rewrite-inventory-and-cut-line.md)
 - [docs/project-plans/on-hold/003-loop-refactor.md](../../project-plans/on-hold/003-loop-refactor.md)
 <!-- markdown-backlinks:end -->
