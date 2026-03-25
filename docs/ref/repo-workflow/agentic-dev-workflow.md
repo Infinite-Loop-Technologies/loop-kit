@@ -4,7 +4,7 @@ This repo needs a practical agentic development workflow now, before the long-te
 
 ## Purpose
 
-Use Dagger, Moon, MCP servers, repo knowledge docs, and inbox-driven GTD habits to create a controllable agent workflow that stays reviewable and does not turn the repo into spaghetti.
+Use Bun-based repo automation, Moon, MCP servers, repo knowledge docs, and inbox-driven GTD habits to create a controllable agent workflow that stays reviewable and does not turn the repo into spaghetti.
 
 ## Core Principles
 
@@ -12,19 +12,19 @@ Use Dagger, Moon, MCP servers, repo knowledge docs, and inbox-driven GTD habits 
 - Treat `docs/agent-inbox/` as the durable intake queue for humans, webhooks, scripts, bug reports, and other agents.
 - Keep execution grounded in `vision -> project plan -> next action`.
 - Favor one active execution agent at a time until the control loop is reliable.
-- Use Moon, MCP tools, validation scripts, and Dagger functions to reduce ad hoc shell behavior and hidden state.
+- Use Moon, MCP tools, validation scripts, and Bun-powered repo scripts to reduce ad hoc shell behavior and hidden state.
 - Automate metadata and hygiene only when automation owns the upkeep. Do not rely on the agent to maintain decorative metadata by hand.
 
 ## Target Short-Term Substrate
 
 - Moon as the structured task and query layer.
 - Moon MCP as a first-class workspace inspection tool for agents.
-- Dagger as the short-term orchestration substrate for local agent runs, review loops, event-driven triggers, and operator tooling.
+- The Bun-powered `tools/` package as the short-term orchestration substrate for local agent runs, review loops, event-driven triggers, and operator tooling.
 - Codex as the primary execution agent inside that loop, ideally controlled through the Codex SDK when structured thread control matters.
 - Custom MCP servers and utility scripts as controllable building blocks that run alongside agent sessions.
 - A lightweight operator surface, initially CLI-first and optionally later a lightweight web UI, for prompting agents, inspecting MCP output, and supervising runs.
 
-The first Dagger automation home should likely live outside `packages/`, because this is operational workflow code rather than product runtime code. `tools/dagger` or `tools/agentic` are the best current candidates, with Moon expanded to track the chosen directory.
+The first automation home should live outside `packages/`, because this is operational workflow code rather than product runtime code. The Bun-powered `tools/` package is the current home, with Moon tracking it as a first-class project.
 
 ## Operating Loop
 
@@ -52,19 +52,19 @@ This queue-based model is a major part of how the repo can support a durable aut
 
 - Better Moon task coverage and documentation, including useful query-driven workflows.
 - A working Moon MCP setup that points at the actual workspace.
-- Dagger functions/modules for prompt-driven agent launch, verification, review, and recurring maintenance loops.
+- Bun-powered repo automation for prompt-driven agent launch, verification, review, and recurring maintenance loops.
 - Knowledge-management tools for inbox processing, next-action hygiene, stale-doc detection, and review-date automation.
 - Repo hygiene checks that catch floating junk, stale structure, and architectural drift.
 - Skills and tools that agents can improve over time instead of repeatedly improvising the same workflows.
 
-## Initial Dagger Entrypoints
+## Initial Automation Entrypoints
 
 - `prompt-run`: operator supplies the prompt and optional scope, and the workflow manages setup, Codex execution, verification, and reviewable output.
 - `weekly-review`: no-prompt recurring workflow for inbox scan, active-plan review, repo-health checks, and follow-up capture.
 - `inbox-sweep`: no-prompt or lightly-configured workflow that turns captured work into next actions, project plans, or human-blocked items.
 - `verification-review`: run targeted checks and produce a summarized operator-facing review artifact.
 
-Not every useful helper needs to become a Dagger function immediately. For example, markdown backlink generation is a good utility for Dagger to call as part of a broader workflow, but not an especially good first candidate to rewrite into Dagger itself.
+Not every useful helper needs to become a first-class automation entrypoint immediately. For example, markdown backlink generation is a good utility for the `tools/` package to call as part of a broader workflow, but not an especially good first candidate to rewrite from scratch.
 
 ## Guardrails
 
@@ -86,7 +86,6 @@ Not every useful helper needs to become a Dagger function immediately. For examp
 ## Backlinks
 
 <!-- markdown-backlinks:start -->
-- [agents.md](../../../agents.md)
 - [docs/next-actions/active/003-dagger-codex-runner-foundation.md](../../next-actions/active/003-dagger-codex-runner-foundation.md)
 - [docs/next-actions/active/004-recurring-agent-review-entrypoints.md](../../next-actions/active/004-recurring-agent-review-entrypoints.md)
 - [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](../../next-actions/active/006-agentic-knowledge-automation-boundaries.md)

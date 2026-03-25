@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Define the first no-prompt Dagger entrypoints for recurring repo review work so the operator can trigger useful maintenance loops without authoring a new prompt each time.
+Define the first no-prompt Bun automation entrypoints for recurring repo review work so the operator can trigger useful maintenance loops without authoring a new prompt each time.
 
 ## Links
 
