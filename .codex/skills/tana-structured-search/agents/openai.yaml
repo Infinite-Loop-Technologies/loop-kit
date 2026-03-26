@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tana Structured Search"
+  short_description: "Use the documented Tana search DSL safely"
+  default_prompt: "Use this skill to build or debug Tana search_nodes queries from the local documented DSL, prefer exact IDs, start with the smallest predicate, and verify important matches with read_node."

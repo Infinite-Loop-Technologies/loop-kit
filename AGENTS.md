@@ -91,6 +91,8 @@ Prefer this Tana behavior:
 - read only the selected node
 - paginate children only when necessary
 - capture out-of-scope follow-ups into Tana instead of repo markdown
+- always use the `tana-structured-search` skill before composing non-trivial `search_nodes` queries; the structured search DSL is subtle, derived from the local Tana OpenAPI, and should be treated as a documented workflow instead of guessed from memory
+- when structured search results matter, verify the target with `read_node`; observed behavior can differ from intuitive expectations even when the query shape looks valid
 
 ## Validation
 
