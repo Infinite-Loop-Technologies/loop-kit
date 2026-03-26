@@ -63,6 +63,10 @@ next-env.d.ts
 .moon/cache/
 .moon/docker/
 
+# local CKB artifacts
+.ckb/
+index.scip
+
 # loop auth material
 loop/auth.json
 

@@ -11,6 +11,7 @@ Review these layers:
 5. local Git branch state
 6. remote branch and PR state
 7. horizon alignment from `#Vision` to `#Project` to `#Slice`
+8. `Last Reviewed On` freshness on active projects and slices
 
 Questions to answer:
 
@@ -19,12 +20,14 @@ Questions to answer:
 - What is stale?
 - What should be captured but is not yet tracked?
 - Which branches and slices no longer match?
+- Which active projects no longer have an obvious next slice?
 - Which inbox items should become projects, slices, references, or handoffs?
 - Which handoffs are resolved and can be cleared?
 
 Expected outputs:
 
 - updated slice statuses
+- updated `Last Reviewed On` on reviewed projects and slices
 - updated branch and PR fields
 - new follow-up captures
 - explicit handoffs where needed

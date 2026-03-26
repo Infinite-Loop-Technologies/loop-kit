@@ -163,6 +163,8 @@ Use these horizons and keep them reconciled:
 
 - every active `#Slice` should belong to a `#Project`
 - every active branch should map to at most one active `#Slice`
+- multiple active `#Project` nodes are allowed, but each active project must have an obvious next slice or be moved to an on-hold style status instead of pretending it is active
+- multiple active `#Slice` nodes are allowed only when they map cleanly to distinct branches, owners, or blocked states; prefer one primary current slice for the current session
 - a `#Project` is a desired outcome, not a branch
 - a `#Slice` is an execution unit, not a whole product goal
 - inbox items are captures, not long-term plans
@@ -231,6 +233,7 @@ The weekly review should reconcile:
 - stale or missing mappings between Git and Tana
 - blocked items
 - horizon alignment between `#Vision`, `#Project`, and `#Slice`
+- `Last Reviewed On` on the reviewed projects and slices
 
 The agent may recommend a weekly review when the inboxes, handoffs, or branch state look neglected.
 
