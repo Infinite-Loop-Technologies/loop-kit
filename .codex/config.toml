@@ -10,6 +10,8 @@ sandbox = "elevated"
 
 [projects.'C:\Users\ijhar\Desktop\isaacs-devkit']
 trust_level = "trusted"
+[projects.'C:\Users\ijhar\Desktop\loop-kit']
+trust_level = "trusted"
 
 [mcp_servers.ckb]
 command = "cmd"
@@ -38,3 +40,10 @@ command = "moon"
 args = ["mcp"]
 env = { MOON_WORKSPACE_ROOT = "C:\\Users\\ijhar\\Desktop\\loop-kit" }
 cwd = "C:\\Users\\ijhar\\Desktop\\loop-kit"
+
+[mcp_servers.jazz-docs]
+command = "npx"
+args = ["jazz-run@latest", "mcp"]
+
+[mcp_servers.instant]
+url = "https://mcp.instantdb.com/mcp"
