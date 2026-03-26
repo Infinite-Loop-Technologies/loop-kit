@@ -139,6 +139,42 @@ Treat that as an implementation caveat, not proof that the documented DSL is wro
 5. If a query unexpectedly returns `[]`, test the same search with fewer predicates before assuming the data is missing.
 6. Prefer exact node IDs and field IDs over names.
 
+## What Is Already Useful
+
+Based on direct testing in the `loop-kit` workspace, these patterns are already useful enough to build around:
+
+- `textContains` for discovery by node name
+- `is: "field"` to find field-definition nodes and recover field IDs from the Schema area
+- `has: "tag"` to find tagged entity nodes across the workspace
+- `read_node` to inspect a candidate subtree with tags, field values, and references
+- `get_children` with `limit` and `offset` for pagination when a node has many children
+
+This means a practical workflow today is:
+
+1. find a project, slice, inbox item, or reference by `textContains`
+2. inspect it with `read_node`
+3. paginate large containers with `get_children`
+4. use exact IDs recovered from reads for subsequent automation
+
+## Search Lab Notes
+
+The repo now includes a tested `Search Lab` subtree inside the `loop-kit` workspace. It was used to exercise:
+
+- tagged `Project`, `Slice`, `Inbox`, `Handoff`, and `Reference` nodes
+- instance-field references between projects, slices, inbox items, and handoffs
+- boolean text queries
+- paginated reads over a sample container
+
+Observed results:
+
+- `textContains` remained the most reliable search path
+- `is: "field"` and `has: "tag"` returned useful results
+- `get_children` pagination worked exactly as expected
+- `textMatches` did not produce expected results in the tested case
+- `hasType`, `field`, `childOf`, and some `and`/`or` combinations still returned false negatives or surprising matches
+
+Treat the lab as a standing regression fixture for future Tana MCP checks.
+
 ## Known Boundary
 
 The localhost HTTP API requires auth for direct calls, even though the MCP server can access the same data. That means the OpenAPI spec is readable locally, but live REST probes need credentials.
