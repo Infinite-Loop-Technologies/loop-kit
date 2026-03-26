@@ -2,76 +2,126 @@
 
 ## Purpose
 
-`loop-kit` is the monorepo for loop-kit and Forge. Treat it as a capability-driven platform for composable software units, registry-aware tooling, and future agentic product surfaces. Canonical GitHub repo: `Infinite-Loop-Technologies/loop-kit`.
+`loop-kit` is the monorepo for loop-kit and Forge.
 
-Use this file as a table of contents. Open the linked docs that match the task, and follow important links instead of guessing.
+Treat it as a capability-driven platform for registry-backed software units, WIT-defined contracts, capability-granted composition, and future agentic development infrastructure.
 
-## Start Here
+## Current Repo Mode
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
-- [PLANS.md](./PLANS.md)
-- [docs/ref/repo-workflow/index.md](./docs/ref/repo-workflow/index.md)
-- [docs/ref/repo-workflow/agentic-dev-workflow.md](./docs/ref/repo-workflow/agentic-dev-workflow.md)
-- [docs/ref/repo-workflow/validation-and-verification.md](./docs/ref/repo-workflow/validation-and-verification.md)
+Prototype mode is enabled.
 
-If the task is knowledge-management-heavy, always review [docs/ref/repo-workflow/index.md](./docs/ref/repo-workflow/index.md) before editing and again before you consider the task done.
+- `dev` is the working integration branch.
+- `main` is for deliberate promotion, not routine agent integration.
+- Small coherent prototype work may be committed directly on `dev`.
+- Use a short-lived feature branch from `dev` when isolation helps.
+- Merge validated feature work back into `dev`.
+- Do not push to or merge to `main` unless explicitly told to.
+- Do not rewrite shared remote history without explicit instruction.
+- Do not use worktrees unless there is truly parallel active work.
 
-## Repo Map
+## Minimal Operating Loop
 
-- `apps/`: runtime shells such as Forge web, Forge desktop, and UI demo
-- `packages/`: reusable product, platform, and runtime packages
-- `loop/`: loop registry/install artifacts and component manifests
-- `docs/visions/`: repo-spanning strategic directions that can spawn multiple project plans
-- `docs/project-plans/`: large desired outcomes, grouped by status
-- `docs/next-actions/`: immediate executable actions, still substantial enough for a focused session, grouped by status
-- `docs/ref/`: reusable references, repo workflow docs, and tech-stack notes
-- `docs/agent-inbox/`: agent-captured notes, prompts, and follow-ups that should become action or be discarded
-- `docs/human-inbox/`: files for work blocked on a human
-- `.codex/skills/`: repo-local reusable skills
+1. Check local repo state first:
+   - current branch
+   - dirty files
+   - whether dirty work appears related
+   - whether `dev` exists and is usable
 
-## Non-Negotiables
+2. For non-trivial code work, use CKB early:
+   - `getStatus()`
+   - then the smallest fitting workflow
 
-- Do not push directly to `main` or merge your own PR into `main` unless explicitly told to.
-- Never develop on `main`; if work starts from a dirty or ahead-of-origin `main`, cut a branch immediately and continue only from a branch that is current with `main`, replaying prior work with `git cherry-pick` or `git rebase` instead of extending stale history on `main`.
-- Keep one coherent goal per branch, PR, and commit sequence.
-- Check git state before non-trivial work: branch, status, local changes, scope fit, and existing PR context when relevant.
-- Preserve user work. Do not reset, stash, clean, overwrite, or rewrite history without explicit approval.
-- Prefer existing automation and MCP integrations when available; if a required tool is unavailable, say so plainly.
-- Keep changes narrow, reviewable, and documented when assumptions or tradeoffs matter.
-- Jazz docs are available via the `jazz-docs` MCP server. Use `search_docs` and `get_doc` to look up APIs before answering Jazz questions.
+3. If work selection, planning, or handoff context is unclear, consult Tana.
 
-## Knowledge Management Workflow
+4. If repo state, tool state, or task state is unclear, stop and report instead of improvising.
 
-Use a GTD-style flow: capture, clarify, organize, review, engage.
+5. Execute the smallest coherent slice possible.
 
-- If something takes 2 minutes or less and is clearly in scope, do it.
-- Otherwise, turn it into a file in `docs/visions/...`, `docs/project-plans/...`, `docs/next-actions/...`, `docs/agent-inbox/`, or `docs/human-inbox/`.
-- Treat `docs/agent-inbox/` as a durable async queue that humans, scripts, webhooks, and agents may inject into at any time; run an emergency scan there before pulling from active next actions.
-- Use the planning hierarchy intentionally: `vision -> project plan -> next action`.
-- Exact next actions belong in `docs/next-actions/`, not buried inside large project plans.
-- Before finishing any non-trivial task, review [docs/ref/repo-workflow/index.md](./docs/ref/repo-workflow/index.md) and do the inbox/review steps it requires.
-- Small relevant items in `docs/agent-inbox/` should be done now; larger ones should be converted into next actions. Human-blocked items go in `docs/human-inbox/` as new files.
+6. Validate at the smallest responsible scope first.
+   - widen validation only when blast radius grows
 
-## Git And PRs
+7. Keep diffs reviewable and slice-shaped.
 
-Prefer narrow task branches, one Draft PR per coherent slice, and worktrees when unrelated dirty work would make the current checkout risky. If a branch becomes messy, salvage reviewable commits into a fresh branch instead of hiding the problem in one giant merge.
+8. If applicable, update Tana branch/status/handoff state before ending the session.
+
+## Dirty Main / Mixed Dirty State Salvage
+
+If `main` contains dirty work:
+
+- do not continue normal development on `main`
+- do not discard the work
+- do not stash by reflex
+
+Use this salvage protocol:
+
+1. classify the dirty state
+2. create a local rescue branch from the current state:
+   - `rescue/dirty-main-<timestamp>`
+3. if needed, create one local preservation commit on the rescue branch
+4. use Git + CKB to group the diff into candidate slices
+5. if one slice is clearly prerequisite bootstrap/config work:
+   - carve it into a clean branch from `dev`
+   - validate it
+   - merge it into `dev`
+6. recreate or rebase later slices on top of updated `dev`
+7. keep the rescue branch until all intended slices land
+8. if slice classification confidence is low, stop and report the candidate groupings instead of guessing
+
+A local preservation commit on a rescue branch is allowed because it preserves work rather than destroying it.
+
+## Tana Control Plane
+
+Tana is the external control plane for loop-kit planning and handoffs.
+
+Use Tana for:
+
+- work selection
+- slices
+- project status
+- inbox capture
+- blocked-on-human handoffs
+- review prompts
+- branch / PR bookkeeping
+
+Do not recreate GTD planning structures inside the repo by default.
+
+Prefer this Tana behavior:
+
+- search first
+- read only the selected node
+- paginate children only when necessary
+- capture out-of-scope follow-ups into Tana instead of repo markdown
 
 ## Validation
 
-Validation is required before you are done. Use [docs/ref/repo-workflow/validation-and-verification.md](./docs/ref/repo-workflow/validation-and-verification.md), prefer Moon/Proto tasks, add or update tests when behavior changes, and always run the `markdown-backlinks` skill after markdown changes.
+Before finalizing non-trivial work:
 
-## Human Collaboration
+- run the smallest relevant validation first
+- then run broader validation that matches the blast radius
+- stop if failures cannot be clearly attributed or localized
+- do not merge to `dev` if unresolved errors, unclear dirty state, or broken required tooling were ignored
 
-Write human-blocked items to `docs/human-inbox/` as new files. Put agent handoffs, mind-sweep captures, or follow-up prompts in `docs/agent-inbox/` as new files until they are processed. Keep notes short and easy to triage.
+## Repo-Specific MCP Guidance
 
-## Skill Registry
+- CKB is the first stop for non-trivial repo understanding.
+- Moon MCP is useful for workspace inspection and task discovery when relevant.
+- Context7 is only for current external docs, not repo-local truth.
+- Use `jazz-docs` for Jazz-specific API lookup.
+
+## Branch / Tana Garbage Collection
+
+After a slice is merged to `dev`:
+
+- delete the merged local feature branch if safe
+- delete the remote feature branch if merged and no longer needed
+- mark the Tana slice as done
+- clear or update branch / PR fields in Tana
+
+Do not auto-trash Tana project or slice nodes just because work is complete.
+Completed nodes are still useful history.
+
+## Repo Skill Registry
 
 | Skill | Scope | Trigger / Use When | Runtime | Location | Notes |
 | ----- | ----- | ------------------ | ------- | -------- | ----- |
-| `loop-wit-wasm-authoring` | local | Creating or updating loop-kit WIT packages, WIT interfaces/worlds, WASM Components, or wRPC boundary designs tied to the new standard surface and OCI artifact model. | Markdown guidance + local tools | `.codex/skills/loop-wit-wasm-authoring` | Align with `docs/ref/loop-kit-fundamentals/standard-surface-and-wit.md` and the active loop rewrite plan. |
-
-## Backlinks
-
-<!-- markdown-backlinks:start -->
-- [docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md](docs/next-actions/active/006-agentic-knowledge-automation-boundaries.md)
-<!-- markdown-backlinks:end -->
+| `loop-wit-wasm-authoring` | local | Creating or updating loop-kit WIT packages, WIT interfaces/worlds, WASM Components, or wRPC boundary designs tied to the standard surface and OCI artifact model. | Markdown guidance + local tools | `.codex/skills/loop-wit-wasm-authoring` | Use when shaping WIT surfaces or component/provider boundaries. |
