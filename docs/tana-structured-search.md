@@ -11,6 +11,11 @@ What the MCP tool expects:
 - The underlying HTTP API is `GET /nodes/search` with `query` encoded as `deepObject`.
 - Do not design queries from the raw URL form when calling the MCP tool. Use the JSON shapes below.
 
+Operational rules from testing:
+- Always set `workspaceIds` explicitly for control-plane searches.
+- Treat trashed nodes as excluded by default.
+- There is no documented `includeTrash` or equivalent search flag in the local OpenAPI.
+
 ## Query Rules
 
 - The root `query` is a single object.
@@ -174,6 +179,21 @@ Observed results:
 - `hasType`, `field`, `childOf`, and some `and`/`or` combinations still returned false negatives or surprising matches
 
 Treat the lab as a standing regression fixture for future Tana MCP checks.
+
+## Trash And Workspace Scope
+
+Direct testing in the `loop-kit` workspace showed:
+
+- a uniquely named live node was found when `workspaceIds` included `X3vpwkCZGvUE`
+- the same unique node was not returned by the unscoped query
+- after trashing that node, the scoped query returned `[]`
+- the unscoped query also returned `[]`
+
+Working rule:
+
+- do not rely on unscoped search for workspace-specific automation
+- always scope to the target workspace
+- assume search excludes trashed nodes unless future docs or behavior prove otherwise
 
 ## Known Boundary
 
