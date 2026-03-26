@@ -34,6 +34,10 @@ A `#Slice` is the smallest bounded unit of repo work worth tracking across:
 
 A slice is usually one branch-sized implementation unit, but very small coherent work may happen directly on `dev`.
 
+Multiple active projects are allowed, but each active project must have an obvious next slice or an explicit on-hold style status.
+
+Multiple active slices are allowed only when they map cleanly to different branches, owners, or blocked states. For a single session, prefer one primary current slice.
+
 ## Preferred Layout
 
 - `Visions`

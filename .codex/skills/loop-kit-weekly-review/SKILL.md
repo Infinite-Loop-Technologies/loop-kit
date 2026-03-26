@@ -16,10 +16,12 @@ Read [references/weekly-review.md](C:\Users\ijhar\Desktop\loop-kit\.codex\skills
 3. Review local Git and remote branch or PR state.
 4. Reconcile Git reality against Tana reality.
 5. Capture follow-ups, cleanup candidates, and blockers back into Tana.
-6. Summarize proposed cleanup instead of silently doing risky cleanup.
+6. Update `Last Reviewed On` on the reviewed projects and slices.
+7. Summarize proposed cleanup instead of silently doing risky cleanup.
 
 ## Defaults
 
 - Look for stale branches, stale slices, missing slices, blocked work, and orphan handoffs.
 - Reconcile horizons from `#Vision` to `#Project` to `#Slice`.
+- Treat \"active project with no next slice\" as a review smell; either define the next slice or stop pretending the project is active.
 - Prefer adding concise review findings to Tana over long repo-local markdown reports.
