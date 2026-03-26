@@ -7,7 +7,7 @@ description: Use when composing, debugging, or reviewing non-trivial Tana `searc
 
 Use this skill before writing anything beyond a trivial `textContains` query for Tana.
 
-Read [docs/tana-structured-search.md](C:\Users\ijhar\Desktop\loop-kit\docs\tana-structured-search.md) first.
+Read [references/tana-structured-search.md](C:\Users\ijhar\Desktop\loop-kit\.codex\skills\tana-structured-search\references\tana-structured-search.md) first.
 
 ## Workflow
 

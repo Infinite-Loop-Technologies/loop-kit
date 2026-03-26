@@ -64,86 +64,6 @@ Boolean composition:
 - `or: [ ...conditions ]`
 - `not: { ...condition }`
 
-## Safe MCP Examples
-
-Find by text in one workspace:
-
-```json
-{
-  "workspaceIds": ["X3vpwkCZGvUE"],
-  "limit": 10,
-  "query": {
-    "textContains": "Node A"
-  }
-}
-```
-
-Find recent inbox items:
-
-```json
-{
-  "workspaceIds": ["workspaceId"],
-  "limit": 20,
-  "query": {
-    "and": [
-      { "hasType": "inboxTagId" },
-      { "created": { "last": 14 } }
-    ]
-  }
-}
-```
-
-Find nodes by referenced project:
-
-```json
-{
-  "workspaceIds": ["workspaceId"],
-  "limit": 20,
-  "query": {
-    "field": {
-      "fieldId": "projectFieldId",
-      "nodeId": "projectNodeId"
-    }
-  }
-}
-```
-
-Find descendants under a control-plane root:
-
-```json
-{
-  "workspaceIds": ["workspaceId"],
-  "limit": 50,
-  "query": {
-    "childOf": {
-      "nodeIds": ["rootNodeId"],
-      "recursive": true,
-      "includeRefs": true
-    }
-  }
-}
-```
-
-## Observed Behavior In This Repo
-
-The OpenAPI shape is clear, but observed MCP behavior in the `loop-kit` workspace was mixed:
-
-- `textContains` worked reliably.
-- Newly written nodes and references were verified reliably with `read_node`.
-- `hasType`, `childOf`, `ownedBy`, and `field` queries returned empty results in cases where `read_node` showed matching nodes.
-- One mixed `and` query returned the workspace home node instead of the expected project node.
-
-Treat that as an implementation caveat, not proof that the documented DSL is wrong.
-
-## Recommended Workflow
-
-1. Start with `textContains` to anchor on a known node name.
-2. Read the candidate node with `read_node`.
-3. Only then move to `hasType`, `field`, `childOf`, or `ownedBy`.
-4. When a structured query matters, validate against `read_node` or `get_children`.
-5. If a query unexpectedly returns `[]`, test the same search with fewer predicates before assuming the data is missing.
-6. Prefer exact node IDs and field IDs over names.
-
 ## What Is Already Useful
 
 Based on direct testing in the `loop-kit` workspace, these patterns are already useful enough to build around:
@@ -161,24 +81,28 @@ This means a practical workflow today is:
 3. paginate large containers with `get_children`
 4. use exact IDs recovered from reads for subsequent automation
 
+## Observed Limits
+
+The OpenAPI shape is clear, but observed MCP behavior in the `loop-kit` workspace was mixed:
+
+- `textContains` worked reliably.
+- newly written nodes and references were verified reliably with `read_node`
+- `hasType`, `field`, `childOf`, and `ownedBy` produced false negatives in some tested cases
+- one mixed boolean query returned surprising matches
+- `textMatches` did not produce expected results in the tested case
+
+Treat that as an implementation caveat, not proof that the documented DSL is wrong.
+
 ## Search Lab Notes
 
-The repo now includes a tested `Search Lab` subtree inside the `loop-kit` workspace. It was used to exercise:
+The `loop-kit` workspace contains a tested `Search Lab` regression fixture when explicitly created for testing. It was used to exercise:
 
 - tagged `Project`, `Slice`, `Inbox`, `Handoff`, and `Reference` nodes
 - instance-field references between projects, slices, inbox items, and handoffs
 - boolean text queries
 - paginated reads over a sample container
 
-Observed results:
-
-- `textContains` remained the most reliable search path
-- `is: "field"` and `has: "tag"` returned useful results
-- `get_children` pagination worked exactly as expected
-- `textMatches` did not produce expected results in the tested case
-- `hasType`, `field`, `childOf`, and some `and`/`or` combinations still returned false negatives or surprising matches
-
-Treat the lab as a standing regression fixture for future Tana MCP checks.
+Treat any future search-lab subtree as disposable test data, not control-plane truth.
 
 ## Trash And Workspace Scope
 
@@ -194,7 +118,3 @@ Working rule:
 - do not rely on unscoped search for workspace-specific automation
 - always scope to the target workspace
 - assume search excludes trashed nodes unless future docs or behavior prove otherwise
-
-## Known Boundary
-
-The localhost HTTP API requires auth for direct calls, even though the MCP server can access the same data. That means the OpenAPI spec is readable locally, but live REST probes need credentials.
