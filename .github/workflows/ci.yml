@@ -4,11 +4,12 @@ on:
   pull_request:
   push:
     branches:
+      - dev
       - main
 
 jobs:
-  moon-ci:
-    name: Moon CI
+  bun-ci:
+    name: Bun CI
     runs-on: ubuntu-latest
 
     steps:
@@ -23,19 +24,7 @@ jobs:
           auto-install: true
 
       - name: Install workspace dependencies
-        run: proto run pnpm -- install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
-      - name: Resolve comparison range
-        id: range
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
-            echo "head=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
-            echo "head=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Run Moon CI
-        run: proto run moon -- ci :build :typecheck :test --base "${{ steps.range.outputs.base }}" --head "${{ steps.range.outputs.head }}"
+      - name: Run repo CI
+        run: bun run ci

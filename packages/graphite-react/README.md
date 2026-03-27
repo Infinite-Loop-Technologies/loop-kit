@@ -52,8 +52,8 @@ export function App() {
 
 ## Commands
 
-- `pnpm --filter @loop-kit/graphite-react run typecheck`
-- `pnpm --filter @loop-kit/graphite-react run build`
+- `bun --filter @loop-kit/graphite-react run typecheck`
+- `bun --filter @loop-kit/graphite-react run build`
 
 ## Backlinks
 

@@ -52,9 +52,9 @@ export function DockApp() {
 
 ## Commands
 
-- `pnpm --filter @loop-kit/dock run typecheck`
-- `pnpm --filter @loop-kit/dock run test`
-- `pnpm --filter @loop-kit/dock run build`
+- `bun --filter @loop-kit/dock run typecheck`
+- `bun --filter @loop-kit/dock run test`
+- `bun --filter @loop-kit/dock run build`
 
 ## Backlinks
 

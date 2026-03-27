@@ -15,7 +15,7 @@ Graphite is a lightweight intent-driven graph runtime with:
 ## Install
 
 ```bash
-pnpm add @loop-kit/graphite
+bun add @loop-kit/graphite
 ```
 
 ## Core Example
