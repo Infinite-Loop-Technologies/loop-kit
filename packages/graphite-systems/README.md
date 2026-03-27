@@ -37,8 +37,8 @@ editingFacet.registerEditingActions(actions);
 
 ## Commands
 
-- `pnpm --filter @loop-kit/graphite-systems run typecheck`
-- `pnpm --filter @loop-kit/graphite-systems run build`
+- `bun --filter @loop-kit/graphite-systems run typecheck`
+- `bun --filter @loop-kit/graphite-systems run build`
 
 ## Backlinks
 

@@ -19,8 +19,8 @@
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "typecheck": "tsc -p tsconfig.json --noEmit",
-        "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-        "prepack": "pnpm run clean && pnpm run build"
+        "clean": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
+        "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
         "@loop-kit/graphite-core": "workspace:*"

@@ -250,11 +250,16 @@ Before finalizing non-trivial work:
 
 ### Proto
 
-Moon is gone. Proto stays.
+Proto stays. Bun is the default runtime.
 
 - Respect `.prototools` when present.
 - Prefer Proto-managed binaries over ad hoc global installs when testing repo CLIs or toolchains.
-- For example, sandbox, or testbed directories, prefer `proto activate` when the goal is to exercise the local toolchain in the directory’s intended environment.
+- Use `bun install`, `bun run ...`, and plain `bun <script.ts>` as the default repo workflow.
+- Keep automation scripts simple and top-level under `tools/`; do not introduce `tools/src`, nested script packages, or generator-heavy structure unless the task actually needs it.
+- Prefer Bun-native tests and Bun-run CLIs over Node+tsx wrappers when both are viable. If a CLI is unstable under `--bun` on Windows, keep Bun as the script runner and use the CLI's normal entrypoint instead of forcing the Bun runtime.
+- In Bun scripts, prefer Bun APIs first: `Bun.$` for shell work, `Bun.spawn` for subprocesses, `Bun.file`/`Bun.write` for file IO, and top-level `await` by default. Only reach for Node helpers when Bun does not cover the need cleanly.
+- Root `tests/` is for repo-level smoke, integration, and orchestration coverage. Package-local tests should stay beside the package when they are package-specific.
+- `fixtures/` is optional and should only hold shared fixture data that is reused across packages or repo-level tests.
 
 ### MCP usage in this repo
 

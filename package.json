@@ -1,25 +1,29 @@
 {
     "private": true,
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
     "scripts": {
+        "setup": "proto install --yes && bun install",
         "setup:tools": "proto install --yes",
-        "build": "proto run moon -- run :build",
-        "ci": "proto run moon -- ci :build :typecheck :test",
-        "forge:dev": "proto run moon -- run tools:forge-dev",
-        "forge:dev:plan": "proto run moon -- run tools:forge-dev-plan",
-        "lint": "proto run moon -- run :lint",
-        "loopkit:oci:scaffold": "proto run moon -- run tools:loopkit-oci-scaffold",
-        "tools:audit": "proto run moon -- run tools:workspace-audit",
-        "exp:oci-lab": "cargo run --manifest-path experiments/oci-lab/Cargo.toml --",
-        "typecheck": "proto run moon -- run :typecheck",
-        "test": "proto run moon -- run :test",
-        "release:patch": "pnpm -r version patch",
-        "release:minor": "pnpm -r version minor"
+        "build": "bun tools/workspace.ts build",
+        "typecheck:bun": "bun x tsc -p tsconfig.bun.json",
+        "typecheck": "bun run typecheck:bun && bun tools/workspace.ts typecheck",
+        "test": "bun test",
+        "check": "bun run typecheck && bun run test",
+        "ci": "bun run build && bun run typecheck && bun run test",
+        "forge:dev": "bun run --cwd apps/forge dev",
+        "ui:dev": "bun run --cwd apps/ui-demo dev",
+        "workspaces:list": "bun tools/workspace.ts list"
     },
     "devDependencies": {
+        "@types/bun": "^1.3.11",
         "typescript": "^5.9.3"
     },
-    "packageManager": "pnpm@10.15.1",
+    "packageManager": "bun@1.3.11",
     "engines": {
+        "bun": "1.3.11",
         "node": "~22"
     }
 }

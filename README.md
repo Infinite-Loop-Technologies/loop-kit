@@ -1,70 +1,59 @@
 # loop-kit
 
-`loop-kit` is being reset around a smaller core: Graphite, Dock, UI, and a new OCI/WASM experiment track for the next Loop and Forge rewrite.
+`loop-kit` is the prototype monorepo for Forge, Graphite, Dock, UI, and the next OCI/WASM runtime experiments.
 
-The legacy `loop-*` packages, Forge shells, Forge app packages, and the old `loop.json` workspace model have been removed on purpose. The current direction is to prove the platform with direct experiments first, especially:
-
-- a local OCI registry
-- Rust-first artifact fetch/push tooling
-- WASM loading and execution
-- container and executable dispatch paths
-- WIT-first interface design after the runtime path is real
+The repo now treats Bun as the default scripting, test, and workspace runtime. Proto stays in place to pin tool versions, but Moon, the old template generator flow, and the Rust `experiments/oci-lab` lab are gone.
 
 ## Current Repo Shape
 
+- `apps/forge`: Forge prototype app
 - `apps/ui-demo`: retained UI demo surface
 - `packages/graphite*`: retained Graphite runtime work
 - `packages/dock`: retained Dock work
 - `packages/ui`: retained UI primitives and blocks
-- `experiments/oci-lab`: new Rust lab for local OCI artifact experiments
+- `experiments/`: Bun-first prototype labs and notes
+- `tests/`: repo-level smoke and orchestration tests
+- `fixtures/`: shared test and experiment fixtures when they are worth centralizing
+- `tools/`: small Bun scripts for repo automation
 - `docs/`: plans, references, and rewrite direction
 
 ## Quickstart
 
 ```powershell
 proto install --yes
-proto run pnpm -- install --frozen-lockfile
-proto run moon -- ci
-```
-
-Run the Rust OCI lab:
-
-```powershell
-cargo run --manifest-path experiments/oci-lab/Cargo.toml -- --help
-```
-
-Or through the root script:
-
-```powershell
-pnpm run exp:oci-lab -- --help
-```
-
-## Local OCI Registry
-
-Use Docker Distribution (`registry:2`) as the first local registry baseline. It is the simplest standards-aligned choice for localhost experiments and works cleanly with direct OCI clients.
-
-Start it:
-
-```powershell
-docker run -d -p 5000:5000 --restart unless-stopped --name loop-registry registry:2
-```
-
-Then target references like:
-
-```text
-localhost:5000/loop/hello-wasm:dev
-localhost:5000/loop/tool-runner:dev
-localhost:5000/loop/shell-container:dev
+bun install
+bun run ci
 ```
 
 ## Core Commands
 
 ```bash
-pnpm run ci
-pnpm run build
-pnpm run typecheck
-pnpm run test
-pnpm run exp:oci-lab -- --help
+bun run forge:dev
+bun run ui:dev
+bun run build
+bun run typecheck
+bun run test
+bun run ci
+```
+
+## Experiments
+
+The OCI/WASM experiment track is being rebuilt as Bun-first TypeScript labs instead of the removed Rust `oci-lab`. Use [`experiments/README.md`](./experiments/README.md) as the entry point for new labs.
+
+## Local OCI Registry
+
+Use Docker Distribution (`registry:2`) as the first local registry baseline. It is still the simplest standards-aligned choice for localhost experiments and works cleanly with direct OCI clients.
+
+```powershell
+docker run -d -p 5000:5000 --restart unless-stopped --name loop-registry registry:2
+```
+
+References can then target paths like:
+
+```text
+localhost:5000/loop/hello-wasm:dev
+localhost:5000/loop/tool-runner:dev
+localhost:5000/loop/shell-container:dev
 ```
 
 ## Planning

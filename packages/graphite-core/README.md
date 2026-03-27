@@ -53,7 +53,7 @@ scope.commitIntentPatch({
 
 ## Commands
 
-- `pnpm --filter @loop-kit/graphite-core run typecheck`
-- `pnpm --filter @loop-kit/graphite-core run test`
-- `pnpm --filter @loop-kit/graphite-core run bench`
-- `pnpm --filter @loop-kit/graphite-core run build`
+- `bun --filter @loop-kit/graphite-core run typecheck`
+- `bun --filter @loop-kit/graphite-core run test`
+- `bun --filter @loop-kit/graphite-core run bench`
+- `bun --filter @loop-kit/graphite-core run build`

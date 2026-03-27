@@ -40,14 +40,14 @@ Compatibility aliases are kept for existing consumers:
 
 ## Local commands
 
-- `pnpm --filter @loop-kit/ui typecheck`
-- `pnpm --filter @loop-kit/ui test`
+- `bun --filter @loop-kit/ui run typecheck`
+- `bun --filter @loop-kit/ui run test`
 
 ## Preview UI
 
 Use the Vite UI demo app:
 
-- `pnpm --filter @loop-kit/ui-demo dev`
+- `bun --filter @loop-kit/ui-demo run dev`
 
 ## Backlinks
 
