@@ -5,7 +5,7 @@ import {
     useGraphite,
     useIntent,
     useQuery,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 import { Plus, Redo2, Settings2, Undo2, Wrench, X } from 'lucide-react';
 
 import { Badge } from '../../legacy/ui/badge';

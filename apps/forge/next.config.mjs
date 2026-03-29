@@ -12,9 +12,7 @@ const nextConfig = {
     transpilePackages: [
         '@loop-kit/dock',
         '@loop-kit/graphite',
-        '@loop-kit/graphite-core',
         '@loop-kit/graphite-react',
-        '@loop-kit/graphite-systems',
         '@loop-kit/ui',
     ],
     typescript: {

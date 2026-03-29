@@ -6,7 +6,7 @@ import {
   type QueryDirectiveObject,
   type QueryMacro,
   type UnlinkMutationPayload,
-} from './types';
+} from './types.js';
 
 /**
  * Creates a typed mutation command object.

@@ -6,7 +6,7 @@ import {
     GraphiteProvider,
     useIntent,
     useQuery,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 
 import {
     createQueryBuilderModel,

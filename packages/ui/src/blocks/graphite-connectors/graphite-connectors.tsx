@@ -17,7 +17,7 @@ import {
     useGraphitePersistence,
     useIntent,
     useQuery,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 
 import { GraphiteDataTable } from '../systems/graphite-data-table';
 

@@ -3,7 +3,7 @@ import type {
   GraphState,
   GraphiteStore,
   MutationPatch,
-} from './types';
+} from './types.js';
 
 export interface GraphConnectorContext<TState extends GraphState = GraphState> {
   readonly store: GraphiteStore<TState>;

@@ -1,7 +1,6 @@
-export * from './facet/index.js';
-export * from './interaction/index.js';
-export * from './react/index.js';
-export * from './register.js';
+// Dock currently ships the Graphite runtime-backed model and geometry helpers
+// that power the UI workbench. The abandoned graphite-core experiment was
+// removed so this package exposes a single coherent surface again.
 export {
     createDockInteractionController,
     computeDropIndicator,
@@ -38,6 +37,7 @@ export {
     type Point,
     type DockResizeIntentPayload,
     type DockResizeSessionStart,
+    type Rect,
     type DockSplitHandleLayout,
     type DockState,
 } from './graphite/index.js';

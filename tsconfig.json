@@ -1,0 +1,14 @@
+{
+    "files": [],
+    "references": [
+        { "path": "./tsconfig.bun.json" },
+        { "path": "./apps/forge/tsconfig.json" },
+        { "path": "./apps/ui-demo/tsconfig.json" },
+        { "path": "./packages/dock/tsconfig.json" },
+        { "path": "./packages/graphite/tsconfig.json" },
+        { "path": "./packages/graphite-react/tsconfig.json" },
+        { "path": "./packages/loopkit-capabilities/tsconfig.json" },
+        { "path": "./packages/loopkit-oci/tsconfig.json" },
+        { "path": "./packages/ui/tsconfig.json" }
+    ]
+}

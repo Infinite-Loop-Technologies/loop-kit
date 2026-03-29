@@ -46,6 +46,7 @@
         "@lezer/highlight": "^1.2.3",
         "@loop-kit/dock": "workspace:*",
         "@loop-kit/graphite": "workspace:*",
+        "@loop-kit/graphite-react": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-aspect-ratio": "^1.1.7",

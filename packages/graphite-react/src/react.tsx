@@ -9,25 +9,25 @@ import {
   type PropsWithChildren,
   type ReactElement,
 } from 'react';
-import type {
-  CommitOptions,
-  CommitRecord,
-  DispatchIntentOptions,
-  GraphEvent,
-  GraphState,
-  GraphiteStore,
-  MutationPatch,
-  QueryInput,
-  QueryInvalidationEvent,
-  QueryRunEvent,
-  QuerySubscription,
-  QueryWatchOptions,
-} from './types';
 import {
   attachGraphitePersistence,
+  type CommitOptions,
+  type CommitRecord,
+  type DispatchIntentOptions,
+  type GraphEvent,
+  type GraphState,
   type GraphitePersistenceOptions,
-} from './persistence';
+  type GraphiteStore,
+  type MutationPatch,
+  type QueryInput,
+  type QueryInvalidationEvent,
+  type QueryRunEvent,
+  type QuerySubscription,
+  type QueryWatchOptions,
+} from '@loop-kit/graphite';
 
+// React-facing utilities for the current Graphite runtime live here so the core
+// package can stay framework-agnostic.
 const GraphiteContext = createContext<GraphiteStore<GraphState> | null>(null);
 
 /**

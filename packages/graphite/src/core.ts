@@ -1,5 +1,5 @@
-import { $delete, $set, isMutationCommand } from './dsl';
-import { GRAPHITE_MUTATION_SYMBOL } from './types';
+import { $delete, $set, isMutationCommand } from './dsl.js';
+import { GRAPHITE_MUTATION_SYMBOL } from './types.js';
 import type {
   CommitDiff,
   CommitListener,
@@ -41,9 +41,13 @@ import type {
   StateListener,
   UnlinkMutationPayload,
   ValueSnapshot,
-} from './types';
+} from './types.js';
 
 const numericPathPattern = /^\d+$/;
+
+// GraphiteRuntime is the current production state runtime for Loop Kit. It owns
+// patch application, intent dispatch, query invalidation, history, events, and
+// external patch materialization in one place.
 
 const now = () =>
   typeof performance !== 'undefined' && typeof performance.now === 'function'

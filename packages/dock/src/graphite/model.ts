@@ -28,6 +28,10 @@ import {
     uniqueNodeId,
 } from './utils.js';
 
+// This module is the single dock model that currently powers the UI workbench.
+// It stays Graphite-runtime-native so packages/ui, ui-demo, and Forge all share
+// the same dock state semantics.
+
 type DockIntents = ReturnType<typeof createDockIntentNames>;
 
 export function createPanelNode(id: DockNodeId, title: string): DockPanelNode {

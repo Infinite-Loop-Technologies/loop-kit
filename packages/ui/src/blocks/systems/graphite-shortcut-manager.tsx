@@ -5,7 +5,7 @@ import type { GraphState } from '@loop-kit/graphite';
 import {
     useIntentShortcuts,
     type IntentShortcut,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 
 import { Button } from '../../legacy/ui/button';
 import { Label } from '../../legacy/ui/label';

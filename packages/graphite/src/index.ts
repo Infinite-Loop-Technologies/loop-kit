@@ -1,19 +1,19 @@
 export {
   createGraphStore,
   GraphiteRuntime,
-} from './core';
+} from './core.js';
 
 export {
   createConnectorHost,
   GraphConnectorHost,
   createHttpPollingConnector,
   createWebSocketConnector,
-} from './connectors';
+} from './connectors.js';
 
 export {
   attachGraphitePersistence,
   createLocalStoragePersistenceAdapter,
-} from './persistence';
+} from './persistence.js';
 
 export {
   mutation,
@@ -33,7 +33,7 @@ export {
   $limit,
   $offset,
   $each,
-} from './dsl';
+} from './dsl.js';
 
 export type {
   GraphConnector,
@@ -41,7 +41,7 @@ export type {
   GraphConnectorHandle,
   HttpPollingConnectorOptions,
   WebSocketConnectorOptions,
-} from './connectors';
+} from './connectors.js';
 
 export type {
   GraphitePersistenceAdapter,
@@ -50,7 +50,7 @@ export type {
   GraphitePersistenceSnapshot,
   GraphitePersistenceStrategy,
   LocalStoragePersistenceAdapterOptions,
-} from './persistence';
+} from './persistence.js';
 
 export type {
   CommitDiff,
@@ -100,4 +100,4 @@ export type {
   StateListener,
   UnlinkMutationPayload,
   ValueSnapshot,
-} from './types';
+} from './types.js';
