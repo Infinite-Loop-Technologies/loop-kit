@@ -15,7 +15,7 @@ import {
     useHistory,
     useIntent,
     useQuery,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 
 import { Badge } from '../../legacy/ui/badge';
 import { Button } from '../../legacy/ui/button';

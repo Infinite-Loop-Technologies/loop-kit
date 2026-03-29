@@ -24,7 +24,7 @@ import {
     type DockState,
     type Rect,
 } from '@loop-kit/dock';
-import { useIntent, useQuery } from '@loop-kit/graphite/react';
+import { useIntent, useQuery } from '@loop-kit/graphite-react';
 
 import { DockGroup, DockOverlay, DockSplitHandle } from './dock-primitives';
 import { panelTitle } from './dock-helpers';

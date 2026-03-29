@@ -1,7 +1,7 @@
 {
     "name": "@loop-kit/graphite-react",
     "version": "0.1.0",
-    "description": "React bindings for Graphite runtime scopes, queries, and interaction input.",
+    "description": "React utilities for the Graphite runtime: providers, queries, history, persistence, shortcuts, and inspectors.",
     "type": "module",
     "sideEffects": false,
     "main": "./src/index.ts",
@@ -23,7 +23,7 @@
         "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
-        "@loop-kit/graphite-core": "workspace:*"
+        "@loop-kit/graphite": "workspace:*"
     },
     "peerDependencies": {
         "react": "^18.2.0 || ^19.0.0",

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { GraphiteProvider, useQuery } from '@loop-kit/graphite/react';
+import { GraphiteProvider, useQuery } from '@loop-kit/graphite-react';
 import { UiProvider } from '../../skins';
 
 import { DockWorkbench, type DockWorkbenchMode } from './dock-workbench';

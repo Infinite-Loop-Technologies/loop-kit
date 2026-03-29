@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { GraphState } from '@loop-kit/graphite';
-import { useGraphite, useIntent } from '@loop-kit/graphite/react';
+import { useGraphite, useIntent } from '@loop-kit/graphite-react';
 
 import {
     CommandDialog,

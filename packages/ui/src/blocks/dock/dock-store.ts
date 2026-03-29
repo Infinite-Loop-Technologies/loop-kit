@@ -37,6 +37,9 @@ import {
     type DockSkinMap,
 } from './theme-state';
 
+// The dock store composes the active Graphite runtime with dock layout, skin,
+// and UI-only state so the workbench can run as a self-contained product demo.
+
 export type DockSkinState = {
     mode: ThemeMode;
     skinId: string;

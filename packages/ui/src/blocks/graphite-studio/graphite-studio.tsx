@@ -17,7 +17,7 @@ import {
     useIntent,
     useQuery,
     useGraphitePersistence,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 
 import {
     $increment,

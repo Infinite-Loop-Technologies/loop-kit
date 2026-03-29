@@ -108,14 +108,14 @@ Custom query directives are supported via `registerQueryOperator`.
 
 ## React
 
-Use the React bindings from `@loop-kit/graphite/react`.
+Use the React bindings from `@loop-kit/graphite-react`.
 
 ```tsx
 import {
     GraphiteProvider,
     useQuery,
     useCommit,
-} from '@loop-kit/graphite/react';
+} from '@loop-kit/graphite-react';
 ```
 
 Included helpers:

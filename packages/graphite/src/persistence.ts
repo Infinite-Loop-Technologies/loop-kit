@@ -1,9 +1,9 @@
-import { $set } from './dsl';
+import { $set } from './dsl.js';
 import type {
   GraphState,
   GraphiteStore,
   MutationPatch,
-} from './types';
+} from './types.js';
 
 export type GraphitePersistenceStrategy = 'state' | 'commits';
 
