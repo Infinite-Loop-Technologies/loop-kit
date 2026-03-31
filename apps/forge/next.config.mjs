@@ -13,7 +13,11 @@ const nextConfig = {
         '@loop-kit/dock',
         '@loop-kit/graphite',
         '@loop-kit/graphite-react',
-        '@loop-kit/ui',
+        '@loop-kit/loom-react',
+        '@loop-kit/loom-pack-dock',
+        '@loop-kit/loom-theme-base-react',
+        '@loop-kit/loom-theme-aquatic-react',
+        '@loop-kit/loom-theme-neumorph-react',
     ],
     typescript: {
         ignoreBuildErrors: true,

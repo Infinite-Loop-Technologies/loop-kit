@@ -1,0 +1,105 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(88, 203, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(255, 244, 148, 0.14), transparent 24%),
+        linear-gradient(180deg, #08121c 0%, #0d1825 48%, #101723 100%);
+    color: #eef5ff;
+    font-family: "Aptos", "Segoe UI", system-ui, sans-serif;
+}
+
+.loom-demo-shell {
+    margin: 0 auto;
+    max-width: 1600px;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.loom-demo-hero {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.loom-demo-copy h1,
+.loom-demo-stage-header h2 {
+    font-family: "Fraunces", "Aptos Display", serif;
+    letter-spacing: -0.05em;
+    margin: 0.5rem 0 0;
+}
+
+.loom-demo-copy h1 {
+    font-size: clamp(2.6rem, 6vw, 5rem);
+    line-height: 0.94;
+    max-width: 12ch;
+}
+
+.loom-demo-kicker {
+    color: rgba(220, 235, 255, 0.72);
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.loom-demo-body {
+    color: rgba(220, 235, 255, 0.78);
+    font-size: 1rem;
+    line-height: 1.8;
+    margin: 1rem 0 0;
+    max-width: 58rem;
+}
+
+.loom-demo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.loom-demo-meta span {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    font-size: 0.76rem;
+    letter-spacing: 0.16em;
+    padding: 0.65rem 0.95rem;
+    text-transform: uppercase;
+}
+
+.loom-demo-section {
+    margin-bottom: 1.5rem;
+}
+
+.loom-demo-stage-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.loom-demo-dock-stage {
+    min-height: 620px;
+}
+
+@media (max-width: 900px) {
+    .loom-demo-shell {
+        padding: 1rem;
+    }
+
+    .loom-demo-stage-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "name": "@loop-kit/loom-pack-dock",
+    "version": "0.1.0",
+    "description": "Loom dock workbench and React UI built on top of @loop-kit/dock.",
+    "type": "module",
+    "sideEffects": false,
+    "main": "./src/index.ts",
+    "module": "./src/index.ts",
+    "types": "./src/index.ts",
+    "exports": {
+        ".": {
+            "types": "./src/index.ts",
+            "import": "./src/index.ts",
+            "default": "./src/index.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": ["src", "README.md"],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "clean": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
+        "test": "bun test",
+        "prepack": "bun run clean && bun run build"
+    },
+    "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/sortable": "^10.0.0",
+        "@dnd-kit/utilities": "^3.2.2",
+        "@loop-kit/dock": "workspace:*",
+        "@loop-kit/graphite": "workspace:*",
+        "@loop-kit/graphite-react": "workspace:*",
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-interactions": "workspace:*",
+        "@loop-kit/loom-pack-data": "workspace:*",
+        "@loop-kit/loom-pack-settings": "workspace:*",
+        "@loop-kit/loom-pack-shortcuts": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+        "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+        "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-neumorph-react": "workspace:*",
+        "lucide-react": "^0.487.0"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "typescript": "^5.9.3"
+    }
+}

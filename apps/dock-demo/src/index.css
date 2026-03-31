@@ -1,0 +1,84 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(68, 162, 255, 0.2), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(255, 170, 94, 0.12), transparent 22%),
+        linear-gradient(180deg, #09111a 0%, #0e1723 48%, #10151f 100%);
+    color: #edf5ff;
+    font-family: "Aptos", "Segoe UI", system-ui, sans-serif;
+}
+
+.dock-demo-shell {
+    margin: 0 auto;
+    max-width: 1680px;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.dock-demo-hero {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dock-demo-kicker {
+    color: rgba(220, 235, 255, 0.72);
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.dock-demo-copy h1 {
+    font-family: "Fraunces", "Aptos Display", serif;
+    font-size: clamp(2.6rem, 6vw, 4.8rem);
+    letter-spacing: -0.05em;
+    line-height: 0.94;
+    margin: 0.5rem 0 0;
+    max-width: 12ch;
+}
+
+.dock-demo-body {
+    color: rgba(220, 235, 255, 0.78);
+    font-size: 1rem;
+    line-height: 1.8;
+    margin: 1rem 0 0;
+    max-width: 56rem;
+}
+
+.dock-demo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.dock-demo-meta span {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    font-size: 0.76rem;
+    letter-spacing: 0.16em;
+    padding: 0.65rem 0.95rem;
+    text-transform: uppercase;
+}
+
+.dock-demo-stage {
+    min-height: 760px;
+}
+
+@media (max-width: 900px) {
+    .dock-demo-shell {
+        padding: 1rem;
+    }
+}

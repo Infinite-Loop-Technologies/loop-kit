@@ -14,7 +14,7 @@ body {
         radial-gradient(circle at top left, rgba(93, 120, 255, 0.18), transparent 28%),
         radial-gradient(circle at 85% 8%, rgba(94, 232, 255, 0.12), transparent 30%),
         linear-gradient(180deg, #0f1318 0%, #111318 42%, #171b22 100%);
-    color: #f3f6ff;
+    color: var(--loom-color-text, #f3f6ff);
     font-family: "Geist Sans", "Aptos", system-ui, sans-serif;
 }
 
@@ -54,7 +54,7 @@ select {
 
 .forge-kicker,
 .forge-eyebrow {
-    color: color-mix(in oklch, var(--muted-foreground) 92%, white 8%);
+    color: color-mix(in oklch, var(--loom-color-text-muted, #c2d5f4) 92%, white 8%);
     font-size: 0.75rem;
     letter-spacing: 0.2em;
     margin: 0;
@@ -106,10 +106,10 @@ select {
 
 .forge-pack-chip {
     appearance: none;
-    background: color-mix(in oklch, var(--card) 88%, transparent);
-    border: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
-    border-radius: var(--loop-radius-md);
-    color: var(--foreground);
+    background: color-mix(in oklch, var(--loom-color-surface, #101722) 88%, transparent);
+    border: 1px solid color-mix(in oklch, var(--loom-color-border, #32414f) 82%, transparent);
+    border-radius: var(--loom-radius-md, 0.75rem);
+    color: var(--loom-color-text, #f3f6ff);
     cursor: pointer;
     padding: 0.85rem 0.95rem;
     text-align: left;
@@ -117,8 +117,8 @@ select {
 }
 
 .forge-pack-chip.is-active {
-    background: color-mix(in oklch, var(--primary) 14%, var(--card));
-    border-color: color-mix(in oklch, var(--primary) 48%, var(--border));
+    background: color-mix(in oklch, var(--loom-color-accent, #6ad7ff) 14%, var(--loom-color-surface, #101722));
+    border-color: color-mix(in oklch, var(--loom-color-accent, #6ad7ff) 48%, var(--loom-color-border, #32414f));
     transform: translateY(-1px);
 }
 
