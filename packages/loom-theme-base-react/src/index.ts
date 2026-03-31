@@ -209,7 +209,8 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 style: {
                     ...kindValue(tokens, variants.tone, variants.kind),
                     alignItems: 'center',
-                    border: '1px solid',
+                    borderStyle: 'solid',
+                    borderWidth: '1px',
                     borderRadius: tokens.radius.md,
                     cursor: 'pointer',
                     display: 'inline-flex',
@@ -244,7 +245,8 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 style: {
                     ...kindValue(tokens, variants.tone, variants.kind),
                     alignItems: 'center',
-                    border: '1px solid',
+                    borderStyle: 'solid',
+                    borderWidth: '1px',
                     borderRadius: tokens.radius.md,
                     cursor: 'pointer',
                     display: 'inline-flex',

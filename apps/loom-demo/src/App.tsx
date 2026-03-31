@@ -200,30 +200,30 @@ export function App() {
                             </Panel>
                         </Grid>
                     </section>
+
+                    <section className='loom-demo-section'>
+                        <div className='loom-demo-stage-header'>
+                            <div>
+                                <p className='loom-demo-kicker'>Pack Example</p>
+                                <h2>Dock pack preview</h2>
+                            </div>
+                            <Inline gap='2'>
+                                <Badge tone='accent'>{themeId}</Badge>
+                                <Badge kind='outline' tone='muted'>
+                                    {colorMode}
+                                </Badge>
+                            </Inline>
+                        </div>
+                        <div className='loom-demo-dock-stage'>
+                            <DockWorkspaceDemo
+                                initialColorMode={colorMode}
+                                initialThemeId={themeId}
+                                mode='preview'
+                            />
+                        </div>
+                    </section>
                 </LoomProvider>
             </InteractionProvider>
-
-            <section className='loom-demo-section'>
-                <div className='loom-demo-stage-header'>
-                    <div>
-                        <p className='loom-demo-kicker'>Pack Example</p>
-                        <h2>Dock pack preview</h2>
-                    </div>
-                    <Inline gap='2'>
-                        <Badge tone='accent'>{themeId}</Badge>
-                        <Badge kind='outline' tone='muted'>
-                            {colorMode}
-                        </Badge>
-                    </Inline>
-                </div>
-                <div className='loom-demo-dock-stage'>
-                    <DockWorkspaceDemo
-                        initialColorMode={colorMode}
-                        initialThemeId={themeId}
-                        mode='preview'
-                    />
-                </div>
-            </section>
         </main>
     );
 }
