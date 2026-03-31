@@ -1,16 +1,17 @@
 # loop-kit
 
-`loop-kit` is the prototype monorepo for Forge, Graphite, Dock, UI, and the next OCI/WASM runtime experiments.
+`loop-kit` is the prototype monorepo for Forge, Graphite, Dock, Loom, and the next OCI/WASM runtime experiments.
 
 The repo now treats Bun as the default scripting, test, and workspace runtime. Proto stays in place to pin tool versions, but Moon, the old template generator flow, and the Rust `experiments/oci-lab` lab are gone.
 
 ## Current Repo Shape
 
 - `apps/forge`: Forge prototype app
-- `apps/ui-demo`: retained UI demo surface
+- `apps/loom-demo`: Loom architecture demo surface
+- `apps/dock-demo`: dock-focused demo surface built on `loom-pack-dock`
 - `packages/graphite*`: retained Graphite runtime work
 - `packages/dock`: retained Dock work
-- `packages/ui`: retained UI primitives and blocks
+- `packages/loom-*`: Loom contracts, renderer, themes, interactions, and higher-level packs
 - `experiments/`: Bun-first prototype labs and notes
 - `tests/`: repo-level smoke and orchestration tests
 - `fixtures/`: shared test and experiment fixtures when they are worth centralizing
@@ -29,7 +30,8 @@ bun run ci
 
 ```bash
 bun run forge:dev
-bun run ui:dev
+bun run loom:dev
+bun run dock:dev
 bun run build
 bun run typecheck
 bun run test

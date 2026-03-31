@@ -14,7 +14,8 @@
         "check": "bun run typecheck && bun run test",
         "ci": "bun run build && bun run typecheck && bun run test",
         "forge:dev": "bun run --cwd apps/forge dev",
-        "ui:dev": "bun run --cwd apps/ui-demo dev",
+        "dock:dev": "bun run --cwd apps/dock-demo dev",
+        "loom:dev": "bun run --cwd apps/loom-demo dev",
         "workspaces:list": "bun tools/workspace.ts list"
     },
     "devDependencies": {

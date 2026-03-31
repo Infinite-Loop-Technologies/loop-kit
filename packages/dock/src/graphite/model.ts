@@ -28,9 +28,9 @@ import {
     uniqueNodeId,
 } from './utils.js';
 
-// This module is the single dock model that currently powers the UI workbench.
-// It stays Graphite-runtime-native so packages/ui, ui-demo, and Forge all share
-// the same dock state semantics.
+// This module is the single dock model that powers the higher-level dock pack.
+// It stays Graphite-runtime-native so loom-pack-dock, dock-demo, and Forge can
+// share the same dock state semantics.
 
 type DockIntents = ReturnType<typeof createDockIntentNames>;
 

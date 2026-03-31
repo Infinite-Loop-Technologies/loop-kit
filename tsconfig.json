@@ -2,13 +2,23 @@
     "files": [],
     "references": [
         { "path": "./tsconfig.bun.json" },
+        { "path": "./apps/dock-demo/tsconfig.json" },
         { "path": "./apps/forge/tsconfig.json" },
-        { "path": "./apps/ui-demo/tsconfig.json" },
+        { "path": "./apps/loom-demo/tsconfig.json" },
         { "path": "./packages/dock/tsconfig.json" },
         { "path": "./packages/graphite/tsconfig.json" },
         { "path": "./packages/graphite-react/tsconfig.json" },
+        { "path": "./packages/loom-core/tsconfig.json" },
+        { "path": "./packages/loom-interactions/tsconfig.json" },
+        { "path": "./packages/loom-pack-data/tsconfig.json" },
+        { "path": "./packages/loom-pack-dock/tsconfig.json" },
+        { "path": "./packages/loom-pack-settings/tsconfig.json" },
+        { "path": "./packages/loom-pack-shortcuts/tsconfig.json" },
+        { "path": "./packages/loom-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-aquatic-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-base-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-neumorph-react/tsconfig.json" },
         { "path": "./packages/loopkit-capabilities/tsconfig.json" },
-        { "path": "./packages/loopkit-oci/tsconfig.json" },
-        { "path": "./packages/ui/tsconfig.json" }
+        { "path": "./packages/loopkit-oci/tsconfig.json" }
     ]
 }
