@@ -22,7 +22,7 @@ import {
 } from '@loop-kit/dock';
 ```
 
-`packages/ui` is the main real consumer of this package today.
+`@loop-kit/loom-pack-dock` is the main high-level consumer of this package today.
 
 ## Commands
 

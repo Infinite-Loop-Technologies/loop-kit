@@ -8,11 +8,31 @@
         "typescript": "^5.9.3",
       },
     },
+    "apps/dock-demo": {
+      "name": "@loop-kit/dock-demo",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-pack-dock": "workspace:*",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "@vitejs/plugin-react": "^5.0.0",
+        "typescript": "^5.9.3",
+        "vite": "^7.0.0",
+      },
+    },
     "apps/forge": {
       "name": "@loop-kit/forge",
       "version": "0.1.0",
       "dependencies": {
-        "@loop-kit/ui": "workspace:*",
+        "@loop-kit/loom-pack-dock": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+        "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+        "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-neumorph-react": "workspace:*",
         "jazz-tools": "^0.20.15",
         "next": "^16.2.1",
         "react": "^19.1.0",
@@ -25,6 +45,29 @@
         "@types/react": "^19.1.2",
         "@types/react-dom": "^19.1.2",
         "typescript": "^5.9.3",
+      },
+    },
+    "apps/loom-demo": {
+      "name": "@loop-kit/loom-demo",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-interactions": "workspace:*",
+        "@loop-kit/loom-pack-data": "workspace:*",
+        "@loop-kit/loom-pack-dock": "workspace:*",
+        "@loop-kit/loom-pack-settings": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+        "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+        "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-neumorph-react": "workspace:*",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "@vitejs/plugin-react": "^5.0.0",
+        "typescript": "^5.9.3",
+        "vite": "^7.0.0",
       },
     },
     "apps/ui-demo": {
@@ -81,6 +124,175 @@
         "@types/node": "^22.17.0",
         "@types/react": "^19.1.2",
         "@types/react-dom": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-core": {
+      "name": "@loop-kit/loom-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^3.25.76",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/loom-interactions": {
+      "name": "@loop-kit/loom-interactions",
+      "version": "0.1.0",
+      "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "react": "^19.1.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-pack-data": {
+      "name": "@loop-kit/loom-pack-data",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-pack-dock": {
+      "name": "@loop-kit/loom-pack-dock",
+      "version": "0.1.0",
+      "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/sortable": "^10.0.0",
+        "@dnd-kit/utilities": "^3.2.2",
+        "@loop-kit/dock": "workspace:*",
+        "@loop-kit/graphite": "workspace:*",
+        "@loop-kit/graphite-react": "workspace:*",
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-interactions": "workspace:*",
+        "@loop-kit/loom-pack-data": "workspace:*",
+        "@loop-kit/loom-pack-settings": "workspace:*",
+        "@loop-kit/loom-pack-shortcuts": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+        "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+        "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-neumorph-react": "workspace:*",
+        "lucide-react": "^0.487.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-pack-settings": {
+      "name": "@loop-kit/loom-pack-settings",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-pack-shortcuts": {
+      "name": "@loop-kit/loom-pack-shortcuts",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/graphite": "workspace:*",
+        "@loop-kit/graphite-react": "workspace:*",
+        "@loop-kit/loom-pack-data": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-react": {
+      "name": "@loop-kit/loom-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-core": "workspace:*",
+        "@radix-ui/react-dialog": "^1.1.15",
+        "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@radix-ui/react-select": "^2.2.6",
+        "@radix-ui/react-switch": "^1.2.6",
+        "@radix-ui/react-tabs": "^1.1.13",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "@types/react-dom": "^19.1.2",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-theme-aquatic-react": {
+      "name": "@loop-kit/loom-theme-aquatic-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-theme-base-react": {
+      "name": "@loop-kit/loom-theme-base-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/loom-theme-neumorph-react": {
+      "name": "@loop-kit/loom-theme-neumorph-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
         "typescript": "^5.9.3",
       },
       "peerDependencies": {
@@ -700,11 +912,35 @@
 
     "@loop-kit/dock": ["@loop-kit/dock@workspace:packages/dock"],
 
+    "@loop-kit/dock-demo": ["@loop-kit/dock-demo@workspace:apps/dock-demo"],
+
     "@loop-kit/forge": ["@loop-kit/forge@workspace:apps/forge"],
 
     "@loop-kit/graphite": ["@loop-kit/graphite@workspace:packages/graphite"],
 
     "@loop-kit/graphite-react": ["@loop-kit/graphite-react@workspace:packages/graphite-react"],
+
+    "@loop-kit/loom-core": ["@loop-kit/loom-core@workspace:packages/loom-core"],
+
+    "@loop-kit/loom-demo": ["@loop-kit/loom-demo@workspace:apps/loom-demo"],
+
+    "@loop-kit/loom-interactions": ["@loop-kit/loom-interactions@workspace:packages/loom-interactions"],
+
+    "@loop-kit/loom-pack-data": ["@loop-kit/loom-pack-data@workspace:packages/loom-pack-data"],
+
+    "@loop-kit/loom-pack-dock": ["@loop-kit/loom-pack-dock@workspace:packages/loom-pack-dock"],
+
+    "@loop-kit/loom-pack-settings": ["@loop-kit/loom-pack-settings@workspace:packages/loom-pack-settings"],
+
+    "@loop-kit/loom-pack-shortcuts": ["@loop-kit/loom-pack-shortcuts@workspace:packages/loom-pack-shortcuts"],
+
+    "@loop-kit/loom-react": ["@loop-kit/loom-react@workspace:packages/loom-react"],
+
+    "@loop-kit/loom-theme-aquatic-react": ["@loop-kit/loom-theme-aquatic-react@workspace:packages/loom-theme-aquatic-react"],
+
+    "@loop-kit/loom-theme-base-react": ["@loop-kit/loom-theme-base-react@workspace:packages/loom-theme-base-react"],
+
+    "@loop-kit/loom-theme-neumorph-react": ["@loop-kit/loom-theme-neumorph-react@workspace:packages/loom-theme-neumorph-react"],
 
     "@loop-kit/loopkit-capabilities": ["@loop-kit/loopkit-capabilities@workspace:packages/loopkit-capabilities"],
 
@@ -1538,7 +1774,7 @@
 
     "color-name": ["color-name@1.1.4", "", {}, "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="],
 
-    "commander": ["commander@12.1.0", "", {}, "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="],
+    "commander": ["commander@2.20.3", "", {}, "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="],
 
     "common-tags": ["common-tags@1.8.2", "", {}, "sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA=="],
 
@@ -3410,6 +3646,8 @@
 
     "react-hook-form/react": ["react@19.1.0", "", {}, "sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg=="],
 
+    "react-native/commander": ["commander@12.1.0", "", {}, "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="],
+
     "react-native/react-refresh": ["react-refresh@0.14.2", "", {}, "sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA=="],
 
     "react-native/semver": ["semver@7.7.3", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q=="],
@@ -3465,8 +3703,6 @@
     "supports-hyperlinks/supports-color": ["supports-color@10.2.2", "", {}, "sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g=="],
 
     "terminal-link/ansi-escapes": ["ansi-escapes@7.3.0", "", { "dependencies": { "environment": "^1.0.0" } }, "sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg=="],
-
-    "terser/commander": ["commander@2.20.3", "", {}, "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="],
 
     "tsx/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
 
