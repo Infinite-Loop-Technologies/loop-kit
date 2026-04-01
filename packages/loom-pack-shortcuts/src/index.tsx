@@ -268,22 +268,27 @@ export function ShortcutSettingsPanel<
 
             <Stack gap='2'>
                 {bindings.map((binding) => (
-                    <button
+                    <Button
                         key={binding.id}
+                        kind={binding.id === selectedId ? 'solid' : 'outline'}
                         onClick={() => setSelectedId(binding.id)}
                         style={{
-                            background: binding.id === selectedId ? 'var(--loom-color-surface-overlay)' : 'transparent',
-                            border: '1px solid var(--loom-color-border-default)',
-                            borderRadius: 'var(--loom-radius-md)',
-                            cursor: 'pointer',
-                            font: 'inherit',
                             padding: '0.75rem',
                             textAlign: 'left',
+                            width: '100%',
                         }}
+                        tone={binding.id === selectedId ? 'accent' : 'neutral'}
                         type='button'>
-                        <strong>{binding.shortcut || 'unset'}</strong>
-                        <div>{intents.find((entry) => entry.id === binding.intentId)?.title ?? binding.intentId}</div>
-                    </button>
+                        <Stack gap='1'>
+                            <Text as='span' emphasis='strong' size='sm'>
+                                {binding.shortcut || 'unset'}
+                            </Text>
+                            <Text as='span' size='sm' tone='muted'>
+                                {intents.find((entry) => entry.id === binding.intentId)?.title ??
+                                    binding.intentId}
+                            </Text>
+                        </Stack>
+                    </Button>
                 ))}
             </Stack>
         </Stack>

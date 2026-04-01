@@ -12,7 +12,7 @@ import type {
     DockNodeId,
     DockSplitHandleLayout,
 } from '@loop-kit/dock';
-import { GripVertical, X } from 'lucide-react';
+import { Icon } from '@loop-kit/loom-react';
 
 function cx(...values: Array<string | undefined | false>) {
     return values.filter(Boolean).join(' ');
@@ -101,12 +101,17 @@ function DockTab({
             }}
             {...attributes}
             {...listeners}>
-            <GripVertical
+            <span
                 aria-hidden='true'
-                size={12}
                 style={{
+                    background:
+                        'linear-gradient(180deg, currentColor 0%, currentColor 100%) left 2px top 2px / 2px calc(100% - 4px) no-repeat, linear-gradient(180deg, currentColor 0%, currentColor 100%) right 2px top 2px / 2px calc(100% - 4px) no-repeat',
                     color: 'var(--loom-color-text-muted)',
+                    display: 'inline-block',
                     flexShrink: 0,
+                    height: 12,
+                    opacity: 0.9,
+                    width: 10,
                 }}
             />
             <span
@@ -139,7 +144,7 @@ function DockTab({
                     width: '1.2rem',
                 }}
                 type='button'>
-                <X size={12} />
+                <Icon name='close' size='sm' />
                 <span style={srOnlyStyle}>Close tab</span>
             </button>
             {active ? (
