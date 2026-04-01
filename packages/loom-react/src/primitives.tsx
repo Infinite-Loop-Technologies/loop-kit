@@ -6,14 +6,17 @@ import * as RadixSwitch from '@radix-ui/react-switch';
 import * as RadixTabs from '@radix-ui/react-tabs';
 
 import type {
+    IconName,
     PrimitiveState,
     PrimitiveVariantName,
     ResolvedStyles,
 } from '@loop-kit/loom-core';
 
 import {
+    useLoomIcon,
     useLoomPrimitive,
     type LoomImplementationMap,
+    type LoomIconComponent,
     type LoomPrimitiveImplementation,
     type LoomPrimitiveImplementationProps,
 } from './runtime';
@@ -148,14 +151,26 @@ export type CodeProps = React.HTMLAttributes<HTMLElement> &
         tone?: Tone;
         size?: SizeToken;
     };
+export type IconProps = CommonPrimitiveProps &
+    VariantProps & {
+        name: IconName;
+        size?: 'sm' | 'md' | 'lg';
+        title?: string;
+        tone?: Tone;
+    };
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
     CommonPrimitiveProps &
     VariantProps & {
+        endIcon?: IconName;
         tone?: Tone;
         kind?: Kind;
         size?: 'sm' | 'md' | 'lg';
+        startIcon?: IconName;
     };
-export type IconButtonProps = ButtonProps;
+export type IconButtonProps = Omit<ButtonProps, 'children' | 'endIcon' | 'startIcon'> & {
+    label?: string;
+    name: IconName;
+};
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> &
     CommonPrimitiveProps &
     VariantProps & {
@@ -268,6 +283,41 @@ function themedSpace(gap: string | undefined) {
     }
     return gap;
 }
+
+function iconPixelSize(size: string | undefined) {
+    switch (size) {
+        case 'sm':
+            return 14;
+        case 'lg':
+            return 20;
+        case 'xl':
+            return 24;
+        case 'md':
+        default:
+            return 16;
+    }
+}
+
+const MissingIconGlyph: LoomIconComponent = ({ className, size = 16, style, title }) => (
+    <svg
+        aria-hidden={title ? undefined : true}
+        className={className}
+        fill='none'
+        height={size}
+        role='img'
+        stroke='currentColor'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        strokeWidth='1.75'
+        style={style}
+        viewBox='0 0 24 24'
+        width={size}>
+        {title ? <title>{title}</title> : null}
+        <rect height='14' rx='2.5' width='14' x='5' y='5' />
+        <path d='m9 9 6 6' />
+        <path d='m15 9-6 6' />
+    </svg>
+);
 
 type BoxImplementationProps = LoomPrimitiveImplementationProps<BoxProps>;
 const BoxImplementation: LoomPrimitiveImplementation<BoxProps> = ({
@@ -485,29 +535,107 @@ const CodeImplementation: LoomPrimitiveImplementation<CodeProps> = ({
     ...props
 }) => <code {...props} {...mergeRootProps(styles, className, style)} />;
 
-const ButtonImplementation: LoomPrimitiveImplementation<ButtonProps> = ({
+const IconImplementation: LoomPrimitiveImplementation<IconProps> = ({
     blueprintKey: _blueprintKey,
     className,
     colorMode: _colorMode,
+    name,
+    size = 'md',
+    state: _state,
+    style,
+    styles,
+    title,
+    tokens: _tokens,
+    variants: _variants,
+}) => {
+    const Glyph = useLoomIcon(name) ?? MissingIconGlyph;
+
+    return (
+        <span {...mergeRootProps(styles, className, style)}>
+            <Glyph
+                className={styles.glyph?.className}
+                size={iconPixelSize(size)}
+                style={{
+                    ...(toReactStyle(styles.glyph?.style) ?? {}),
+                    ...(styles.glyph?.vars as React.CSSProperties | undefined),
+                }}
+                title={title}
+            />
+        </span>
+    );
+};
+
+const ButtonImplementation: LoomPrimitiveImplementation<ButtonProps> = ({
+    blueprintKey: _blueprintKey,
+    children,
+    className,
+    colorMode: _colorMode,
+    endIcon,
+    size,
+    startIcon,
     state: _state,
     style,
     styles,
     tokens: _tokens,
     variants: _variants,
     ...props
-}) => <button {...props} {...mergeRootProps(styles, className, style)} />;
+}) => {
+    const StartGlyph = startIcon ? useLoomIcon(startIcon) ?? MissingIconGlyph : null;
+    const EndGlyph = endIcon ? useLoomIcon(endIcon) ?? MissingIconGlyph : null;
+
+    return (
+        <button {...props} {...mergeRootProps(styles, className, style)}>
+            {StartGlyph ? (
+                <StartGlyph
+                    className={styles.icon?.className}
+                    size={iconPixelSize(size)}
+                    style={toReactStyle(styles.icon?.style)}
+                />
+            ) : null}
+            <span className={styles.label?.className} style={toReactStyle(styles.label?.style)}>
+                {children}
+            </span>
+            {EndGlyph ? (
+                <EndGlyph
+                    className={styles.icon?.className}
+                    size={iconPixelSize(size)}
+                    style={toReactStyle(styles.icon?.style)}
+                />
+            ) : null}
+        </button>
+    );
+};
 
 const IconButtonImplementation: LoomPrimitiveImplementation<IconButtonProps> = ({
     blueprintKey: _blueprintKey,
     className,
     colorMode: _colorMode,
+    label,
+    name,
+    size,
     state: _state,
     style,
     styles,
     tokens: _tokens,
     variants: _variants,
     ...props
-}) => <button {...props} {...mergeRootProps(styles, className, style)} />;
+}) => {
+    const Glyph = useLoomIcon(name) ?? MissingIconGlyph;
+
+    return (
+        <button
+            aria-label={label ?? name}
+            title={label}
+            {...props}
+            {...mergeRootProps(styles, className, style)}>
+            <Glyph
+                className={styles.icon?.className}
+                size={iconPixelSize(size)}
+                style={toReactStyle(styles.icon?.style)}
+            />
+        </button>
+    );
+};
 
 const InputImplementation: LoomPrimitiveImplementation<InputProps> = ({
     blueprintKey: _blueprintKey,
@@ -601,7 +729,7 @@ const SelectImplementation: LoomPrimitiveImplementation<SelectProps> = ({
     blueprintKey: _blueprintKey,
     className,
     colorMode: _colorMode,
-    size: _size,
+    size,
     options = [],
     placeholder,
     state: _state,
@@ -613,22 +741,33 @@ const SelectImplementation: LoomPrimitiveImplementation<SelectProps> = ({
     defaultValue,
     variants: _variants,
     ...props
-}) => (
-    <select
-        {...props}
-        className={cx(styles.trigger?.className, className)}
-        defaultValue={defaultValue}
-        onChange={onChange}
-        style={{ ...(toReactStyle(styles.trigger?.style) ?? {}), ...(style ?? {}) }}
-        value={value}>
-        {placeholder ? <option value=''>{placeholder}</option> : null}
-        {options.map((option) => (
-            <option key={option.value} value={option.value}>
-                {option.label}
-            </option>
-        ))}
-    </select>
-);
+}) => {
+    const Chevron = useLoomIcon('chevronDown') ?? MissingIconGlyph;
+
+    return (
+        <span {...mergeRootProps(styles, undefined, undefined)}>
+            <select
+                {...props}
+                className={cx(styles.trigger?.className, className)}
+                defaultValue={defaultValue}
+                onChange={onChange}
+                style={{ ...(toReactStyle(styles.trigger?.style) ?? {}), ...(style ?? {}) }}
+                value={value}>
+                {placeholder ? <option value=''>{placeholder}</option> : null}
+                {options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+            <Chevron
+                className={styles.icon?.className}
+                size={iconPixelSize(size)}
+                style={toReactStyle(styles.icon?.style)}
+            />
+        </span>
+    );
+};
 
 const BadgeImplementation: LoomPrimitiveImplementation<BadgeProps> = ({
     blueprintKey: _blueprintKey,
@@ -790,6 +929,7 @@ export const defaultLoomImplementationMap: LoomImplementationMap = {
     heading: HeadingImplementation as LoomPrimitiveImplementation<object>,
     link: LinkImplementation as LoomPrimitiveImplementation<object>,
     code: CodeImplementation as LoomPrimitiveImplementation<object>,
+    icon: IconImplementation as LoomPrimitiveImplementation<object>,
     button: ButtonImplementation as LoomPrimitiveImplementation<object>,
     'icon-button': IconButtonImplementation as LoomPrimitiveImplementation<object>,
     input: InputImplementation as LoomPrimitiveImplementation<object>,
@@ -872,6 +1012,10 @@ export function Link(props: LinkProps) {
 
 export function Code(props: CodeProps) {
     return renderPrimitive('code', props);
+}
+
+export function Icon(props: IconProps) {
+    return renderPrimitive('icon', props);
 }
 
 export function Button(props: ButtonProps) {

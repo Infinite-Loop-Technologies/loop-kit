@@ -16,6 +16,7 @@ import {
     Button,
     Grid,
     Heading,
+    Icon,
     Inline,
     LoomProvider,
     Panel,
@@ -78,7 +79,7 @@ function ViewRegistryCard() {
             ref={ref}
             style={{
                 background: 'color-mix(in oklch, var(--loom-color-surface-raised) 88%, transparent)',
-                border: '1px solid var(--loom-color-border)',
+                border: '1px solid var(--loom-color-border-default)',
                 borderRadius: 'var(--loom-radius-lg)',
                 boxShadow: 'var(--loom-shadow-sm)',
                 padding: '1rem',
@@ -139,9 +140,20 @@ export function App() {
                                         </Badge>
                                     </Inline>
                                     <Inline gap='2'>
-                                        <Button type='button'>Primary</Button>
-                                        <Button kind='outline' type='button'>Outline</Button>
-                                        <Button kind='ghost' type='button'>Ghost</Button>
+                                        <Button startIcon='plus' type='button'>
+                                            Primary
+                                        </Button>
+                                        <Button endIcon='chevronRight' kind='outline' type='button'>
+                                            Outline
+                                        </Button>
+                                        <Button kind='ghost' startIcon='search' type='button'>
+                                            Ghost
+                                        </Button>
+                                    </Inline>
+                                    <Inline gap='2'>
+                                        <Icon name='settings' tone='accent' />
+                                        <Icon name='info' tone='info' />
+                                        <Icon name='warning' tone='warning' />
                                     </Inline>
                                     <Tabs
                                         items={[

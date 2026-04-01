@@ -84,7 +84,7 @@ function DockTab({
                     : 'transparent',
                 border: `1px solid ${active ? 'var(--loom-color-border-strong)' : 'transparent'}`,
                 borderRadius: 'calc(var(--loom-radius-sm) + 2px)',
-                color: active ? 'var(--loom-color-text)' : 'var(--loom-color-text-muted)',
+                color: active ? 'var(--loom-color-text-default)' : 'var(--loom-color-text-muted)',
                 cursor: isDragging ? 'grabbing' : 'grab',
                 display: 'inline-flex',
                 gap: '0.4rem',
@@ -145,7 +145,7 @@ function DockTab({
             {active ? (
                 <span
                     style={{
-                        background: 'var(--loom-color-accent)',
+                        background: 'var(--loom-color-accent-default)',
                         borderRadius: '999px',
                         bottom: '0.12rem',
                         height: 2,
@@ -189,8 +189,8 @@ export function DockGroup({
             data-testid={`dock-group-${group.id}`}
             style={{
                 background:
-                    'color-mix(in oklch, var(--loom-color-surface) 88%, transparent)',
-                border: '1px solid var(--loom-color-border)',
+                    'color-mix(in oklch, var(--loom-color-surface-default) 88%, transparent)',
+                border: '1px solid var(--loom-color-border-default)',
                 borderRadius: 'var(--loom-radius-lg)',
                 boxShadow: 'var(--loom-shadow-md)',
                 display: 'flex',
@@ -207,7 +207,7 @@ export function DockGroup({
                     alignItems: 'center',
                     background:
                         'color-mix(in oklch, var(--loom-color-surface-sunken) 74%, transparent)',
-                    borderBottom: '1px solid var(--loom-color-border)',
+                    borderBottom: '1px solid var(--loom-color-border-default)',
                     display: 'flex',
                     gap: '0.35rem',
                     minHeight: '2rem',
@@ -298,7 +298,7 @@ export function DockSplitHandle({
                 aria-hidden='true'
                 style={{
                     background: active
-                        ? 'var(--loom-color-accent)'
+                        ? 'var(--loom-color-accent-default)'
                         : 'var(--loom-color-border-strong)',
                     borderRadius: '999px',
                     inset: vertical
@@ -338,11 +338,11 @@ export function DockOverlay({
             style={{
                 background:
                     indicator.kind === 'zone'
-                        ? 'color-mix(in oklch, var(--loom-color-accent) 18%, transparent)'
-                        : 'var(--loom-color-accent)',
+                        ? 'color-mix(in oklch, var(--loom-color-accent-default) 18%, transparent)'
+                        : 'var(--loom-color-accent-default)',
                 border:
                     indicator.kind === 'zone'
-                        ? '1px solid color-mix(in oklch, var(--loom-color-accent) 75%, white 10%)'
+                        ? '1px solid color-mix(in oklch, var(--loom-color-accent-default) 75%, white 10%)'
                         : 'none',
                 borderRadius:
                     indicator.kind === 'zone'
@@ -350,7 +350,7 @@ export function DockOverlay({
                         : '999px',
                 boxShadow:
                     indicator.kind === 'line'
-                        ? '0 0 0 1px color-mix(in oklch, var(--loom-color-surface) 70%, white 20%)'
+                        ? '0 0 0 1px color-mix(in oklch, var(--loom-color-surface-default) 70%, white 20%)'
                         : undefined,
                 inset: `${indicator.rect.y}px auto auto ${indicator.rect.x}px`,
                 pointerEvents: 'none',
@@ -362,7 +362,7 @@ export function DockOverlay({
             {showLabel ? (
                 <span
                     style={{
-                        background: 'var(--loom-color-accent)',
+                        background: 'var(--loom-color-accent-default)',
                         borderRadius: '999px',
                         color: 'var(--loom-color-accent-text)',
                         fontSize: '0.62rem',

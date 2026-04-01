@@ -219,7 +219,12 @@ export type InteractionRuntime = {
     drag: DragCoordinator;
 };
 
-function createInteractionRuntime(): InteractionRuntime {
+/**
+ * Interaction runtime owns ephemeral UI coordination state such as measured
+ * rects, active keyboard scopes, and transient drag state. It is not a
+ * general scheduler and it is not a Graphite fact store.
+ */
+export function createInteractionRuntime(): InteractionRuntime {
     return {
         viewRegistry: createViewRegistry(),
         keyboardScopes: createKeyboardScopeManager(),

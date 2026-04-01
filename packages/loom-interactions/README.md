@@ -14,5 +14,6 @@ Runtime-only interaction coordination for Loom.
 - Graphite facts
 - app domain state
 - long-lived semantic models
+- scheduler/runtime orchestration
 
 Measured DOM rects, pointer movement, and transient drag state stay here rather than in Graphite.
