@@ -3,6 +3,11 @@ export type LoomStyleObject = Record<string, LoomStyleValue | undefined>;
 export type LoomDataAttributes = Record<string, string | number | boolean | undefined>;
 export type LoomCssVariables = Record<`--${string}`, LoomStyleValue | undefined>;
 
+/**
+ * ResolvedStyles is the renderer-facing output of recipe resolution.
+ * Implementation components consume this structure to attach classes, inline
+ * styles, data attributes, and CSS variables to concrete DOM.
+ */
 export type PartStyles = {
     className?: string;
     style?: LoomStyleObject;

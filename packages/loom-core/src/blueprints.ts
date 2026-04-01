@@ -11,6 +11,7 @@ export type PrimitiveKey =
     | 'heading'
     | 'link'
     | 'code'
+    | 'icon'
     | 'button'
     | 'icon-button'
     | 'input'
@@ -32,6 +33,23 @@ export type PrimitiveVariantName =
     | 'emphasis'
     | 'interactive';
 
+/**
+ * Icon names are semantic content selectors. They are not style variants.
+ */
+export type IconName =
+    | 'close'
+    | 'check'
+    | 'chevronDown'
+    | 'chevronRight'
+    | 'search'
+    | 'settings'
+    | 'warning'
+    | 'info'
+    | 'plus'
+    | 'minus'
+    | 'panelLeft'
+    | 'panelRight';
+
 export type PrimitiveState = {
     active?: boolean;
     checked?: boolean;
@@ -44,9 +62,9 @@ export type PrimitiveState = {
     selected?: boolean;
 };
 
-export type BlueprintVariantDefinition = {
-    values: readonly string[];
-    default: string;
+export type BlueprintVariantDefinition<TValue extends string = string> = {
+    values: readonly TValue[];
+    default: TValue;
 };
 
 export type SemanticPropMapping = {
@@ -64,7 +82,7 @@ export type PrimitiveBlueprint<TPart extends string = string> = {
 
 export type ResolvedVariantValues = Partial<Record<PrimitiveVariantName, string>>;
 
-function createBlueprint<TPart extends string>(
+function defineBlueprint<TPart extends string>(
     blueprint: PrimitiveBlueprint<TPart>,
 ): PrimitiveBlueprint<TPart> {
     return blueprint;
@@ -98,12 +116,12 @@ const standardVariants = {
 } satisfies Record<PrimitiveVariantName, BlueprintVariantDefinition>;
 
 export const primitiveBlueprints = {
-    box: createBlueprint({
+    box: defineBlueprint({
         key: 'box',
         parts: ['root'],
         variants: {},
     }),
-    surface: createBlueprint({
+    surface: defineBlueprint({
         key: 'surface',
         parts: ['root'],
         variants: {
@@ -111,7 +129,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    panel: createBlueprint({
+    panel: defineBlueprint({
         key: 'panel',
         parts: ['root', 'header', 'body', 'footer'],
         variants: {
@@ -120,42 +138,42 @@ export const primitiveBlueprints = {
             density: standardVariants.density,
         },
     }),
-    'scroll-area': createBlueprint({
+    'scroll-area': defineBlueprint({
         key: 'scroll-area',
         parts: ['root', 'viewport'],
         variants: {
             emphasis: standardVariants.emphasis,
         },
     }),
-    separator: createBlueprint({
+    separator: defineBlueprint({
         key: 'separator',
         parts: ['root'],
         variants: {
             tone: standardVariants.tone,
         },
     }),
-    stack: createBlueprint({
+    stack: defineBlueprint({
         key: 'stack',
         parts: ['root'],
         variants: {
             density: standardVariants.density,
         },
     }),
-    inline: createBlueprint({
+    inline: defineBlueprint({
         key: 'inline',
         parts: ['root'],
         variants: {
             density: standardVariants.density,
         },
     }),
-    grid: createBlueprint({
+    grid: defineBlueprint({
         key: 'grid',
         parts: ['root'],
         variants: {
             density: standardVariants.density,
         },
     }),
-    text: createBlueprint({
+    text: defineBlueprint({
         key: 'text',
         parts: ['root'],
         variants: {
@@ -164,7 +182,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    heading: createBlueprint({
+    heading: defineBlueprint({
         key: 'heading',
         parts: ['root'],
         variants: {
@@ -176,7 +194,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    link: createBlueprint({
+    link: defineBlueprint({
         key: 'link',
         parts: ['root'],
         variants: {
@@ -184,7 +202,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    code: createBlueprint({
+    code: defineBlueprint({
         key: 'code',
         parts: ['root'],
         variants: {
@@ -192,7 +210,16 @@ export const primitiveBlueprints = {
             size: standardVariants.size,
         },
     }),
-    button: createBlueprint({
+    icon: defineBlueprint({
+        key: 'icon',
+        parts: ['root', 'glyph'],
+        variants: {
+            tone: standardVariants.tone,
+            size: standardVariants.size,
+            emphasis: standardVariants.emphasis,
+        },
+    }),
+    button: defineBlueprint({
         key: 'button',
         parts: ['root', 'label', 'icon'],
         variants: {
@@ -212,7 +239,7 @@ export const primitiveBlueprints = {
             },
         },
     }),
-    'icon-button': createBlueprint({
+    'icon-button': defineBlueprint({
         key: 'icon-button',
         parts: ['root', 'icon'],
         variants: {
@@ -222,7 +249,7 @@ export const primitiveBlueprints = {
             interactive: standardVariants.interactive,
         },
     }),
-    input: createBlueprint({
+    input: defineBlueprint({
         key: 'input',
         parts: ['root', 'field', 'prefix', 'suffix'],
         variants: {
@@ -231,7 +258,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    'text-area': createBlueprint({
+    'text-area': defineBlueprint({
         key: 'text-area',
         parts: ['root', 'field'],
         variants: {
@@ -240,7 +267,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    checkbox: createBlueprint({
+    checkbox: defineBlueprint({
         key: 'checkbox',
         parts: ['root', 'control', 'label'],
         variants: {
@@ -249,7 +276,7 @@ export const primitiveBlueprints = {
             interactive: standardVariants.interactive,
         },
     }),
-    switch: createBlueprint({
+    switch: defineBlueprint({
         key: 'switch',
         parts: ['root', 'track', 'thumb', 'label'],
         variants: {
@@ -258,16 +285,16 @@ export const primitiveBlueprints = {
             interactive: standardVariants.interactive,
         },
     }),
-    select: createBlueprint({
+    select: defineBlueprint({
         key: 'select',
-        parts: ['root', 'trigger', 'content'],
+        parts: ['root', 'trigger', 'content', 'icon'],
         variants: {
             tone: standardVariants.tone,
             size: standardVariants.size,
             emphasis: standardVariants.emphasis,
         },
     }),
-    badge: createBlueprint({
+    badge: defineBlueprint({
         key: 'badge',
         parts: ['root'],
         variants: {
@@ -275,7 +302,7 @@ export const primitiveBlueprints = {
             kind: standardVariants.kind,
         },
     }),
-    dialog: createBlueprint({
+    dialog: defineBlueprint({
         key: 'dialog',
         parts: ['overlay', 'content', 'header', 'body', 'footer'],
         variants: {
@@ -283,7 +310,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    menu: createBlueprint({
+    menu: defineBlueprint({
         key: 'menu',
         parts: ['trigger', 'content', 'item'],
         variants: {
@@ -291,7 +318,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    tabs: createBlueprint({
+    tabs: defineBlueprint({
         key: 'tabs',
         parts: ['root', 'list', 'trigger', 'content'],
         variants: {
@@ -299,7 +326,7 @@ export const primitiveBlueprints = {
             emphasis: standardVariants.emphasis,
         },
     }),
-    table: createBlueprint({
+    table: defineBlueprint({
         key: 'table',
         parts: ['root', 'head', 'body', 'row', 'cell'],
         variants: {
@@ -315,6 +342,10 @@ export function getBlueprint<TKey extends PrimitiveKey>(
     return primitiveBlueprints[key];
 }
 
+/**
+ * Variants are portable style axes. Content selectors such as Icon `name`
+ * are handled separately and do not participate in variant resolution.
+ */
 export function resolveBlueprintVariants(
     blueprint: PrimitiveBlueprint<string>,
     input?: Record<string, unknown>,

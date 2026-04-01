@@ -1,27 +1,48 @@
-import { createFallbackTokens, defineRecipe, type LoomTokens } from '@loop-kit/loom-core';
-import { defaultLoomImplementationMap, type LoomReactThemeLayer } from '@loop-kit/loom-react';
+import {
+    Check,
+    ChevronDown,
+    ChevronRight,
+    Info,
+    Minus,
+    PanelLeft,
+    PanelRight,
+    Plus,
+    Search,
+    Settings,
+    TriangleAlert,
+    X,
+} from 'lucide-react';
+
+import { defineRecipe, type LoomTokens } from '@loop-kit/loom-core';
+import {
+    defaultLoomImplementationMap,
+    defineIconSet,
+    type LoomIconComponent,
+    type LoomReactThemeLayer,
+} from '@loop-kit/loom-react';
 
 function toneValue(tokens: LoomTokens, tone: string | undefined) {
     switch (tone) {
         case 'accent':
-            return tokens.color.accent;
+            return tokens.color.accent.default;
         case 'success':
-            return tokens.color.success;
+            return tokens.color.status.success;
         case 'warning':
-            return tokens.color.warning;
+            return tokens.color.status.warning;
         case 'danger':
-            return tokens.color.danger;
+            return tokens.color.status.danger;
         case 'info':
-            return tokens.color.info;
+            return tokens.color.status.info;
         case 'muted':
-            return tokens.color.textMuted;
+            return tokens.color.text.muted;
         default:
-            return tokens.color.text;
+            return tokens.color.text.default;
     }
 }
 
 function kindValue(tokens: LoomTokens, tone: string | undefined, kind: string | undefined) {
-    const accent = tone === 'neutral' || !tone ? tokens.color.accent : toneValue(tokens, tone);
+    const accent =
+        tone === 'neutral' || !tone ? tokens.color.accent.default : toneValue(tokens, tone);
     if (kind === 'ghost') {
         return {
             background: 'transparent',
@@ -38,55 +59,199 @@ function kindValue(tokens: LoomTokens, tone: string | undefined, kind: string | 
     }
     if (kind === 'soft') {
         return {
-            background: tokens.color.surfaceSunken,
-            borderColor: tokens.color.border,
+            background: tokens.color.surface.sunken,
+            borderColor: tokens.color.border.default,
             color: toneValue(tokens, tone),
         };
     }
     return {
         background: accent,
         borderColor: accent,
-        color: tokens.color.accentText,
+        color: tokens.color.accent.text,
     };
 }
 
-export const baseReactTheme: LoomReactThemeLayer = {
-    id: 'loom-base',
-    label: 'Loom Base',
-    description:
-        'Base theme layer with the standard semantic token surface, default recipes, and default primitive implementations.',
-    modes: {
-        light: {
-            tokens: createFallbackTokens(),
-        },
-        dark: {
-            tokens: {
-                color: {
-                    text: 'oklch(0.93 0.01 255)',
-                    textMuted: 'oklch(0.72 0.02 255)',
-                    textInverse: 'oklch(0.16 0.01 255)',
-                    surface: 'oklch(0.19 0.008 255)',
-                    surfaceRaised: 'oklch(0.23 0.008 255)',
-                    surfaceSunken: 'oklch(0.16 0.008 255)',
-                    surfaceOverlay: 'oklch(0.28 0.01 255 / 0.86)',
-                    border: 'oklch(0.32 0.01 255)',
-                    borderStrong: 'oklch(0.48 0.02 255)',
-                    accent: 'oklch(0.72 0.15 235)',
-                    accentText: 'oklch(0.17 0.01 255)',
+function createBaseTokens(mode: 'light' | 'dark'): LoomTokens {
+    if (mode === 'dark') {
+        return {
+            color: {
+                text: {
+                    default: 'oklch(0.93 0.01 255)',
+                    muted: 'oklch(0.72 0.02 255)',
+                    inverse: 'oklch(0.16 0.01 255)',
+                },
+                surface: {
+                    default: 'oklch(0.19 0.008 255)',
+                    raised: 'oklch(0.23 0.008 255)',
+                    sunken: 'oklch(0.16 0.008 255)',
+                    overlay: 'oklch(0.28 0.01 255 / 0.86)',
+                },
+                border: {
+                    default: 'oklch(0.32 0.01 255)',
+                    strong: 'oklch(0.48 0.02 255)',
+                    focus: 'oklch(0.76 0.14 235)',
+                },
+                accent: {
+                    default: 'oklch(0.72 0.15 235)',
+                    text: 'oklch(0.17 0.01 255)',
+                },
+                status: {
                     success: 'oklch(0.74 0.13 150)',
                     warning: 'oklch(0.82 0.16 80)',
                     danger: 'oklch(0.72 0.18 28)',
                     info: 'oklch(0.76 0.11 230)',
-                    focusRing: 'oklch(0.76 0.14 235)',
-                },
-                shadow: {
-                    sm: '0 1px 2px rgb(2 6 23 / 0.3)',
-                    md: '0 14px 36px rgb(2 6 23 / 0.42)',
-                    lg: '0 24px 68px rgb(2 6 23 / 0.52)',
                 },
             },
+            space: {
+                0: '0rem',
+                1: '0.25rem',
+                2: '0.5rem',
+                3: '0.75rem',
+                4: '1rem',
+                5: '1.5rem',
+                6: '2rem',
+            },
+            radius: {
+                sm: '0.375rem',
+                md: '0.75rem',
+                lg: '1rem',
+            },
+            font: {
+                family: {
+                    body: '"Aptos", system-ui, sans-serif',
+                    heading: '"Fraunces", "Aptos Display", serif',
+                    mono: '"JetBrains Mono", monospace',
+                },
+                size: {
+                    sm: '0.875rem',
+                    md: '1rem',
+                    lg: '1.125rem',
+                    xl: '1.5rem',
+                },
+            },
+            shadow: {
+                sm: '0 1px 2px rgb(2 6 23 / 0.3)',
+                md: '0 14px 36px rgb(2 6 23 / 0.42)',
+                lg: '0 24px 68px rgb(2 6 23 / 0.52)',
+            },
+            motion: {
+                duration: {
+                    fast: '120ms',
+                    normal: '180ms',
+                    slow: '280ms',
+                },
+            },
+        };
+    }
+
+    return {
+        color: {
+            text: {
+                default: 'oklch(0.23 0.02 255)',
+                muted: 'oklch(0.5 0.02 255)',
+                inverse: 'oklch(0.98 0.004 255)',
+            },
+            surface: {
+                default: 'oklch(0.985 0.003 255)',
+                raised: 'oklch(0.995 0.002 255)',
+                sunken: 'oklch(0.94 0.005 255)',
+                overlay: 'oklch(0.92 0.01 255 / 0.84)',
+            },
+            border: {
+                default: 'oklch(0.86 0.01 255)',
+                strong: 'oklch(0.7 0.02 255)',
+                focus: 'oklch(0.74 0.15 235)',
+            },
+            accent: {
+                default: 'oklch(0.62 0.15 235)',
+                text: 'oklch(0.98 0.004 255)',
+            },
+            status: {
+                success: 'oklch(0.68 0.14 150)',
+                warning: 'oklch(0.78 0.16 80)',
+                danger: 'oklch(0.67 0.18 28)',
+                info: 'oklch(0.72 0.12 230)',
+            },
+        },
+        space: {
+            0: '0rem',
+            1: '0.25rem',
+            2: '0.5rem',
+            3: '0.75rem',
+            4: '1rem',
+            5: '1.5rem',
+            6: '2rem',
+        },
+        radius: {
+            sm: '0.375rem',
+            md: '0.75rem',
+            lg: '1rem',
+        },
+        font: {
+            family: {
+                body: '"Aptos", system-ui, sans-serif',
+                heading: '"Fraunces", "Aptos Display", serif',
+                mono: '"JetBrains Mono", monospace',
+            },
+            size: {
+                sm: '0.875rem',
+                md: '1rem',
+                lg: '1.125rem',
+                xl: '1.5rem',
+            },
+        },
+        shadow: {
+            sm: '0 1px 2px rgb(15 23 42 / 0.08)',
+            md: '0 12px 30px rgb(15 23 42 / 0.12)',
+            lg: '0 20px 60px rgb(15 23 42 / 0.16)',
+        },
+        motion: {
+            duration: {
+                fast: '120ms',
+                normal: '180ms',
+                slow: '280ms',
+            },
+        },
+    };
+}
+
+function withLucide(Component: LoomIconComponent): LoomIconComponent {
+    return Component;
+}
+
+const baseIconSet = defineIconSet({
+    close: withLucide(X),
+    check: withLucide(Check),
+    chevronDown: withLucide(ChevronDown),
+    chevronRight: withLucide(ChevronRight),
+    search: withLucide(Search),
+    settings: withLucide(Settings),
+    warning: withLucide(TriangleAlert),
+    info: withLucide(Info),
+    plus: withLucide(Plus),
+    minus: withLucide(Minus),
+    panelLeft: withLucide(PanelLeft),
+    panelRight: withLucide(PanelRight),
+});
+
+/**
+ * Base theme owns the default visual foundation: tokens, recipes, icons, and
+ * the default React primitive implementation map.
+ */
+export const baseReactTheme: LoomReactThemeLayer = {
+    id: 'loom-base',
+    label: 'Loom Base',
+    description:
+        'Base React theme layer with the default semantic tokens, icons, recipes, and implementation map.',
+    modes: {
+        light: {
+            tokens: createBaseTokens('light'),
+        },
+        dark: {
+            tokens: createBaseTokens('dark'),
         },
     },
+    icons: baseIconSet,
     implementations: defaultLoomImplementationMap,
     recipes: {
         box: defineRecipe(() => ({
@@ -97,9 +262,9 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 style: {
                     background:
                         variants.emphasis === 'strong'
-                            ? tokens.color.surfaceRaised
-                            : tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                            ? tokens.color.surface.raised
+                            : tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
                     color: toneValue(tokens, variants.tone),
                     boxShadow: tokens.shadow.sm,
@@ -111,14 +276,14 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 style: {
                     background:
                         variants.emphasis === 'strong'
-                            ? tokens.color.surfaceRaised
+                            ? tokens.color.surface.raised
                             : variants.emphasis === 'subtle'
-                              ? tokens.color.surfaceSunken
-                              : tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                              ? tokens.color.surface.sunken
+                              : tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.lg,
                     boxShadow: tokens.shadow.md,
-                    color: tokens.color.text,
+                    color: tokens.color.text.default,
                     padding:
                         variants.density === 'compact'
                             ? tokens.space[3]
@@ -131,7 +296,7 @@ export const baseReactTheme: LoomReactThemeLayer = {
         'scroll-area': defineRecipe(({ tokens }) => ({
             root: {
                 style: {
-                    background: tokens.color.surfaceSunken,
+                    background: tokens.color.surface.sunken,
                     borderRadius: tokens.radius.md,
                 },
             },
@@ -139,7 +304,7 @@ export const baseReactTheme: LoomReactThemeLayer = {
         separator: defineRecipe(({ tokens }) => ({
             root: {
                 style: {
-                    background: tokens.color.border,
+                    background: tokens.color.border.default,
                 },
             },
         })),
@@ -152,12 +317,12 @@ export const baseReactTheme: LoomReactThemeLayer = {
                     color: toneValue(tokens, variants.tone),
                     fontSize:
                         variants.size === 'sm'
-                            ? tokens.font.sizeSm
+                            ? tokens.font.size.sm
                             : variants.size === 'lg'
-                              ? tokens.font.sizeLg
+                              ? tokens.font.size.lg
                               : variants.size === 'xl'
-                                ? tokens.font.sizeXl
-                                : tokens.font.sizeMd,
+                                ? tokens.font.size.xl
+                                : tokens.font.size.md,
                     fontWeight: variants.emphasis === 'strong' ? 650 : 430,
                     lineHeight: 1.6,
                     margin: 0,
@@ -168,15 +333,15 @@ export const baseReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     color: toneValue(tokens, variants.tone),
-                    fontFamily: tokens.font.headingFamily,
+                    fontFamily: tokens.font.family.heading,
                     fontSize:
                         variants.size === 'sm'
-                            ? tokens.font.sizeMd
+                            ? tokens.font.size.md
                             : variants.size === 'md'
-                              ? tokens.font.sizeLg
+                              ? tokens.font.size.lg
                               : variants.size === 'xl'
                                 ? 'clamp(2rem, 4vw, 3.5rem)'
-                                : tokens.font.sizeXl,
+                                : tokens.font.size.xl,
                     fontWeight: 650,
                     letterSpacing: '-0.03em',
                     lineHeight: 1.05,
@@ -187,7 +352,7 @@ export const baseReactTheme: LoomReactThemeLayer = {
         link: defineRecipe(({ tokens }) => ({
             root: {
                 style: {
-                    color: tokens.color.accent,
+                    color: tokens.color.accent.default,
                     textDecoration: 'underline',
                     textDecorationThickness: '0.12em',
                 },
@@ -196,11 +361,27 @@ export const baseReactTheme: LoomReactThemeLayer = {
         code: defineRecipe(({ tokens }) => ({
             root: {
                 style: {
-                    background: tokens.color.surfaceSunken,
+                    background: tokens.color.surface.sunken,
                     borderRadius: tokens.radius.sm,
-                    color: tokens.color.text,
-                    fontFamily: tokens.font.monoFamily,
+                    color: tokens.color.text.default,
+                    fontFamily: tokens.font.family.mono,
                     padding: `${tokens.space[1]} ${tokens.space[2]}`,
+                },
+            },
+        })),
+        icon: defineRecipe(({ tokens, variants }) => ({
+            root: {
+                style: {
+                    alignItems: 'center',
+                    color: toneValue(tokens, variants.tone),
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                },
+            },
+            glyph: {
+                style: {
+                    display: 'block',
                 },
             },
         })),
@@ -214,13 +395,13 @@ export const baseReactTheme: LoomReactThemeLayer = {
                     borderRadius: tokens.radius.md,
                     cursor: 'pointer',
                     display: 'inline-flex',
-                    fontFamily: tokens.font.bodyFamily,
+                    fontFamily: tokens.font.family.body,
                     fontSize:
                         variants.size === 'sm'
-                            ? tokens.font.sizeSm
+                            ? tokens.font.size.sm
                             : variants.size === 'lg'
-                              ? tokens.font.sizeLg
-                              : tokens.font.sizeMd,
+                              ? tokens.font.size.lg
+                              : tokens.font.size.md,
                     fontWeight: 600,
                     gap: tokens.space[2],
                     justifyContent: 'center',
@@ -236,7 +417,19 @@ export const baseReactTheme: LoomReactThemeLayer = {
                             : variants.size === 'lg'
                               ? `0 ${tokens.space[5]}`
                               : `0 ${tokens.space[4]}`,
-                    transition: `transform ${tokens.motion.fast} ease, background ${tokens.motion.fast} ease`,
+                    transition: `transform ${tokens.motion.duration.fast} ease, background ${tokens.motion.duration.fast} ease`,
+                },
+            },
+            label: {
+                style: {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                },
+            },
+            icon: {
+                style: {
+                    display: 'inline-flex',
+                    flexShrink: 0,
                 },
             },
         })),
@@ -265,13 +458,18 @@ export const baseReactTheme: LoomReactThemeLayer = {
                               : '2.5rem',
                 },
             },
+            icon: {
+                style: {
+                    display: 'inline-flex',
+                },
+            },
         })),
         input: defineRecipe(({ tokens }) => ({
             root: {
                 style: {
                     alignItems: 'center',
-                    background: tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
                     display: 'flex',
                     gap: tokens.space[2],
@@ -282,10 +480,10 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 style: {
                     background: 'transparent',
                     border: 'none',
-                    color: tokens.color.text,
+                    color: tokens.color.text.default,
                     flex: 1,
-                    fontFamily: tokens.font.bodyFamily,
-                    fontSize: tokens.font.sizeMd,
+                    fontFamily: tokens.font.family.body,
+                    fontSize: tokens.font.size.md,
                     outline: 'none',
                 },
             },
@@ -293,12 +491,12 @@ export const baseReactTheme: LoomReactThemeLayer = {
         'text-area': defineRecipe(({ tokens }) => ({
             field: {
                 style: {
-                    background: tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
-                    color: tokens.color.text,
-                    fontFamily: tokens.font.bodyFamily,
-                    fontSize: tokens.font.sizeMd,
+                    color: tokens.color.text.default,
+                    fontFamily: tokens.font.family.body,
+                    fontSize: tokens.font.size.md,
                     minHeight: '7rem',
                     padding: tokens.space[3],
                 },
@@ -308,14 +506,14 @@ export const baseReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     alignItems: 'center',
-                    color: tokens.color.text,
+                    color: tokens.color.text.default,
                     display: 'inline-flex',
                     gap: tokens.space[2],
                 },
             },
             control: {
                 style: {
-                    accentColor: tokens.color.accent,
+                    accentColor: tokens.color.accent.default,
                 },
             },
         })),
@@ -329,7 +527,7 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
             track: {
                 style: {
-                    background: tokens.color.surfaceSunken,
+                    background: tokens.color.surface.sunken,
                     borderRadius: '999px',
                     height: '1.5rem',
                     padding: '0.125rem',
@@ -338,7 +536,7 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
             thumb: {
                 style: {
-                    background: tokens.color.accent,
+                    background: tokens.color.accent.default,
                     borderRadius: '999px',
                     boxShadow: tokens.shadow.sm,
                     display: 'block',
@@ -348,28 +546,45 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
         })),
         select: defineRecipe(({ tokens }) => ({
+            root: {
+                style: {
+                    alignItems: 'center',
+                    display: 'inline-grid',
+                    position: 'relative',
+                },
+            },
             trigger: {
                 style: {
-                    background: tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                    appearance: 'none',
+                    background: tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
-                    color: tokens.color.text,
-                    fontFamily: tokens.font.bodyFamily,
-                    fontSize: tokens.font.sizeMd,
+                    color: tokens.color.text.default,
+                    fontFamily: tokens.font.family.body,
+                    fontSize: tokens.font.size.md,
                     minHeight: '2.5rem',
-                    padding: `0 ${tokens.space[3]}`,
+                    padding: `0 calc(${tokens.space[5]} + ${tokens.space[1]}) 0 ${tokens.space[3]}`,
+                },
+            },
+            icon: {
+                style: {
+                    color: tokens.color.text.muted,
+                    pointerEvents: 'none',
+                    position: 'absolute',
+                    right: tokens.space[3],
                 },
             },
         })),
         badge: defineRecipe(({ tokens, variants }) => ({
             root: {
                 style: {
-                    background: variants.kind === 'outline' ? 'transparent' : tokens.color.surfaceSunken,
-                    border: `1px solid ${variants.kind === 'outline' ? toneValue(tokens, variants.tone) : tokens.color.border}`,
+                    background:
+                        variants.kind === 'outline' ? 'transparent' : tokens.color.surface.sunken,
+                    border: `1px solid ${variants.kind === 'outline' ? toneValue(tokens, variants.tone) : tokens.color.border.default}`,
                     borderRadius: '999px',
                     color: toneValue(tokens, variants.tone),
                     display: 'inline-flex',
-                    fontSize: tokens.font.sizeSm,
+                    fontSize: tokens.font.size.sm,
                     fontWeight: 600,
                     padding: `${tokens.space[1]} ${tokens.space[2]}`,
                 },
@@ -386,8 +601,8 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
             content: {
                 style: {
-                    background: tokens.color.surfaceRaised,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.raised,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.lg,
                     boxShadow: tokens.shadow.lg,
                     left: '50%',
@@ -413,8 +628,8 @@ export const baseReactTheme: LoomReactThemeLayer = {
         menu: defineRecipe(({ tokens }) => ({
             content: {
                 style: {
-                    background: tokens.color.surfaceRaised,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.raised,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
                     boxShadow: tokens.shadow.md,
                     padding: tokens.space[2],
@@ -439,18 +654,18 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
             trigger: {
                 style: {
-                    background: tokens.color.surfaceSunken,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.sunken,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
-                    color: tokens.color.text,
+                    color: tokens.color.text.default,
                     cursor: 'pointer',
                     padding: `${tokens.space[2]} ${tokens.space[3]}`,
                 },
             },
             content: {
                 style: {
-                    background: tokens.color.surface,
-                    border: `1px solid ${tokens.color.border}`,
+                    background: tokens.color.surface.default,
+                    border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
                     padding: tokens.space[4],
                 },
@@ -465,12 +680,12 @@ export const baseReactTheme: LoomReactThemeLayer = {
             },
             head: {
                 style: {
-                    background: tokens.color.surfaceSunken,
+                    background: tokens.color.surface.sunken,
                 },
             },
             cell: {
                 style: {
-                    borderBottom: `1px solid ${tokens.color.border}`,
+                    borderBottom: `1px solid ${tokens.color.border.default}`,
                     padding: `${tokens.space[2]} ${tokens.space[3]}`,
                     textAlign: 'left',
                 },

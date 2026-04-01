@@ -273,7 +273,7 @@ export function ShortcutSettingsPanel<
                         onClick={() => setSelectedId(binding.id)}
                         style={{
                             background: binding.id === selectedId ? 'var(--loom-color-surface-overlay)' : 'transparent',
-                            border: '1px solid var(--loom-color-border)',
+                            border: '1px solid var(--loom-color-border-default)',
                             borderRadius: 'var(--loom-radius-md)',
                             cursor: 'pointer',
                             font: 'inherit',

@@ -2,17 +2,20 @@ import type { PrimitiveKey } from './blueprints';
 import type { Recipe } from './recipes';
 import {
     ColorModeSchema,
-    createFallbackTokens,
-    mergeTokens,
+    composeTokens,
     type ColorMode,
     type LoomTokenPatch,
     type LoomTokens,
 } from './tokens';
 
 export type LoomThemeModeDefinition = {
-    tokens?: LoomTokenPatch;
+    tokens?: LoomTokenPatch | LoomTokens;
 };
 
+/**
+ * Theme layers carry inert token values and recipe overrides.
+ * They do not render DOM and they do not define framework-specific assets.
+ */
 export type LoomThemeLayer = {
     id: string;
     label?: string;
@@ -33,15 +36,17 @@ export type ResolvedLoomTheme = {
 export function resolveThemeLayers(
     layers: readonly LoomThemeLayer[],
     colorMode: ColorMode,
-    fallback = createFallbackTokens(),
 ): ResolvedLoomTheme {
     const mode = ColorModeSchema.parse(colorMode);
-    let tokens = structuredClone(fallback);
     const recipes: Partial<Record<PrimitiveKey, Recipe>> = {};
     const layerIds: string[] = [];
+    const tokenLayers: Array<LoomTokenPatch | LoomTokens> = [];
 
     for (const layer of layers) {
-        tokens = mergeTokens(tokens, layer.modes[mode]?.tokens);
+        const modeDefinition = layer.modes[mode];
+        if (modeDefinition?.tokens) {
+            tokenLayers.push(modeDefinition.tokens);
+        }
         Object.assign(recipes, layer.recipes ?? {});
         layerIds.push(layer.id);
     }
@@ -50,7 +55,7 @@ export function resolveThemeLayers(
         id: layerIds.join('+') || 'loom-theme',
         label: layers[layers.length - 1]?.label ?? layers[0]?.label,
         colorMode: mode,
-        tokens,
+        tokens: composeTokens(...tokenLayers),
         recipes,
         layers: layerIds,
     };

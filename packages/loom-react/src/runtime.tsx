@@ -6,6 +6,7 @@ import {
     resolveThemeLayers,
     tokensToCssVariables,
     type ColorMode,
+    type IconName,
     type LoomThemeLayer,
     type LoomTokens,
     type PrimitiveKey,
@@ -33,11 +34,27 @@ export type LoomImplementationMap = Partial<
     Record<PrimitiveKey, LoomPrimitiveImplementation<object>>
 >;
 
+export type LoomIconComponentProps = {
+    className?: string;
+    size?: number | string;
+    style?: React.CSSProperties;
+    title?: string;
+};
+
+export type LoomIconComponent = React.ComponentType<LoomIconComponentProps>;
+export type LoomIconMap = Partial<Record<IconName, LoomIconComponent>>;
+
+export function defineIconSet<TIcons extends LoomIconMap>(icons: TIcons): TIcons {
+    return icons;
+}
+
 export type LoomReactThemeLayer = LoomThemeLayer & {
+    icons?: LoomIconMap;
     implementations?: LoomImplementationMap;
 };
 
 export type ResolvedLoomReactTheme = ResolvedLoomTheme & {
+    icons: LoomIconMap;
     implementations: LoomImplementationMap;
 };
 
@@ -47,13 +64,16 @@ function resolveReactThemeLayers(
 ): ResolvedLoomReactTheme {
     const resolved = resolveThemeLayers(layers, colorMode);
     const implementations: LoomImplementationMap = {};
+    const icons: LoomIconMap = {};
 
     for (const layer of layers) {
         Object.assign(implementations, layer.implementations ?? {});
+        Object.assign(icons, layer.icons ?? {});
     }
 
     return {
         ...resolved,
+        icons,
         implementations,
     };
 }
@@ -105,8 +125,8 @@ export function LoomProvider({
                 data-loom-theme={theme.layers.join(' ')}
                 style={{
                     ...cssVars,
-                    color: theme.tokens.color.text,
-                    fontFamily: theme.tokens.font.bodyFamily,
+                    color: theme.tokens.color.text.default,
+                    fontFamily: theme.tokens.font.family.body,
                     ...style,
                 }}>
                 {children}
@@ -125,6 +145,10 @@ export function useLoom() {
 
 export function useLoomTokens() {
     return useLoom().theme.tokens;
+}
+
+export function useLoomIcon(name: IconName) {
+    return useLoom().theme.icons[name];
 }
 
 export function useLoomColorMode() {

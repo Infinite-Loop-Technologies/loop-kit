@@ -457,8 +457,8 @@ export function DockCanvas({
                 data-testid='dock-stage'
                 style={{
                     background:
-                        'linear-gradient(180deg, color-mix(in oklch, var(--loom-color-surface-sunken) 92%, transparent) 0%, color-mix(in oklch, var(--loom-color-surface) 88%, transparent) 100%)',
-                    border: '1px solid var(--loom-color-border)',
+                        'linear-gradient(180deg, color-mix(in oklch, var(--loom-color-surface-sunken) 92%, transparent) 0%, color-mix(in oklch, var(--loom-color-surface-default) 88%, transparent) 100%)',
+                    border: '1px solid var(--loom-color-border-default)',
                     borderRadius: '1.5rem',
                     height: '100%',
                     minHeight: '32rem',
@@ -507,10 +507,10 @@ export function DockCanvas({
                         style={{
                             background:
                                 'color-mix(in oklch, var(--loom-color-surface-raised) 94%, transparent)',
-                            border: '1px solid color-mix(in oklch, var(--loom-color-accent) 45%, var(--loom-color-border))',
+                            border: '1px solid color-mix(in oklch, var(--loom-color-accent-default) 45%, var(--loom-color-border-default))',
                             borderRadius: 'var(--loom-radius-md)',
                             boxShadow: 'var(--loom-shadow-lg)',
-                            color: 'var(--loom-color-text)',
+                            color: 'var(--loom-color-text-default)',
                             fontSize: '0.82rem',
                             fontWeight: 600,
                             padding: '0.65rem 0.85rem',

@@ -3,22 +3,32 @@ import { z } from 'zod';
 export const ColorModeSchema = z.enum(['light', 'dark']);
 
 export const LoomColorTokensSchema = z.object({
-    text: z.string(),
-    textMuted: z.string(),
-    textInverse: z.string(),
-    surface: z.string(),
-    surfaceRaised: z.string(),
-    surfaceSunken: z.string(),
-    surfaceOverlay: z.string(),
-    border: z.string(),
-    borderStrong: z.string(),
-    accent: z.string(),
-    accentText: z.string(),
-    success: z.string(),
-    warning: z.string(),
-    danger: z.string(),
-    info: z.string(),
-    focusRing: z.string(),
+    text: z.object({
+        default: z.string(),
+        muted: z.string(),
+        inverse: z.string(),
+    }),
+    surface: z.object({
+        default: z.string(),
+        raised: z.string(),
+        sunken: z.string(),
+        overlay: z.string(),
+    }),
+    border: z.object({
+        default: z.string(),
+        strong: z.string(),
+        focus: z.string(),
+    }),
+    accent: z.object({
+        default: z.string(),
+        text: z.string(),
+    }),
+    status: z.object({
+        success: z.string(),
+        warning: z.string(),
+        danger: z.string(),
+        info: z.string(),
+    }),
 });
 
 export const LoomSpaceTokensSchema = z.object({
@@ -38,13 +48,17 @@ export const LoomRadiusTokensSchema = z.object({
 });
 
 export const LoomFontTokensSchema = z.object({
-    bodyFamily: z.string(),
-    headingFamily: z.string(),
-    monoFamily: z.string(),
-    sizeSm: z.string(),
-    sizeMd: z.string(),
-    sizeLg: z.string(),
-    sizeXl: z.string(),
+    family: z.object({
+        body: z.string(),
+        heading: z.string(),
+        mono: z.string(),
+    }),
+    size: z.object({
+        sm: z.string(),
+        md: z.string(),
+        lg: z.string(),
+        xl: z.string(),
+    }),
 });
 
 export const LoomShadowTokensSchema = z.object({
@@ -54,9 +68,11 @@ export const LoomShadowTokensSchema = z.object({
 });
 
 export const LoomMotionTokensSchema = z.object({
-    fast: z.string(),
-    normal: z.string(),
-    slow: z.string(),
+    duration: z.object({
+        fast: z.string(),
+        normal: z.string(),
+        slow: z.string(),
+    }),
 });
 
 export const LoomTokensSchema = z.object({
@@ -79,103 +95,76 @@ export type DeepPartial<T> = {
 
 export type LoomTokenPatch = DeepPartial<LoomTokens>;
 
-export function createFallbackTokens(): LoomTokens {
-    return {
-        color: {
-            text: 'oklch(0.23 0.02 255)',
-            textMuted: 'oklch(0.5 0.02 255)',
-            textInverse: 'oklch(0.98 0.004 255)',
-            surface: 'oklch(0.985 0.003 255)',
-            surfaceRaised: 'oklch(0.995 0.002 255)',
-            surfaceSunken: 'oklch(0.94 0.005 255)',
-            surfaceOverlay: 'oklch(0.92 0.01 255 / 0.84)',
-            border: 'oklch(0.86 0.01 255)',
-            borderStrong: 'oklch(0.7 0.02 255)',
-            accent: 'oklch(0.62 0.15 235)',
-            accentText: 'oklch(0.98 0.004 255)',
-            success: 'oklch(0.68 0.14 150)',
-            warning: 'oklch(0.78 0.16 80)',
-            danger: 'oklch(0.67 0.18 28)',
-            info: 'oklch(0.72 0.12 230)',
-            focusRing: 'oklch(0.74 0.15 235)',
-        },
-        space: {
-            0: '0rem',
-            1: '0.25rem',
-            2: '0.5rem',
-            3: '0.75rem',
-            4: '1rem',
-            5: '1.5rem',
-            6: '2rem',
-        },
-        radius: {
-            sm: '0.375rem',
-            md: '0.75rem',
-            lg: '1rem',
-        },
-        font: {
-            bodyFamily: '"Aptos", system-ui, sans-serif',
-            headingFamily: '"Fraunces", "Aptos Display", serif',
-            monoFamily: '"JetBrains Mono", monospace',
-            sizeSm: '0.875rem',
-            sizeMd: '1rem',
-            sizeLg: '1.125rem',
-            sizeXl: '1.5rem',
-        },
-        shadow: {
-            sm: '0 1px 2px rgb(15 23 42 / 0.08)',
-            md: '0 12px 30px rgb(15 23 42 / 0.12)',
-            lg: '0 20px 60px rgb(15 23 42 / 0.16)',
-        },
-        motion: {
-            fast: '120ms',
-            normal: '180ms',
-            slow: '280ms',
-        },
-    };
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function mergeTokens(base: LoomTokens, patch?: LoomTokenPatch | null): LoomTokens {
+export function mergeDeep<T extends Record<string, unknown>>(
+    base: T,
+    patch?: DeepPartial<T> | null,
+): T {
     if (!patch) {
         return structuredClone(base);
     }
 
-    return LoomTokensSchema.parse({
-        color: {
-            ...base.color,
-            ...(patch.color ?? {}),
-        },
-        space: {
-            ...base.space,
-            ...(patch.space ?? {}),
-        },
-        radius: {
-            ...base.radius,
-            ...(patch.radius ?? {}),
-        },
-        font: {
-            ...base.font,
-            ...(patch.font ?? {}),
-        },
-        shadow: {
-            ...base.shadow,
-            ...(patch.shadow ?? {}),
-        },
-        motion: {
-            ...base.motion,
-            ...(patch.motion ?? {}),
-        },
-    });
+    const next: Record<string, unknown> = structuredClone(base);
+
+    for (const [key, patchValue] of Object.entries(patch)) {
+        if (patchValue === undefined) {
+            continue;
+        }
+
+        const baseValue = next[key];
+        if (isPlainObject(baseValue) && isPlainObject(patchValue)) {
+            next[key] = mergeDeep(baseValue, patchValue);
+            continue;
+        }
+
+        next[key] = patchValue;
+    }
+
+    return next as T;
+}
+
+export function mergeTokens(base: LoomTokens, patch?: LoomTokenPatch | null): LoomTokens {
+    return LoomTokensSchema.parse(mergeDeep(base, patch));
+}
+
+export function composeTokens(
+    ...layers: ReadonlyArray<LoomTokenPatch | LoomTokens | null | undefined>
+): LoomTokens {
+    let next: Record<string, unknown> = {};
+
+    for (const layer of layers) {
+        if (!layer) {
+            continue;
+        }
+        next = mergeDeep(next, layer as DeepPartial<Record<string, unknown>>);
+    }
+
+    return LoomTokensSchema.parse(next);
+}
+
+function flattenTokenEntries(
+    value: Record<string, unknown>,
+    path: string[],
+    entries: Array<[`--${string}`, string]>,
+) {
+    for (const [key, nested] of Object.entries(value)) {
+        const nextPath = [...path, key];
+        if (isPlainObject(nested)) {
+            flattenTokenEntries(nested, nextPath, entries);
+            continue;
+        }
+        if (nested === undefined || nested === null) {
+            continue;
+        }
+        entries.push([`--loom-${nextPath.join('-')}`, String(nested)]);
+    }
 }
 
 export function tokensToCssVariables(tokens: LoomTokens): Record<`--${string}`, string> {
     const entries: Array<[`--${string}`, string]> = [];
-
-    for (const [groupKey, groupValue] of Object.entries(tokens) as Array<[keyof LoomTokens, Record<string, string>]>) {
-        for (const [key, value] of Object.entries(groupValue)) {
-            entries.push([`--loom-${String(groupKey)}-${key}`, value]);
-        }
-    }
-
+    flattenTokenEntries(tokens as Record<string, unknown>, [], entries);
     return Object.fromEntries(entries) as Record<`--${string}`, string>;
 }
