@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dock-demo-favicon" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#63c7ff" />
+      <stop offset="55%" stop-color="#15c2a3" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#08111f" />
+  <path d="M18 18h28v8H18z" fill="url(#dock-demo-favicon)" />
+  <path d="M18 30h12v16H18z" fill="#e2f4ff" opacity="0.92" />
+  <path d="M34 30h12v16H34z" fill="#8fe5ff" opacity="0.88" />
+</svg>

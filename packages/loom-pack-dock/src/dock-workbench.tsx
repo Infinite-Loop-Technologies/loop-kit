@@ -15,6 +15,7 @@ import {
     Dialog,
     Grid,
     Heading,
+    Icon,
     Inline,
     Panel,
     Stack,
@@ -28,15 +29,7 @@ import {
     type GraphiteShortcutBinding,
 } from '@loop-kit/loom-pack-shortcuts';
 import { ThemeSettingsPanel } from '@loop-kit/loom-pack-settings';
-import {
-    LayoutPanelLeft,
-    LayoutPanelTop,
-    MoonStar,
-    Plus,
-    Redo2,
-    Sparkles,
-    Undo2,
-} from 'lucide-react';
+import { MoonStar, Redo2, Undo2 } from 'lucide-react';
 
 import { DockCanvas, type DockCanvasDebugState } from './dock-canvas';
 import { getActivePanelRef, panelTitle } from './dock-helpers';
@@ -563,7 +556,7 @@ export function DockWorkbench({
                     <Inline align='center' justify='space-between'>
                         <Stack gap='2'>
                             <Inline align='center' gap='2'>
-                                <Sparkles size={16} />
+                                <Icon name='panelLeft' size='sm' />
                                 <Text
                                     as='span'
                                     size='sm'
@@ -601,12 +594,13 @@ export function DockWorkbench({
                                         DOCK_LAYOUT_DISPATCH_OPTIONS,
                                     )
                                 }
+                                startIcon='plus'
                                 type='button'>
-                                <Plus size={16} />
                                 Add Panel
                             </Button>
                             <Button
                                 disabled={!activePanelRef}
+                                endIcon='close'
                                 kind='outline'
                                 onClick={removeActivePanel}
                                 type='button'>
@@ -652,8 +646,8 @@ export function DockWorkbench({
                                         DOCK_UI_DISPATCH_OPTIONS,
                                     )
                                 }
+                                startIcon='panelRight'
                                 type='button'>
-                                <LayoutPanelLeft size={16} />
                                 Next Theme
                             </Button>
                             <Button
@@ -670,8 +664,8 @@ export function DockWorkbench({
                                         section: 'general',
                                     })
                                 }
+                                startIcon='settings'
                                 type='button'>
-                                <LayoutPanelTop size={16} />
                                 Settings
                             </Button>
                         </Inline>

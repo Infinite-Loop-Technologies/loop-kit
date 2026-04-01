@@ -10,7 +10,14 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@loop-kit/graphite-react": "workspace:*",
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-interactions": "workspace:*",
         "@loop-kit/loom-pack-dock": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
+        "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+        "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-neumorph-react": "workspace:*",
         "react": "^19.1.0",
         "react-dom": "^19.1.0"
     },

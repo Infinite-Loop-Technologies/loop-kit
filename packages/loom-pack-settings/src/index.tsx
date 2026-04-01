@@ -3,6 +3,7 @@ import * as React from 'react';
 import {
     Button,
     Heading,
+    Icon,
     Inline,
     Panel,
     Select,
@@ -39,14 +40,17 @@ export function ThemeSettingsPanel({
     return (
         <Panel className={className}>
             <Stack gap='3'>
-                <div>
-                    <Heading level={3} size='sm'>
-                        Theme Settings
-                    </Heading>
+                <Stack gap='2'>
+                    <Inline align='center' gap='2'>
+                        <Icon name='settings' tone='accent' />
+                        <Heading level={3} size='sm'>
+                            Theme Settings
+                        </Heading>
+                    </Inline>
                     <Text tone='muted'>
                         Provider-level color mode and theme selection. Light/dark stays outside primitive variants.
                     </Text>
-                </div>
+                </Stack>
 
                 <Select
                     onChange={(event) => onThemeChange(event.currentTarget.value)}
@@ -73,12 +77,14 @@ export function ThemeSettingsPanel({
                     <Button
                         kind={colorMode === 'light' ? 'solid' : 'outline'}
                         onClick={() => onColorModeChange('light')}
+                        startIcon={colorMode === 'light' ? 'check' : undefined}
                         type='button'>
                         Light
                     </Button>
                     <Button
                         kind={colorMode === 'dark' ? 'solid' : 'outline'}
                         onClick={() => onColorModeChange('dark')}
+                        startIcon={colorMode === 'dark' ? 'check' : undefined}
                         type='button'>
                         Dark
                     </Button>
