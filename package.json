@@ -10,13 +10,14 @@
         "build": "bun tools/workspace.ts build",
         "typecheck:bun": "bun x tsc -p tsconfig.bun.json",
         "typecheck": "bun run typecheck:bun && bun tools/workspace.ts typecheck",
-        "test": "bun test",
-        "check": "bun run typecheck && bun run test",
-        "ci": "bun run build && bun run typecheck && bun run test",
-        "forge:dev": "bun run --cwd apps/forge dev",
-        "dock:dev": "bun run --cwd apps/dock-demo dev",
-        "loom:dev": "bun run --cwd apps/loom-demo dev",
-        "workspaces:list": "bun tools/workspace.ts list"
+    "test": "bun test",
+    "check": "bun run typecheck && bun run test",
+    "ci": "bun run build && bun run typecheck && bun run test",
+    "forge:dev": "bun run --cwd apps/forge dev",
+    "platform:dev": "bun run --cwd apps/platform-api dev",
+    "dock:dev": "bun run --cwd apps/dock-demo dev",
+    "loom:dev": "bun run --cwd apps/loom-demo dev",
+    "workspaces:list": "bun tools/workspace.ts list"
     },
     "devDependencies": {
         "@types/bun": "^1.3.11",

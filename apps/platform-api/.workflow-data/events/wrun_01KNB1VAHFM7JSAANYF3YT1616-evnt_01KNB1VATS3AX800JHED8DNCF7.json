@@ -1,0 +1,15 @@
+{
+  "eventType": "step_created",
+  "specVersion": 2,
+  "correlationId": "step_01KNB1VARAA170X7H6KPYWRXMS",
+  "eventData": {
+    "stepName": "step//./workflows/demo-signup//createDemoUser",
+    "input": {
+      "__type": "Uint8Array",
+      "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyXSwiaGVsbG9AZXhhbXBsZS5jb20iXQ=="
+    }
+  },
+  "runId": "wrun_01KNB1VAHFM7JSAANYF3YT1616",
+  "eventId": "evnt_01KNB1VATS3AX800JHED8DNCF7",
+  "createdAt": "2026-04-04T01:31:18.233Z"
+}

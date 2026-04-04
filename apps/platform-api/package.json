@@ -1,0 +1,25 @@
+{
+  "name": "@loop-kit/platform-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nitro dev",
+    "build": "nitro build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "workflow:inspect": "workflow inspect runs",
+    "workflow:web": "workflow web"
+  },
+  "dependencies": {
+    "@clerk/fastify": "^3.1.6",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.8.4",
+    "nitro": "^3.0.260311-beta",
+    "rollup": "^4.52.4",
+    "workflow": "^4.2.0-beta.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.3"
+  }
+}
