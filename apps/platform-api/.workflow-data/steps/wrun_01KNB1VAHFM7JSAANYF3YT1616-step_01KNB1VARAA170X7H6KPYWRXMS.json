@@ -1,0 +1,20 @@
+{
+  "runId": "wrun_01KNB1VAHFM7JSAANYF3YT1616",
+  "stepId": "step_01KNB1VARAA170X7H6KPYWRXMS",
+  "stepName": "step//./workflows/demo-signup//createDemoUser",
+  "status": "completed",
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyXSwiaGVsbG9AZXhhbXBsZS5jb20iXQ=="
+  },
+  "attempt": 1,
+  "startedAt": "2026-04-04T01:31:18.328Z",
+  "createdAt": "2026-04-04T01:31:18.233Z",
+  "updatedAt": "2026-04-04T01:31:18.336Z",
+  "specVersion": 2,
+  "output": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFt7ImlkIjoxLCJlbWFpbCI6MiwiY3JlYXRlZEF0IjozfSwiODM3MzJmNTgtMjMxNi00ZWU5LWI2ZmItYTg1ZDk1ZWU5NDdiIiwiaGVsbG9AZXhhbXBsZS5jb20iLCIyMDI2LTA0LTA0VDAxOjMxOjE4LjMzNVoiXQ=="
+  },
+  "completedAt": "2026-04-04T01:31:18.336Z"
+}

@@ -5,6 +5,7 @@
         { "path": "./apps/dock-demo/tsconfig.json" },
         { "path": "./apps/forge/tsconfig.json" },
         { "path": "./apps/loom-demo/tsconfig.json" },
+        { "path": "./apps/platform-api/tsconfig.json" },
         { "path": "./packages/dock/tsconfig.json" },
         { "path": "./packages/graphite/tsconfig.json" },
         { "path": "./packages/graphite-react/tsconfig.json" },
