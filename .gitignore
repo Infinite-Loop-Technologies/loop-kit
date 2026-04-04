@@ -25,6 +25,7 @@
 /dist
 **/dist/
 **/.output/
+**/.swc/
 **/target/
 **/tmp/
 **/src-tauri/target/
