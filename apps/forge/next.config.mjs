@@ -17,6 +17,7 @@ const nextConfig = {
         '@loop-kit/loom-pack-dock',
         '@loop-kit/loom-theme-base-react',
         '@loop-kit/loom-theme-aquatic-react',
+        '@loop-kit/loom-theme-foundry-react',
         '@loop-kit/loom-theme-neumorph-react',
     ],
     typescript: {

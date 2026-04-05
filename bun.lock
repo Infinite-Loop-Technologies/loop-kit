@@ -39,6 +39,7 @@
         "@loop-kit/loom-react": "workspace:*",
         "@loop-kit/loom-theme-aquatic-react": "workspace:*",
         "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-foundry-react": "workspace:*",
         "@loop-kit/loom-theme-neumorph-react": "workspace:*",
         "jazz-tools": "^0.20.15",
         "next": "^16.2.1",
@@ -281,6 +282,24 @@
         "@loop-kit/loom-core": "workspace:*",
         "@loop-kit/loom-react": "workspace:*",
         "lucide-react": "^0.487.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.2",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^18.2.0 || ^19.0.0",
+        "react-dom": "^18.2.0 || ^19.0.0",
+      },
+    },
+    "packages/loom-theme-foundry-react": {
+      "name": "@loop-kit/loom-theme-foundry-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@loop-kit/loom-core": "workspace:*",
+        "@loop-kit/loom-react": "workspace:*",
       },
       "devDependencies": {
         "@types/react": "^19.1.2",
@@ -799,6 +818,8 @@
 
     "@loop-kit/loom-theme-base-react": ["@loop-kit/loom-theme-base-react@workspace:packages/loom-theme-base-react"],
 
+    "@loop-kit/loom-theme-foundry-react": ["@loop-kit/loom-theme-foundry-react@workspace:packages/loom-theme-foundry-react"],
+
     "@loop-kit/loom-theme-neumorph-react": ["@loop-kit/loom-theme-neumorph-react@workspace:packages/loom-theme-neumorph-react"],
 
     "@loop-kit/loopkit-capabilities": ["@loop-kit/loopkit-capabilities@workspace:packages/loopkit-capabilities"],
@@ -1297,29 +1318,29 @@
 
     "@webassemblyjs/wast-printer": ["@webassemblyjs/wast-printer@1.14.1", "", { "dependencies": { "@webassemblyjs/ast": "1.14.1", "@xtuc/long": "4.2.2" } }, "sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw=="],
 
-    "@workflow/astro": ["@workflow/astro@4.0.0-beta.47", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/rollup": "4.0.0-beta.30", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.23", "exsolve": "^1.0.8", "pathe": "^2.0.3" } }, "sha512-t/9R18hMKrwLVO1Gc61MUTsnRj+ZdQXvur5IkZWlMfo6xgH9RN5xUR8O0b2fN+GRBlMnzdR5hTG+DYH4PrWQ8w=="],
+    "@workflow/astro": ["@workflow/astro@4.0.0-beta.50", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "^1.0.8", "pathe": "^2.0.3" } }, "sha512-NI5eqOCBApqd88fRPZ27NW8tMtiG+UjjkMNMD0zb7sD6LwKhChTGHO/fk3brvnyxUy0zRca8am9IRAeXAra9jg=="],
 
-    "@workflow/builders": ["@workflow/builders@4.0.1-beta.64", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.73", "@workflow/errors": "4.1.0-beta.19", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-RChF5D2XMyW63+1OiRovrQLlsGTpoA+A21SwvuoJ/XpoIIVQhz99z6sEwGABlk0Qj+z4ZJfyuSQdUs+zg7P+Ng=="],
+    "@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
 
-    "@workflow/cli": ["@workflow/cli@4.2.0-beta.73", "", { "dependencies": { "@oclif/core": "4.8.1", "@oclif/plugin-help": "6.2.37", "@swc/core": "1.15.3", "@vercel/cli-auth": "0.0.1", "@workflow/builders": "4.0.1-beta.64", "@workflow/core": "4.2.0-beta.73", "@workflow/errors": "4.1.0-beta.19", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "@workflow/web": "4.1.0-beta.45", "@workflow/world": "4.1.0-beta.14", "@workflow/world-local": "4.1.0-beta.46", "@workflow/world-vercel": "4.1.0-beta.45", "boxen": "8.0.1", "builtin-modules": "5.0.0", "chalk": "5.6.2", "chokidar": "4.0.3", "date-fns": "4.1.0", "dotenv": "^17.3.1", "easy-table": "1.2.0", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "mixpart": "0.0.4", "open": "10.2.0", "ora": "8.2.0", "terminal-link": "5.0.0", "tinyglobby": "0.2.15", "xdg-app-paths": "5.1.0", "zod": "4.3.6" }, "bin": { "workflow": "bin/run.js", "wf": "bin/run.js" } }, "sha512-2jW1QX8/Y0C+uBOzvk4KZy8BoOwRgPHCI7Hx7hOrHxEmUrKVSj5jJTEWpwmagJl+gxCcbo1tB8YBD5yYRMzfwA=="],
+    "@workflow/cli": ["@workflow/cli@4.2.0-beta.76", "", { "dependencies": { "@oclif/core": "4.8.1", "@oclif/plugin-help": "6.2.37", "@swc/core": "1.15.3", "@vercel/cli-auth": "0.0.1", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "@workflow/web": "4.1.0-beta.47", "@workflow/world": "4.1.0-beta.15", "@workflow/world-local": "4.1.0-beta.49", "@workflow/world-vercel": "4.1.0-beta.47", "boxen": "8.0.1", "builtin-modules": "5.0.0", "chalk": "5.6.2", "chokidar": "4.0.3", "date-fns": "4.1.0", "dotenv": "^17.3.1", "easy-table": "1.2.0", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "mixpart": "0.0.4", "open": "10.2.0", "ora": "8.2.0", "terminal-link": "5.0.0", "tinyglobby": "0.2.15", "xdg-app-paths": "5.1.0", "zod": "4.3.6" }, "bin": { "workflow": "bin/run.js", "wf": "bin/run.js" } }, "sha512-fauuVTDuxqovptTZrbkhgqVqDATDXaiO4F/+nmpMUNTlvBuWfEIULGZT3nMOpgUsF8159inTyCX56vdFlwXYJw=="],
 
-    "@workflow/core": ["@workflow/core@4.2.0-beta.73", "", { "dependencies": { "@aws-sdk/credential-provider-web-identity": "3.972.13", "@jridgewell/trace-mapping": "0.3.31", "@standard-schema/spec": "1.0.0", "@types/ms": "2.1.0", "@vercel/functions": "^3.4.3", "@workflow/errors": "4.1.0-beta.19", "@workflow/serde": "4.1.0-beta.2", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.14", "@workflow/world-local": "4.1.0-beta.46", "@workflow/world-vercel": "4.1.0-beta.45", "debug": "4.4.3", "devalue": "5.6.3", "ms": "2.1.3", "nanoid": "5.1.6", "seedrandom": "3.0.5", "ulid": "~3.0.1", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-F0DQrw11KO1tG5gIOk493Y+O3OwmI2K31z3/HehCD/HSh7LIgj7gQVwNR78dbkt5+4q3BL8RurRDN35hRqk1tg=="],
+    "@workflow/core": ["@workflow/core@4.2.0-beta.76", "", { "dependencies": { "@aws-sdk/credential-provider-web-identity": "3.972.13", "@jridgewell/trace-mapping": "0.3.31", "@standard-schema/spec": "1.0.0", "@types/ms": "2.1.0", "@vercel/functions": "^3.4.3", "@workflow/errors": "4.1.0-beta.20", "@workflow/serde": "4.1.0-beta.2", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.15", "@workflow/world-local": "4.1.0-beta.49", "@workflow/world-vercel": "4.1.0-beta.47", "debug": "4.4.3", "devalue": "5.6.3", "ms": "2.1.3", "nanoid": "5.1.6", "seedrandom": "3.0.5", "semver": "7.7.4", "ulid": "~3.0.1", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-W/P85lrf2/nE0RWfB07t3Bem0BwDuqnXoknRuSrOOq+WO6Hxc9/CiEN3S1lk9L/QVgzBLWZOCS5IhBwTt3VR1A=="],
 
-    "@workflow/errors": ["@workflow/errors@4.1.0-beta.19", "", { "dependencies": { "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" } }, "sha512-AEZefVGpant/4eUJixnjGlK3LfyNPWp/C6YpmAsJbPPaFHPggKE7WT185BCMtXJMbpVKF/d/rNa7fxZ3J/yYhw=="],
+    "@workflow/errors": ["@workflow/errors@4.1.0-beta.20", "", { "dependencies": { "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" } }, "sha512-V54ssJo7vUXFCueX5TssM4NhTKsmG5umoG/hYtVPVgJUDL1i17kB8Fm41FJfh4dg/PWta0ruJCAFs58Udz/2sg=="],
 
-    "@workflow/nest": ["@workflow/nest@0.0.0-beta.22", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/swc-plugin": "4.1.0-beta.21", "pathe": "2.0.3" }, "peerDependencies": { "@nestjs/common": ">=10.0.0", "@nestjs/core": ">=10.0.0", "@swc/cli": ">=0.4.0" }, "bin": { "workflow-nest": "dist/cli.js" } }, "sha512-8pCwKGSPWscoKfqjca+K/AiI/sUF690iGChmSvMe9PWQKnMVYtcbawaujCf/i0ru+tMmfFO80Vm+iNpMj/YbZQ=="],
+    "@workflow/nest": ["@workflow/nest@0.0.0-beta.25", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/swc-plugin": "4.1.0-beta.21", "pathe": "2.0.3" }, "peerDependencies": { "@nestjs/common": ">=10.0.0", "@nestjs/core": ">=10.0.0", "@swc/cli": ">=0.4.0" }, "bin": { "workflow-nest": "dist/cli.js" } }, "sha512-g5u4gWW7IzzbfHkDqCHuQld9cWaeS53dU0V385da7+bLYvy6XPJ0yvABqKAtJFm8xOsWlm06QDH19ymjaUkl+g=="],
 
-    "@workflow/next": ["@workflow/next@4.0.1-beta.69", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/core": "4.2.0-beta.73", "@workflow/swc-plugin": "4.1.0-beta.21", "semver": "7.7.4", "watchpack": "2.5.1" }, "peerDependencies": { "next": ">13" }, "optionalPeers": ["next"] }, "sha512-+3As/uSlYhTtHE7r2qFess2HyJI0zVqXu3K7YvKgzNM+td6dl/SF0cbXcUgTy58WeFfPQoGCCumO6LNgC9c1oA=="],
+    "@workflow/next": ["@workflow/next@4.0.1-beta.72", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/swc-plugin": "4.1.0-beta.21", "semver": "7.7.4", "watchpack": "2.5.1" }, "peerDependencies": { "next": ">13" }, "optionalPeers": ["next"] }, "sha512-QgcdkLkjs2hPG/EnYfK+d4iYfJyQVg8KuxON3K/LiP1Ijagn/1xu4vC+hZocM8UbpXg46LzsASxY9p5bgVaY1Q=="],
 
-    "@workflow/nitro": ["@workflow/nitro@4.0.1-beta.68", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/core": "4.2.0-beta.73", "@workflow/rollup": "4.0.0-beta.30", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.23", "exsolve": "1.0.8", "pathe": "2.0.3" } }, "sha512-g5yEEZpncc99fqdXZcQWSC2dvASbhzqLHKB4lOP2da+Sy8i2Fb86hKIwtSTgi/POpr/9WCI3u4F1i8sn3DBhig=="],
+    "@workflow/nitro": ["@workflow/nitro@4.0.1-beta.71", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "1.0.8", "pathe": "2.0.3" } }, "sha512-g6cSM/KUlgz49kgqUC3eshzTldbNPzkB60adnksqqBnt7wZbY/GTBjsKAScR7QFSTzMZfSZ5SdGkQJixCtkFDw=="],
 
-    "@workflow/nuxt": ["@workflow/nuxt@4.0.1-beta.57", "", { "dependencies": { "@nuxt/kit": "4.4.2", "@workflow/nitro": "4.0.1-beta.68" } }, "sha512-pTWDevRsscNoklP2R43a/ENUlBU/dBcQWxlvmrP7eTkK6LmRjvl1+S57fKiMcRzlYvhUB8yOAD9CDaZZ2jMecg=="],
+    "@workflow/nuxt": ["@workflow/nuxt@4.0.1-beta.60", "", { "dependencies": { "@nuxt/kit": "4.4.2", "@workflow/nitro": "4.0.1-beta.71" } }, "sha512-ywHvVVwJ1BUuU7m4zPP8CG4/T59bd9FJoC3xsdiFgqTjFXyOFqzkQYnujvhp4zqv6Rmldp2bb3sLkSAJJhVniQ=="],
 
-    "@workflow/rollup": ["@workflow/rollup@4.0.0-beta.30", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/swc-plugin": "4.1.0-beta.21", "exsolve": "1.0.7" } }, "sha512-ZbJPwo01UyiyzBr6GIv20jYnfXfGm/PZ9yA4ARrkwwZt1X/G1S/J08T33iWYUkXV0RH+6DJUvJioHtn8QbL0DA=="],
+    "@workflow/rollup": ["@workflow/rollup@4.0.0-beta.33", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/swc-plugin": "4.1.0-beta.21", "exsolve": "1.0.7" } }, "sha512-g0Rd5eV80nvOqP222N9YhByBkrtGgH+9fjQuiG1kDdSYNu/ZEArNdBhpwVK5ZDrjTXZgmbYDsg8GzkVcDmOvrg=="],
 
     "@workflow/serde": ["@workflow/serde@4.1.0-beta.2", "", {}, "sha512-8kkeoQKLDaKXefjV5dbhBj2aErfKp1Mc4pb6tj8144cF+Em5SPbyMbyLCHp+BVrFfFVCBluCtMx+jjvaFVZGww=="],
 
-    "@workflow/sveltekit": ["@workflow/sveltekit@4.0.0-beta.62", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.64", "@workflow/rollup": "4.0.0-beta.30", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.23", "exsolve": "^1.0.8", "fs-extra": "^11.3.2", "pathe": "^2.0.3" } }, "sha512-HetSMA+rh/ZbQTNH55wfSLFEoUhsQpKK7vX6aY35CUwVATiq1Ib8/hgVBM01ZI0HxD+T5HzbZg7wx9dJOJicXw=="],
+    "@workflow/sveltekit": ["@workflow/sveltekit@4.0.0-beta.65", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "^1.0.8", "fs-extra": "^11.3.2", "pathe": "^2.0.3" } }, "sha512-aBZCvCOK4NC2VTddn/0jPEpO7XgopACV8eZQFVRQEln5W3bCNzSYqAmUefKQ7a96BBwNSTDcBX7/30ypOH/SYg=="],
 
     "@workflow/swc-plugin": ["@workflow/swc-plugin@4.1.0-beta.21", "", { "peerDependencies": { "@swc/core": "1.15.3" } }, "sha512-CcZG8T3oxMNils93OTomXT54pMwqH2IPheiZjg4bEz2aQtIQXGyU3ul0NRCDyLFgQa9tb3mgW18yOsOqajr0Tg=="],
 
@@ -1327,15 +1348,15 @@
 
     "@workflow/utils": ["@workflow/utils@4.1.0-beta.13", "", { "dependencies": { "ms": "2.1.3" } }, "sha512-3vVuXZVfLVeJ78MM6D0gNXg6hMZdDYAzmF92p+HxItI0B2Yk1EuDIIUfBXKWwTOKCCuKF4iroZt2u9BFqrs2AQ=="],
 
-    "@workflow/vite": ["@workflow/vite@4.0.0-beta.23", "", { "dependencies": { "@workflow/builders": "4.0.1-beta.64" } }, "sha512-EM5rDgrkwWN5vAY2YteuL8/bELEv6g2dckTHiEl4SuYNYZK/NLvQV7b57ypMNafWAc2hZ/euplE1fBqsuQEC3Q=="],
+    "@workflow/vite": ["@workflow/vite@4.0.0-beta.26", "", { "dependencies": { "@workflow/builders": "4.0.1-beta.67" } }, "sha512-TuOdcX0v7miHIcs5+kera70kWkvygAXTKHAqkBb4pHmmlqKOrlwbCu1Z/qNI3qOWd5Jtpu9IItHaiwR9uu/dUg=="],
 
-    "@workflow/web": ["@workflow/web@4.1.0-beta.45", "", { "dependencies": { "express": "^4.21.0" } }, "sha512-ITqHjQMS5QPj0lx4vGdyhASz/IrqKQcgnv97OBiKvnwcWCH+nszmP59LJ/BL9DTb0AR2ugFWh2FlGe1GJxTTZg=="],
+    "@workflow/web": ["@workflow/web@4.1.0-beta.47", "", { "dependencies": { "express": "^4.21.0" } }, "sha512-1D7uRpN7pBXIm4yS/26s9g110uiU8n7UfD7oAK2+5eI4HSyYfBvr/+iUFvpCClyadeUlxNdzVPqSNFoX60QVSg=="],
 
-    "@workflow/world": ["@workflow/world@4.1.0-beta.14", "", { "dependencies": { "ulid": "~3.0.1" }, "peerDependencies": { "zod": "4.3.6" } }, "sha512-23BC9d7m7DDuGuaLncMHZ/6XFJePsY7Dr2zVecRWpM6NvOmAKV+oiOav/HEBxUCdaccSshSsLRqwdHX9Q9HCZA=="],
+    "@workflow/world": ["@workflow/world@4.1.0-beta.15", "", { "dependencies": { "ulid": "~3.0.1" }, "peerDependencies": { "zod": "4.3.6" } }, "sha512-/eoYOF7WdxGTlHVYMA66dRIENtJpgEfJPbQbl+JZoui1V/6uA0ZmXP742qEwbref5+tq4tzLT4nnC+WJbdUqXQ=="],
 
-    "@workflow/world-local": ["@workflow/world-local@4.1.0-beta.46", "", { "dependencies": { "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.19", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.14", "async-sema": "3.1.1", "ulid": "~3.0.1", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-jCDcJdQTDwq4+5BTf3OajUtRuDaXM6yYdrGsA0P4PAnY7grgOW+R1Thd4cW4EHJZYhOQ5bfgrCCCMF8nhAwukw=="],
+    "@workflow/world-local": ["@workflow/world-local@4.1.0-beta.49", "", { "dependencies": { "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.15", "async-sema": "3.1.1", "ulid": "~3.0.1", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-juVuEeDcx0wPwGW3HnFrmHUNRgnZkq2aRkhU43X0eqL7wxJDBsBQi7MV1Rfrf6gFh9CnEmV6/jFpbdY1kc5KiA=="],
 
-    "@workflow/world-vercel": ["@workflow/world-vercel@4.1.0-beta.45", "", { "dependencies": { "@vercel/oidc": "3.2.0", "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.19", "@workflow/world": "4.1.0-beta.14", "cbor-x": "1.6.0", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-+2u8BtWnOWgdry22zJj9QSgh4s1WrTy9EvAJKx+sFnG24mrVBAW83IvqxpDIXAAd72PTFnEXyGHP4LUIO2KJag=="],
+    "@workflow/world-vercel": ["@workflow/world-vercel@4.1.0-beta.47", "", { "dependencies": { "@vercel/oidc": "3.2.0", "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/world": "4.1.0-beta.15", "cbor-x": "1.6.0", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-jIgVu95a5Thu+2tJJHZiSBJawplfXSQ6jyNwQY2rsEXkL2H6WigxryaeHTUlp4ntyFzdjAdojQYQTbAM9Dc4Ug=="],
 
     "@xhmikosr/archive-type": ["@xhmikosr/archive-type@7.1.0", "", { "dependencies": { "file-type": "^20.5.0" } }, "sha512-xZEpnGplg1sNPyEgFh0zbHxqlw5dtYg6viplmWSxUj12+QjU9SKu3U/2G73a15pEjLaOqTefNSZ1fOPUOT4Xgg=="],
 
@@ -2797,7 +2818,7 @@
 
     "workbox-window": ["workbox-window@7.1.0", "", { "dependencies": { "@types/trusted-types": "2.0.7", "workbox-core": "7.1.0" } }, "sha512-ZHeROyqR+AS5UPzholQRDttLFqGMwP0Np8MKWAdyxsDETxq3qOAyXvqessc3GniohG6e0mAqSQyKOHmT8zPF7g=="],
 
-    "workflow": ["workflow@4.2.0-beta.73", "", { "dependencies": { "@workflow/astro": "4.0.0-beta.47", "@workflow/cli": "4.2.0-beta.73", "@workflow/core": "4.2.0-beta.73", "@workflow/errors": "4.1.0-beta.19", "@workflow/nest": "0.0.0-beta.22", "@workflow/next": "4.0.1-beta.69", "@workflow/nitro": "4.0.1-beta.68", "@workflow/nuxt": "4.0.1-beta.57", "@workflow/rollup": "4.0.0-beta.30", "@workflow/sveltekit": "4.0.0-beta.62", "@workflow/typescript-plugin": "4.0.1-beta.5", "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"], "bin": { "wf": "bin/run.js", "workflow": "bin/run.js" } }, "sha512-qojoyPIommGOVCj/LHOZEBRJqlSbijLOKDr5yzBokhc7qO2wJAXixVshPH6mOxHJc22KuYKFMlJu+ocqhDKT0A=="],
+    "workflow": ["workflow@4.2.0-beta.76", "", { "dependencies": { "@workflow/astro": "4.0.0-beta.50", "@workflow/cli": "4.2.0-beta.76", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/nest": "0.0.0-beta.25", "@workflow/next": "4.0.1-beta.72", "@workflow/nitro": "4.0.1-beta.71", "@workflow/nuxt": "4.0.1-beta.60", "@workflow/rollup": "4.0.0-beta.33", "@workflow/sveltekit": "4.0.0-beta.65", "@workflow/typescript-plugin": "4.0.1-beta.5", "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"], "bin": { "wf": "bin/run.js", "workflow": "bin/run.js" } }, "sha512-Qpc7wD6oFrs/UYB4ypVf9TfuCzH2a8iOmslnF/QGppHEdtld01dz/DdjbckvuI9ge/zy+PiopzDT7Duk7/LFRQ=="],
 
     "wrap-ansi": ["wrap-ansi@7.0.0", "", { "dependencies": { "ansi-styles": "4.3.0", "string-width": "4.2.3", "strip-ansi": "6.0.1" } }, "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="],
 
@@ -3021,8 +3042,6 @@
 
     "@loop-kit/platform-api/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
-    "@loop-kit/platform-api/workflow": ["workflow@4.2.0-beta.76", "", { "dependencies": { "@workflow/astro": "4.0.0-beta.50", "@workflow/cli": "4.2.0-beta.76", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/nest": "0.0.0-beta.25", "@workflow/next": "4.0.1-beta.72", "@workflow/nitro": "4.0.1-beta.71", "@workflow/nuxt": "4.0.1-beta.60", "@workflow/rollup": "4.0.0-beta.33", "@workflow/sveltekit": "4.0.0-beta.65", "@workflow/typescript-plugin": "4.0.1-beta.5", "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"], "bin": { "wf": "bin/run.js", "workflow": "bin/run.js" } }, "sha512-Qpc7wD6oFrs/UYB4ypVf9TfuCzH2a8iOmslnF/QGppHEdtld01dz/DdjbckvuI9ge/zy+PiopzDT7Duk7/LFRQ=="],
-
     "@nuxt/kit/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
 
     "@oclif/core/minimatch": ["minimatch@10.2.5", "", { "dependencies": { "brace-expansion": "^5.0.5" } }, "sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg=="],
@@ -3170,6 +3189,8 @@
     "@workflow/cli/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "@workflow/core/nanoid": ["nanoid@5.1.6", "", { "bin": { "nanoid": "bin/nanoid.js" } }, "sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg=="],
+
+    "@workflow/core/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
 
     "@workflow/core/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
@@ -3412,26 +3433,6 @@
     "@jest/types/chalk/supports-color": ["supports-color@7.2.0", "", { "dependencies": { "has-flag": "4.0.0" } }, "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw=="],
 
     "@loop-kit/platform-api/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro": ["@workflow/astro@4.0.0-beta.50", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "^1.0.8", "pathe": "^2.0.3" } }, "sha512-NI5eqOCBApqd88fRPZ27NW8tMtiG+UjjkMNMD0zb7sD6LwKhChTGHO/fk3brvnyxUy0zRca8am9IRAeXAra9jg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli": ["@workflow/cli@4.2.0-beta.76", "", { "dependencies": { "@oclif/core": "4.8.1", "@oclif/plugin-help": "6.2.37", "@swc/core": "1.15.3", "@vercel/cli-auth": "0.0.1", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "@workflow/web": "4.1.0-beta.47", "@workflow/world": "4.1.0-beta.15", "@workflow/world-local": "4.1.0-beta.49", "@workflow/world-vercel": "4.1.0-beta.47", "boxen": "8.0.1", "builtin-modules": "5.0.0", "chalk": "5.6.2", "chokidar": "4.0.3", "date-fns": "4.1.0", "dotenv": "^17.3.1", "easy-table": "1.2.0", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "mixpart": "0.0.4", "open": "10.2.0", "ora": "8.2.0", "terminal-link": "5.0.0", "tinyglobby": "0.2.15", "xdg-app-paths": "5.1.0", "zod": "4.3.6" }, "bin": { "workflow": "bin/run.js", "wf": "bin/run.js" } }, "sha512-fauuVTDuxqovptTZrbkhgqVqDATDXaiO4F/+nmpMUNTlvBuWfEIULGZT3nMOpgUsF8159inTyCX56vdFlwXYJw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core": ["@workflow/core@4.2.0-beta.76", "", { "dependencies": { "@aws-sdk/credential-provider-web-identity": "3.972.13", "@jridgewell/trace-mapping": "0.3.31", "@standard-schema/spec": "1.0.0", "@types/ms": "2.1.0", "@vercel/functions": "^3.4.3", "@workflow/errors": "4.1.0-beta.20", "@workflow/serde": "4.1.0-beta.2", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.15", "@workflow/world-local": "4.1.0-beta.49", "@workflow/world-vercel": "4.1.0-beta.47", "debug": "4.4.3", "devalue": "5.6.3", "ms": "2.1.3", "nanoid": "5.1.6", "seedrandom": "3.0.5", "semver": "7.7.4", "ulid": "~3.0.1", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-W/P85lrf2/nE0RWfB07t3Bem0BwDuqnXoknRuSrOOq+WO6Hxc9/CiEN3S1lk9L/QVgzBLWZOCS5IhBwTt3VR1A=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/errors": ["@workflow/errors@4.1.0-beta.20", "", { "dependencies": { "@workflow/utils": "4.1.0-beta.13", "ms": "2.1.3" } }, "sha512-V54ssJo7vUXFCueX5TssM4NhTKsmG5umoG/hYtVPVgJUDL1i17kB8Fm41FJfh4dg/PWta0ruJCAFs58Udz/2sg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest": ["@workflow/nest@0.0.0-beta.25", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/swc-plugin": "4.1.0-beta.21", "pathe": "2.0.3" }, "peerDependencies": { "@nestjs/common": ">=10.0.0", "@nestjs/core": ">=10.0.0", "@swc/cli": ">=0.4.0" }, "bin": { "workflow-nest": "dist/cli.js" } }, "sha512-g5u4gWW7IzzbfHkDqCHuQld9cWaeS53dU0V385da7+bLYvy6XPJ0yvABqKAtJFm8xOsWlm06QDH19ymjaUkl+g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next": ["@workflow/next@4.0.1-beta.72", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/swc-plugin": "4.1.0-beta.21", "semver": "7.7.4", "watchpack": "2.5.1" }, "peerDependencies": { "next": ">13" }, "optionalPeers": ["next"] }, "sha512-QgcdkLkjs2hPG/EnYfK+d4iYfJyQVg8KuxON3K/LiP1Ijagn/1xu4vC+hZocM8UbpXg46LzsASxY9p5bgVaY1Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro": ["@workflow/nitro@4.0.1-beta.71", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/core": "4.2.0-beta.76", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "1.0.8", "pathe": "2.0.3" } }, "sha512-g6cSM/KUlgz49kgqUC3eshzTldbNPzkB60adnksqqBnt7wZbY/GTBjsKAScR7QFSTzMZfSZ5SdGkQJixCtkFDw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nuxt": ["@workflow/nuxt@4.0.1-beta.60", "", { "dependencies": { "@nuxt/kit": "4.4.2", "@workflow/nitro": "4.0.1-beta.71" } }, "sha512-ywHvVVwJ1BUuU7m4zPP8CG4/T59bd9FJoC3xsdiFgqTjFXyOFqzkQYnujvhp4zqv6Rmldp2bb3sLkSAJJhVniQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup": ["@workflow/rollup@4.0.0-beta.33", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/swc-plugin": "4.1.0-beta.21", "exsolve": "1.0.7" } }, "sha512-g0Rd5eV80nvOqP222N9YhByBkrtGgH+9fjQuiG1kDdSYNu/ZEArNdBhpwVK5ZDrjTXZgmbYDsg8GzkVcDmOvrg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit": ["@workflow/sveltekit@4.0.0-beta.65", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/builders": "4.0.1-beta.67", "@workflow/rollup": "4.0.0-beta.33", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/vite": "4.0.0-beta.26", "exsolve": "^1.0.8", "fs-extra": "^11.3.2", "pathe": "^2.0.3" } }, "sha512-aBZCvCOK4NC2VTddn/0jPEpO7XgopACV8eZQFVRQEln5W3bCNzSYqAmUefKQ7a96BBwNSTDcBX7/30ypOH/SYg=="],
 
     "@oclif/core/minimatch/brace-expansion": ["brace-expansion@5.0.5", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ=="],
 
@@ -3711,450 +3712,10 @@
 
     "@istanbuljs/load-nyc-config/find-up/locate-path/p-locate": ["p-locate@4.1.0", "", { "dependencies": { "p-limit": "2.3.0" } }, "sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A=="],
 
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/vite": ["@workflow/vite@4.0.0-beta.26", "", { "dependencies": { "@workflow/builders": "4.0.1-beta.67" } }, "sha512-TuOdcX0v7miHIcs5+kera70kWkvygAXTKHAqkBb4pHmmlqKOrlwbCu1Z/qNI3qOWd5Jtpu9IItHaiwR9uu/dUg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/@workflow/web": ["@workflow/web@4.1.0-beta.47", "", { "dependencies": { "express": "^4.21.0" } }, "sha512-1D7uRpN7pBXIm4yS/26s9g110uiU8n7UfD7oAK2+5eI4HSyYfBvr/+iUFvpCClyadeUlxNdzVPqSNFoX60QVSg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/@workflow/world": ["@workflow/world@4.1.0-beta.15", "", { "dependencies": { "ulid": "~3.0.1" }, "peerDependencies": { "zod": "4.3.6" } }, "sha512-/eoYOF7WdxGTlHVYMA66dRIENtJpgEfJPbQbl+JZoui1V/6uA0ZmXP742qEwbref5+tq4tzLT4nnC+WJbdUqXQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/@workflow/world-local": ["@workflow/world-local@4.1.0-beta.49", "", { "dependencies": { "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.15", "async-sema": "3.1.1", "ulid": "~3.0.1", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-juVuEeDcx0wPwGW3HnFrmHUNRgnZkq2aRkhU43X0eqL7wxJDBsBQi7MV1Rfrf6gFh9CnEmV6/jFpbdY1kc5KiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/@workflow/world-vercel": ["@workflow/world-vercel@4.1.0-beta.47", "", { "dependencies": { "@vercel/oidc": "3.2.0", "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/world": "4.1.0-beta.15", "cbor-x": "1.6.0", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-jIgVu95a5Thu+2tJJHZiSBJawplfXSQ6jyNwQY2rsEXkL2H6WigxryaeHTUlp4ntyFzdjAdojQYQTbAM9Dc4Ug=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/@workflow/world": ["@workflow/world@4.1.0-beta.15", "", { "dependencies": { "ulid": "~3.0.1" }, "peerDependencies": { "zod": "4.3.6" } }, "sha512-/eoYOF7WdxGTlHVYMA66dRIENtJpgEfJPbQbl+JZoui1V/6uA0ZmXP742qEwbref5+tq4tzLT4nnC+WJbdUqXQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/@workflow/world-local": ["@workflow/world-local@4.1.0-beta.49", "", { "dependencies": { "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/utils": "4.1.0-beta.13", "@workflow/world": "4.1.0-beta.15", "async-sema": "3.1.1", "ulid": "~3.0.1", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-juVuEeDcx0wPwGW3HnFrmHUNRgnZkq2aRkhU43X0eqL7wxJDBsBQi7MV1Rfrf6gFh9CnEmV6/jFpbdY1kc5KiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/@workflow/world-vercel": ["@workflow/world-vercel@4.1.0-beta.47", "", { "dependencies": { "@vercel/oidc": "3.2.0", "@vercel/queue": "0.1.4", "@workflow/errors": "4.1.0-beta.20", "@workflow/world": "4.1.0-beta.15", "cbor-x": "1.6.0", "undici": "7.22.0", "zod": "4.3.6" }, "peerDependencies": { "@opentelemetry/api": "1" }, "optionalPeers": ["@opentelemetry/api"] }, "sha512-jIgVu95a5Thu+2tJJHZiSBJawplfXSQ6jyNwQY2rsEXkL2H6WigxryaeHTUlp4ntyFzdjAdojQYQTbAM9Dc4Ug=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/nanoid": ["nanoid@5.1.6", "", { "bin": { "nanoid": "bin/nanoid.js" } }, "sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/core/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/vite": ["@workflow/vite@4.0.0-beta.26", "", { "dependencies": { "@workflow/builders": "4.0.1-beta.67" } }, "sha512-TuOdcX0v7miHIcs5+kera70kWkvygAXTKHAqkBb4pHmmlqKOrlwbCu1Z/qNI3qOWd5Jtpu9IItHaiwR9uu/dUg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/exsolve": ["exsolve@1.0.7", "", {}, "sha512-VO5fQUzZtI6C+vx4w/4BWJpg3s/5l+6pRQEHzFRM8WFi4XffSP1Z+4qi7GbjWbvRQEbdIco5mIMq+zX4rPuLrw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders": ["@workflow/builders@4.0.1-beta.67", "", { "dependencies": { "@swc/core": "1.15.3", "@workflow/core": "4.2.0-beta.76", "@workflow/errors": "4.1.0-beta.20", "@workflow/swc-plugin": "4.1.0-beta.21", "@workflow/utils": "4.1.0-beta.13", "builtin-modules": "5.0.0", "chalk": "5.6.2", "enhanced-resolve": "5.19.0", "esbuild": "^0.27.3", "find-up": "7.0.0", "json5": "2.2.3", "tinyglobby": "0.2.15" } }, "sha512-TX6nAFsebscncVaPHRAS18otBuK5ZnhSeq4rS3A6CGaSJiST8tv3kQcbXyZu4pJiSPmGKxn4uy9/KbReyCl7DQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/vite": ["@workflow/vite@4.0.0-beta.26", "", { "dependencies": { "@workflow/builders": "4.0.1-beta.67" } }, "sha512-TuOdcX0v7miHIcs5+kera70kWkvygAXTKHAqkBb4pHmmlqKOrlwbCu1Z/qNI3qOWd5Jtpu9IItHaiwR9uu/dUg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/fs-extra": ["fs-extra@11.3.4", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-CTXd6rk/M3/ULNQj8FBqBWHYBVYybQ3VPBw0xGKFe3tuH7ytT6ACnvzpIQ3UZtB8yvUKC2cXn1a+x+5EVQLovA=="],
-
     "@oclif/core/minimatch/brace-expansion/balanced-match": ["balanced-match@4.0.4", "", {}, "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA=="],
 
     "@vercel/queue/minimatch/brace-expansion/balanced-match": ["balanced-match@4.0.4", "", {}, "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA=="],
 
     "@istanbuljs/load-nyc-config/find-up/locate-path/p-locate/p-limit": ["p-limit@2.3.0", "", { "dependencies": { "p-try": "2.2.0" } }, "sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/cli/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/enhanced-resolve": ["enhanced-resolve@5.19.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.0" } }, "sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild": ["esbuild@0.27.3", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.27.3", "@esbuild/android-arm": "0.27.3", "@esbuild/android-arm64": "0.27.3", "@esbuild/android-x64": "0.27.3", "@esbuild/darwin-arm64": "0.27.3", "@esbuild/darwin-x64": "0.27.3", "@esbuild/freebsd-arm64": "0.27.3", "@esbuild/freebsd-x64": "0.27.3", "@esbuild/linux-arm": "0.27.3", "@esbuild/linux-arm64": "0.27.3", "@esbuild/linux-ia32": "0.27.3", "@esbuild/linux-loong64": "0.27.3", "@esbuild/linux-mips64el": "0.27.3", "@esbuild/linux-ppc64": "0.27.3", "@esbuild/linux-riscv64": "0.27.3", "@esbuild/linux-s390x": "0.27.3", "@esbuild/linux-x64": "0.27.3", "@esbuild/netbsd-arm64": "0.27.3", "@esbuild/netbsd-x64": "0.27.3", "@esbuild/openbsd-arm64": "0.27.3", "@esbuild/openbsd-x64": "0.27.3", "@esbuild/openharmony-arm64": "0.27.3", "@esbuild/sunos-x64": "0.27.3", "@esbuild/win32-arm64": "0.27.3", "@esbuild/win32-ia32": "0.27.3", "@esbuild/win32-x64": "0.27.3" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/astro/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nest/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/next/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/nitro/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/rollup/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/android-arm": ["@esbuild/android-arm@0.27.3", "", { "os": "android", "cpu": "arm" }, "sha512-i5D1hPY7GIQmXlXhs2w8AWHhenb00+GxjxRncS2ZM7YNVGNfaMxgzSGuO8o8SJzRc/oZwU2bcScvVERk03QhzA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/android-arm64": ["@esbuild/android-arm64@0.27.3", "", { "os": "android", "cpu": "arm64" }, "sha512-YdghPYUmj/FX2SYKJ0OZxf+iaKgMsKHVPF1MAq/P8WirnSpCStzKJFjOjzsW0QQ7oIAiccHdcqjbHmJxRb/dmg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/android-x64": ["@esbuild/android-x64@0.27.3", "", { "os": "android", "cpu": "x64" }, "sha512-IN/0BNTkHtk8lkOM8JWAYFg4ORxBkZQf9zXiEOfERX/CzxW3Vg1ewAhU7QSWQpVIzTW+b8Xy+lGzdYXV6UZObQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/darwin-arm64": ["@esbuild/darwin-arm64@0.27.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Re491k7ByTVRy0t3EKWajdLIr0gz2kKKfzafkth4Q8A5n1xTHrkqZgLLjFEHVD+AXdUGgQMq+Godfq45mGpCKg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/darwin-x64": ["@esbuild/darwin-x64@0.27.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-vHk/hA7/1AckjGzRqi6wbo+jaShzRowYip6rt6q7VYEDX4LEy1pZfDpdxCBnGtl+A5zq8iXDcyuxwtv3hNtHFg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/freebsd-arm64": ["@esbuild/freebsd-arm64@0.27.3", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-ipTYM2fjt3kQAYOvo6vcxJx3nBYAzPjgTCk7QEgZG8AUO3ydUhvelmhrbOheMnGOlaSFUoHXB6un+A7q4ygY9w=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/freebsd-x64": ["@esbuild/freebsd-x64@0.27.3", "", { "os": "freebsd", "cpu": "x64" }, "sha512-dDk0X87T7mI6U3K9VjWtHOXqwAMJBNN2r7bejDsc+j03SEjtD9HrOl8gVFByeM0aJksoUuUVU9TBaZa2rgj0oA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-arm": ["@esbuild/linux-arm@0.27.3", "", { "os": "linux", "cpu": "arm" }, "sha512-s6nPv2QkSupJwLYyfS+gwdirm0ukyTFNl3KTgZEAiJDd+iHZcbTPPcWCcRYH+WlNbwChgH2QkE9NSlNrMT8Gfw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-arm64": ["@esbuild/linux-arm64@0.27.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sZOuFz/xWnZ4KH3YfFrKCf1WyPZHakVzTiqji3WDc0BCl2kBwiJLCXpzLzUBLgmp4veFZdvN5ChW4Eq/8Fc2Fg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-ia32": ["@esbuild/linux-ia32@0.27.3", "", { "os": "linux", "cpu": "ia32" }, "sha512-yGlQYjdxtLdh0a3jHjuwOrxQjOZYD/C9PfdbgJJF3TIZWnm/tMd/RcNiLngiu4iwcBAOezdnSLAwQDPqTmtTYg=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-loong64": ["@esbuild/linux-loong64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-WO60Sn8ly3gtzhyjATDgieJNet/KqsDlX5nRC5Y3oTFcS1l0KWba+SEa9Ja1GfDqSF1z6hif/SkpQJbL63cgOA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-mips64el": ["@esbuild/linux-mips64el@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-APsymYA6sGcZ4pD6k+UxbDjOFSvPWyZhjaiPyl/f79xKxwTnrn5QUnXR5prvetuaSMsb4jgeHewIDCIWljrSxw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-ppc64": ["@esbuild/linux-ppc64@0.27.3", "", { "os": "linux", "cpu": "ppc64" }, "sha512-eizBnTeBefojtDb9nSh4vvVQ3V9Qf9Df01PfawPcRzJH4gFSgrObw+LveUyDoKU3kxi5+9RJTCWlj4FjYXVPEA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-riscv64": ["@esbuild/linux-riscv64@0.27.3", "", { "os": "linux", "cpu": "none" }, "sha512-3Emwh0r5wmfm3ssTWRQSyVhbOHvqegUDRd0WhmXKX2mkHJe1SFCMJhagUleMq+Uci34wLSipf8Lagt4LlpRFWQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-s390x": ["@esbuild/linux-s390x@0.27.3", "", { "os": "linux", "cpu": "s390x" }, "sha512-pBHUx9LzXWBc7MFIEEL0yD/ZVtNgLytvx60gES28GcWMqil8ElCYR4kvbV2BDqsHOvVDRrOxGySBM9Fcv744hw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/linux-x64": ["@esbuild/linux-x64@0.27.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Czi8yzXUWIQYAtL/2y6vogER8pvcsOsk5cpwL4Gk5nJqH5UZiVByIY8Eorm5R13gq+DQKYg0+JyQoytLQas4dA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/netbsd-arm64": ["@esbuild/netbsd-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-sDpk0RgmTCR/5HguIZa9n9u+HVKf40fbEUt+iTzSnCaGvY9kFP0YKBWZtJaraonFnqef5SlJ8/TiPAxzyS+UoA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/netbsd-x64": ["@esbuild/netbsd-x64@0.27.3", "", { "os": "none", "cpu": "x64" }, "sha512-P14lFKJl/DdaE00LItAukUdZO5iqNH7+PjoBm+fLQjtxfcfFE20Xf5CrLsmZdq5LFFZzb5JMZ9grUwvtVYzjiA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/openbsd-arm64": ["@esbuild/openbsd-arm64@0.27.3", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-AIcMP77AvirGbRl/UZFTq5hjXK+2wC7qFRGoHSDrZ5v5b8DK/GYpXW3CPRL53NkvDqb9D+alBiC/dV0Fb7eJcw=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/openbsd-x64": ["@esbuild/openbsd-x64@0.27.3", "", { "os": "openbsd", "cpu": "x64" }, "sha512-DnW2sRrBzA+YnE70LKqnM3P+z8vehfJWHXECbwBmH/CU51z6FiqTQTHFenPlHmo3a8UgpLyH3PT+87OViOh1AQ=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/openharmony-arm64": ["@esbuild/openharmony-arm64@0.27.3", "", { "os": "none", "cpu": "arm64" }, "sha512-NinAEgr/etERPTsZJ7aEZQvvg/A6IsZG/LgZy+81wON2huV7SrK3e63dU0XhyZP4RKGyTm7aOgmQk0bGp0fy2g=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/sunos-x64": ["@esbuild/sunos-x64@0.27.3", "", { "os": "sunos", "cpu": "x64" }, "sha512-PanZ+nEz+eWoBJ8/f8HKxTTD172SKwdXebZ0ndd953gt1HRBbhMsaNqjTyYLGLPdoWHy4zLU7bDVJztF5f3BHA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/win32-arm64": ["@esbuild/win32-arm64@0.27.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-B2t59lWWYrbRDw/tjiWOuzSsFh1Y/E95ofKz7rIVYSQkUYBjfSgf6oeYPNWHToFRr2zx52JKApIcAS/D5TUBnA=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.27.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-QLKSFeXNS8+tHW7tZpMtjlNb7HKau0QDpwm49u0vUp9y1WOF+PEzkU84y9GqYaAVW8aH8f3GcBck26jh54cX4Q=="],
-
-    "@loop-kit/platform-api/workflow/@workflow/sveltekit/@workflow/builders/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.27.3", "", { "os": "win32", "cpu": "x64" }, "sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA=="],
   }
 }

@@ -13,6 +13,7 @@
         "@loop-kit/loom-react": "workspace:*",
         "@loop-kit/loom-theme-aquatic-react": "workspace:*",
         "@loop-kit/loom-theme-base-react": "workspace:*",
+        "@loop-kit/loom-theme-foundry-react": "workspace:*",
         "@loop-kit/loom-theme-neumorph-react": "workspace:*",
         "jazz-tools": "^0.20.15",
         "next": "^16.2.1",

@@ -37,18 +37,43 @@ export type PrimitiveVariantName =
  * Icon names are semantic content selectors. They are not style variants.
  */
 export type IconName =
+    | 'arrowLeft'
+    | 'arrowRight'
+    | 'blocks'
+    | 'calendar'
     | 'close'
     | 'check'
     | 'chevronDown'
     | 'chevronRight'
+    | 'clock'
+    | 'eye'
+    | 'file'
+    | 'fileText'
+    | 'folder'
+    | 'folderOpen'
+    | 'github'
+    | 'globe'
+    | 'hexagon'
+    | 'kanban'
+    | 'list'
+    | 'lock'
+    | 'messageSquare'
+    | 'moreHorizontal'
+    | 'pin'
+    | 'refresh'
     | 'search'
     | 'settings'
+    | 'star'
+    | 'table'
+    | 'type'
+    | 'user'
     | 'warning'
     | 'info'
     | 'plus'
     | 'minus'
     | 'panelLeft'
-    | 'panelRight';
+    | 'panelRight'
+    | 'zap';
 
 export type PrimitiveState = {
     active?: boolean;
