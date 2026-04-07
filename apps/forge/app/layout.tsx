@@ -16,9 +16,9 @@ const forgeMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Forge Prototype',
+    title: 'Forge Workspace',
     description:
-        'Forge prototype for policy-aware agent workflows, Jazz-backed collaboration, and OCI-driven runtime control.',
+        'Forge workspace prototype built on the Dock v2 renderer and Loom theme primitives.',
     icons: {
         icon: '/icon.svg',
     },

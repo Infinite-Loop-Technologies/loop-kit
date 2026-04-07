@@ -343,6 +343,163 @@ export const baseReactTheme: LoomReactThemeLayer = {
                 },
             },
         })),
+        toolbar: defineRecipe(({ tokens, variants }) => ({
+            root: {
+                style: {
+                    alignItems: 'center',
+                    background:
+                        variants.emphasis === 'strong'
+                            ? tokens.color.surface.raised
+                            : variants.emphasis === 'subtle'
+                              ? tokens.color.surface.sunken
+                              : 'transparent',
+                    border: `1px solid ${
+                        variants.emphasis === 'subtle'
+                            ? tokens.color.border.default
+                            : 'transparent'
+                    }`,
+                    borderRadius: tokens.radius.md,
+                    color: toneValue(tokens, variants.tone),
+                    display: 'flex',
+                    gap:
+                        variants.density === 'compact'
+                            ? tokens.space[2]
+                            : variants.density === 'roomy'
+                              ? tokens.space[4]
+                              : tokens.space[3],
+                    minHeight:
+                        variants.density === 'compact'
+                            ? '2rem'
+                            : variants.density === 'roomy'
+                              ? '3rem'
+                              : '2.5rem',
+                    padding:
+                        variants.density === 'compact'
+                            ? `0 ${tokens.space[2]}`
+                            : variants.density === 'roomy'
+                              ? `0 ${tokens.space[4]}`
+                              : `0 ${tokens.space[3]}`,
+                },
+            },
+        })),
+        breadcrumbs: defineRecipe(({ tokens, variants }) => ({
+            root: {
+                style: {
+                    color: toneValue(tokens, variants.tone),
+                },
+            },
+            list: {
+                style: {
+                    alignItems: 'center',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: tokens.space[2],
+                    listStyle: 'none',
+                    margin: 0,
+                    padding: 0,
+                },
+            },
+            item: {
+                style: {
+                    alignItems: 'center',
+                    display: 'inline-flex',
+                    gap: tokens.space[2],
+                    lineHeight: 1.4,
+                },
+            },
+            separator: {
+                style: {
+                    color: tokens.color.text.muted,
+                    display: 'inline-flex',
+                },
+            },
+            link: {
+                style: {
+                    color: tokens.color.text.muted,
+                    textDecoration: 'none',
+                },
+            },
+            current: {
+                style: {
+                    color: tokens.color.text.default,
+                    fontWeight: 600,
+                },
+            },
+        })),
+        avatar: defineRecipe(({ tokens, variants }) => {
+            const size =
+                variants.size === 'sm'
+                    ? '1.5rem'
+                    : variants.size === 'lg'
+                      ? '2.5rem'
+                      : '2rem';
+            return {
+                root: {
+                    style: {
+                        alignItems: 'center',
+                        background:
+                            variants.emphasis === 'strong'
+                                ? tokens.color.surface.raised
+                                : tokens.color.surface.sunken,
+                        border: `1px solid ${tokens.color.border.default}`,
+                        borderRadius: '999px',
+                        color: toneValue(tokens, variants.tone),
+                        display: 'inline-flex',
+                        height: size,
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        width: size,
+                    },
+                },
+                image: {
+                    style: {
+                        display: 'block',
+                        height: '100%',
+                        objectFit: 'cover',
+                        width: '100%',
+                    },
+                },
+                fallback: {
+                    style: {
+                        fontSize:
+                            variants.size === 'sm'
+                                ? tokens.font.size.sm
+                                : variants.size === 'lg'
+                                  ? tokens.font.size.lg
+                                  : tokens.font.size.md,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                    },
+                },
+            };
+        }),
+        kbd: defineRecipe(({ tokens, variants }) => ({
+            root: {
+                style: {
+                    alignItems: 'center',
+                    background:
+                        variants.emphasis === 'strong'
+                            ? tokens.color.surface.raised
+                            : tokens.color.surface.sunken,
+                    border: `1px solid ${tokens.color.border.default}`,
+                    borderRadius: tokens.radius.sm,
+                    boxShadow: `inset 0 -1px 0 ${tokens.color.border.strong}`,
+                    color: toneValue(tokens, variants.tone),
+                    display: 'inline-flex',
+                    fontFamily: tokens.font.family.mono,
+                    fontSize:
+                        variants.size === 'sm'
+                            ? tokens.font.size.sm
+                            : variants.size === 'lg'
+                              ? tokens.font.size.lg
+                              : tokens.font.size.md,
+                    fontWeight: 600,
+                    lineHeight: 1,
+                    minHeight: '1.5rem',
+                    padding: `0 ${tokens.space[2]}`,
+                },
+            },
+        })),
         'scroll-area': defineRecipe(({ tokens }) => ({
             root: {
                 style: {

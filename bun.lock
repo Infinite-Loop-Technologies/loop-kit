@@ -35,6 +35,8 @@
       "name": "@loop-kit/forge",
       "version": "0.1.0",
       "dependencies": {
+        "@loop-kit/dock": "workspace:*",
+        "@loop-kit/loom-interactions": "workspace:*",
         "@loop-kit/loom-pack-dock": "workspace:*",
         "@loop-kit/loom-react": "workspace:*",
         "@loop-kit/loom-theme-aquatic-react": "workspace:*",

@@ -103,6 +103,45 @@ export type PanelProps = React.HTMLAttributes<HTMLDivElement> &
         density?: Density;
         emphasis?: Emphasis;
     };
+export type ToolbarProps = React.HTMLAttributes<HTMLDivElement> &
+    CommonPrimitiveProps &
+    VariantProps & {
+        gap?: SpaceTokenKey | string;
+        tone?: Tone;
+        density?: Density;
+        emphasis?: Emphasis;
+    };
+export type BreadcrumbsItem = {
+    href?: string;
+    icon?: IconName;
+    id: string;
+    label: React.ReactNode;
+};
+export type BreadcrumbsProps = React.HTMLAttributes<HTMLElement> &
+    CommonPrimitiveProps &
+    VariantProps & {
+        items: readonly BreadcrumbsItem[];
+        separatorIcon?: IconName;
+        tone?: Tone;
+        size?: SizeToken;
+        emphasis?: Emphasis;
+    };
+export type AvatarProps = CommonPrimitiveProps &
+    VariantProps & {
+        alt?: string;
+        initials?: string;
+        name?: string;
+        size?: 'sm' | 'md' | 'lg';
+        src?: string;
+        tone?: Tone;
+    };
+export type KbdProps = React.HTMLAttributes<HTMLElement> &
+    CommonPrimitiveProps &
+    VariantProps & {
+        tone?: Tone;
+        size?: SizeToken;
+        emphasis?: Emphasis;
+    };
 export type ScrollAreaProps = React.HTMLAttributes<HTMLDivElement> &
     CommonPrimitiveProps &
     VariantProps;
@@ -298,6 +337,25 @@ function iconPixelSize(size: string | undefined) {
     }
 }
 
+function avatarFallbackText(
+    initials: string | undefined,
+    name: string | undefined,
+) {
+    if (initials && initials.trim().length > 0) {
+        return initials.trim().slice(0, 2).toUpperCase();
+    }
+    if (!name) {
+        return '?';
+    }
+    const letters = name
+        .split(/\s+/)
+        .map((part) => part[0] ?? '')
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+    return letters || '?';
+}
+
 const MissingIconGlyph: LoomIconComponent = ({ className, size = 16, style, title }) => (
     <svg
         aria-hidden={title ? undefined : true}
@@ -355,6 +413,128 @@ const PanelImplementation: LoomPrimitiveImplementation<PanelProps> = ({
     variants: _variants,
     ...props
 }) => <section {...props} {...mergeRootProps(styles, className, style)} />;
+
+const ToolbarImplementation: LoomPrimitiveImplementation<ToolbarProps> = ({
+    blueprintKey: _blueprintKey,
+    className,
+    colorMode: _colorMode,
+    gap,
+    state: _state,
+    style,
+    styles,
+    tokens: _tokens,
+    variants: _variants,
+    ...props
+}) => (
+    <div
+        {...props}
+        {...mergeRootProps(styles, className, {
+            gap: themedSpace(gap),
+            ...style,
+        })}
+    />
+);
+
+const BreadcrumbsImplementation: LoomPrimitiveImplementation<BreadcrumbsProps> = ({
+    blueprintKey: _blueprintKey,
+    className,
+    colorMode: _colorMode,
+    items,
+    separatorIcon = 'chevronRight',
+    state: _state,
+    style,
+    styles,
+    tokens: _tokens,
+    variants: _variants,
+    ...props
+}) => (
+    <nav {...props} {...mergeRootProps(styles, className, style)} aria-label='Breadcrumb'>
+        <ol
+            className={styles.list?.className}
+            style={toReactStyle(styles.list?.style)}>
+            {items.map((item, index) => {
+                const current = index === items.length - 1;
+                const content = (
+                    <>
+                        {item.icon ? <Icon name={item.icon} size='sm' /> : null}
+                        <span>{item.label}</span>
+                    </>
+                );
+
+                return (
+                    <li
+                        key={item.id}
+                        className={cx(
+                            styles.item?.className,
+                            current ? styles.current?.className : styles.link?.className,
+                        )}
+                        style={{
+                            ...(toReactStyle(styles.item?.style) ?? {}),
+                            ...(current
+                                ? (toReactStyle(styles.current?.style) ?? {})
+                                : (toReactStyle(styles.link?.style) ?? {})),
+                        }}>
+                        {item.href && !current ? <a href={item.href}>{content}</a> : content}
+                        {!current ? (
+                            <span
+                                aria-hidden
+                                className={styles.separator?.className}
+                                style={toReactStyle(styles.separator?.style)}>
+                                <Icon name={separatorIcon} size='sm' />
+                            </span>
+                        ) : null}
+                    </li>
+                );
+            })}
+        </ol>
+    </nav>
+);
+
+const AvatarImplementation: LoomPrimitiveImplementation<AvatarProps> = ({
+    alt,
+    blueprintKey: _blueprintKey,
+    className,
+    colorMode: _colorMode,
+    initials,
+    name,
+    src,
+    state: _state,
+    style,
+    styles,
+    tokens: _tokens,
+    variants: _variants,
+}) => (
+    <span
+        {...mergeRootProps(styles, className, style)}
+        aria-label={alt ?? name}>
+        {src ? (
+            <img
+                alt={alt ?? name ?? ''}
+                className={styles.image?.className}
+                src={src}
+                style={toReactStyle(styles.image?.style)}
+            />
+        ) : (
+            <span
+                className={styles.fallback?.className}
+                style={toReactStyle(styles.fallback?.style)}>
+                {avatarFallbackText(initials, name)}
+            </span>
+        )}
+    </span>
+);
+
+const KbdImplementation: LoomPrimitiveImplementation<KbdProps> = ({
+    blueprintKey: _blueprintKey,
+    className,
+    colorMode: _colorMode,
+    state: _state,
+    style,
+    styles,
+    tokens: _tokens,
+    variants: _variants,
+    ...props
+}) => <kbd {...props} {...mergeRootProps(styles, className, style)} />;
 
 const ScrollAreaImplementation: LoomPrimitiveImplementation<ScrollAreaProps> = ({
     blueprintKey: _blueprintKey,
@@ -582,6 +762,20 @@ const ButtonImplementation: LoomPrimitiveImplementation<ButtonProps> = ({
 }) => {
     const StartGlyph = startIcon ? useLoomIcon(startIcon) ?? MissingIconGlyph : null;
     const EndGlyph = endIcon ? useLoomIcon(endIcon) ?? MissingIconGlyph : null;
+    const iconStyle: React.CSSProperties = {
+        alignItems: 'center',
+        display: 'inline-flex',
+        flexShrink: 0,
+        justifyContent: 'center',
+        ...(toReactStyle(styles.icon?.style) ?? {}),
+    };
+    const labelStyle: React.CSSProperties = {
+        alignItems: 'center',
+        display: 'inline-flex',
+        gap: 'inherit',
+        minWidth: 0,
+        ...(toReactStyle(styles.label?.style) ?? {}),
+    };
 
     return (
         <button {...props} {...mergeRootProps(styles, className, style)}>
@@ -589,17 +783,17 @@ const ButtonImplementation: LoomPrimitiveImplementation<ButtonProps> = ({
                 <StartGlyph
                     className={styles.icon?.className}
                     size={iconPixelSize(size)}
-                    style={toReactStyle(styles.icon?.style)}
+                    style={iconStyle}
                 />
             ) : null}
-            <span className={styles.label?.className} style={toReactStyle(styles.label?.style)}>
+            <span className={styles.label?.className} style={labelStyle}>
                 {children}
             </span>
             {EndGlyph ? (
                 <EndGlyph
                     className={styles.icon?.className}
                     size={iconPixelSize(size)}
-                    style={toReactStyle(styles.icon?.style)}
+                    style={iconStyle}
                 />
             ) : null}
         </button>
@@ -621,6 +815,13 @@ const IconButtonImplementation: LoomPrimitiveImplementation<IconButtonProps> = (
     ...props
 }) => {
     const Glyph = useLoomIcon(name) ?? MissingIconGlyph;
+    const iconStyle: React.CSSProperties = {
+        alignItems: 'center',
+        display: 'inline-flex',
+        flexShrink: 0,
+        justifyContent: 'center',
+        ...(toReactStyle(styles.icon?.style) ?? {}),
+    };
 
     return (
         <button
@@ -631,7 +832,7 @@ const IconButtonImplementation: LoomPrimitiveImplementation<IconButtonProps> = (
             <Glyph
                 className={styles.icon?.className}
                 size={iconPixelSize(size)}
-                style={toReactStyle(styles.icon?.style)}
+                style={iconStyle}
             />
         </button>
     );
@@ -920,6 +1121,10 @@ export const defaultLoomImplementationMap: LoomImplementationMap = {
     box: BoxImplementation as LoomPrimitiveImplementation<object>,
     surface: SurfaceImplementation as LoomPrimitiveImplementation<object>,
     panel: PanelImplementation as LoomPrimitiveImplementation<object>,
+    toolbar: ToolbarImplementation as LoomPrimitiveImplementation<object>,
+    breadcrumbs: BreadcrumbsImplementation as LoomPrimitiveImplementation<object>,
+    avatar: AvatarImplementation as LoomPrimitiveImplementation<object>,
+    kbd: KbdImplementation as LoomPrimitiveImplementation<object>,
     'scroll-area': ScrollAreaImplementation as LoomPrimitiveImplementation<object>,
     separator: SeparatorImplementation as LoomPrimitiveImplementation<object>,
     stack: StackImplementation as LoomPrimitiveImplementation<object>,
@@ -976,6 +1181,22 @@ export function Surface(props: SurfaceProps) {
 
 export function Panel(props: PanelProps) {
     return renderPrimitive('panel', props);
+}
+
+export function Toolbar(props: ToolbarProps) {
+    return renderPrimitive('toolbar', props);
+}
+
+export function Breadcrumbs(props: BreadcrumbsProps) {
+    return renderPrimitive('breadcrumbs', props);
+}
+
+export function Avatar(props: AvatarProps) {
+    return renderPrimitive('avatar', props);
+}
+
+export function Kbd(props: KbdProps) {
+    return renderPrimitive('kbd', props);
 }
 
 export function ScrollArea(props: ScrollAreaProps) {

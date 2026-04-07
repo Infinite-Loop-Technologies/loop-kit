@@ -1,82 +1,72 @@
 import type { LoomReactThemeLayer } from '@loop-kit/loom-react';
 
-function foundryPanelBackground(emphasis: string | undefined) {
-    if (emphasis === 'strong') {
-        return 'linear-gradient(180deg, rgba(28, 28, 30, 0.98) 0%, rgba(22, 22, 23, 0.98) 100%)';
-    }
-    if (emphasis === 'subtle') {
-        return 'rgba(21, 21, 23, 0.94)';
-    }
-    return 'rgba(22, 22, 23, 0.96)';
-}
-
-function badgeStyles(tone: string | undefined, kind: string | undefined) {
+function forgeBadgeStyles(tone: string | undefined, kind: string | undefined) {
     if (tone === 'accent') {
         return {
-            background: 'rgba(167, 139, 250, 0.12)',
-            borderColor: 'rgba(167, 139, 250, 0.18)',
-            color: '#c4b5fd',
+            background: 'rgba(116, 94, 181, 0.24)',
+            borderColor: 'rgba(116, 94, 181, 0.34)',
+            color: '#ddd5ff',
         };
     }
 
     if (tone === 'info') {
         return {
-            background: 'rgba(108, 192, 255, 0.1)',
+            background: 'rgba(108, 192, 255, 0.12)',
             borderColor: 'rgba(108, 192, 255, 0.2)',
-            color: '#89d2ff',
+            color: '#b8e2ff',
         };
     }
 
     if (tone === 'success') {
         return {
-            background: 'rgba(40, 192, 139, 0.12)',
-            borderColor: 'rgba(40, 192, 139, 0.22)',
-            color: '#7de0b7',
+            background: 'rgba(40, 192, 139, 0.16)',
+            borderColor: 'rgba(40, 192, 139, 0.26)',
+            color: '#b6f4dc',
         };
     }
 
     if (kind === 'outline') {
         return {
             background: 'transparent',
-            borderColor: 'rgba(255, 255, 255, 0.12)',
-            color: '#d0d4db',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            color: '#d8d8d8',
         };
     }
 
     return {
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: '#202226',
         borderColor: 'rgba(255, 255, 255, 0.08)',
-        color: '#c9ccd2',
+        color: '#d8d8d8',
     };
 }
 
-export const foundryReactTheme: LoomReactThemeLayer = {
-    id: 'loom-foundry',
-    label: 'Foundry',
-    description: 'Dense dark control-plane theme with crisp borders and restrained blue accents.',
+export const forgeReactTheme: LoomReactThemeLayer = {
+    id: 'forge-workspace',
+    label: 'Forge Workspace',
+    description: 'Design-matched workspace theme for the Forge dock demo.',
     modes: {
         light: {
             tokens: {
                 color: {
                     accent: {
-                        default: '#2d7ff9',
-                        text: '#f8fbff',
+                        default: '#6cc0ff',
+                        text: '#0b1b23',
                     },
                     border: {
                         default: 'rgba(17, 24, 39, 0.1)',
-                        strong: 'rgba(17, 24, 39, 0.18)',
-                        focus: '#2d7ff9',
+                        strong: 'rgba(17, 24, 39, 0.16)',
+                        focus: '#6cc0ff',
                     },
                     surface: {
-                        default: '#fcfcfd',
+                        default: '#f6f7f9',
                         raised: '#ffffff',
-                        sunken: '#f4f5f7',
-                        overlay: 'rgba(252, 252, 253, 0.92)',
+                        sunken: '#eef1f5',
+                        overlay: 'rgba(255, 255, 255, 0.92)',
                     },
                     text: {
-                        default: '#111418',
-                        muted: '#667085',
-                        inverse: '#f8fbff',
+                        default: '#101114',
+                        muted: '#5f6673',
+                        inverse: '#ffffff',
                     },
                 },
                 font: {
@@ -91,11 +81,6 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                     md: '6px',
                     lg: '8px',
                 },
-                shadow: {
-                    sm: '0 1px 2px rgba(17, 24, 39, 0.05)',
-                    md: '0 12px 32px rgba(17, 24, 39, 0.08)',
-                    lg: '0 24px 60px rgba(17, 24, 39, 0.12)',
-                },
             },
         },
         dark: {
@@ -106,14 +91,14 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                         text: '#0b1b23',
                     },
                     border: {
-                        default: 'rgba(255, 255, 255, 0.08)',
-                        strong: 'rgba(255, 255, 255, 0.14)',
+                        default: 'rgba(0, 0, 0, 0.15)',
+                        strong: 'rgba(255, 255, 255, 0.08)',
                         focus: '#6cc0ff',
                     },
                     surface: {
-                        default: '#161617',
-                        raised: '#1c1c1e',
-                        sunken: '#111214',
+                        default: '#151517',
+                        raised: '#161617',
+                        sunken: '#141416',
                         overlay: 'rgba(22, 22, 23, 0.95)',
                     },
                     text: {
@@ -138,7 +123,7 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                         sm: '0.8125rem',
                         md: '0.875rem',
                         lg: '1rem',
-                        xl: '1.5rem',
+                        xl: '2.125rem',
                     },
                 },
                 radius: {
@@ -147,9 +132,9 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                     lg: '8px',
                 },
                 shadow: {
-                    sm: '0 1px 2px rgba(0, 0, 0, 0.16)',
-                    md: '0 18px 40px rgba(0, 0, 0, 0.28)',
-                    lg: '0 32px 72px rgba(0, 0, 0, 0.45)',
+                    sm: '0 1px 2px rgba(0, 0, 0, 0.14)',
+                    md: '0 18px 40px rgba(0, 0, 0, 0.3)',
+                    lg: '0 24px 60px rgba(0, 0, 0, 0.55)',
                 },
             },
         },
@@ -159,12 +144,11 @@ export const foundryReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     background:
-                        variants.emphasis === 'strong'
-                            ? tokens.color.surface.raised
-                            : tokens.color.surface.default,
+                        variants.emphasis === 'subtle'
+                            ? '#141416'
+                            : tokens.color.surface.raised,
                     border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.md,
-                    boxShadow: variants.emphasis === 'strong' ? tokens.shadow.md : 'none',
                     color: tokens.color.text.default,
                 },
             },
@@ -172,10 +156,13 @@ export const foundryReactTheme: LoomReactThemeLayer = {
         panel: ({ tokens, variants }) => ({
             root: {
                 style: {
-                    background: foundryPanelBackground(variants.emphasis),
+                    background:
+                        variants.emphasis === 'strong'
+                            ? tokens.color.surface.raised
+                            : tokens.color.surface.default,
                     border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.lg,
-                    boxShadow: variants.emphasis === 'strong' ? tokens.shadow.lg : tokens.shadow.sm,
+                    boxShadow: variants.emphasis === 'strong' ? tokens.shadow?.md : 'none',
                     color: tokens.color.text.default,
                     padding:
                         variants.density === 'compact'
@@ -190,16 +177,9 @@ export const foundryReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     alignItems: 'center',
-                    background:
-                        variants.emphasis === 'subtle'
-                            ? 'rgba(255, 255, 255, 0.035)'
-                            : 'transparent',
-                    border: `1px solid ${
-                        variants.emphasis === 'subtle'
-                            ? tokens.color.border.default
-                            : 'transparent'
-                    }`,
-                    borderRadius: tokens.radius.md,
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: 0,
                     color: tokens.color.text.default,
                     display: 'flex',
                     gap: variants.density === 'compact' ? tokens.space[2] : tokens.space[3],
@@ -262,7 +242,7 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                 root: {
                     style: {
                         alignItems: 'center',
-                        background: 'rgba(255, 255, 255, 0.06)',
+                        background: '#202226',
                         border: `1px solid ${tokens.color.border.default}`,
                         borderRadius: '999px',
                         color: tokens.color.text.default,
@@ -285,7 +265,6 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                     style: {
                         fontSize: variants.size === 'sm' ? '0.6875rem' : '0.75rem',
                         fontWeight: 700,
-                        letterSpacing: '0.04em',
                     },
                 },
             };
@@ -294,18 +273,17 @@ export const foundryReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     alignItems: 'center',
-                    background: 'rgba(17, 18, 20, 0.95)',
+                    background: '#141416',
                     border: `1px solid ${tokens.color.border.default}`,
                     borderRadius: tokens.radius.sm,
-                    boxShadow: `inset 0 -1px 0 ${tokens.color.border.strong}`,
                     color: tokens.color.text.muted,
                     display: 'inline-flex',
                     fontFamily: tokens.font.family.mono,
-                    fontSize: '0.6875rem',
+                    fontSize: '0.625rem',
                     fontWeight: 600,
                     lineHeight: 1,
-                    minHeight: '1.375rem',
-                    padding: `0 ${tokens.space[2]}`,
+                    minHeight: '1.25rem',
+                    padding: '0 0.375rem',
                 },
             },
         }),
@@ -320,11 +298,11 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                             : variants.size === 'md'
                               ? '1.125rem'
                               : variants.size === 'xl'
-                                ? '2rem'
+                                ? '2.125rem'
                                 : '1.375rem',
                     fontWeight: 600,
                     letterSpacing: '-0.03em',
-                    lineHeight: 1.1,
+                    lineHeight: 1.08,
                     margin: 0,
                 },
             },
@@ -344,8 +322,8 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                               : variants.size === 'xl'
                                 ? '1.125rem'
                                 : '0.875rem',
-                    fontWeight: variants.emphasis === 'strong' ? 600 : 450,
-                    lineHeight: 1.55,
+                    fontWeight: variants.emphasis === 'strong' ? 600 : 400,
+                    lineHeight: 1.5,
                     margin: 0,
                 },
             },
@@ -363,39 +341,35 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                 style: {
                     alignItems: 'center',
                     background:
-                        variants.kind === 'ghost'
-                            ? 'transparent'
-                            : variants.kind === 'outline'
-                              ? 'transparent'
-                              : variants.kind === 'soft'
-                                ? 'rgba(255, 255, 255, 0.05)'
-                                : tokens.color.text.default,
+                        variants.kind === 'soft'
+                            ? '#202226'
+                            : variants.kind === 'solid'
+                              ? tokens.color.accent.default
+                              : 'transparent',
                     border: `1px solid ${
                         variants.kind === 'outline'
-                            ? tokens.color.border.strong
-                            : variants.kind === 'solid'
-                              ? 'transparent'
-                              : tokens.color.border.default
+                            ? tokens.color.border.default
+                            : variants.kind === 'soft'
+                              ? tokens.color.border.default
+                              : 'transparent'
                     }`,
                     borderRadius: tokens.radius.md,
                     color:
                         variants.kind === 'solid'
-                            ? tokens.color.text.inverse
+                            ? tokens.color.accent.text
                             : variants.tone === 'muted'
                               ? tokens.color.text.muted
                               : tokens.color.text.default,
                     cursor: 'pointer',
                     display: 'inline-flex',
+                    fontFamily: tokens.font.family.body,
                     fontSize: variants.size === 'sm' ? '0.8125rem' : '0.875rem',
                     fontWeight: 500,
                     gap: tokens.space[2],
                     justifyContent: 'flex-start',
-                    minHeight: variants.size === 'sm' ? '2rem' : '2.375rem',
-                    padding:
-                        variants.size === 'sm'
-                            ? `0 ${tokens.space[2]}`
-                            : `0 ${tokens.space[3]}`,
-                    transition: `background ${tokens.motion.duration.fast} ease, border-color ${tokens.motion.duration.fast} ease, color ${tokens.motion.duration.fast} ease`,
+                    minHeight: variants.size === 'sm' ? '2rem' : '2.25rem',
+                    padding: variants.size === 'sm' ? '0 0.625rem' : `0 ${tokens.space[3]}`,
+                    transition: `background ${tokens.motion.duration.fast} ease, color ${tokens.motion.duration.fast} ease, border-color ${tokens.motion.duration.fast} ease`,
                 },
             },
         }),
@@ -403,62 +377,32 @@ export const foundryReactTheme: LoomReactThemeLayer = {
             root: {
                 style: {
                     alignItems: 'center',
-                    background:
-                        variants.kind === 'ghost' ? 'transparent' : 'rgba(255, 255, 255, 0.04)',
+                    background: variants.kind === 'soft' ? '#202226' : 'transparent',
                     border: `1px solid ${
-                        variants.kind === 'ghost'
-                            ? 'transparent'
-                            : tokens.color.border.default
+                        variants.kind === 'soft' ? tokens.color.border.default : 'transparent'
                     }`,
                     borderRadius: tokens.radius.md,
                     color: tokens.color.text.muted,
                     cursor: 'pointer',
                     display: 'inline-flex',
-                    height: variants.size === 'sm' ? '2rem' : '2.25rem',
+                    height: variants.size === 'sm' ? '1.875rem' : '2.25rem',
                     justifyContent: 'center',
-                    width: variants.size === 'sm' ? '2rem' : '2.25rem',
-                },
-            },
-        }),
-        input: ({ tokens }) => ({
-            root: {
-                style: {
-                    alignItems: 'center',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: `1px solid ${tokens.color.border.default}`,
-                    borderRadius: tokens.radius.md,
-                    color: tokens.color.text.default,
-                    display: 'flex',
-                    gap: tokens.space[2],
-                    minHeight: '2.375rem',
-                    padding: `0 ${tokens.space[3]}`,
-                },
-            },
-            field: {
-                style: {
-                    background: 'transparent',
-                    border: 'none',
-                    color: tokens.color.text.default,
-                    flex: 1,
-                    fontFamily: tokens.font.family.body,
-                    fontSize: tokens.font.size.md,
-                    outline: 'none',
+                    width: variants.size === 'sm' ? '1.875rem' : '2.25rem',
                 },
             },
         }),
         badge: ({ variants }) => ({
             root: {
                 style: {
-                    ...badgeStyles(variants.tone, variants.kind),
+                    ...forgeBadgeStyles(variants.tone, variants.kind),
                     borderStyle: 'solid',
                     borderWidth: '1px',
                     borderRadius: '999px',
                     display: 'inline-flex',
                     fontSize: '0.6875rem',
                     fontWeight: 600,
-                    letterSpacing: '0.01em',
                     lineHeight: 1,
-                    padding: '0.25rem 0.5rem',
+                    padding: '0.1875rem 0.5rem',
                 },
             },
         }),
@@ -471,7 +415,8 @@ export const foundryReactTheme: LoomReactThemeLayer = {
             },
             head: {
                 style: {
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: '#0f0f10',
+                    color: tokens.color.text.muted,
                 },
             },
             cell: {
@@ -479,6 +424,7 @@ export const foundryReactTheme: LoomReactThemeLayer = {
                     borderBottom: `1px solid ${tokens.color.border.default}`,
                     color: tokens.color.text.default,
                     fontSize: '0.8125rem',
+                    fontWeight: 400,
                     padding: '0.625rem 0.75rem',
                     textAlign: 'left',
                 },

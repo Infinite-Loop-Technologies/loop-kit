@@ -1,5 +1,5 @@
-import { ForgePrototype } from '../src/components/forge-prototype';
+import { ForgeWorkspace } from '../src/components/forge-workspace';
 
 export default function HomePage() {
-    return <ForgePrototype />;
+    return <ForgeWorkspace />;
 }

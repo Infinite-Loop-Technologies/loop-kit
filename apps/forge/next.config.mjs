@@ -1,4 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import withPWAInit from '@ducanh2912/next-pwa';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withPWA = withPWAInit({
     dest: 'public',
@@ -8,6 +13,7 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    outputFileTracingRoot: path.join(__dirname, '../..'),
     reactStrictMode: true,
     transpilePackages: [
         '@loop-kit/dock',

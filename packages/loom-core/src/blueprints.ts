@@ -2,6 +2,10 @@ export type PrimitiveKey =
     | 'box'
     | 'surface'
     | 'panel'
+    | 'toolbar'
+    | 'breadcrumbs'
+    | 'avatar'
+    | 'kbd'
     | 'scroll-area'
     | 'separator'
     | 'stack'
@@ -161,6 +165,42 @@ export const primitiveBlueprints = {
             tone: standardVariants.tone,
             emphasis: standardVariants.emphasis,
             density: standardVariants.density,
+        },
+    }),
+    toolbar: defineBlueprint({
+        key: 'toolbar',
+        parts: ['root'],
+        variants: {
+            tone: standardVariants.tone,
+            density: standardVariants.density,
+            emphasis: standardVariants.emphasis,
+        },
+    }),
+    breadcrumbs: defineBlueprint({
+        key: 'breadcrumbs',
+        parts: ['root', 'list', 'item', 'separator', 'current', 'link'],
+        variants: {
+            tone: standardVariants.tone,
+            size: standardVariants.size,
+            emphasis: standardVariants.emphasis,
+        },
+    }),
+    avatar: defineBlueprint({
+        key: 'avatar',
+        parts: ['root', 'image', 'fallback'],
+        variants: {
+            tone: standardVariants.tone,
+            size: standardVariants.size,
+            emphasis: standardVariants.emphasis,
+        },
+    }),
+    kbd: defineBlueprint({
+        key: 'kbd',
+        parts: ['root'],
+        variants: {
+            tone: standardVariants.tone,
+            size: standardVariants.size,
+            emphasis: standardVariants.emphasis,
         },
     }),
     'scroll-area': defineBlueprint({
