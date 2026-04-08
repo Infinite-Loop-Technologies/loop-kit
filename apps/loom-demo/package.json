@@ -10,6 +10,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@loop-kit/dock": "workspace:*",
         "@loop-kit/loom-interactions": "workspace:*",
         "@loop-kit/loom-pack-data": "workspace:*",
         "@loop-kit/loom-pack-dock": "workspace:*",

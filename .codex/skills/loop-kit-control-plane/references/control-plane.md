@@ -1,63 +1,51 @@
 # Loop-Kit Control Plane
 
-The canonical Tana workspace is `loop-kit`.
+The canonical control plane for `loop-kit` is repo-local markdown.
 
-Use Tana as the external control plane for:
+Use these files:
 
-- capture
-- work selection
-- active slice context
-- project status
-- human and agent handoffs
-- branch and PR bookkeeping
-- review prompts
-- cleanup and reconciliation
-
-## GTD Horizons
-
-- `#Vision`: higher-level strategic direction
-- `#Project`: medium-horizon desired outcome
-- `#Slice`: current execution unit
-- `#Inbox`: raw captured item, issue, idea, or follow-up
-- `#Handoff`: explicit transfer between human and agent or across sessions
-- `#Reference`: support material
+- `CHECKLIST.md` for durable task tracking
+- `AGENT_INBOX.md` for temporary future-relevant captures
+- `HUMAN_INBOX.md` for explicit user-facing asks and blockers
+- `ARCHITECTURE.md` for repo map, architectural direction, and invariants
+- `references/` for durable support material when it does not belong in a package
 
 ## Slice Semantics
 
-A `#Slice` is the smallest bounded unit of repo work worth tracking across:
+A slice is the smallest bounded unit of repo work worth tracking across:
 
 - Git branches
 - validation
 - blockers
-- handoffs
+- follow-ups
 - review
 
 A slice is usually one branch-sized implementation unit, but very small coherent work may happen directly on `dev`.
 
-Multiple active projects are allowed, but each active project must have an obvious next slice or an explicit on-hold style status.
-
-Multiple active slices are allowed only when they map cleanly to different branches, owners, or blocked states. For a single session, prefer one primary current slice.
-
-## Preferred Layout
-
-- `Visions`
-- `Projects`
-- `Active Slices`
-- `Agent Inbox`
-- `Human Inbox`
-- `References`
-- `Prompts`
-- `Rituals`
+Keep slice tracking lightweight. In most cases, the relevant checklist section is enough.
 
 ## Session Open
 
 At session start:
 
-1. glance `Agent Inbox`
-2. glance `Human Inbox`
-3. glance active `#Project` state
-4. glance active `#Slice` state
-5. identify the next coherent slice before coding
+1. glance `AGENT_INBOX.md`
+2. glance `HUMAN_INBOX.md`
+3. glance the relevant part of `CHECKLIST.md`
+4. read `ARCHITECTURE.md` if the work is architectural or unfamiliar
+5. read an obvious relevant doc in `references/` if one exists
+6. identify the next coherent slice before coding
+
+## Inbox Processing
+
+Process relevant inbox items before coding:
+
+1. toss it
+2. do it if it is truly tiny
+3. move it to `CHECKLIST.md`
+4. move it to `HUMAN_INBOX.md`
+5. fold it into `ARCHITECTURE.md` or a reference doc if it is durable knowledge
+
+Never move an item out of `AGENT_INBOX.md` and then put the same unresolved note back there.
 
 ## Capture Habit
 
@@ -70,11 +58,20 @@ Capture aggressively when something should not be lost:
 - cleanup candidates
 - future-agent reminders
 
+But keep captures lightweight. Do not create new files unless the existing ones are not enough.
+
+## Reference Defaults
+
+- Prefer package-local docs for package-local truths.
+- Use `references/` when a topic spans multiple packages or represents repo-level support material.
+- Prefer obvious filenames over links.
+- Delete stale reference docs instead of creating archives by default.
+
 ## Session Close
 
 At session end:
 
-1. update slice branch, PR, validation, and blocker state
-2. create a `#Handoff` when the user or a future agent needs something explicit
-3. mention in chat what was placed into Tana
-4. ask the user directly in chat for unanswered unblockers
+1. update the relevant checklist items with current reality if needed
+2. clear processed inbox items
+3. add a note to `HUMAN_INBOX.md` when the user or a future session needs something explicit
+4. mention in chat what was placed into the human inbox

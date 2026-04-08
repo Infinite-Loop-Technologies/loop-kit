@@ -24,7 +24,6 @@
         "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
-        "@dnd-kit/core": "^6.3.1",
         "react": "^19.1.0"
     },
     "peerDependencies": {

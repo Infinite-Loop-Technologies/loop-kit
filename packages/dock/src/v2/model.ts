@@ -1,4 +1,3 @@
-import type { DockNodeId, DockState } from '../graphite/types.js';
 import type {
     DockV2FlowConfig,
     DockV2Group,
@@ -8,6 +7,48 @@ import type {
     DockV2Panel,
     DockV2State,
 } from './types.js';
+
+type LegacyDockNodeId = string;
+type LegacyDockPanelNode = {
+    id: LegacyDockNodeId;
+    kind: 'panel';
+    data: {
+        title: string;
+    };
+    links: {
+        children: [];
+    };
+};
+
+type LegacyDockGroupNode = {
+    id: LegacyDockNodeId;
+    kind: 'group';
+    data: {
+        activePanelId?: LegacyDockNodeId;
+    };
+    links: {
+        children: LegacyDockNodeId[];
+    };
+};
+
+type LegacyDockSplitNode = {
+    id: LegacyDockNodeId;
+    kind: 'split';
+    data: {
+        direction: 'row' | 'col';
+        weights: number[];
+    };
+    links: {
+        children: LegacyDockNodeId[];
+    };
+};
+
+type LegacyDockNode = LegacyDockPanelNode | LegacyDockGroupNode | LegacyDockSplitNode;
+type LegacyDockState = {
+    floatRootId?: string;
+    nodes: Record<LegacyDockNodeId, LegacyDockNode>;
+    rootId: LegacyDockNodeId;
+};
 
 const DEFAULT_GROUP_POLICIES: DockV2GroupPolicies = {
     attachable: true,
@@ -120,9 +161,9 @@ export function createDockV2State(state: DockV2State): DockV2State {
 }
 
 function collectLegacyGroupIds(
-    legacy: DockState,
-    nodeId: DockNodeId,
-    groupIds: DockNodeId[],
+    legacy: LegacyDockState,
+    nodeId: LegacyDockNodeId,
+    groupIds: LegacyDockNodeId[],
 ) {
     const node = legacy.nodes[nodeId];
     if (!node) {
@@ -138,13 +179,13 @@ function collectLegacyGroupIds(
 }
 
 export function fromLegacyDockState(
-    legacy: DockState,
+    legacy: LegacyDockState,
     options: {
         layerId?: DockV2LayerId;
     } = {},
 ): DockV2State {
     const layerId = options.layerId ?? 'legacy-flow';
-    const groupIds: DockNodeId[] = [];
+    const groupIds: LegacyDockNodeId[] = [];
     collectLegacyGroupIds(legacy, legacy.rootId, groupIds);
 
     const panels: Record<string, DockV2Panel> = {};

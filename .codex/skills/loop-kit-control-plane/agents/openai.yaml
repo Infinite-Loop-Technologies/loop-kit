@@ -1,4 +1,4 @@
 interface:
   display_name: "Loop-Kit Control Plane"
-  short_description: "Run the loop-kit Tana operating model"
-  default_prompt: "Use this skill to work with the loop-kit Tana control plane: glance inboxes and active work, choose a coherent slice, capture follow-ups, and reconcile Tana state at session close."
+  short_description: "Run the loop-kit markdown operating model"
+  default_prompt: "Use this skill to work with the loop-kit markdown control plane: glance AGENT_INBOX.md, HUMAN_INBOX.md, CHECKLIST.md, and ARCHITECTURE.md as needed, choose a coherent slice, capture follow-ups, and reconcile markdown state at session close."

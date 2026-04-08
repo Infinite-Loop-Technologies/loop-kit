@@ -3,9 +3,9 @@
         "target": "ES2022",
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "jsx": "react-jsx",
-        "types": ["node", "react"],
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "types": ["react", "bun"],
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "strict": true,
         "declaration": true,
         "declarationMap": true,
@@ -14,12 +14,5 @@
         "rootDir": ".",
         "skipLibCheck": true
     },
-    "include": [
-        "src/index.ts",
-        "src/store.ts",
-        "src/v2/controller.ts",
-        "src/v2/model.ts",
-        "src/v2/result.ts",
-        "src/v2/types.ts"
-    ]
+    "include": ["src"]
 }

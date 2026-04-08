@@ -1,6 +1,6 @@
 ---
 name: loop-kit-weekly-review
-description: Use when running the loop-kit weekly review or when the inboxes, handoffs, branches, or project horizons look neglected. This skill defines the GTD-style weekly review for human-agent collaboration in the loop-kit control plane.
+description: Use when running the loop-kit weekly review or when the inboxes, checklist, branches, or reference docs look neglected. This skill defines the GTD-inspired weekly review for the markdown control plane.
 ---
 
 # Loop-Kit Weekly Review
@@ -11,17 +11,19 @@ Read [references/weekly-review.md](C:\Users\ijhar\Desktop\loop-kit\.codex\skills
 
 ## Workflow
 
-1. Review `Agent Inbox` and `Human Inbox`.
-2. Review active `#Project` and `#Slice` state.
-3. Review local Git and remote branch or PR state.
-4. Reconcile Git reality against Tana reality.
-5. Capture follow-ups, cleanup candidates, and blockers back into Tana.
-6. Update `Last Reviewed On` on the reviewed projects and slices.
-7. Summarize proposed cleanup instead of silently doing risky cleanup.
+1. Review `AGENT_INBOX.md` item by item.
+2. Review `HUMAN_INBOX.md`.
+3. Review `CHECKLIST.md`.
+4. Review `ARCHITECTURE.md`.
+5. Review relevant docs in `references/`.
+6. Review local Git and remote branch or PR state.
+7. Reconcile Git reality against markdown control-plane reality.
+8. Capture follow-ups, cleanup candidates, and blockers back into the right markdown file.
+9. Summarize proposed cleanup instead of silently doing risky cleanup.
 
 ## Defaults
 
-- Look for stale branches, stale slices, missing slices, blocked work, and orphan handoffs.
-- Reconcile horizons from `#Vision` to `#Project` to `#Slice`.
-- Treat \"active project with no next slice\" as a review smell; either define the next slice or stop pretending the project is active.
-- Prefer adding concise review findings to Tana over long repo-local markdown reports.
+- Look for stale branches, stale tasks, blocked work, outdated references, and orphan human asks.
+- Process inbox items with GTD-style triage instead of letting them accumulate.
+- Treat "important project with no clear next checklist item or reference doc" as a review smell.
+- Prefer concise updates to the existing markdown files over writing a large review report.

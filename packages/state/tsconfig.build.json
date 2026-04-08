@@ -4,5 +4,5 @@
         "noEmit": false,
         "rootDir": "src"
     },
-    "include": ["src/index.ts", "src/dock-v2.tsx", "src/composites.tsx"]
+    "include": ["src"]
 }

@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 
-import { type DockV2State } from '@loop-kit/dock';
+import { type DockState } from '@loop-kit/dock';
 
 import { createForgePanelRegistry } from '../components/forge-panel-components';
 import { createForgeDockState } from './forge-dock-model';
 
-export function createForgeDockInitialState(): DockV2State {
+export function createForgeDockInitialState(): DockState {
     return createForgeDockState({
         commandPaletteOpen: true,
         inspectorDock: 'right',

@@ -3,26 +3,26 @@
 import * as React from 'react';
 
 import {
-    createDockV2Controller,
-    createDockV2State,
-    normalizeDockV2Policies,
-    type DockAttachPanelInput,
-    type DockDismissLayerInput,
-    type DockEnsurePanelInput,
-    type DockMoveGroupInput,
-    type DockOpenPanelInput,
-    type DockResizeGroupInput,
-    type DockResizeSplitInput,
-    type DockSetGroupModeInput,
-    type DockSplitPanelInput,
-    type DockV2Controller,
-    type DockV2ControllerResult,
-    type DockV2Group,
-    type DockV2Layer,
-    type DockV2Panel,
-    type DockV2SplitChild,
-    type DockV2SplitNode,
-    type DockV2State,
+    createDockState,
+    createDockStore,
+    normalizeDockPolicies,
+    type DockAttachPanelOptions,
+    type DockCommandResult,
+    type DockController,
+    type DockDismissLayerOptions,
+    type DockEnsurePanelOptions,
+    type DockGroup,
+    type DockLayer,
+    type DockOpenPanelOptions,
+    type DockPanel,
+    type DockResizeGroupOptions,
+    type DockResizeSplitOptions,
+    type DockSetGroupModeOptions,
+    type DockSplitChild,
+    type DockSplitNode,
+    type DockSplitPanelOptions,
+    type DockState,
+    type DockStore,
 } from '@loop-kit/dock';
 import {
     Box,
@@ -44,14 +44,14 @@ import {
 } from '@loop-kit/loom-interactions';
 
 export type DockPanelRendererProps = {
-    closePanel: () => DockV2ControllerResult;
-    controller: DockV2Controller;
-    group: DockV2Group;
+    closePanel: () => DockCommandResult;
+    controller: DockStore;
+    group: DockGroup;
     isActive: boolean;
-    layer: DockV2Layer;
-    openPanel: (input: DockOpenPanelInput) => DockV2ControllerResult;
-    panel: DockV2Panel;
-    state: DockV2State;
+    layer: DockLayer;
+    openPanel: (input: DockOpenPanelOptions) => DockCommandResult;
+    panel: DockPanel;
+    state: DockState;
 };
 
 export type DockPanelRenderer = React.ComponentType<DockPanelRendererProps>;
@@ -63,67 +63,51 @@ export type DockPanelRegistry = {
 };
 
 type DockContextValue = {
-    controller: DockV2Controller;
+    onError?: (result: DockCommandResult) => void;
     registry: DockPanelRegistry;
-    state: DockV2State;
+    store: DockStore;
 };
 
 const DockContext = React.createContext<DockContextValue | null>(null);
 
 export type DockProviderProps = {
     children: React.ReactNode;
-    controller?: DockV2Controller;
-    initialState: DockV2State;
-    onError?: (result: DockV2ControllerResult) => void;
-    onStateChange?: (state: DockV2State) => void;
+    initialState: DockState;
+    onError?: (result: DockCommandResult) => void;
+    onStateChange?: (state: DockState) => void;
     registry?: DockPanelRegistry;
+    store?: DockStore;
 };
 
 export function DockProvider({
     children,
-    controller,
     initialState,
     onError,
     onStateChange,
     registry,
+    store,
 }: DockProviderProps) {
-    const errorRef = React.useRef(onError);
-    const stateChangeRef = React.useRef(onStateChange);
-    errorRef.current = onError;
-    stateChangeRef.current = onStateChange;
-
-    const [state, setState] = React.useState(() =>
-        controller ? controller.getState() : createDockV2State(initialState),
+    const dockStore = React.useMemo(
+        () => store ?? createDockStore(createDockState(initialState)),
+        [initialState, store],
     );
-    const controllerRef = React.useRef<DockV2Controller | null>(null);
-
-    if (!controllerRef.current) {
-        controllerRef.current =
-            controller ??
-            createDockV2Controller(initialState, {
-                onChange(nextState) {
-                    setState(nextState);
-                    stateChangeRef.current?.(nextState);
-                },
-            });
-    }
 
     React.useEffect(() => {
-        if (!controller) {
+        if (!onStateChange) {
             return;
         }
-        const nextState = controller.getState();
-        setState(nextState);
-        stateChangeRef.current?.(nextState);
-    }, [controller]);
+        return dockStore.subscribe(() => {
+            onStateChange(dockStore.getState());
+        });
+    }, [dockStore, onStateChange]);
 
     const value = React.useMemo<DockContextValue>(
         () => ({
-            controller: controllerRef.current!,
+            onError,
             registry: registry ?? {},
-            state,
+            store: dockStore,
         }),
-        [registry, state],
+        [dockStore, onError, registry],
     );
 
     return (
@@ -141,20 +125,33 @@ export function useDock() {
     return value;
 }
 
-function activePanelId(group: DockV2Group) {
+export function useDockStore() {
+    return useDock().store;
+}
+
+export function useDockSelector<TSelected>(selector: (state: DockState) => TSelected) {
+    const store = useDockStore();
+    return React.useSyncExternalStore(
+        store.subscribe,
+        () => selector(store.getState()),
+        () => selector(store.getState()),
+    );
+}
+
+function activePanelId(group: DockGroup) {
     return group.activePanelId ?? group.panelIds[0];
 }
 
 function resolveRenderer(
     registry: DockPanelRegistry,
-    panel: DockV2Panel,
+    panel: DockPanel,
 ) {
     return registry.ids?.[panel.id] ?? registry.kinds?.[panel.kind] ?? registry.fallback;
 }
 
 function runAction(
-    result: DockV2ControllerResult,
-    onError?: (result: DockV2ControllerResult) => void,
+    result: DockCommandResult,
+    onError?: (result: DockCommandResult) => void,
 ) {
     if (!result.ok) {
         onError?.(result);
@@ -174,10 +171,10 @@ function normalizeSplitWeights(weights: [number, number]) {
 }
 
 function computeSplitWeights(
-    direction: DockV2SplitNode['direction'],
+    direction: DockSplitNode['direction'],
     splitSize: number,
     startPoint: { x: number; y: number },
-    weights: DockV2SplitNode['weights'],
+    weights: DockSplitNode['weights'],
     point: { x: number; y: number },
 ) {
     const left = Number.isFinite(weights[0]) ? Math.max(0.01, weights[0]) : 0.5;
@@ -195,7 +192,7 @@ function computeSplitWeights(
     return normalizeSplitWeights([nextLeft, total - nextLeft]);
 }
 
-function flowLayerStyle(layer: DockV2Layer, tokens: ReturnType<typeof useLoomTokens>) {
+function flowLayerStyle(layer: DockLayer, tokens: ReturnType<typeof useLoomTokens>) {
     return {
         display: 'flex',
         flex: 1,
@@ -210,7 +207,7 @@ function flowLayerStyle(layer: DockV2Layer, tokens: ReturnType<typeof useLoomTok
     };
 }
 
-function overlayLayerStyle(layer: DockV2Layer) {
+function overlayLayerStyle(layer: DockLayer) {
     return {
         inset: 0,
         pointerEvents:
@@ -222,7 +219,7 @@ function overlayLayerStyle(layer: DockV2Layer) {
     };
 }
 
-function flowGroupStyle(group: DockV2Group) {
+function flowGroupStyle(group: DockGroup) {
     return {
         display: 'flex',
         flexBasis: group.layout?.basis ?? group.layout?.width,
@@ -237,7 +234,7 @@ function flowGroupStyle(group: DockV2Group) {
     };
 }
 
-function overlayGroupStyle(group: DockV2Group) {
+function overlayGroupStyle(group: DockGroup) {
     const placement = group.layout?.placement;
     if (!placement) {
         return {
@@ -304,15 +301,15 @@ function overlayGroupStyle(group: DockV2Group) {
     };
 }
 
-function panelTitle(group: DockV2Group, panel: DockV2Panel | undefined) {
+function panelTitle(group: DockGroup, panel: DockPanel | undefined) {
     return group.title ?? panel?.title ?? 'Panel';
 }
 
 function panelCanClose(
-    group: DockV2Group,
-    panel: DockV2Panel | undefined,
+    group: DockGroup,
+    panel: DockPanel | undefined,
 ) {
-    const policies = normalizeDockV2Policies(group.policies);
+    const policies = normalizeDockPolicies(group.policies);
     return policies.closeable && panel?.closeable !== false;
 }
 
@@ -320,11 +317,12 @@ function DockGroupHeader({
     group,
     panel,
 }: {
-    group: DockV2Group;
-    panel: DockV2Panel | undefined;
+    group: DockGroup;
+    panel: DockPanel | undefined;
 }) {
-    const { controller } = useDock();
-    const policies = normalizeDockV2Policies(group.policies);
+    const controller = useDockStore();
+    const { onError } = useDock();
+    const policies = normalizeDockPolicies(group.policies);
     const canClose = panelCanClose(group, panel);
 
     return (
@@ -376,7 +374,7 @@ function DockGroupHeader({
                         label={`Close ${panelTitle(group, panel)}`}
                         name='close'
                         onClick={() => {
-                            controller.closeGroup(group.id);
+                            runAction(controller.closeGroup(group.id), onError);
                         }}
                         size='sm'
                     />
@@ -386,8 +384,10 @@ function DockGroupHeader({
     );
 }
 
-function DockTabsRow({ group }: { group: DockV2Group }) {
-    const { controller, state } = useDock();
+function DockTabsRow({ group }: { group: DockGroup }) {
+    const controller = useDockStore();
+    const { onError } = useDock();
+    const state = useDockSelector((current) => current);
     const currentPanelId = activePanelId(group);
 
     return (
@@ -407,7 +407,7 @@ function DockTabsRow({ group }: { group: DockV2Group }) {
                         aria-selected={selected}
                         kind={selected ? 'soft' : 'ghost'}
                         onClick={() => {
-                            controller.focusPanel(panelId);
+                            runAction(controller.focusPanel(panelId, { history: false }), onError);
                         }}
                         size='sm'
                         tone={selected ? 'neutral' : 'muted'}>
@@ -420,21 +420,21 @@ function DockTabsRow({ group }: { group: DockV2Group }) {
 }
 
 type SplitResizePayload = {
-    groupId: DockV2Group['id'];
-    splitId: DockV2SplitNode['id'];
-    weights: DockV2SplitNode['weights'];
+    groupId: DockGroup['id'];
+    splitId: DockSplitNode['id'];
+    weights: DockSplitNode['weights'];
 };
 
 type SplitResizeSession = {
-    direction: DockV2SplitNode['direction'];
-    groupId: DockV2Group['id'];
-    splitId: DockV2SplitNode['id'];
+    direction: DockSplitNode['direction'];
+    groupId: DockGroup['id'];
+    splitId: DockSplitNode['id'];
     splitSize: number;
     startPoint: {
         x: number;
         y: number;
     };
-    weights: DockV2SplitNode['weights'];
+    weights: DockSplitNode['weights'];
 };
 
 function DockSplitResizeHandle({
@@ -443,10 +443,10 @@ function DockSplitResizeHandle({
     node,
 }: {
     containerRef: React.RefObject<HTMLDivElement | null>;
-    groupId: DockV2Group['id'];
-    node: DockV2SplitNode;
+    groupId: DockGroup['id'];
+    node: DockSplitNode;
 }) {
-    const { controller } = useDock();
+    const controller = useDockStore();
     const [active, setActive] = React.useState(false);
     const frameQueue = React.useMemo(
         () =>
@@ -575,11 +575,11 @@ function DockSplitNodeView({
     group,
     layer,
 }: {
-    child: DockV2SplitChild;
-    group: DockV2Group;
-    layer: DockV2Layer;
+    child: DockSplitChild;
+    group: DockGroup;
+    layer: DockLayer;
 }) {
-    const { state } = useDock();
+    const state = useDockSelector((current) => current);
 
     if (child.kind === 'panel') {
         const panel = state.panels[child.panelId];
@@ -614,9 +614,9 @@ function DockSplitView({
     layer,
     node,
 }: {
-    group: DockV2Group;
-    layer: DockV2Layer;
-    node: DockV2SplitNode;
+    group: DockGroup;
+    layer: DockLayer;
+    node: DockSplitNode;
 }) {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -660,12 +660,14 @@ export function DockPanelView({
     layer,
     panel,
 }: {
-    group: DockV2Group;
+    group: DockGroup;
     isActive?: boolean;
-    layer: DockV2Layer;
-    panel: DockV2Panel;
+    layer: DockLayer;
+    panel: DockPanel;
 }) {
-    const { controller, registry, state } = useDock();
+    const { onError, registry } = useDock();
+    const controller = useDockStore();
+    const state = useDockSelector((current) => current);
     const renderer = resolveRenderer(registry, panel);
 
     if (!renderer) {
@@ -680,12 +682,12 @@ export function DockPanelView({
     }
 
     return React.createElement(renderer, {
-        closePanel: () => controller.closePanel(panel.id),
+        closePanel: () => runAction(controller.closePanel(panel.id), onError),
         controller,
         group,
         isActive,
         layer,
-        openPanel: (input) => controller.openPanel(input),
+        openPanel: (input) => runAction(controller.openPanel(input), onError),
         panel,
         state,
     });
@@ -695,10 +697,10 @@ export function DockGroupView({
     group,
     layer,
 }: {
-    group: DockV2Group;
-    layer: DockV2Layer;
+    group: DockGroup;
+    layer: DockLayer;
 }) {
-    const { state } = useDock();
+    const state = useDockSelector((current) => current);
     const currentPanel = state.panels[activePanelId(group) ?? ''];
     const showTitlebar =
         group.chrome?.titlebarMode !== 'none' && group.chrome?.showTitlebar !== false;
@@ -739,7 +741,7 @@ export function DockGroupView({
                 data-dock-group={group.id}
                 data-dock-group-closeable={panelCanClose(group, currentPanel)}
                 data-dock-group-mode={group.mode}
-                data-dock-group-splittable={normalizeDockV2Policies(group.policies).splittable}
+                data-dock-group-splittable={normalizeDockPolicies(group.policies).splittable}
                 style={{
                     display: 'flex',
                     flex: 1,
@@ -758,7 +760,7 @@ export function DockGroupView({
             data-dock-group={group.id}
             data-dock-group-closeable={panelCanClose(group, currentPanel)}
             data-dock-group-mode={group.mode}
-            data-dock-group-splittable={normalizeDockV2Policies(group.policies).splittable}
+            data-dock-group-splittable={normalizeDockPolicies(group.policies).splittable}
             density='compact'
             emphasis='strong'
             style={{
@@ -774,8 +776,10 @@ export function DockGroupView({
     );
 }
 
-export function DockLayerView({ layer }: { layer: DockV2Layer }) {
-    const { controller, state } = useDock();
+export function DockLayerView({ layer }: { layer: DockLayer }) {
+    const { onError } = useDock();
+    const controller = useDockStore();
+    const state = useDockSelector((current) => current);
     const tokens = useLoomTokens();
     const isFlow = layer.kind === 'flow';
     const keyboardActive =
@@ -790,7 +794,7 @@ export function DockLayerView({ layer }: { layer: DockV2Layer }) {
                 return false;
             }
             event.preventDefault();
-            controller.dismissLayer({ layerId: layer.id });
+            runAction(controller.dismissLayer({ layerId: layer.id }), onError);
             return true;
         },
         keyboardActive,
@@ -804,7 +808,7 @@ export function DockLayerView({ layer }: { layer: DockV2Layer }) {
                 <Box
                     data-dock-layer-backdrop={layer.id}
                     onClick={() => {
-                        controller.dismissLayer({ layerId: layer.id });
+                        runAction(controller.dismissLayer({ layerId: layer.id }), onError);
                     }}
                     style={{
                         backdropFilter: 'blur(10px)',
@@ -843,14 +847,14 @@ export function DockStage({
     className?: string;
     style?: React.CSSProperties;
 }) {
-    const { state } = useDock();
+    const state = useDockSelector((current) => current);
     const tokens = useLoomTokens();
     const flowLayers = state.layerOrder
-        .map((layerId) => state.layers[layerId])
-        .filter((layer): layer is DockV2Layer => Boolean(layer) && layer.kind === 'flow');
+        .map((layerId: string) => state.layers[layerId])
+        .filter((layer: DockLayer | undefined): layer is DockLayer => layer != null && layer.kind === 'flow');
     const floatingLayers = state.layerOrder
-        .map((layerId) => state.layers[layerId])
-        .filter((layer): layer is DockV2Layer => Boolean(layer) && layer.kind !== 'flow');
+        .map((layerId: string) => state.layers[layerId])
+        .filter((layer: DockLayer | undefined): layer is DockLayer => layer != null && layer.kind !== 'flow');
 
     return (
         <Box
@@ -871,11 +875,11 @@ export function DockStage({
                     minHeight: 0,
                     minWidth: 0,
                 }}>
-                {flowLayers.map((layer) => (
+                {flowLayers.map((layer: DockLayer) => (
                     <DockLayerView key={layer.id} layer={layer} />
                 ))}
             </Stack>
-            {floatingLayers.map((layer) => (
+            {floatingLayers.map((layer: DockLayer) => (
                 <DockLayerView key={layer.id} layer={layer} />
             ))}
         </Box>

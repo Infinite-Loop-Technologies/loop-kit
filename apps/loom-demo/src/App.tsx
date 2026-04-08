@@ -1,10 +1,17 @@
 import * as React from 'react';
 import {
+    createDockGroup,
+    createDockLayer,
+    createDockPanel,
+    createDockState,
+    type DockState,
+} from '@loop-kit/dock';
+import {
     InteractionProvider,
     useMeasuredView,
     useViewSnapshot,
 } from '@loop-kit/loom-interactions';
-import { DockWorkspaceDemo } from '@loop-kit/loom-pack-dock';
+import { DockProvider, DockStage, type DockPanelRegistry } from '@loop-kit/loom-pack-dock';
 import {
     DataTable,
     createQueryBuilderModel,
@@ -61,6 +68,89 @@ const sampleColumns: DataTableColumn<(typeof sampleRows)[number]>[] = [
     { key: 'owner', header: 'Layer', sortable: true, sortValue: (row) => row.owner, cell: (row) => row.owner },
     { key: 'role', header: 'Role', cell: (row) => row.role },
 ];
+
+function createPreviewDockState(): DockState {
+    return createDockState({
+        activeGroupId: 'group-main',
+        activeLayerId: 'layer-main',
+        focusedPanelId: 'panel-preview',
+        groups: {
+            'group-main': createDockGroup({
+                chrome: {
+                    framed: true,
+                    showTabs: true,
+                    showTitlebar: true,
+                },
+                id: 'group-main',
+                layerId: 'layer-main',
+                layout: {
+                    basis: 'auto',
+                    grow: 1,
+                    min: '0',
+                },
+                mode: 'tabs',
+                panelIds: ['panel-preview', 'panel-reference'],
+                title: 'Dock Pack Preview',
+            }),
+        },
+        layerOrder: ['layer-main'],
+        layers: {
+            'layer-main': createDockLayer({
+                flow: {
+                    direction: 'horizontal',
+                    gap: '0',
+                    reorder: 'horizontal-only',
+                },
+                groupIds: ['group-main'],
+                id: 'layer-main',
+                kind: 'flow',
+            }),
+        },
+        panels: {
+            'panel-preview': createDockPanel({
+                id: 'panel-preview',
+                kind: 'preview',
+                title: 'Preview',
+            }),
+            'panel-reference': createDockPanel({
+                id: 'panel-reference',
+                kind: 'reference',
+                title: 'Reference',
+            }),
+        },
+    });
+}
+
+function createPreviewDockRegistry(): DockPanelRegistry {
+    return {
+        kinds: {
+            preview: function PreviewPanel() {
+                return (
+                    <Panel emphasis='strong'>
+                        <Stack gap='3'>
+                            <Heading level={3} size='sm'>
+                                Loom Pack Dock
+                            </Heading>
+                            <Text tone='muted'>
+                                The dock bridge now consumes app-provided themes instead of choosing them internally.
+                            </Text>
+                        </Stack>
+                    </Panel>
+                );
+            },
+            reference: function ReferencePanel() {
+                return (
+                    <Stack gap='3'>
+                        <Badge tone='accent'>Theme agnostic</Badge>
+                        <Text tone='muted'>
+                            Packs can render dock state without hardcoding theme IDs or concrete theme packages.
+                        </Text>
+                    </Stack>
+                );
+            },
+        },
+    };
+}
 
 function resolveThemes(themeId: string) {
     switch (themeId) {
@@ -190,6 +280,9 @@ function DemoContent({
     onThemeChange: (themeId: 'base' | 'aquatic' | 'neumorph') => void;
     themeId: 'base' | 'aquatic' | 'neumorph';
 }) {
+    const dockState = React.useMemo(() => createPreviewDockState(), []);
+    const dockRegistry = React.useMemo(() => createPreviewDockRegistry(), []);
+
     return (
         <DemoPageShell>
             <Grid
@@ -378,11 +471,9 @@ function DemoContent({
                             minHeight: '620px',
                             padding: '0.75rem',
                         }}>
-                        <DockWorkspaceDemo
-                            initialColorMode={colorMode}
-                            initialThemeId={themeId}
-                            mode='preview'
-                        />
+                        <DockProvider initialState={dockState} registry={dockRegistry}>
+                            <DockStage style={{ minHeight: '36rem' }} />
+                        </DockProvider>
                     </Surface>
                 </Stack>
             </DemoSection>

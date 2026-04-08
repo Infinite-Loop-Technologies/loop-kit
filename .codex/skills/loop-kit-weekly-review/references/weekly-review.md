@@ -1,17 +1,16 @@
 # Loop-Kit Weekly Review
 
-The weekly review is the ritual that keeps the control plane trustworthy.
+The weekly review is the ritual that keeps the markdown control plane trustworthy.
 
 Review these layers:
 
-1. `Agent Inbox`
-2. `Human Inbox`
-3. active `#Project` nodes
-4. active `#Slice` nodes
-5. local Git branch state
-6. remote branch and PR state
-7. horizon alignment from `#Vision` to `#Project` to `#Slice`
-8. `Last Reviewed On` freshness on active projects and slices
+1. `AGENT_INBOX.md`
+2. `HUMAN_INBOX.md`
+3. `CHECKLIST.md`
+4. `ARCHITECTURE.md`
+5. relevant docs in `references/`
+6. local Git branch state
+7. remote branch and PR state when relevant
 
 Questions to answer:
 
@@ -19,16 +18,25 @@ Questions to answer:
 - What is blocked?
 - What is stale?
 - What should be captured but is not yet tracked?
-- Which branches and slices no longer match?
-- Which active projects no longer have an obvious next slice?
-- Which inbox items should become projects, slices, references, or handoffs?
-- Which handoffs are resolved and can be cleared?
+- Which checklist items are obsolete, done, or too vague?
+- Which inbox items should become checklist items, human asks, or reference material?
+- Which reference docs are outdated, duplicated, or no longer worth keeping?
+- Which branches and tasks no longer match?
+- Which user blockers are still unresolved?
+
+Inbox processing rules:
+
+1. toss it
+2. do it if it is truly tiny
+3. move it to `CHECKLIST.md`
+4. move it to `HUMAN_INBOX.md`
+5. fold it into `ARCHITECTURE.md` or a reference doc
 
 Expected outputs:
 
-- updated slice statuses
-- updated `Last Reviewed On` on reviewed projects and slices
-- updated branch and PR fields
-- new follow-up captures
-- explicit handoffs where needed
+- cleaned-up inboxes
+- updated checklist state
+- clearer human blockers
+- pruned or updated reference docs
+- explicit follow-up captures where needed
 - a concise review summary to the user

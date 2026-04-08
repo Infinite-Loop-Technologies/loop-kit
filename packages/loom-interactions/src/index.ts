@@ -1,10 +1,4 @@
 import * as React from 'react';
-import type {
-    DragCancelEvent,
-    DragEndEvent,
-    DragMoveEvent,
-    DragStartEvent,
-} from '@dnd-kit/core';
 
 type Subscriber = () => void;
 
@@ -354,76 +348,6 @@ export function createFrameQueue<TPayload>(dispatch: (payload: TPayload) => void
                 frameId = null;
             }
         },
-    };
-}
-
-export type DndRecognizerConfig<TSession = unknown, TPayload = unknown> = {
-    createSession: (event: DragStartEvent) => TSession | null;
-    onStart?: (session: TSession, event: DragStartEvent) => void;
-    onMove?: (session: TSession, event: DragMoveEvent) => TPayload | null;
-    onEnd?: (session: TSession, event: DragEndEvent) => TPayload | null;
-    onCancel?: (session: TSession | null, event: DragCancelEvent) => void;
-    dispatch: (payload: TPayload) => void;
-    dispatchFrame?: (payload: TPayload) => void;
-    flushFrame?: () => void;
-};
-
-export function useDndRecognizer<TSession = unknown, TPayload = unknown>(
-    config: DndRecognizerConfig<TSession, TPayload>,
-) {
-    const configRef = React.useRef(config);
-    const sessionRef = React.useRef<TSession | null>(null);
-    configRef.current = config;
-
-    const onDragStart = React.useCallback((event: DragStartEvent) => {
-        const session = configRef.current.createSession(event);
-        sessionRef.current = session;
-        if (session) {
-            configRef.current.onStart?.(session, event);
-        }
-    }, []);
-
-    const onDragMove = React.useCallback((event: DragMoveEvent) => {
-        const session = sessionRef.current;
-        if (!session) {
-            return;
-        }
-        const payload = configRef.current.onMove?.(session, event);
-        if (payload == null) {
-            return;
-        }
-        if (configRef.current.dispatchFrame) {
-            configRef.current.dispatchFrame(payload);
-            return;
-        }
-        configRef.current.dispatch(payload);
-    }, []);
-
-    const onDragEnd = React.useCallback((event: DragEndEvent) => {
-        const session = sessionRef.current;
-        sessionRef.current = null;
-        configRef.current.flushFrame?.();
-        if (!session) {
-            return;
-        }
-        const payload = configRef.current.onEnd?.(session, event);
-        if (payload != null) {
-            configRef.current.dispatch(payload);
-        }
-    }, []);
-
-    const onDragCancel = React.useCallback((event: DragCancelEvent) => {
-        const session = sessionRef.current;
-        sessionRef.current = null;
-        configRef.current.flushFrame?.();
-        configRef.current.onCancel?.(session, event);
-    }, []);
-
-    return {
-        onDragStart,
-        onDragMove,
-        onDragEnd,
-        onDragCancel,
     };
 }
 

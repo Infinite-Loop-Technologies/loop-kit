@@ -1,5 +1,3 @@
-import type { DispatchIntentOptions, GraphPath, GraphState } from '@loop-kit/graphite';
-
 import type { Option, Result } from './result.js';
 
 export type DockV2LayerId = string;
@@ -246,30 +244,9 @@ export type DockV2ControllerOptions = {
     onChange?: (state: DockV2State) => void;
 };
 
-export type DockV2IntentNames = {
-    attachPanel: string;
-    closeGroup: string;
-    closePanel: string;
-    dismissLayer: string;
-    ensurePanel: string;
-    focusPanel: string;
-    moveGroup: string;
-    openPanel: string;
-    resizeGroup: string;
-    resizeSplit: string;
-    setGroupMode: string;
-    splitPanel: string;
-};
-
-export type RegisterDockV2IntentsOptions = {
-    intentPrefix?: string;
-    path?: GraphPath;
-};
-
 export type DockV2IntentEnvelope = {
-    intent: string;
-    options?: DispatchIntentOptions<GraphState>;
+    history?: boolean;
+    name: string;
     payload?: unknown;
 };
-
-export type DockV2GraphResult<TState extends GraphState> = Option<TState>;
+export type DockV2CommandResult<TState = DockV2State> = Option<TState>;

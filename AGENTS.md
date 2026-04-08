@@ -8,11 +8,49 @@ Treat it as a capability-driven platform for registry-backed software units, WIT
 
 ## Required Control Plane
 
-For work in this repo, Tana is the external control plane and CKB is the primary repo-understanding layer.
+For work in this repo, the control plane is repo-local markdown and CKB is the primary repo-understanding layer.
 
-- If Tana MCP is unavailable, stop and report unless the user explicitly says to proceed without Tana.
 - If CKB is unavailable for non-trivial repo work, stop and report.
 - If GitHub MCP is unavailable, stop only for remote GitHub work that depends on it.
+- Do not invent extra planning systems when the existing markdown files are enough.
+
+### Control-Plane Files
+
+- `CHECKLIST.md`
+  - the primary task inventory
+  - use it for active work, next slices, blockers, and follow-ups worth keeping
+- `AGENT_INBOX.md`
+  - the agent's temporary capture list
+  - use it for future-relevant notes that are not part of the current slice yet
+  - process it regularly; do not let it become a second checklist
+- `HUMAN_INBOX.md`
+  - only for things the human must do, answer, or decide
+  - if the agent is blocked on human setup, note the blocker on the relevant checklist item too
+- `ARCHITECTURE.md`
+  - repo map, high-level architecture, and non-negotiable invariants
+  - read it before architecture work, brainstorming, or cross-package changes
+- `references/`
+  - optional support material for project-specific or general durable reference docs
+  - use obvious filenames instead of links or deep folder trees
+
+### Minimal Semantics
+
+- Keep the system lightweight.
+- Prefer editing an existing file over creating a new one.
+- Do not create taxonomy for its own sake.
+- Do not store trivial scratch notes in `references/`.
+- Do not archive by default; delete stale reference docs when they stop being useful.
+- Keep package-local reference material near the package when it is only about that package.
+- Use `references/` when a document spans multiple packages, captures repo-level direction, or would be awkward to bury inside one package.
+
+### Suggested Reference Filenames
+
+- `references/project-loom.md`
+- `references/project-forge-workspace.md`
+- `references/reference-instantdb.md`
+- `references/list-potential-future-problems.md`
+
+Do not treat these prefixes as a schema. They are naming hints, not metadata.
 
 ## Current Repo Mode
 
@@ -38,32 +76,37 @@ Prototype mode is enabled.
    - if the tree is clean and the current branch is unrelated, switch to `dev`
    - if switching branches on a clean tree, fetch first and inspect whether the target branch needs a fast-forward update before working
 
-2. Open with Tana reality before choosing work.
-   - use the `loop-kit-control-plane` skill
-   - always scope Tana search to the `loop-kit` workspace
-   - glance the `Agent Inbox` for urgent captures
-   - glance the `Human Inbox` for blockers, answers, or handoffs from the user
-   - glance active `#Project` and `#Slice` context before deciding the next action
+2. Open with markdown control-plane reality before choosing work.
+   - glance `AGENT_INBOX.md`
+   - glance `HUMAN_INBOX.md`
+   - glance the relevant sections of `CHECKLIST.md`
+   - if the task is architectural, cross-package, or concept-heavy, read `ARCHITECTURE.md`
+   - if a clearly relevant doc exists in `references/`, read that too
 
-3. For non-trivial code work, use CKB early.
+3. Process inbox items before coding when relevant.
+   - for each relevant inbox item: do it, delete it, move it to `CHECKLIST.md`, move it to `HUMAN_INBOX.md`, or fold it into a reference doc
+   - never move an item out of `AGENT_INBOX.md` and then put the same unresolved note back into `AGENT_INBOX.md`
+   - inbox is for capture, not storage
+
+4. For non-trivial code work, use CKB early.
    - call `getStatus()`
    - then use the smallest fitting CKB workflow
 
-4. Choose the smallest coherent slice.
-   - a `#Slice` is the smallest bounded unit of repo work worth tracking across Git, validation, and Tana
+5. Choose the smallest coherent slice.
+   - a slice is the smallest bounded unit of repo work worth tracking across Git, validation, and blockers
    - a slice is usually one branch-sized implementation unit, but it can also be direct work on `dev` when the change is very small and coherent
-   - a slice is not the same thing as a GTD project
+   - keep slice tracking lightweight; usually the relevant checklist section is enough
 
-5. Execute, validate, and capture follow-ups as you go.
+6. Execute, validate, and capture follow-ups as you go.
    - validate at the smallest responsible scope first
    - widen validation only when blast radius grows
-   - capture friction, surprises, follow-ups, and workflow improvements into Tana instead of relying on memory
+   - capture friction, surprises, follow-ups, and future ideas into the markdown control plane instead of relying on memory
 
-6. Close with a mini-review.
-   - update branch, PR, status, validation, and blocker state in Tana
-   - add a `#Handoff` when the user or a future agent needs something explicit
-   - mention in chat when you put something in the user-facing inbox or handoff area
-   - ask the user directly in chat for clarifications or unblockers when needed instead of hiding everything in Tana
+7. Close with a mini-review.
+   - update the relevant checklist item with branch, validation, blockers, or next-step reality when helpful
+   - add a human-facing note to `HUMAN_INBOX.md` when the user or a future session needs something explicit
+   - mention in chat when you put something in the human inbox
+   - ask the user directly in chat for unblockers instead of hiding them only in markdown
 
 ## Git Branch Selection And Salvage
 
@@ -120,122 +163,87 @@ Use this salvage protocol:
 
 A local preservation commit on a rescue branch is allowed because it preserves work rather than destroying it.
 
-## Tana Workflow
+## Markdown Workflow
 
-Use the `loop-kit-control-plane` skill whenever repo work depends on Tana state.
+Use the markdown control plane instead of external planning software.
 
-Tana is the external control plane for:
+### Checklist Rules
 
-- capture
-- work selection
-- active slice context
-- project status
-- blocked-on-human handoffs
-- blocked-on-agent handoffs
-- review prompts
-- branch and PR bookkeeping
-- cleanup and reconciliation
+- `CHECKLIST.md` is the default home for durable task tracking.
+- Keep sections obvious and human-readable.
+- Add blockers inline on the relevant task instead of scattering them elsewhere.
+- Remove or rewrite stale items during normal work and weekly review.
+- If a task is clearly done, mark it done or delete it instead of leaving ambiguous residue.
 
-Do not recreate GTD planning structures inside this repo by default.
+### Inbox Rules
 
-### Workspace Rules
+- `AGENT_INBOX.md` is for captures that should not be lost but are not part of the current slice.
+- `HUMAN_INBOX.md` is for explicit asks, decisions, setup steps, or answers needed from the human.
+- Process inbox items quickly.
+- Use GTD-style triage:
+  - toss it
+  - do it if it is truly tiny
+  - move it to `CHECKLIST.md`
+  - move it to `HUMAN_INBOX.md`
+  - fold it into `ARCHITECTURE.md` or a reference doc if it is durable knowledge
+- Do not leave processed items sitting in inboxes.
 
-- the canonical workspace is named `loop-kit`
-- always scope Tana search to the `loop-kit` workspace
-- prefer exact node IDs and field IDs over names when available
-- search first, then read only the selected node, then paginate children only when necessary
-- use the `tana-structured-search` skill before composing non-trivial `search_nodes` queries
-- validate structured searches with `read_node` or `get_children` when the result matters
-- assume `search_nodes` excludes trash unless future testing proves otherwise
+### Reference Rules
 
-### GTD Horizons In Tana
-
-Use these horizons and keep them reconciled:
-
-- `#Vision`: higher-level strategic direction
-- `#Project`: medium-horizon desired outcome
-- `#Slice`: current execution unit
-- `#Inbox`: raw captured item, idea, issue, or follow-up
-- `#Handoff`: explicit transfer between human and agent or between sessions
-- `#Reference`: supporting material
-
-### Required Semantics
-
-- every active `#Slice` should belong to a `#Project`
-- every active branch should map to at most one active `#Slice`
-- multiple active `#Project` nodes are allowed, but each active project must have an obvious next slice or be moved to an on-hold style status instead of pretending it is active
-- multiple active `#Slice` nodes are allowed only when they map cleanly to distinct branches, owners, or blocked states; prefer one primary current slice for the current session
-- a `#Project` is a desired outcome, not a branch
-- a `#Slice` is an execution unit, not a whole product goal
-- inbox items are captures, not long-term plans
-- handoffs are explicit and searchable
-- completed work is preserved as history, not trashed by default
-
-### Control-Plane Layout
-
-The control-plane root should make navigation obvious instead of relying on clever searches.
-
-Preferred top-level sections:
-
-- `Visions`
-- `Projects`
-- `Active Slices`
-- `Agent Inbox`
-- `Human Inbox`
-- `References`
-- `Prompts`
-- `Rituals`
-
-The agent should prefer obvious placement over excessive linking and maintenance.
-
-### Capture Habit
-
-Capture into Tana aggressively when something should not be lost.
-
-Good capture targets:
-
-- workflow friction
-- follow-up ideas
-- risky cleanup candidates
-- unclear branch situations that need human direction
-- questions for the user
-- future-agent handoffs
-
-When possible, tag captures cleanly with the existing schema instead of writing loose notes.
+- Reach for `ARCHITECTURE.md` first for repo-wide concepts and invariants.
+- Create a file in `references/` only when durable support material is actually needed.
+- Project support docs are for high-level direction, constraints, and context, not for acting as a second task manager.
+- Package-specific docs belong near the package unless the topic spans multiple packages.
+- Prefer one obvious file over multiple cross-linked files.
+- Avoid links between reference docs when simple filenames and folder scans are enough.
 
 ### Session Open And Close
 
 At session start:
 
-- glance `Agent Inbox`
-- glance `Human Inbox`
-- glance active `#Project` and `#Slice` state
-- identify the next coherent slice before coding
+1. glance `AGENT_INBOX.md`
+2. glance `HUMAN_INBOX.md`
+3. glance the relevant `CHECKLIST.md` sections
+4. read `ARCHITECTURE.md` and any obvious relevant reference doc when the task is architectural or unfamiliar
+5. identify the next coherent slice before coding
 
 At session end:
 
-- do a quick mini-review
-- update slice status, branch, validation, and blockers
-- move or clear resolved handoffs where appropriate
-- tell the user in chat what was updated in Tana
+1. do a quick mini-review
+2. update checklist status, validation, and blockers if needed
+3. clear any inbox items processed during the session
+4. move unresolved human dependencies into `HUMAN_INBOX.md` and the relevant checklist item
+5. tell the user in chat what was updated in the markdown control plane
 
 ## Weekly Review
 
 If the user says `do a weekly review`, use the `loop-kit-weekly-review` skill.
 
-The weekly review should reconcile:
+The weekly review should be thorough and reconcile:
 
-- inboxes
-- handoffs
-- active projects
-- active slices
-- branch and PR state
-- stale or missing mappings between Git and Tana
-- blocked items
-- horizon alignment between `#Vision`, `#Project`, and `#Slice`
-- `Last Reviewed On` on the reviewed projects and slices
+- `AGENT_INBOX.md`
+- `HUMAN_INBOX.md`
+- `CHECKLIST.md`
+- `ARCHITECTURE.md`
+- relevant docs in `references/`
+- local Git branch state
+- remote branch and PR state when relevant
+- stale blockers
+- stale tasks
+- missing project direction
+- reference docs that are obsolete, duplicated, or no longer worth keeping
 
-The agent may recommend a weekly review when the inboxes, handoffs, or branch state look neglected.
+The weekly review should process inbox items one by one:
+
+1. toss it
+2. do it if it is truly tiny
+3. move it to `CHECKLIST.md`
+4. move it to `HUMAN_INBOX.md`
+5. fold it into `ARCHITECTURE.md` or a reference doc
+
+Then review the checklist for stale or completed work, and review reference docs for drift or useless buildup.
+
+The agent may recommend a weekly review when the inboxes, checklist, or references look neglected.
 
 ## Validation
 
@@ -264,18 +272,23 @@ Proto stays. Bun is the default runtime.
 ### MCP usage in this repo
 
 - CKB is the first stop for non-trivial repo understanding.
-- Tana is the first stop for planning, handoffs, and review state.
 - Context7 is only for current external docs, not repo-local truth.
 - Use `jazz-docs` for Jazz-specific API lookup.
 
-## Branch / Tana Garbage Collection
+## Theme And Package Boundaries
+
+- Packs, primitives, provider bridges, and reusable UI packages must not hardcode theme names, concrete theme package imports, or app-level CSS assumptions as part of their public behavior.
+- Theme selection belongs to the app shell or outer Loom provider. Reusable packages may consume Loom context, but they must not choose the active theme for the caller.
+- Headless packages must stay React-free unless React is the declared purpose of the package. `@loop-kit/dock` is headless; `@loop-kit/loom-pack-dock` is the React bridge.
+
+## Branch / Markdown Control-Plane Cleanup
 
 After a slice is merged to `dev`:
 
 - delete the merged local feature branch if safe
 - delete the remote feature branch if merged and no longer needed
-- mark the Tana slice as done
-- clear or update branch and PR fields in Tana
+- update or remove the corresponding checklist item when appropriate
+- clear resolved human inbox items
+- remove stale reference notes that only existed for the completed slice
 
-Do not auto-trash Tana project or slice nodes just because work is complete.
-Completed nodes are useful history.
+Do not keep dead planning residue around just because it once existed.

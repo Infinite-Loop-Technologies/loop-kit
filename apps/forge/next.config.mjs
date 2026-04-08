@@ -17,8 +17,6 @@ const nextConfig = {
     reactStrictMode: true,
     transpilePackages: [
         '@loop-kit/dock',
-        '@loop-kit/graphite',
-        '@loop-kit/graphite-react',
         '@loop-kit/loom-react',
         '@loop-kit/loom-pack-dock',
         '@loop-kit/loom-theme-base-react',

@@ -1,0 +1,35 @@
+# Checklist
+
+## Repository Cleanup, Improvements, and Refactoring
+
+- [ ] Delete `packages/graphite` and `packages/react`, but only after making sure nothing is still depending on them.
+- [ ] Delete `loopkit-capabilities` and `loopkit-oci`. These are useless experiments.
+
+## Volt
+
+- [ ] This repo is at the path `C:\Users\ijhar\Desktop\loop-kit`. Volt is at the path `C:\Users\ijhar\Desktop\volt`. Integrate Volt into this repository. Do not bring over AGENTS.md, or ARCHITECTURE.md. Do merge the CHECKLIST.md underneath the Volt category in our checklist, though. When merging it, do some renaming. There are Volt demo apps - make it clear that that's what they are. Same with the Volt site. Potentially integrate /docs/prototypes/loop-daemon-prototype.md into our knowledge management workflow here - but don't just blindly copy. Do take the /scripts folder though, because it has a handy npm package publishing script that we should absolutely have in this repo - and document that we have that someplace where we document our tooling workflows (AGENTS or ARCHITECTURE or other).
+- [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
+
+## Dock
+
+- [ ] `apps/dock-demo` does not show off the features that dock should have. Specifically, drag and drop appears to not be working at all, so there is no way to tell if panel splitting works, or drag overlays, or anything else.
+  - [ ] Show off all of dock's features in dock-demo.
+    - [ ] The system of panels, and how panels belong to groups, sometimes implicitly, with policy. Show off a main panel view where you can split panels. Then a sidebar panel in a different group on the left, with policy to make it its own group that isn't interopable with the panels from the main group.
+    - [ ] Show off the layers system which dock should have. Ensure dock supports this. Specifically, some groups should be allowed to be on separate layers. Use this to show off a modal, and a side peek. The side peek should have the background behind it still interactable.
+
+## Forge
+
+- [ ] The architecture of Forge is messy and gimmicky, because it's simply a demo. We should improve it:
+  - [ ] Implement a simple client-side state store with `@loop-kit/state`.
+  - [ ] Implement a service dependency injection pattern inspired by [this](https://www.evolu.dev/docs/dependency-injection) Evolu page.
+  - [ ] Implement several services. Do not let services be used from arbitrary React components. They should be created and provided to React Context providers near the app boundary (perhaps in `layout.tsx` for example). Organize providers in a folder, and have a single file for composing them together so that `layout.tsx` doesn't fill up with them.
+  - [ ] Implement a simple command pattern. Commands can do side effects, mutations, and more. Arbitrary UI components shouldn't directly use commands, they should go through providers via hooks.
+- [ ] Replace the workspace demo with a real workspace.
+  - [ ] Set up InstantDB using the information [here](https://www.instantdb.com/llms-full.txt).
+  - [ ] Use a service and provider pattern. Again, arbitrary React components should go through hooks from the providers.
+  - [ ] Set up an authentication workflow using InstantDB's Clerk support. Set up example API keys and I will fill them in. Reorganize the routing layout so that when not logged in, you land on a landing page (very basic). The landing page can have a login/signup button. Have a simple Clerk-powered authentication flow. If the user is logged in, they should be immediately redirected to the workspace route. Users should always have at least one workspace so if they have none, one should be created for them on the backend. Set up the InstantDB admin SDK for Next.js on the backend only for managing users and things.
+  - [ ] Create a simple InstantDB schema and queries, and wire it up with providers to populate the workspace with real data. Create commands and potentially actions too for various things.
+- [ ] Add interactivity to the workspace UI.
+  - [ ] Set up a lightweight concept of "actions". Actions can contextually dispatch commands. Use the concept of actions to create a keybindings manager and a real command pallette. This would involve having an actions registry.
+  - [ ] Upon loading Forge, the command palette instantly opens up. It should stay closed until toggled via a command, Ctrl+K by default. Use the new keybindings system for this.
+  - [ ] Make sure `loom-pack-dock` is being taken advantage of fully, including the drag and drop, and panel splitting. Set up actions and register them to the keybindings system and thew command palette to do things like contextually splitting the panel the user is currently working in. Wire up drag and drop of panels, but make sure that the "node view" panels can't be swapped with panels that aren't compatible such as the sidebar or side peek. Dock is supposed to have a system of layers and groups with policy to prevent this - make sure it's working properly.
