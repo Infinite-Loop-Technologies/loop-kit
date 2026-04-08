@@ -163,21 +163,67 @@ export interface VoltPlugin {
   setup: (builder: VoltPluginBuilder) => Promise<void> | void;
 }
 
-export interface VoltConfig<TTargets extends Record<string, VoltTargetDefinition>> {
-  defaults?: {
-    build?: Array<keyof TTargets & string>;
-    dev?: Array<keyof TTargets & string>;
+export interface VoltConfigContext {
+  command: VoltCommand;
+  configPath: string;
+  env: {
+    boolean: (name: string) => boolean;
+    number: (name: string, fallback: number) => number;
+    read: (name: string, fallback?: string) => string | undefined;
   };
+  mode: VoltMode;
+  rootDir: string;
+  workspaceRoot: string;
+}
+
+export interface VoltEntrypoint<TServices = unknown> {
+  source: string;
+  types?: TServices;
+}
+
+export interface VoltConfig<TTargets extends Record<string, VoltTargetDefinition>> {
+  build: Array<keyof TTargets & string>;
+  dev: Array<keyof TTargets & string>;
   integrations?: Record<string, VoltIntegrationDefinition>;
   name: string;
   plugins?: VoltPlugin[];
   targets: TTargets;
 }
 
+export interface VoltConfigInput<TTargets extends Record<string, VoltTargetDefinition>> {
+  build?: Array<keyof TTargets & string>;
+  defaults?: {
+    build?: Array<keyof TTargets & string>;
+    dev?: Array<keyof TTargets & string>;
+  };
+  dev?: Array<keyof TTargets & string>;
+  integrations?: Record<string, VoltIntegrationDefinition>;
+  name: string;
+  plugins?: VoltPlugin[];
+  runtimes?: TTargets;
+  targets?: TTargets;
+}
+
+export type VoltConfigDefinition<
+  TTargets extends Record<string, VoltTargetDefinition>,
+> =
+  | VoltConfigInput<TTargets>
+  | ((
+      context: VoltConfigContext,
+    ) => Promise<VoltConfigInput<TTargets>> | VoltConfigInput<TTargets>);
+
 export const defineVoltConfig = <
   const TTargets extends Record<string, VoltTargetDefinition>,
 >(
-  config: VoltConfig<TTargets>,
-): VoltConfig<TTargets> => config;
+  config: VoltConfigDefinition<TTargets>,
+): VoltConfigDefinition<TTargets> => config;
 
 export const defineVoltPlugin = (plugin: VoltPlugin): VoltPlugin => plugin;
+
+export const defineEntrypoint = <TServices = unknown>(
+  source: string,
+): VoltEntrypoint<TServices> => ({
+  source,
+});
+
+export const entrypoint = defineEntrypoint;

@@ -1,5 +1,9 @@
 import { resolve } from "node:path";
-import type { VoltTargetContext } from "../../contracts";
+import type {
+  ManagedVoltProcess,
+  VoltEntrypoint,
+  VoltTargetContext,
+} from "../../contracts";
 import { resolveScopedTargetValue } from "../../platform/scoped";
 import { failOnBuildErrors, runSpawnedCommand } from "../../utils";
 
@@ -48,45 +52,60 @@ const createIntegrationEnv = (context: VoltTargetContext) => {
   return env;
 };
 
-export interface BunTargetOptions<TTargetName extends string, TPlatform extends object = {}> {
+type BunEntrypoint<TServices = unknown> = string | VoltEntrypoint<TServices>;
+
+const resolveEntrypointSource = (entrypoint: BunEntrypoint) =>
+  typeof entrypoint === "string" ? entrypoint : entrypoint.source;
+
+export interface BunRuntimeOptions<TPlatform extends object = {}> {
   build?: (context: VoltTargetContext) => Promise<void>;
   define?: Record<string, string>;
   dependsOn?: string[];
-  dev?: (context: VoltTargetContext) => Promise<import("../../contracts").ManagedVoltProcess | void>;
+  dev?: (context: VoltTargetContext) => Promise<ManagedVoltProcess | void>;
   env?: Record<string, string>;
   external?: string[];
   features?: string[];
   minify?: boolean;
-  name: TTargetName;
   naming?: Bun.BuildConfig["naming"];
-  outdir: string;
-  platform?: import("../../platform/scoped").ScopedTargetValue<TTargetName, TPlatform> | TPlatform;
+  outdir?: string;
+  platform?: import("../../platform/scoped").ScopedTargetValue<string, TPlatform> | TPlatform;
   plugins?: Bun.BunPlugin[];
-  source: string;
   uses?: string[];
 }
 
-export interface BunCommandTargetOptions {
+export interface BunCommandRuntimeOptions {
   commands: {
     build?: string[];
     dev?: string[];
   };
   cwd?: string;
   dependsOn?: string[];
-  dev?: (context: VoltTargetContext) => Promise<import("../../contracts").ManagedVoltProcess | void>;
+  dev?: (context: VoltTargetContext) => Promise<ManagedVoltProcess | void>;
   env?: Record<string, string>;
-  name: string;
   uses?: string[];
+}
+
+export interface LegacyBunTargetOptions<
+  TTargetName extends string,
+  TPlatform extends object = {},
+> extends BunRuntimeOptions<TPlatform> {
+  name: TTargetName;
+  source: BunEntrypoint;
+}
+
+export interface LegacyBunCommandTargetOptions extends BunCommandRuntimeOptions {
+  name: string;
 }
 
 const buildDefaultBunTarget = async (
   context: VoltTargetContext,
-  options: BunTargetOptions<string>,
+  entrypoint: BunEntrypoint,
+  options: BunRuntimeOptions,
   runtime: "bun-fullstack" | "bun-server",
 ) => {
   const result = await Bun.build({
     define: options.define,
-    entrypoints: [resolve(context.rootDir, options.source)],
+    entrypoints: [resolve(context.rootDir, resolveEntrypointSource(entrypoint))],
     external: options.external,
     features: [
       ...createRuntimeFeatures(runtime),
@@ -95,7 +114,7 @@ const buildDefaultBunTarget = async (
     ],
     minify: options.minify ?? true,
     naming: options.naming,
-    outdir: resolve(context.rootDir, options.outdir),
+    outdir: resolve(context.rootDir, options.outdir ?? `dist/${context.currentTarget.name}`),
     plugins: options.plugins,
     target: "bun",
   });
@@ -105,28 +124,29 @@ const buildDefaultBunTarget = async (
 
 const devDefaultBunTarget = (
   context: VoltTargetContext,
-  options: BunTargetOptions<string>,
+  entrypoint: BunEntrypoint,
+  options: BunRuntimeOptions,
   runtime: "bun-fullstack" | "bun-server",
 ) =>
   context.spawn(
-    options.name,
+    context.currentTarget.name,
     [
       "bun",
       "--watch",
       ...createRuntimeFeatures(runtime).flatMap((feature) => ["--feature", feature]),
       ...createModeFeatures(context.mode).flatMap((feature) => ["--feature", feature]),
       ...(options.features ?? []).flatMap((feature) => ["--feature", feature]),
-      options.source,
+      resolveEntrypointSource(entrypoint),
     ],
     {
       cwd: context.rootDir,
       env: {
         ...createIntegrationEnv(context),
         ...options.env,
-        VOLT_TARGET_NAME: options.name,
         VOLT_PLATFORM_CONFIG: JSON.stringify(
-          resolveScopedTargetValue(options.name, options.platform) ?? {},
+          resolveScopedTargetValue(context.currentTarget.name, options.platform) ?? {},
         ),
+        VOLT_TARGET_NAME: context.currentTarget.name,
       },
     },
   );
@@ -136,31 +156,31 @@ const resolveCommandCwd = (context: VoltTargetContext, cwd?: string) =>
 
 const buildCommandTarget = async (
   context: VoltTargetContext,
-  options: BunCommandTargetOptions,
+  options: BunCommandRuntimeOptions,
 ) => {
   if (!options.commands.build) {
     return;
   }
 
-  const child = context.spawn(options.name, options.commands.build, {
+  const child = context.spawn(context.currentTarget.name, options.commands.build, {
     cwd: resolveCommandCwd(context, options.cwd),
     env: {
       ...createIntegrationEnv(context),
       ...options.env,
     },
   });
-  await runSpawnedCommand(child, `${options.name} build`);
+  await runSpawnedCommand(child, `${context.currentTarget.name} build`);
 };
 
 const devCommandTarget = (
   context: VoltTargetContext,
-  options: BunCommandTargetOptions,
+  options: BunCommandRuntimeOptions,
 ) => {
   if (!options.commands.dev) {
     return;
   }
 
-  return context.spawn(options.name, options.commands.dev, {
+  return context.spawn(context.currentTarget.name, options.commands.dev, {
     cwd: resolveCommandCwd(context, options.cwd),
     env: {
       ...createIntegrationEnv(context),
@@ -169,62 +189,70 @@ const devCommandTarget = (
   });
 };
 
+const createBunRuntimeTarget = (
+  runtime: "bun-fullstack" | "bun-server",
+  entrypoint: BunEntrypoint,
+  options: BunRuntimeOptions = {},
+) => ({
+  async build(context: VoltTargetContext) {
+    if (options.build) {
+      await options.build(context);
+      return;
+    }
+
+    await buildDefaultBunTarget(context, entrypoint, options, runtime);
+  },
+  dependsOn: options.dependsOn,
+  async dev(context: VoltTargetContext) {
+    if (options.dev) {
+      return options.dev(context);
+    }
+
+    return devDefaultBunTarget(context, entrypoint, options, runtime);
+  },
+  runtime,
+  target: "bun",
+  uses: options.uses,
+});
+
+export const BunFullstackRuntime = <
+  TServices = unknown,
+  TPlatform extends object = {},
+>(
+  entrypoint: BunEntrypoint<TServices>,
+  options: BunRuntimeOptions<TPlatform> = {},
+) => createBunRuntimeTarget("bun-fullstack", entrypoint, options);
+
+export const BunServerRuntime = <
+  TServices = unknown,
+  TPlatform extends object = {},
+>(
+  entrypoint: BunEntrypoint<TServices>,
+  options: BunRuntimeOptions<TPlatform> = {},
+) => createBunRuntimeTarget("bun-server", entrypoint, options);
+
+export const BunCommandRuntime = (options: BunCommandRuntimeOptions) => ({
+  async build(context: VoltTargetContext) {
+    await buildCommandTarget(context, options);
+  },
+  dependsOn: options.dependsOn,
+  async dev(context: VoltTargetContext) {
+    if (options.dev) {
+      return options.dev(context);
+    }
+    return devCommandTarget(context, options);
+  },
+  runtime: "bun-command",
+  target: "bun",
+  uses: options.uses,
+});
+
 export const createBunPlugin = () => ({
-  command: (options: BunCommandTargetOptions) => ({
-    async build(context: VoltTargetContext) {
-      await buildCommandTarget(context, options);
-    },
-    dependsOn: options.dependsOn,
-    async dev(context: VoltTargetContext) {
-      if (options.dev) {
-        return options.dev(context);
-      }
-      return devCommandTarget(context, options);
-    },
-    runtime: "bun-command",
-    target: "bun",
-    uses: options.uses,
-  }),
+  command: (options: LegacyBunCommandTargetOptions) => BunCommandRuntime(options),
   fullstack: <TTargetName extends string, TPlatform extends object = {}>(
-    options: BunTargetOptions<TTargetName, TPlatform>,
-  ) => ({
-    async build(context: VoltTargetContext) {
-      if (options.build) {
-        await options.build(context);
-        return;
-      }
-      await buildDefaultBunTarget(context, options, "bun-fullstack");
-    },
-    dependsOn: options.dependsOn,
-    async dev(context: VoltTargetContext) {
-      if (options.dev) {
-        return options.dev(context);
-      }
-      return devDefaultBunTarget(context, options, "bun-fullstack");
-    },
-    runtime: "bun-fullstack",
-    target: "bun",
-    uses: options.uses,
-  }),
+    options: LegacyBunTargetOptions<TTargetName, TPlatform>,
+  ) => BunFullstackRuntime(options.source, options),
   server: <TTargetName extends string, TPlatform extends object = {}>(
-    options: BunTargetOptions<TTargetName, TPlatform>,
-  ) => ({
-    async build(context: VoltTargetContext) {
-      if (options.build) {
-        await options.build(context);
-        return;
-      }
-      await buildDefaultBunTarget(context, options, "bun-server");
-    },
-    dependsOn: options.dependsOn,
-    async dev(context: VoltTargetContext) {
-      if (options.dev) {
-        return options.dev(context);
-        }
-      return devDefaultBunTarget(context, options, "bun-server");
-    },
-    runtime: "bun-server",
-    target: "bun",
-    uses: options.uses,
-  }),
+    options: LegacyBunTargetOptions<TTargetName, TPlatform>,
+  ) => BunServerRuntime(options.source, options),
 });

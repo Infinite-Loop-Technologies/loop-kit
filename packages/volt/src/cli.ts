@@ -1,5 +1,4 @@
 import { dirname, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import type {
   ManagedVoltProcess,
@@ -13,6 +12,7 @@ import type {
   VoltTargetHookContext,
   VoltTargetHookEndContext,
 } from "./contracts";
+import { loadVoltConfig, resolveConfigPath, resolveMode } from "./config";
 import {
   collectTargetIntegrations,
   ensureWorkspaceDaemonRunning,
@@ -25,20 +25,6 @@ import { createRootLogger, createSpawn } from "./utils";
 type TargetGraph = VoltConfig<Record<string, import("./contracts").VoltTargetDefinition>>["targets"];
 
 const workspaceRoot = process.cwd();
-
-const resolveMode = (value: string | undefined, command: VoltCommand) =>
-  value === "production"
-    ? "production"
-    : value === "development"
-      ? "development"
-      : command === "build"
-        ? "production"
-        : "development";
-
-const loadConfig = async (configPath: string): Promise<VoltConfig<TargetGraph>> => {
-  const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
-  return loaded.default;
-};
 
 const normalizeTargets = (values: readonly string[]): string[] =>
   values
@@ -142,19 +128,19 @@ const runTargetCommand = async (
   const mode = resolveMode(parsed.values.mode, command);
   process.env.VOLT_MODE = mode;
 
-  const configPath = resolve(workspaceRoot, parsed.values.config ?? "volt.config.ts");
+  const configPath = resolveConfigPath(workspaceRoot, parsed.values.config ?? "volt.config.ts");
   if (command === "dev") {
     await ensureWorkspaceDaemonRunning(workspaceRoot, [configPath], mode, Bun.argv[1], true);
   }
   const rootDir = dirname(configPath);
-  const config = await loadConfig(configPath);
+  const config = await loadVoltConfig<TargetGraph>(command, configPath, mode, workspaceRoot);
   const graph = config.targets;
   const explicitTargets = normalizeTargets(parsed.values.targets ?? []);
   const requestedTargets = parsed.values.all
     ? Object.keys(graph)
     : explicitTargets.length
       ? explicitTargets
-      : config.defaults?.[command] ?? [];
+      : config[command] ?? [];
 
   if (!requestedTargets.length) {
     throw new Error(`No default ${command} targets configured in ${configPath}.`);

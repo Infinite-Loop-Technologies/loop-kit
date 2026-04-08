@@ -11,10 +11,9 @@ export interface ElectrobunTargetOptions {
   dev?: (context: VoltTargetContext) => Promise<import("../contracts").ManagedVoltProcess | void>;
   devArgs?: string[];
   env?: Record<string, string>;
-  name: string;
 }
 
-export const electrobun = (options: ElectrobunTargetOptions) => ({
+export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
   async build(context: VoltTargetContext) {
     if (options.build) {
       await options.build(context);
@@ -29,7 +28,7 @@ export const electrobun = (options: ElectrobunTargetOptions) => ({
       );
     }
 
-    const child = context.spawn(options.name, [
+    const child = context.spawn(context.currentTarget.name, [
       "bunx",
       "electrobun",
       "build",
@@ -60,7 +59,7 @@ export const electrobun = (options: ElectrobunTargetOptions) => ({
       );
     }
 
-    return context.spawn(options.name, ["bunx", "electrobun", "dev", ...(options.devArgs ?? [])], {
+    return context.spawn(context.currentTarget.name, ["bunx", "electrobun", "dev", ...(options.devArgs ?? [])], {
       cwd,
       env: options.env,
     });
@@ -68,3 +67,5 @@ export const electrobun = (options: ElectrobunTargetOptions) => ({
   runtime: "electrobun",
   target: "bun",
 });
+
+export const electrobun = ElectrobunRuntime;

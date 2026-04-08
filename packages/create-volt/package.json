@@ -1,6 +1,6 @@
 {
   "name": "create-volt",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Project scaffolder for Volt templates.",
   "bin": {
@@ -21,7 +21,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "volt": "^0.2.0",
+    "volt": "^0.4.0",
     "zod": "^4.1.12"
   },
   "publishConfig": {

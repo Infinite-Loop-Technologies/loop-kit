@@ -13,4 +13,11 @@ Rules for this folder:
 Current entry points:
 
 - `utils.ts`: shared Bun-first helpers for repo scripts
-- `publish-packages.ts`: bumps and publishes `x-publish` workspaces plus template references
+- `publish-packages.ts`: Bun-native release helper with interactive wizard, aligned version bumps, and CI-safe non-interactive flags
+
+Examples:
+
+- `bun run ./tools/publish-packages`
+- `bun run ./tools/publish-packages publish --non-interactive --package all --tag latest`
+- `bun run ./tools/publish-packages bump minor --non-interactive`
+- `bun run ./tools/publish-packages release minor --non-interactive --package volt --tag next --dry-run`

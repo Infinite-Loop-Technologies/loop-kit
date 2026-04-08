@@ -23,7 +23,6 @@
     "volt:demo:build": "bun run --cwd apps/volt-demo build",
     "volt:site:build": "bun run --cwd apps/volt-site build",
     "volt:jco-demo:build": "bun run --cwd apps/volt-jco-demo build",
-    "publish:volt": "bun --env-file=.env.release tools/publish-packages.ts",
     "workspaces:list": "bun pm ls"
   },
   "devDependencies": {

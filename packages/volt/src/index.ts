@@ -1,4 +1,6 @@
+export * from "./config";
 export * from "./contracts";
+export * from "./example-runtimes/electrobun";
 export * from "./integrations";
 export * from "./platform/scoped";
 export * from "./plugins/bun";

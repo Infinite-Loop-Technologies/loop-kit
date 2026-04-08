@@ -10,6 +10,6 @@
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "volt": "^0.2.0"
+    "volt": "^0.4.0"
   }
 }

@@ -1,7 +1,6 @@
 import { existsSync, watch } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { basename, dirname, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import type {
   ManagedVoltProcess,
   VoltConfig,
@@ -16,6 +15,7 @@ import type {
   VoltResolvedIntegration,
   VoltTargetDefinition,
 } from "./contracts";
+import { loadVoltConfig } from "./config";
 import {
   createRootLogger,
   createSpawn,
@@ -76,12 +76,6 @@ interface LoadedPlugins {
 }
 
 const delay = (ms: number) => new Promise((resolveDelay) => setTimeout(resolveDelay, ms));
-
-const loadConfig = async (configPath: string): Promise<VoltConfig<TargetGraph>> => {
-  const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
-  return loaded.default;
-};
-
 const createPluginBuilder = () => {
   const daemonServices: LoadedPlugins["daemonServices"] = [];
   const builder: VoltPluginBuilder = {
@@ -606,7 +600,7 @@ export const runDaemonRuntime = async (
 ) => {
   const loadedConfigs: LoadedVoltConfig[] = await Promise.all(
     configPaths.map(async (configPath) => ({
-      config: await loadConfig(configPath),
+      config: await loadVoltConfig<TargetGraph>("dev", configPath, mode, workspaceRoot),
       configPath,
       rootDir: dirname(configPath),
       workspaceRoot,
@@ -683,7 +677,7 @@ export const runDaemonRuntime = async (
   });
 
   for (const loaded of loadedConfigs) {
-    const targetNames = loaded.config.defaults?.dev ?? [];
+    const targetNames = loaded.config.dev ?? [];
     const integrationNames = collectTargetIntegrations(loaded.config.targets, targetNames);
     const configId = toConfigId(workspaceRoot, loaded.configPath);
 
