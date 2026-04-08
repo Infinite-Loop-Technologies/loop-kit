@@ -220,24 +220,58 @@ In this model:
 
 That is still ordered execution, but with explicit output registration.
 
-## Daemon Prototype
+## Current Workspace Daemon Behavior
 
-The daemon should be a normal Bun program owned by Volt.
+Volt now uses one workspace-scoped daemon process per repo, not one pid/log/state triple per `volt.config.ts`.
+
+Current properties:
+
+- root-level `volt daemon start|status|logs|stop` discovers `apps/*/volt.config.ts` automatically when `--config` is omitted
+- daemon state lives under root `/.volt/daemon/`
+- `volt dev` ensures the workspace daemon is running and that the current app config is included in its managed config set
+- the daemon state file records the managed config list and per-config watcher/service counts
+
+This is a better fit for a monorepo because the daemon is now "the workspace background process" instead of "whatever config path happened to be in the current directory when the command ran"
+
+## Daemon Prototype
 
 Suggested commands:
 
+- `volt daemon start`
+- `volt daemon stop`
+- `volt daemon logs`
+- `volt daemon status`
 - `volt daemon start --config apps/volt-demo/volt.config.ts`
-- `volt daemon stop --config apps/volt-demo/volt.config.ts`
-- `volt daemon logs --config apps/volt-demo/volt.config.ts`
-- `volt daemon status --config apps/volt-demo/volt.config.ts`
 
 Suggested daemon responsibilities:
 
 - load config
+- discover and track managed app configs at workspace scope
 - start plugin/integration watchers
 - write generated files
 - stream logs
 - expose status for active integrations and targets
+
+## Resonate Fit
+
+Resonate looks like the right layer above the local Volt daemon, not a replacement for it.
+
+Use the Volt daemon for:
+
+- local workspace watchers
+- generated file maintenance
+- integration refresh
+- plugin-owned background services that are tightly coupled to the local repo
+
+Use Resonate for:
+
+- durable waits and sleeps
+- human approval checkpoints
+- AI workflows that react to project or data changes
+- retries, resumability, and cross-process progress tracking
+- Forge-side long-running jobs like authentication email verification and node-triggered AI flows
+
+That split keeps the local daemon simple and makes the durable workflow layer explicit.
 
 Suggested daemon plugin shape:
 

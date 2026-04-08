@@ -52,6 +52,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# root-level Volt daemon/runtime state
+/.volt/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

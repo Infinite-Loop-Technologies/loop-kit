@@ -35,10 +35,33 @@ interface LoadedVoltConfig {
   workspaceRoot: string;
 }
 
-interface DaemonPaths {
+interface WorkspaceDaemonPaths {
   logPath: string;
   pidPath: string;
   statePath: string;
+}
+
+interface WorkspaceDaemonState {
+  configs: string[];
+  mode: "development" | "production";
+  pid?: number;
+  reason?: string;
+  serviceCount?: number;
+  status: "running" | "starting" | "stopped" | "stopping";
+  updatedAt?: string;
+  watcherCount?: number;
+  byConfig?: Record<
+    string,
+    {
+      appRoot: string;
+      configPath: string;
+      integrations: string[];
+      serviceCount: number;
+      status: "running" | "starting" | "stopped" | "stopping";
+      targets: string[];
+      watcherCount: number;
+    }
+  >;
 }
 
 interface LoadedPlugins {
@@ -84,14 +107,46 @@ const loadPlugins = async (
   return { daemonServices };
 };
 
-const createDaemonPaths = (workspaceRoot: string, configPath: string): DaemonPaths => {
-  const daemonRoot = resolve(workspaceRoot, ".volt", "daemon");
-  const configId = sanitizeForPath(relative(workspaceRoot, configPath) || basename(configPath));
+const toConfigId = (workspaceRoot: string, configPath: string) =>
+  sanitizeForPath(relative(workspaceRoot, configPath) || basename(configPath));
+
+const createWorkspaceDaemonPaths = (workspaceRoot: string): WorkspaceDaemonPaths => {
+  const daemonRoot = createVoltPaths(workspaceRoot).daemonDir;
   return {
-    logPath: resolve(daemonRoot, `${configId}.log`),
-    pidPath: resolve(daemonRoot, `${configId}.pid`),
-    statePath: resolve(daemonRoot, `${configId}.json`),
+    logPath: resolve(daemonRoot, "workspace.log"),
+    pidPath: resolve(daemonRoot, "workspace.pid"),
+    statePath: resolve(daemonRoot, "workspace.json"),
   };
+};
+
+export const discoverVoltConfigPaths = async (
+  workspaceRoot: string,
+): Promise<string[]> => {
+  const discovered = new Set<string>();
+  const rootConfig = resolve(workspaceRoot, "volt.config.ts");
+
+  if (existsSync(rootConfig)) {
+    discovered.add(rootConfig);
+  }
+
+  const glob = new Bun.Glob("apps/*/volt.config.ts");
+  for await (const path of glob.scan({ cwd: workspaceRoot })) {
+    discovered.add(resolve(workspaceRoot, path));
+  }
+
+  return [...discovered].sort((left, right) => left.localeCompare(right));
+};
+
+const resolveRequestedConfigPaths = async (
+  workspaceRoot: string,
+  requestedConfigs: string[],
+) => {
+  const resolvedConfigs = [...new Set(requestedConfigs.map((configPath) => resolve(workspaceRoot, configPath)))];
+  if (resolvedConfigs.length > 0) {
+    return resolvedConfigs.sort((left, right) => left.localeCompare(right));
+  }
+
+  return discoverVoltConfigPaths(workspaceRoot);
 };
 
 const createIntegrationContext = (
@@ -388,7 +443,7 @@ const isProcessAlive = (pid: number) => {
 
 const writeDaemonState = async (
   statePath: string,
-  data: Record<string, unknown>,
+  data: WorkspaceDaemonState,
 ) => {
   await writeJsonFile(statePath, {
     ...data,
@@ -396,31 +451,179 @@ const writeDaemonState = async (
   });
 };
 
+const readDaemonState = async (
+  statePath: string,
+): Promise<WorkspaceDaemonState | undefined> => {
+  if (!existsSync(statePath)) {
+    return undefined;
+  }
+
+  return JSON.parse(await readFile(statePath, "utf8")) as WorkspaceDaemonState;
+};
+
+const stopWorkspaceDaemon = async (
+  daemonPaths: WorkspaceDaemonPaths,
+  quiet = false,
+) => {
+  if (!existsSync(daemonPaths.pidPath)) {
+    if (!quiet) {
+      console.log("[volt] workspace daemon is not running");
+    }
+    return false;
+  }
+
+  const pid = Number((await readFile(daemonPaths.pidPath, "utf8")).trim());
+  if (!Number.isFinite(pid) || !isProcessAlive(pid)) {
+    await rm(daemonPaths.pidPath, { force: true });
+    if (!quiet) {
+      console.log("[volt] removed stale workspace daemon pid");
+    }
+    return false;
+  }
+
+  process.kill(pid, "SIGTERM");
+  await delay(500);
+  if (!isProcessAlive(pid)) {
+    await rm(daemonPaths.pidPath, { force: true });
+  }
+
+  if (!quiet) {
+    console.log(`[volt] stopping workspace daemon pid=${pid}`);
+  }
+  return true;
+};
+
+const startWorkspaceDaemon = async (
+  workspaceRoot: string,
+  daemonPaths: WorkspaceDaemonPaths,
+  configPaths: string[],
+  mode: "development" | "production",
+  cliScriptPath: string,
+  quiet = false,
+) => {
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      cliScriptPath,
+      "__daemon-run",
+      "--mode",
+      mode,
+      ...configPaths.flatMap((configPath) => ["--config", configPath]),
+    ],
+    {
+      cwd: workspaceRoot,
+      detached: true,
+      stderr: Bun.file(daemonPaths.logPath),
+      stdin: "ignore",
+      stdout: Bun.file(daemonPaths.logPath),
+    },
+  );
+  child.unref();
+
+  await delay(400);
+
+  const pid = child.pid;
+  const alive = Number.isFinite(pid) && isProcessAlive(pid);
+  if (!alive && existsSync(daemonPaths.logPath)) {
+    const log = await readFile(daemonPaths.logPath, "utf8");
+    throw new Error(
+      `Volt daemon failed to start for ${configPaths.join(", ")}.\n${log.trim()}`.trim(),
+    );
+  }
+
+  if (!quiet) {
+    console.log(
+      `[volt] started workspace daemon pid=${pid} configs=${configPaths.map((configPath) => relative(workspaceRoot, configPath)).join(", ")}`,
+    );
+  }
+};
+
+export const ensureWorkspaceDaemonRunning = async (
+  workspaceRoot: string,
+  requestedConfigs: string[],
+  mode: "development" | "production",
+  cliScriptPath: string,
+  quiet = false,
+) => {
+  const configPaths = await resolveRequestedConfigPaths(workspaceRoot, requestedConfigs);
+  if (!configPaths.length) {
+    throw new Error(
+      `No volt.config.ts files were found under ${workspaceRoot}. Pass --config explicitly or add an app Volt config.`,
+    );
+  }
+
+  const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
+  await ensureDirectory(dirname(daemonPaths.logPath));
+
+  const currentState = await readDaemonState(daemonPaths.statePath);
+  const requestedRelative = configPaths.map((configPath) => relative(workspaceRoot, configPath));
+  const managedConfigs = new Set(currentState?.configs ?? []);
+  const alreadyCoversRequested =
+    currentState?.mode === mode &&
+    requestedRelative.every((configPath) => managedConfigs.has(configPath));
+
+  if (existsSync(daemonPaths.pidPath)) {
+    const pid = Number((await readFile(daemonPaths.pidPath, "utf8")).trim());
+    if (Number.isFinite(pid) && isProcessAlive(pid) && alreadyCoversRequested) {
+      if (!quiet) {
+        console.log(
+          `[volt] workspace daemon already running pid=${pid} configs=${(currentState?.configs ?? []).join(", ")}`,
+        );
+      }
+      return;
+    }
+
+    if (Number.isFinite(pid) && isProcessAlive(pid)) {
+      const mergedConfigPaths = [
+        ...new Set([
+          ...(currentState?.configs ?? []).map((configPath) => resolve(workspaceRoot, configPath)),
+          ...configPaths,
+        ]),
+      ].sort((left, right) => left.localeCompare(right));
+
+      await stopWorkspaceDaemon(daemonPaths, true);
+      await startWorkspaceDaemon(
+        workspaceRoot,
+        daemonPaths,
+        mergedConfigPaths,
+        mode,
+        cliScriptPath,
+        quiet,
+      );
+      return;
+    }
+
+    await rm(daemonPaths.pidPath, { force: true });
+  }
+
+  await startWorkspaceDaemon(workspaceRoot, daemonPaths, configPaths, mode, cliScriptPath, quiet);
+};
+
 export const runDaemonRuntime = async (
   workspaceRoot: string,
-  configPath: string,
+  configPaths: string[],
   mode: "development" | "production",
 ) => {
-  const loaded: LoadedVoltConfig = {
-    config: await loadConfig(configPath),
-    configPath,
-    rootDir: dirname(configPath),
-    workspaceRoot,
-  };
+  const loadedConfigs: LoadedVoltConfig[] = await Promise.all(
+    configPaths.map(async (configPath) => ({
+      config: await loadConfig(configPath),
+      configPath,
+      rootDir: dirname(configPath),
+      workspaceRoot,
+    })),
+  );
   const logger = createRootLogger();
-  const daemonPaths = createDaemonPaths(workspaceRoot, configPath);
-  const targetNames = loaded.config.defaults?.dev ?? [];
-  const integrationNames = collectTargetIntegrations(loaded.config.targets, targetNames);
+  const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
+  const configState: NonNullable<WorkspaceDaemonState["byConfig"]> = {};
 
   await ensureDirectory(dirname(daemonPaths.pidPath));
   await writeTextFile(daemonPaths.pidPath, String(process.pid));
   await writeDaemonState(daemonPaths.statePath, {
-    configPath,
-    integrations: integrationNames,
+    configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
     mode,
     pid: process.pid,
     status: "starting",
-    targets: targetNames,
+    byConfig: {},
   });
 
   const serviceHandles: Array<ManagedVoltProcess | VoltDaemonHandle> = [];
@@ -434,11 +637,17 @@ export const runDaemonRuntime = async (
     shuttingDown = true;
     logger.info("stopping daemon", { reason });
     await writeDaemonState(daemonPaths.statePath, {
-      configPath,
+      configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
       mode,
       pid: process.pid,
       reason,
       status: "stopping",
+      byConfig: Object.fromEntries(
+        Object.entries(configState).map(([configId, state]) => [
+          configId,
+          { ...state, status: "stopping" as const },
+        ]),
+      ),
     });
 
     for (const handle of integrationHandles) {
@@ -450,11 +659,17 @@ export const runDaemonRuntime = async (
 
     await rm(daemonPaths.pidPath, { force: true });
     await writeDaemonState(daemonPaths.statePath, {
-      configPath,
+      configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
       mode,
       pid: process.pid,
       reason,
       status: "stopped",
+      byConfig: Object.fromEntries(
+        Object.entries(configState).map(([configId, state]) => [
+          configId,
+          { ...state, status: "stopped" as const },
+        ]),
+      ),
     });
     process.exit(0);
   };
@@ -462,19 +677,48 @@ export const runDaemonRuntime = async (
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
-  logger.info("starting Volt daemon", { configPath, mode });
-  await resolveIntegrationsForPhase(loaded, integrationNames, mode, "dev", logger);
-  serviceHandles.push(...(await startDaemonServices(loaded, logger, mode)));
-  integrationHandles.push(...(await startIntegrationWatchers(loaded, integrationNames, logger, mode)));
+  logger.info("starting Volt daemon", {
+    configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
+    mode,
+  });
+
+  for (const loaded of loadedConfigs) {
+    const targetNames = loaded.config.defaults?.dev ?? [];
+    const integrationNames = collectTargetIntegrations(loaded.config.targets, targetNames);
+    const configId = toConfigId(workspaceRoot, loaded.configPath);
+
+    configState[configId] = {
+      appRoot: relative(workspaceRoot, loaded.rootDir),
+      configPath: relative(workspaceRoot, loaded.configPath),
+      integrations: integrationNames,
+      serviceCount: 0,
+      status: "starting",
+      targets: targetNames,
+      watcherCount: 0,
+    };
+
+    await resolveIntegrationsForPhase(loaded, integrationNames, mode, "dev", logger);
+    const loadedServiceHandles = await startDaemonServices(loaded, logger, mode);
+    const loadedWatcherHandles = await startIntegrationWatchers(loaded, integrationNames, logger, mode);
+    serviceHandles.push(...loadedServiceHandles);
+    integrationHandles.push(...loadedWatcherHandles);
+
+    configState[configId] = {
+      ...configState[configId],
+      serviceCount: loadedServiceHandles.length,
+      status: "running",
+      watcherCount: loadedWatcherHandles.length,
+    };
+  }
+
   await writeDaemonState(daemonPaths.statePath, {
-    configPath,
-    integrations: integrationNames,
+    configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
     mode,
     pid: process.pid,
     serviceCount: serviceHandles.length,
     status: "running",
-    targets: targetNames,
     watcherCount: integrationHandles.length,
+    byConfig: configState,
   });
 
   // Keep the daemon process alive while watchers/services run.
@@ -486,16 +730,20 @@ export const runDaemonRuntime = async (
 export const handleDaemonCommand = async (
   command: VoltDaemonCommand,
   workspaceRoot: string,
-  configPath: string,
+  requestedConfigs: string[],
   mode: "development" | "production",
   cliScriptPath: string,
 ) => {
-  const daemonPaths = createDaemonPaths(workspaceRoot, configPath);
+  const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
   await ensureDirectory(dirname(daemonPaths.logPath));
+  const state = await readDaemonState(daemonPaths.statePath);
+  const requestedRelative = requestedConfigs.map((configPath) =>
+    relative(workspaceRoot, resolve(workspaceRoot, configPath)),
+  );
 
   if (command === "logs") {
     if (!existsSync(daemonPaths.logPath)) {
-      console.log(`[volt] no daemon log found for ${configPath}`);
+      console.log("[volt] no workspace daemon log found");
       return;
     }
     process.stdout.write(await readFile(daemonPaths.logPath, "utf8"));
@@ -504,72 +752,91 @@ export const handleDaemonCommand = async (
   
   if (command === "status") {
     if (!existsSync(daemonPaths.pidPath)) {
-      console.log(`[volt] daemon is not running for ${configPath}`);
+      if (state && state.status !== "stopped") {
+        await writeDaemonState(daemonPaths.statePath, {
+          ...state,
+          reason: state.reason ?? "missing-pid",
+          status: "stopped",
+          byConfig: state.byConfig
+            ? Object.fromEntries(
+                Object.entries(state.byConfig).map(([configId, configState]) => [
+                  configId,
+                  { ...configState, status: "stopped" as const },
+                ]),
+              )
+            : undefined,
+        });
+      }
+      console.log("[volt] workspace daemon is not running");
+      const refreshedState = await readDaemonState(daemonPaths.statePath);
+      if (refreshedState) {
+        console.log(JSON.stringify(refreshedState, null, 2));
+      }
       return;
     }
 
     const pid = Number((await readFile(daemonPaths.pidPath, "utf8")).trim());
     const alive = Number.isFinite(pid) && isProcessAlive(pid);
-    const state = existsSync(daemonPaths.statePath)
-      ? await readFile(daemonPaths.statePath, "utf8")
-      : "";
+    const serializedState = state ? JSON.stringify(state, null, 2) : "";
 
     if (!alive) {
       await rm(daemonPaths.pidPath, { force: true });
+      if (state && state.status !== "stopped") {
+        await writeDaemonState(daemonPaths.statePath, {
+          ...state,
+          reason: state.reason ?? "stale-pid",
+          status: "stopped",
+          byConfig: state.byConfig
+            ? Object.fromEntries(
+                Object.entries(state.byConfig).map(([configId, configState]) => [
+                  configId,
+                  { ...configState, status: "stopped" as const },
+                ]),
+              )
+            : undefined,
+        });
+      }
     }
 
-    console.log(
-      `[volt] daemon ${alive ? "running" : "stale"} pid=${pid} config=${configPath}`,
-    );
-    if (state) {
-      console.log(state.trim());
+    const managedMessage =
+      requestedRelative.length > 0 && state
+        ? ` requested=${requestedRelative.join(", ")} managed=${state.configs.join(", ")}`
+        : "";
+    console.log(`[volt] workspace daemon ${alive ? "running" : "stale"} pid=${pid}${managedMessage}`);
+    if (serializedState) {
+      console.log(serializedState.trim());
     }
     return;
   }
 
   if (command === "stop") {
-    if (!existsSync(daemonPaths.pidPath)) {
-      console.log(`[volt] daemon is not running for ${configPath}`);
-      return;
+    const stopped = await stopWorkspaceDaemon(daemonPaths, false);
+    if (stopped) {
+      const refreshedState = await readDaemonState(daemonPaths.statePath);
+      if (refreshedState && refreshedState.status !== "stopped") {
+        await writeDaemonState(daemonPaths.statePath, {
+          ...refreshedState,
+          reason: refreshedState.reason ?? "cli-stop",
+          status: "stopped",
+          byConfig: refreshedState.byConfig
+            ? Object.fromEntries(
+                Object.entries(refreshedState.byConfig).map(([configId, configState]) => [
+                  configId,
+                  { ...configState, status: "stopped" as const },
+                ]),
+              )
+            : undefined,
+        });
+      }
     }
-
-    const pid = Number((await readFile(daemonPaths.pidPath, "utf8")).trim());
-    if (!Number.isFinite(pid) || !isProcessAlive(pid)) {
-      await rm(daemonPaths.pidPath, { force: true });
-      console.log(`[volt] removed stale daemon pid for ${configPath}`);
-      return;
-    }
-
-    process.kill(pid, "SIGTERM");
-    await delay(500);
-    if (!isProcessAlive(pid)) {
-      await rm(daemonPaths.pidPath, { force: true });
-    }
-    console.log(`[volt] stopping daemon pid=${pid} config=${configPath}`);
     return;
   }
 
-  if (existsSync(daemonPaths.pidPath)) {
-    const pid = Number((await readFile(daemonPaths.pidPath, "utf8")).trim());
-    if (Number.isFinite(pid) && isProcessAlive(pid)) {
-      console.log(`[volt] daemon already running pid=${pid} config=${configPath}`);
-      return;
-    }
-    await rm(daemonPaths.pidPath, { force: true });
-  }
-
-  const child = Bun.spawn(
-    [process.execPath, cliScriptPath, "__daemon-run", "--config", configPath, "--mode", mode],
-    {
-      cwd: workspaceRoot,
-      detached: true,
-      stderr: Bun.file(daemonPaths.logPath),
-      stdin: "ignore",
-      stdout: Bun.file(daemonPaths.logPath),
-    },
+  await ensureWorkspaceDaemonRunning(
+    workspaceRoot,
+    requestedConfigs,
+    mode,
+    cliScriptPath,
+    false,
   );
-  child.unref();
-
-  await delay(300);
-  console.log(`[volt] started daemon pid=${child.pid} config=${configPath}`);
 };

@@ -12,4 +12,5 @@ Rules for this folder:
 
 Current entry points:
 
-- `workspace.ts`: runs workspace scripts in dependency order for root orchestration
+- `utils.ts`: shared Bun-first helpers for repo scripts
+- `publish-packages.ts`: bumps and publishes `x-publish` workspaces plus template references

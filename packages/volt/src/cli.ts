@@ -15,6 +15,7 @@ import type {
 } from "./contracts";
 import {
   collectTargetIntegrations,
+  ensureWorkspaceDaemonRunning,
   handleDaemonCommand,
   resolveIntegrationsForPhase,
   runDaemonRuntime,
@@ -40,6 +41,12 @@ const loadConfig = async (configPath: string): Promise<VoltConfig<TargetGraph>> 
 };
 
 const normalizeTargets = (values: readonly string[]): string[] =>
+  values
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+const normalizeConfigValues = (values: readonly string[]): string[] =>
   values
     .flatMap((value) => value.split(","))
     .map((value) => value.trim())
@@ -136,6 +143,9 @@ const runTargetCommand = async (
   process.env.VOLT_MODE = mode;
 
   const configPath = resolve(workspaceRoot, parsed.values.config ?? "volt.config.ts");
+  if (command === "dev") {
+    await ensureWorkspaceDaemonRunning(workspaceRoot, [configPath], mode, Bun.argv[1], true);
+  }
   const rootDir = dirname(configPath);
   const config = await loadConfig(configPath);
   const graph = config.targets;
@@ -351,20 +361,20 @@ const runDaemonCommand = async (rest: string[]) => {
     allowPositionals: true,
     args: daemonArgs,
     options: {
-      config: { type: "string" },
+      config: { multiple: true, type: "string" },
       mode: { type: "string" },
     },
     strict: true,
   });
 
-  const configPath = resolve(workspaceRoot, parsed.values.config ?? "volt.config.ts");
+  const configPaths = normalizeConfigValues(parsed.values.config ?? []);
   const mode =
     parsed.values.mode === "production" ? "production" : "development";
 
   await handleDaemonCommand(
     daemonCommand as VoltDaemonCommand,
     workspaceRoot,
-    configPath,
+    configPaths,
     mode,
     Bun.argv[1],
   );
@@ -375,15 +385,17 @@ const runInternalDaemon = async (rest: string[]) => {
     allowPositionals: true,
     args: rest,
     options: {
-      config: { type: "string" },
+      config: { multiple: true, type: "string" },
       mode: { type: "string" },
     },
     strict: true,
   });
-  const configPath = resolve(workspaceRoot, parsed.values.config ?? "volt.config.ts");
+  const configPaths = normalizeConfigValues(parsed.values.config ?? []).map((configPath) =>
+    resolve(workspaceRoot, configPath),
+  );
   const mode =
     parsed.values.mode === "production" ? "production" : "development";
-  await runDaemonRuntime(workspaceRoot, configPath, mode);
+  await runDaemonRuntime(workspaceRoot, configPaths, mode);
 };
 
 const main = async () => {

@@ -13,6 +13,7 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - `apps/loom-demo` is the focused demo surface for Loom concepts.
 - `apps/volt-demo`, `apps/volt-site`, and `apps/volt-jco-demo` are the imported Volt proof surfaces.
 - Forge and Loom now boot through Volt-managed Bun fullstack targets instead of Next.js/Vite-specific app runners.
+- Dock Demo also now boots through Volt-managed Bun fullstack targets.
 - `packages/` holds the reusable runtime, UI, and bridge packages.
 - `tools/` holds lightweight Bun-first repo automation.
 - `experiments/` holds smaller prototype labs that are not yet promoted into product/package architecture.
@@ -36,6 +37,7 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - Dock should prove real interaction behavior in `apps/dock-demo`, not only in package internals.
 - Loom should stay themeable from the outside instead of choosing themes internally.
 - Volt should stay Bun-native, explicit, and plugin-driven while absorbing loop-kit’s artifact and contract model instead of becoming a second disconnected platform.
+- Volt’s daemon should be workspace-scoped infrastructure. Higher-level durable orchestration can then sit on top, rather than re-encoding daemon state inside ad hoc local watchers.
 
 ## Invariants / non-negotiables
 
@@ -80,6 +82,7 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - how much of Forge should remain demo-oriented versus hardened into reusable product architecture
 - how Dock layering/group policy should surface across headless and React integration boundaries
 - how loop-kit's registry/artifact/contract model should map into Volt integrations and daemon services
+- how Resonate should layer on top of Volt for durable AI workflows, waits, approvals, and background jobs without making the local daemon itself too magical
 - how much reference/process material the repo should keep before it becomes maintenance overhead
 - how aggressively to promote experiment/package ideas into durable architecture docs
 
