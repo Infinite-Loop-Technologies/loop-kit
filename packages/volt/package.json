@@ -1,0 +1,31 @@
+{
+  "name": "volt",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "A Bun-first metaframework for orchestrating multi-target apps.",
+  "bin": {
+    "volt": "./bin/volt.js"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "bun run build:package",
+    "build:package": "bun build ./src/index.ts ./src/cli.ts --outdir ./dist --target bun --format esm",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "bun run typecheck"
+  },
+  "devDependencies": {
+    "@bytecodealliance/jco": "^1.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "x-publish": true
+}

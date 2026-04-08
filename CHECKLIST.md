@@ -3,12 +3,38 @@
 ## Repository Cleanup, Improvements, and Refactoring
 
 - [ ] Delete `packages/graphite` and `packages/react`, but only after making sure nothing is still depending on them.
-- [ ] Delete `loopkit-capabilities` and `loopkit-oci`. These are useless experiments.
+- [x] Delete `loopkit-capabilities` and `loopkit-oci`. These are useless experiments.
 
 ## Volt
 
-- [ ] This repo is at the path `C:\Users\ijhar\Desktop\loop-kit`. Volt is at the path `C:\Users\ijhar\Desktop\volt`. Integrate Volt into this repository. Do not bring over AGENTS.md, or ARCHITECTURE.md. Do merge the CHECKLIST.md underneath the Volt category in our checklist, though. When merging it, do some renaming. There are Volt demo apps - make it clear that that's what they are. Same with the Volt site. Potentially integrate /docs/prototypes/loop-daemon-prototype.md into our knowledge management workflow here - but don't just blindly copy. Do take the /scripts folder though, because it has a handy npm package publishing script that we should absolutely have in this repo - and document that we have that someplace where we document our tooling workflows (AGENTS or ARCHITECTURE or other).
+- [x] This repo is at the path `C:\Users\ijhar\Desktop\loop-kit`. Volt is at the path `C:\Users\ijhar\Desktop\volt`. Integrate Volt into this repository. Do not bring over AGENTS.md, or ARCHITECTURE.md. Do merge the CHECKLIST.md underneath the Volt category in our checklist, though. When merging it, do some renaming. There are Volt demo apps - make it clear that that's what they are. Same with the Volt site. Potentially integrate /docs/prototypes/loop-daemon-prototype.md into our knowledge management workflow here - but don't just blindly copy. Do take the /scripts folder though, because it has a handy npm package publishing script that we should absolutely have in this repo - and document that we have that someplace where we document our tooling workflows (AGENTS or ARCHITECTURE or other).
+- [x] Convert `apps/loom-demo` and `apps/forge` into Volt apps instead of Vite/Next.js apps.
+- [x] Convert `apps/dock-demo` into a Volt app instead of a Vite app.
 - [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
+- [ ] Integrate Resonate into the repo as durable execution infrastructure for daemon-backed workflows, AI jobs, and Forge automation.
+- [ ] Prove that ElectroBun works with `apps/volt-demo`.
+- [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
+- [ ] Add richer dev orchestration around readiness, restart policies, and grouped logs for `bun.command()` targets.
+- [ ] Design Volt's next artifact-aware layer before adding more adapters.
+  - [ ] Keep `targets` as runnable and buildable units.
+  - [ ] Add a separate concept for produced artifacts or generated modules.
+  - [ ] Decide whether the user-facing concept should be called `artifacts`, `integrations`, or `loop`.
+- [ ] Add a lightweight dependency graph for build products, not just process order.
+- [ ] Add a plugin-driven workspace daemon model for Volt dev.
+- [ ] Teach the Volt daemon to persist richer task/workflow state on top of its workspace process model.
+- [ ] Add code generation as a first-class Volt capability.
+- [ ] Prove the model with WASM components before generalizing further.
+- [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
+- [ ] Add stronger app templates: multiplayer/fullstack starter, docs starter, and library starter.
+- [ ] Add an inspect/debug surface in the CLI so target graphs, resolved env, and dependency order are visible.
+- [ ] Greatly improve the Volt demos and templates.
+- [ ] Add a real docs/content app for Volt, not just the current site shell.
+- [ ] Begin writing Volt documentation about the service dependency pattern, runtimes/platforms, and TypeScript-first dev/build/deploy flows.
+- [ ] Set up AI tooling via the Volt CLI and installable Volt-specific skills or docs surfaces.
+- [ ] Set up npm token and publish packages to prove the Volt release flow works.
+- [ ] Set up an actual GitHub repository for Volt.
+- [ ] Set up GitHub Actions workflows for publishing Volt packages.
+- [ ] Set up deployed Volt examples and choose a hosting story for the longer-running demos.
 
 ## Dock
 

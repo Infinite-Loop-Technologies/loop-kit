@@ -264,6 +264,7 @@ Proto stays. Bun is the default runtime.
 - Prefer Proto-managed binaries over ad hoc global installs when testing repo CLIs or toolchains.
 - Use `bun install`, `bun run ...`, and plain `bun <script.ts>` as the default repo workflow.
 - Keep automation scripts simple and top-level under `tools/`; do not introduce `tools/src`, nested script packages, or generator-heavy structure unless the task actually needs it.
+- Use `tools/publish-packages.ts` for the imported Volt package publishing flow; keep it aligned with the actual publishable Volt workspaces instead of inventing a second release script.
 - Prefer Bun-native tests and Bun-run CLIs over Node+tsx wrappers when both are viable. If a CLI is unstable under `--bun` on Windows, keep Bun as the script runner and use the CLI's normal entrypoint instead of forcing the Bun runtime.
 - In Bun scripts, prefer Bun APIs first: `Bun.$` for shell work, `Bun.spawn` for subprocesses, `Bun.file`/`Bun.write` for file IO, and top-level `await` by default. Only reach for Node helpers when Bun does not cover the need cleanly.
 - Root `tests/` is for repo-level smoke, integration, and orchestration coverage. Package-local tests should stay beside the package when they are package-specific.
