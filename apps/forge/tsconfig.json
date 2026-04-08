@@ -1,18 +1,18 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "lib": ["dom", "dom.iterable", "es2022"],
-        "allowJs": false,
-        "esModuleInterop": true,
-        "incremental": true,
-        "isolatedModules": true,
-        "jsx": "preserve",
-        "module": "esnext",
-        "moduleResolution": "bundler",
-        "noEmit": true,
-        "plugins": [{ "name": "next" }],
-        "resolveJsonModule": true
-    },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["bun"]
+  },
+  "include": ["src", "volt.config.ts"]
 }

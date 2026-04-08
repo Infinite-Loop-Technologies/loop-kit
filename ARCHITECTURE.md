@@ -12,6 +12,7 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - `apps/dock-demo` is the focused demo surface for dock behavior.
 - `apps/loom-demo` is the focused demo surface for Loom concepts.
 - `apps/volt-demo`, `apps/volt-site`, and `apps/volt-jco-demo` are the imported Volt proof surfaces.
+- Forge and Loom now boot through Volt-managed Bun fullstack targets instead of Next.js/Vite-specific app runners.
 - `packages/` holds the reusable runtime, UI, and bridge packages.
 - `tools/` holds lightweight Bun-first repo automation.
 - `experiments/` holds smaller prototype labs that are not yet promoted into product/package architecture.

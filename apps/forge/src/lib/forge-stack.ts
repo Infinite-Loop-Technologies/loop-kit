@@ -1,8 +1,8 @@
 export const forgeControlPlanes = [
     {
         id: 'web-shell',
-        label: 'Next.js + Bun shell',
-        detail: 'Forge starts as a Bun-first Next.js PWA and keeps ElectroBun as the future native wrapper.',
+        label: 'Volt + Bun shell',
+        detail: 'Forge now runs as a Volt-hosted Bun shell and keeps ElectroBun as the future native wrapper.',
     },
     {
         id: 'workflow',
@@ -36,7 +36,7 @@ export const forgeLocalServices = [
     },
     {
         id: 'forge-app',
-        label: 'Forge Next.js app',
+        label: 'Forge Volt app',
         detail: 'Local Forge shell with Dock, theme packs, and stack blueprints.',
     },
     {

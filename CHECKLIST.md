@@ -8,6 +8,7 @@
 ## Volt
 
 - [x] This repo is at the path `C:\Users\ijhar\Desktop\loop-kit`. Volt is at the path `C:\Users\ijhar\Desktop\volt`. Integrate Volt into this repository. Do not bring over AGENTS.md, or ARCHITECTURE.md. Do merge the CHECKLIST.md underneath the Volt category in our checklist, though. When merging it, do some renaming. There are Volt demo apps - make it clear that that's what they are. Same with the Volt site. Potentially integrate /docs/prototypes/loop-daemon-prototype.md into our knowledge management workflow here - but don't just blindly copy. Do take the /scripts folder though, because it has a handy npm package publishing script that we should absolutely have in this repo - and document that we have that someplace where we document our tooling workflows (AGENTS or ARCHITECTURE or other).
+- [x] Convert `apps/loom-demo` and `apps/forge` into Volt apps instead of Vite/Next.js apps.
 - [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
 - [ ] Prove that ElectroBun works with `apps/volt-demo`.
 - [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
