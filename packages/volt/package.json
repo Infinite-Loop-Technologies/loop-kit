@@ -8,7 +8,13 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./cli": "./src/cli.ts"
+    "./bun": "./src/plugins/bun/index.ts",
+    "./builtins": "./src/builtins.ts",
+    "./cli": "./src/cli.ts",
+    "./contracts": "./src/schema.ts",
+    "./entrypoint": "./src/entrypoint.ts",
+    "./flow": "./src/flow.ts",
+    "./workspace": "./src/workspace.ts"
   },
   "files": [
     "bin",

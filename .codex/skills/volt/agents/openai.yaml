@@ -1,0 +1,3 @@
+display_name: Volt
+short_description: Volt authoring, runtime, daemon, and design guidance for loop-kit
+default_prompt: Use this skill for Volt configs, entrypoints, daemon and integration work, or when answering Volt architecture questions in this repository.

@@ -9,6 +9,17 @@ import type {
   VoltMode,
   VoltTargetDefinition,
 } from "./contracts";
+import {
+  type VoltProjectConfigDefinition,
+  normalizeLoadedProjectDefinition,
+  projectInputToLegacyConfig,
+} from "./project";
+import {
+  isWorkspaceConfigDefinition,
+  normalizeWorkspaceConfig,
+  type LoadedVoltWorkspaceLike,
+} from "./workspace";
+import type { LoadedVoltProjectLike } from "./task";
 
 type TargetGraph = Record<string, VoltTargetDefinition>;
 
@@ -37,7 +48,7 @@ export const resolveMode = (value: string | undefined, command: VoltCommand): Vo
         ? "production"
         : "development";
 
-const createVoltConfigContext = (
+export const createVoltConfigContext = (
   command: VoltCommand,
   configPath: string,
   mode: VoltMode,
@@ -61,6 +72,7 @@ const normalizeVoltConfig = <TTargets extends TargetGraph>(
   }
 
   return {
+    artifacts: input.artifacts,
     build: normalizeSelection(input.build ?? input.defaults?.build ?? []) as Array<
       keyof TTargets & string
     >,
@@ -74,20 +86,61 @@ const normalizeVoltConfig = <TTargets extends TargetGraph>(
   };
 };
 
-export const loadVoltConfig = async <TTargets extends TargetGraph>(
+export const loadVoltConfig = async (
   command: VoltCommand,
   configPath: string,
   mode: VoltMode,
   workspaceRoot: string,
-): Promise<VoltConfig<TTargets>> => {
+): Promise<VoltConfig<TargetGraph>> => {
   const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
-  const definition = loaded.default as VoltConfigDefinition<TTargets>;
+  const definition = loaded.default as
+    | VoltConfigDefinition<TargetGraph>
+    | VoltProjectConfigDefinition;
+  const context = createVoltConfigContext(command, configPath, mode, workspaceRoot);
   const input =
-    typeof definition === "function"
-      ? await definition(createVoltConfigContext(command, configPath, mode, workspaceRoot))
-      : definition;
+    typeof definition === "function" ? await definition(context) : definition;
 
-  return normalizeVoltConfig(input, configPath);
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    "tasks" in input &&
+    typeof (input as { name?: unknown }).name === "string"
+  ) {
+    return normalizeVoltConfig(
+      projectInputToLegacyConfig(
+        input as unknown as Parameters<typeof projectInputToLegacyConfig>[0],
+      ),
+      configPath,
+    );
+  }
+
+  return normalizeVoltConfig(input as VoltConfigInput<TargetGraph>, configPath);
+};
+
+export const loadVoltProject = async (
+  command: VoltCommand,
+  configPath: string,
+  mode: VoltMode,
+  workspaceRoot: string,
+): Promise<LoadedVoltProjectLike> => {
+  const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
+  return normalizeLoadedProjectDefinition(
+    loaded.default as VoltConfigDefinition<TargetGraph> | VoltProjectConfigDefinition,
+    createVoltConfigContext(command, configPath, mode, workspaceRoot),
+    configPath,
+    workspaceRoot,
+  );
+};
+
+export const loadVoltWorkspace = async (
+  workspaceConfigPath: string,
+): Promise<LoadedVoltWorkspaceLike> => {
+  const loaded = await import(`${pathToFileURL(workspaceConfigPath).href}?t=${Date.now()}`);
+  if (!isWorkspaceConfigDefinition(loaded.default)) {
+    throw new Error(`${workspaceConfigPath} does not export defineWorkspaceConfig(...).`);
+  }
+
+  return normalizeWorkspaceConfig(loaded.default);
 };
 
 export const resolveConfigPath = (workspaceRoot: string, configPath: string) =>

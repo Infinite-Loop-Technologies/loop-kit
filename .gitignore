@@ -54,6 +54,7 @@ yarn-error.log*
 
 # root-level Volt daemon/runtime state
 /.volt/
+**/.volt/
 
 # typescript
 *.tsbuildinfo

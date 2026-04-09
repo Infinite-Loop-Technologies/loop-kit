@@ -91,10 +91,14 @@ export const sanitizeForPath = (value: string) =>
 export const createVoltPaths = (rootDir: string) => {
   const voltDir = resolve(rootDir, ".volt");
   return {
+    artifactsGeneratedDir: resolve(voltDir, "generated", "artifacts"),
+    artifactsStateDir: resolve(voltDir, "state", "artifacts"),
     daemonDir: resolve(voltDir, "daemon"),
     generatedDir: resolve(voltDir, "generated"),
     integrationsGeneratedDir: resolve(voltDir, "generated", "integrations"),
+    targetsGeneratedDir: resolve(voltDir, "generated", "targets"),
     integrationsStateDir: resolve(voltDir, "state", "integrations"),
+    servicesStateDir: resolve(voltDir, "state", "services"),
     stateDir: resolve(voltDir, "state"),
     voltDir,
   };

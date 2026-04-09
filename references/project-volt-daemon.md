@@ -2,6 +2,8 @@
 
 This note exists to make the next architectural step concrete before changing Volt core.
 
+The daemon notes here are still useful, but the current public execution story is now task-first. See `references/project-volt-project-model.md` for how daemon behavior fits under project tasks, flows, and workspace orchestration.
+
 ## What Volt Does Today
 
 Volt currently has:

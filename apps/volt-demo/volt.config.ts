@@ -1,5 +1,15 @@
-import { createBunPlugin, defineVoltConfig } from "volt";
-import { createDemoRuntimeSession } from "./src/dev/demoSession";
+import { defineProjectConfig, defineServices } from "volt";
+import { bunFullstackTask, bunServerTask } from "volt/bun";
+import { contractBindingsTask } from "volt/contracts";
+import { flow } from "volt/flow";
+import {
+  createDemoSessionArtifact,
+  type DemoRuntimeSession,
+} from "./src/dev/demoSession";
+import { GameApi } from "./src/contracts/gameApi";
+import { BrowserRuntime } from "./src/contracts/runtimeSession";
+import { GameServer } from "./src/entrypoints/gameServer";
+import { WebApp } from "./src/entrypoints/webApp";
 import { createPortlessShareProvider } from "./src/dev/portlessShareProvider";
 
 const command = process.env.VOLT_COMMAND === "build" ? "build" : "dev";
@@ -9,7 +19,7 @@ const enableShare = process.env.VOLT_SHARE === "1";
 const shareProvider =
   command === "dev" && enableShare ? createPortlessShareProvider() : undefined;
 
-const session = await createDemoRuntimeSession({
+const sessionArtifact = createDemoSessionArtifact({
   command,
   enableShare,
   mode,
@@ -17,37 +27,74 @@ const session = await createDemoRuntimeSession({
   shareProvider,
 });
 
-const bun = createBunPlugin();
+const gameServices = defineServices(({ artifacts }) => {
+  const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
+  return {
+    demoGame: {
+      healthUrl: `${session.game.localHttpUrl}/health`,
+      mode: session.mode,
+      port: session.game.port,
+      websocketUrl: session.game.localWsUrl,
+    },
+  };
+});
 
-export default defineVoltConfig({
+const webServices = defineServices(({ artifacts }) => {
+  const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
+  return {
+    demoWeb: {
+      browserConfig: session.browserConfig,
+      mode: session.mode,
+      port: session.web.port,
+    },
+  };
+});
+
+export default defineProjectConfig({
+  artifacts: {
+    runtimeSession: sessionArtifact,
+  },
   defaults: {
-    build: ["web", "game"],
-    dev: ["web"],
+    build: ["codegen:demo", "build:game", "build:web"],
+    dev: "dev:full",
   },
   name: "Volt Demo",
-  targets: {
-    game: bun.server({
-      env: {
-        GAME_SERVER_PORT: String(session.game.port),
-        VOLT_MODE: session.mode,
-      },
-      name: "game",
+  tasks: {
+    "build:game": bunServerTask(GameServer, {
+      artifacts: ["runtimeSession"],
+      command: "build",
       outdir: "dist/game-server",
-      source: "./src/game-server/server.runtime.ts",
+      services: gameServices,
     }),
-    web: bun.fullstack({
-      dependsOn: ["game"],
-      env: {
-        PORT: String(session.web.port),
-        VOLT_GAME_PUBLIC_WS_URL: session.game.publicWsUrl ?? "",
-        VOLT_GAME_WS_URL: session.game.localWsUrl,
-        VOLT_MODE: session.mode,
-        VOLT_SHARE_ENABLED: session.share.enabled ? "1" : "0",
-        VOLT_WEB_PUBLIC_URL: session.web.publicUrl ?? "",
-      },
-      name: "web",
+    "build:web": bunFullstackTask(WebApp, {
+      artifacts: ["runtimeSession"],
+      command: "build",
       outdir: "dist/web",
-      source: "./src/web/server.runtime.ts",
+      services: webServices,
+    }),
+    "codegen:demo": contractBindingsTask({
+      contracts: [GameApi, BrowserRuntime],
+      jsonPath: ".volt/state/contracts/demo-contracts.json",
+      tsPath: ".volt/generated/contracts/demo-contracts.ts",
+    }),
+    "dev:full": flow("dev:full", function* (ctx) {
+      const game = yield* ctx.runTask("dev:game");
+      const web = yield* ctx.runTask("dev:web", {
+        inputs: { game },
+      });
+      return { game, web };
+    }),
+    "dev:game": bunServerTask(GameServer, {
+      artifacts: ["runtimeSession"],
+      command: "dev",
+      outdir: "dist/game-server",
+      services: gameServices,
+    }),
+    "dev:web": bunFullstackTask(WebApp, {
+      artifacts: ["runtimeSession"],
+      command: "dev",
+      outdir: "dist/web",
+      services: webServices,
     }),
   },
 });

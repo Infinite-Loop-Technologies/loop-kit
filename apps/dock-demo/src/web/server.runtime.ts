@@ -1,7 +1,7 @@
 import indexHtml from "../index.html";
-import { bunFullstackApp } from "volt";
+import { defineEntrypoint, type BunFullstackServices } from "volt";
 import { startWebServer } from "./startWebServer";
 
-export default bunFullstackApp(import.meta, async (services) => {
+export default defineEntrypoint<BunFullstackServices>(import.meta, async (services) => {
   startWebServer(services, indexHtml);
 });

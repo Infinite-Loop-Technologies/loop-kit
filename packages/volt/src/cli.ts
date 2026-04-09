@@ -1,112 +1,211 @@
-import { dirname, resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import type {
-  ManagedVoltProcess,
-  VoltCommand,
-  VoltCommandHookContext,
-  VoltCommandHookEndContext,
-  VoltConfig,
-  VoltDaemonCommand,
-  VoltPluginBuilder,
-  VoltTargetContext,
-  VoltTargetHookContext,
-  VoltTargetHookEndContext,
-} from "./contracts";
-import { loadVoltConfig, resolveConfigPath, resolveMode } from "./config";
+import type { VoltCommand } from "./contracts";
 import {
-  collectTargetIntegrations,
-  ensureWorkspaceDaemonRunning,
-  handleDaemonCommand,
-  resolveIntegrationsForPhase,
-  runDaemonRuntime,
-} from "./daemon";
-import { createRootLogger, createSpawn } from "./utils";
-
-type TargetGraph = VoltConfig<Record<string, import("./contracts").VoltTargetDefinition>>["targets"];
+  createVoltConfigContext,
+  loadVoltProject,
+  loadVoltWorkspace,
+  resolveConfigPath,
+  resolveMode,
+} from "./config";
+import { handleDaemonCommand, runDaemonRuntime } from "./daemon";
+import { normalizeLoadedProjectDefinition } from "./project";
+import { runFlow } from "./flow";
+import type { LoadedVoltProjectLike, VoltAnyTaskDefinition } from "./task";
+import { executeProjectCommand, executeProjectTask, listProjectTasks } from "./task";
+import { createRootLogger } from "./utils";
 
 const workspaceRoot = process.cwd();
 
-const normalizeTargets = (values: readonly string[]): string[] =>
-  values
+const normalizeValues = (values: readonly string[] | string | undefined): string[] =>
+  (Array.isArray(values) ? values : values ? [values] : [])
     .flatMap((value) => value.split(","))
     .map((value) => value.trim())
     .filter(Boolean);
 
-const normalizeConfigValues = (values: readonly string[]): string[] =>
-  values
-    .flatMap((value) => value.split(","))
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-const expandTargets = (graph: TargetGraph, requested: string[]): string[] => {
-  const seen = new Set<string>();
-  const ordered: string[] = [];
-
-  const visit = (name: string) => {
-    const target = graph[name];
-    if (!target) {
-      throw new Error(`Unknown Volt target: ${name}`);
-    }
-    if (seen.has(name)) {
-      return;
-    }
-    seen.add(name);
-    for (const dependency of target.dependsOn ?? []) {
-      visit(dependency);
-    }
-    ordered.push(name);
-  };
-
-  for (const name of requested) {
-    visit(name);
-  }
-
-  return ordered;
-};
-
-const shutdown = (children: ManagedVoltProcess[]) => {
-  for (const child of children) {
-    child.process.kill();
-  }
-};
-
-const createPluginBuilder = () => {
-  const hooks = {
-    commandEnd: [] as Array<(context: VoltCommandHookEndContext) => Promise<void> | void>,
-    commandStart: [] as Array<(context: VoltCommandHookContext) => Promise<void> | void>,
-    targetEnd: [] as Array<(context: VoltTargetHookEndContext) => Promise<void> | void>,
-    targetStart: [] as Array<(context: VoltTargetHookContext) => Promise<void> | void>,
-  };
-
-  const builder: VoltPluginBuilder = {
-    addDaemonService: () => {},
-    onCommandEnd: (callback) => {
-      hooks.commandEnd.push(callback);
-    },
-    onCommandStart: (callback) => {
-      hooks.commandStart.push(callback);
-    },
-    onTargetEnd: (callback) => {
-      hooks.targetEnd.push(callback);
-    },
-    onTargetStart: (callback) => {
-      hooks.targetStart.push(callback);
-    },
-  };
-
-  return { builder, hooks };
-};
-
-const runHooks = async <TContext>(
-  callbacks: Array<(context: TContext) => Promise<void> | void>,
-  context: TContext,
+const waitForActiveProcesses = async (
+  handles: Array<{ label: string; process?: Bun.Subprocess }>,
 ) => {
-  for (const callback of callbacks) {
-    await callback(context);
+  const processes = handles.filter((handle) => handle.process);
+  if (!processes.length) {
+    return;
+  }
+
+  const shutdown = () => {
+    for (const handle of processes) {
+      handle.process?.kill();
+    }
+  };
+
+  const onSignal = () => {
+    shutdown();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
+
+  const firstExit = await Promise.race(
+    processes.map(async (handle) => ({
+      code: await handle.process?.exited,
+      label: handle.label,
+    })),
+  );
+
+  shutdown();
+  if (firstExit.code !== 0) {
+    throw new Error(`${firstExit.label} exited with code ${firstExit.code}.`);
   }
 };
 
-const createBaseArgs = (rest: string[]) =>
+const getDefaultWorkspaceConfigPath = () => resolve(workspaceRoot, "volt.workspace.ts");
+
+const resolveWorkspaceConfigPath = (value?: string) => {
+  if (value) {
+    return resolve(workspaceRoot, value);
+  }
+
+  const defaultPath = getDefaultWorkspaceConfigPath();
+  return existsSync(defaultPath) ? defaultPath : undefined;
+};
+
+const resolveProjectConfigPath = (value?: string) =>
+  resolveConfigPath(workspaceRoot, value ?? "volt.config.ts");
+
+const resolveProjectFromWorkspaceValue = async (
+  name: string,
+  value: unknown,
+  mode: "development" | "production",
+): Promise<LoadedVoltProjectLike> => {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "configPath" in value &&
+    "tasks" in value &&
+    "defaults" in value
+  ) {
+    return value as LoadedVoltProjectLike;
+  }
+
+  const source =
+    typeof value === "function" && "source" in value
+      ? (value as { source?: string }).source
+      : typeof value === "object" && value !== null && "source" in value
+        ? (value as { source?: string }).source
+        : undefined;
+
+  if (!source) {
+    throw new Error(
+      `Workspace project ${name} must come from defineProjectConfig(...) or provide a source path.`,
+    );
+  }
+
+  return normalizeLoadedProjectDefinition(
+    value as Parameters<typeof normalizeLoadedProjectDefinition>[0],
+    createVoltConfigContext("dev", source, mode, workspaceRoot),
+    source,
+    workspaceRoot,
+  );
+};
+
+const executeWorkspaceTask = async (
+  workspacePath: string,
+  taskName: string,
+  options: {
+    inputs?: unknown;
+    logger?: ReturnType<typeof createRootLogger>;
+    mode: "development" | "production";
+  },
+) => {
+  const workspace = await loadVoltWorkspace(workspacePath);
+  const logger = options.logger ?? createRootLogger();
+  const completed = new Map<string, unknown>();
+  const inFlight = new Set<string>();
+  const handles: Array<{ label: string; process?: Bun.Subprocess }> = [];
+
+  const executeTaskInternal = async (
+    name: string,
+    inputs: unknown,
+  ): Promise<unknown> => {
+    if (completed.has(name)) {
+      return completed.get(name);
+    }
+    if (inFlight.has(name)) {
+      throw new Error(`Detected recursive Volt workspace task execution for ${name}.`);
+    }
+
+    const definition = workspace.tasks[name];
+    if (!definition) {
+      throw new Error(`Unknown Volt workspace task: ${name}`);
+    }
+
+    inFlight.add(name);
+    try {
+      for (const dependency of definition.dependsOn ?? []) {
+        await executeTaskInternal(dependency, undefined);
+      }
+
+      let result: unknown;
+      if (definition.kind === "task") {
+        result = await definition.run({
+          configPath: workspace.configPath,
+          inputs,
+          logger,
+          projectName: workspace.name,
+          rootDir: workspace.rootDir,
+          workspaceRoot,
+        });
+      } else if (definition.kind === "flow-task") {
+        result = await runFlow(definition.value, inputs, {
+          logger,
+          runner: {
+            runProjectTask: async (projectName, nestedTaskName, nestedOptions) => {
+              const projectValue = workspace.projects[projectName];
+              if (!projectValue) {
+                throw new Error(`Unknown Volt workspace project: ${projectName}`);
+              }
+
+              const project = await resolveProjectFromWorkspaceValue(
+                projectName,
+                projectValue,
+                options.mode,
+              );
+              const executed = await executeProjectTask(project, nestedTaskName, {
+                inputs: nestedOptions?.inputs,
+                logger,
+              });
+              handles.push(
+                ...executed.activeHandles.map((handle) =>
+                  "process" in handle
+                    ? { label: handle.label, process: handle.process }
+                    : { label: handle.label },
+                ),
+              );
+              return executed.result;
+            },
+            runTask: async (nestedTaskName, nestedOptions) =>
+              executeTaskInternal(nestedTaskName, nestedOptions?.inputs),
+          },
+        });
+      } else {
+        throw new Error(
+          `Workspace task ${name} must be a plain task or flow. Target-backed tasks belong in project configs.`,
+        );
+      }
+
+      completed.set(name, result);
+      return result;
+    } finally {
+      inFlight.delete(name);
+    }
+  };
+
+  const result = await executeTaskInternal(taskName, options.inputs);
+  return { handles, result, workspace };
+};
+
+const parseBaseArgs = (rest: string[]) =>
   parseArgs({
     allowPositionals: true,
     args: rest,
@@ -114,220 +213,118 @@ const createBaseArgs = (rest: string[]) =>
       all: { type: "boolean" },
       config: { type: "string" },
       mode: { type: "string" },
-      targets: { multiple: true, type: "string" },
+      tasks: { multiple: true, type: "string" },
+      "workspace-config": { type: "string" },
     },
     strict: true,
   });
 
-const runTargetCommand = async (
-  command: VoltCommand,
-  rest: string[],
-) => {
-  const parsed = createBaseArgs(rest);
-  process.env.VOLT_COMMAND = command;
+const runProjectCommand = async (command: VoltCommand, rest: string[]) => {
+  const parsed = parseBaseArgs(rest);
   const mode = resolveMode(parsed.values.mode, command);
-  process.env.VOLT_MODE = mode;
+  const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
 
-  const configPath = resolveConfigPath(workspaceRoot, parsed.values.config ?? "volt.config.ts");
-  if (command === "dev") {
-    await ensureWorkspaceDaemonRunning(workspaceRoot, [configPath], mode, Bun.argv[1], true);
+  if (workspaceConfigPath && !parsed.values.config) {
+    const workspace = await loadVoltWorkspace(workspaceConfigPath);
+    const selected = normalizeValues(parsed.values.tasks ?? []).length
+      ? normalizeValues(parsed.values.tasks ?? [])
+      : workspace.defaults[command];
+
+    if (!selected.length) {
+      throw new Error(`No default ${command} tasks configured in ${workspaceConfigPath}.`);
+    }
+
+    const handles: Array<{ label: string; process?: Bun.Subprocess }> = [];
+    for (const taskName of selected) {
+      const executed = await executeWorkspaceTask(workspaceConfigPath, taskName, {
+        logger: createRootLogger(),
+        mode,
+      });
+      handles.push(...executed.handles);
+    }
+
+    if (command === "dev") {
+      await waitForActiveProcesses(handles);
+    }
+    return;
   }
-  const rootDir = dirname(configPath);
-  const config = await loadVoltConfig<TargetGraph>(command, configPath, mode, workspaceRoot);
-  const graph = config.targets;
-  const explicitTargets = normalizeTargets(parsed.values.targets ?? []);
-  const requestedTargets = parsed.values.all
-    ? Object.keys(graph)
-    : explicitTargets.length
-      ? explicitTargets
-      : config[command] ?? [];
 
-  if (!requestedTargets.length) {
-    throw new Error(`No default ${command} targets configured in ${configPath}.`);
-  }
-
-  const orderedTargets = expandTargets(graph, requestedTargets);
-  const logger = createRootLogger();
-  const { builder, hooks } = createPluginBuilder();
-  for (const plugin of config.plugins ?? []) {
-    await plugin.setup(builder);
-  }
-
-  const integrationNames = collectTargetIntegrations(graph, orderedTargets);
-  const integrations = await resolveIntegrationsForPhase(
-    {
-      config,
-      configPath,
-      rootDir,
-      workspaceRoot,
-    },
-    integrationNames,
-    mode,
+  const configPath = resolveProjectConfigPath(parsed.values.config);
+  const project = await loadVoltProject(command, configPath, mode, workspaceRoot);
+  await executeProjectCommand(
+    project,
     command,
-    logger,
+    normalizeValues(parsed.values.tasks ?? []),
+    { logger: createRootLogger() },
   );
+};
 
-  const commandHookContext: VoltCommandHookContext = {
-    command,
-    configPath,
-    logger,
-    mode,
-    rootDir,
-    targets: orderedTargets,
-    workspaceRoot,
-  };
+const runTaskCommand = async (rest: string[]) => {
+  const [taskCommand, ...taskArgs] = rest;
 
-  await runHooks(hooks.commandStart, commandHookContext);
-
-  logger.info(`running ${config.name}`, {
-    command,
-    configPath,
-    integrations: integrationNames,
-    mode,
-    targets: orderedTargets,
-  });
-
-  try {
-    if (command === "build") {
-      for (const name of orderedTargets) {
-        const target = graph[name];
-        const targetHookContext: VoltTargetHookContext = {
-          ...commandHookContext,
-          runtime: target.runtime,
-          target: target.target,
-          targetName: name,
-        };
-
-        await runHooks(hooks.targetStart, targetHookContext);
-        logger.info("building target", { name, runtime: target.runtime });
-
-        try {
-          await target.build({
-            appRoot: rootDir,
-            command,
-            configPath,
-            currentTarget: {
-              name,
-              runtime: target.runtime,
-              target: target.target,
-              uses: target.uses ?? [],
-            },
-            integrations,
-            logger,
-            mode,
-            rootDir,
-            spawn: createSpawn(rootDir, logger),
-            workspaceRoot,
-          });
-          await runHooks(hooks.targetEnd, {
-            ...targetHookContext,
-            status: "success",
-          });
-        } catch (error) {
-          await runHooks(hooks.targetEnd, {
-            ...targetHookContext,
-            error,
-            status: "error",
-          });
-          throw error;
-        }
-      }
-
-      await runHooks(hooks.commandEnd, {
-        ...commandHookContext,
-        status: "success",
-      });
+  if (taskCommand === "list") {
+    const parsed = parseBaseArgs(taskArgs);
+    const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
+    const mode = resolveMode(parsed.values.mode, "dev");
+    if (workspaceConfigPath && !parsed.values.config) {
+      const workspace = await loadVoltWorkspace(workspaceConfigPath);
+      const taskNames = Object.keys(workspace.tasks).sort((left, right) =>
+        left.localeCompare(right),
+      );
+      process.stdout.write(`${taskNames.join("\n")}\n`);
       return;
     }
 
-    const children: ManagedVoltProcess[] = [];
-    const onSignal = () => {
-      shutdown(children);
-      process.exit(0);
-    };
-    process.on("SIGINT", onSignal);
-    process.on("SIGTERM", onSignal);
-
-    for (const name of orderedTargets) {
-      const target = graph[name];
-      const targetHookContext: VoltTargetHookContext = {
-        ...commandHookContext,
-        runtime: target.runtime,
-        target: target.target,
-        targetName: name,
-      };
-
-      await runHooks(hooks.targetStart, targetHookContext);
-      logger.info("starting target", { name, runtime: target.runtime });
-
-      try {
-        const child = await target.dev({
-          appRoot: rootDir,
-          command,
-          configPath,
-          currentTarget: {
-            name,
-            runtime: target.runtime,
-            target: target.target,
-            uses: target.uses ?? [],
-          },
-          integrations,
-          logger,
-          mode,
-          rootDir,
-          spawn: createSpawn(rootDir, logger),
-          workspaceRoot,
-        });
-        if (child) {
-          children.push(child);
-        }
-        await runHooks(hooks.targetEnd, {
-          ...targetHookContext,
-          status: "success",
-        });
-      } catch (error) {
-        await runHooks(hooks.targetEnd, {
-          ...targetHookContext,
-          error,
-          status: "error",
-        });
-        throw error;
-      }
-    }
-
-    if (!children.length) {
-      logger.warn("No dev processes were started.");
-      await runHooks(hooks.commandEnd, {
-        ...commandHookContext,
-        status: "success",
-      });
-      return;
-    }
-
-    const firstExit = await Promise.race(
-      children.map(async (child) => ({
-        code: await child.process.exited,
-        label: child.label,
-      })),
+    const project = await loadVoltProject(
+      "dev",
+      resolveProjectConfigPath(parsed.values.config),
+      mode,
+      workspaceRoot,
     );
+    process.stdout.write(`${listProjectTasks(project).join("\n")}\n`);
+    return;
+  }
 
-    shutdown(children);
-    if (firstExit.code !== 0) {
-      throw new Error(`${firstExit.label} exited with code ${firstExit.code}.`);
+  if (taskCommand === "run") {
+    const [taskName, ...runArgs] = taskArgs;
+    if (!taskName) {
+      throw new Error("Usage: volt task run <name> [--config ...]");
     }
 
-    await runHooks(hooks.commandEnd, {
-      ...commandHookContext,
-      status: "success",
+    const parsed = parseBaseArgs(runArgs);
+    const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
+    const mode = resolveMode(parsed.values.mode, "dev");
+    if (workspaceConfigPath && !parsed.values.config) {
+      const executed = await executeWorkspaceTask(workspaceConfigPath, taskName, {
+        logger: createRootLogger(),
+        mode,
+      });
+      await waitForActiveProcesses(executed.handles);
+      return;
+    }
+
+    const project = await loadVoltProject(
+      "dev",
+      resolveProjectConfigPath(parsed.values.config),
+      mode,
+      workspaceRoot,
+    );
+    const executed = await executeProjectTask(project, taskName, {
+      logger: createRootLogger(),
     });
-  } catch (error) {
-    await runHooks(hooks.commandEnd, {
-      ...commandHookContext,
-      error,
-      status: "error",
-    });
-    throw error;
+    await waitForActiveProcesses(
+      executed.activeHandles.map((handle) =>
+        "process" in handle
+          ? { label: handle.label, process: handle.process }
+          : { label: handle.label },
+      ),
+    );
+    return;
   }
+
+  throw new Error(
+    "Usage: volt task <list|run <name>> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
+  );
 };
 
 const runDaemonCommand = async (rest: string[]) => {
@@ -353,12 +350,12 @@ const runDaemonCommand = async (rest: string[]) => {
     strict: true,
   });
 
-  const configPaths = normalizeConfigValues(parsed.values.config ?? []);
+  const configPaths = normalizeValues(parsed.values.config ?? []);
   const mode =
     parsed.values.mode === "production" ? "production" : "development";
 
   await handleDaemonCommand(
-    daemonCommand as VoltDaemonCommand,
+    daemonCommand,
     workspaceRoot,
     configPaths,
     mode,
@@ -376,7 +373,7 @@ const runInternalDaemon = async (rest: string[]) => {
     },
     strict: true,
   });
-  const configPaths = normalizeConfigValues(parsed.values.config ?? []).map((configPath) =>
+  const configPaths = normalizeValues(parsed.values.config ?? []).map((configPath) =>
     resolve(workspaceRoot, configPath),
   );
   const mode =
@@ -387,7 +384,11 @@ const runInternalDaemon = async (rest: string[]) => {
 const main = async () => {
   const [command, ...rest] = Bun.argv.slice(2);
   if (command === "build" || command === "dev") {
-    await runTargetCommand(command, rest);
+    await runProjectCommand(command, rest);
+    return;
+  }
+  if (command === "task") {
+    await runTaskCommand(rest);
     return;
   }
   if (command === "daemon") {
@@ -400,7 +401,7 @@ const main = async () => {
   }
 
   throw new Error(
-    "Usage: volt <build|dev|daemon> [--config apps/volt-demo/volt.config.ts] [--targets web game] [--all] [--mode production]",
+    "Usage: volt <build|dev|task|daemon> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
   );
 };
 

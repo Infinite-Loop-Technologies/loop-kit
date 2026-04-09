@@ -2,6 +2,10 @@ import { existsSync, watch } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { basename, dirname, relative, resolve } from "node:path";
 import type {
+  VoltArtifactContext,
+  VoltArtifactDefinition,
+  VoltArtifactOutput,
+  VoltArtifactRegistry,
   ManagedVoltProcess,
   VoltConfig,
   VoltDaemonCommand,
@@ -12,6 +16,7 @@ import type {
   VoltIntegrationOutput,
   VoltLogger,
   VoltPluginBuilder,
+  VoltResolvedArtifact,
   VoltResolvedIntegration,
   VoltTargetDefinition,
 } from "./contracts";
@@ -54,6 +59,7 @@ interface WorkspaceDaemonState {
     string,
     {
       appRoot: string;
+      artifacts?: string[];
       configPath: string;
       integrations: string[];
       serviceCount: number;
@@ -167,6 +173,32 @@ const createIntegrationContext = (
   };
 };
 
+const createArtifactContext = (
+  loaded: LoadedVoltConfig,
+  name: string,
+  logger: VoltLogger,
+  mode: "development" | "production",
+  artifacts: VoltArtifactRegistry,
+): VoltArtifactContext => {
+  const voltPaths = createVoltPaths(loaded.rootDir);
+
+  return {
+    appRoot: loaded.rootDir,
+    artifacts,
+    configPath: loaded.configPath,
+    logger,
+    mode,
+    name,
+    rootDir: loaded.rootDir,
+    spawn: createSpawn(loaded.rootDir, logger),
+    workspaceRoot: loaded.workspaceRoot,
+    writeGeneratedFile: async (relativePath, content) =>
+      writeTextFile(resolve(voltPaths.artifactsGeneratedDir, name, relativePath), content),
+    writeMetadata: async (data) =>
+      writeJsonFile(resolve(voltPaths.artifactsStateDir, `${name}.json`), data),
+  };
+};
+
 const normalizeIntegrationOutput = async (
   loaded: LoadedVoltConfig,
   name: string,
@@ -197,6 +229,65 @@ const normalizeIntegrationOutput = async (
   return resolved;
 };
 
+const normalizeArtifactOutput = async (
+  loaded: LoadedVoltConfig,
+  name: string,
+  definition: VoltArtifactDefinition,
+  output: VoltArtifactOutput | void,
+): Promise<VoltResolvedArtifact> => {
+  const resolved: VoltResolvedArtifact = {
+    artifactPath: output?.artifactPath,
+    generatedModulePath: output?.generatedModulePath,
+    kind: definition.kind,
+    metadata: output?.metadata,
+    name,
+    typesPath: output?.typesPath,
+    value: output?.value,
+  };
+  const metadataPath = resolve(
+    createVoltPaths(loaded.rootDir).artifactsStateDir,
+    `${name}.json`,
+  );
+  resolved.metadataPath = metadataPath;
+
+  await ensureDirectory(createVoltPaths(loaded.rootDir).artifactsStateDir);
+  await writeJsonFile(metadataPath, {
+    artifactPath: resolved.artifactPath,
+    generatedModulePath: resolved.generatedModulePath,
+    kind: resolved.kind,
+    metadata: resolved.metadata ?? {},
+    name: resolved.name,
+    typesPath: resolved.typesPath,
+    value: resolved.value ?? null,
+  });
+
+  return resolved;
+};
+
+const createArtifactRegistry = (
+  resolved: Record<string, VoltResolvedArtifact>,
+): VoltArtifactRegistry => ({
+  all: resolved,
+  get: (name) => resolved[name],
+  require: (name) => {
+    const artifact = resolved[name];
+    if (!artifact) {
+      throw new Error(`Missing Volt artifact output: ${name}`);
+    }
+    return artifact;
+  },
+  requireValue: (name) => {
+    const artifact = resolved[name];
+    if (!artifact) {
+      throw new Error(`Missing Volt artifact output: ${name}`);
+    }
+    if (artifact.value === undefined) {
+      throw new Error(`Volt artifact ${name} does not have a value output.`);
+    }
+    return artifact.value as never;
+  },
+});
+
 export const collectTargetIntegrations = (
   graph: TargetGraph,
   targetNames: string[],
@@ -209,6 +300,91 @@ export const collectTargetIntegrations = (
     }
   }
   return [...names];
+};
+
+export const collectTargetArtifacts = (
+  graph: TargetGraph,
+  targetNames: string[],
+): string[] => {
+  const names = new Set<string>();
+  for (const targetName of targetNames) {
+    const target = graph[targetName];
+    for (const name of target?.artifacts ?? []) {
+      names.add(name);
+    }
+  }
+  return [...names];
+};
+
+const orderArtifacts = (
+  definitions: Record<string, VoltArtifactDefinition>,
+  artifactNames: string[],
+) => {
+  const ordered: string[] = [];
+  const seen = new Set<string>();
+
+  const visit = (name: string) => {
+    const definition = definitions[name];
+    if (!definition) {
+      throw new Error(`Unknown Volt artifact: ${name}`);
+    }
+    if (seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+    for (const dependency of definition.dependsOn ?? []) {
+      visit(dependency);
+    }
+    ordered.push(name);
+  };
+
+  for (const name of artifactNames) {
+    visit(name);
+  }
+
+  return ordered;
+};
+
+export const resolveArtifactsForPhase = async (
+  loaded: LoadedVoltConfig,
+  artifactNames: string[],
+  mode: "development" | "production",
+  phase: "build" | "dev",
+  logger: VoltLogger,
+) => {
+  const definitions = loaded.config.artifacts ?? {};
+  const orderedArtifactNames = orderArtifacts(definitions, artifactNames);
+  const resolved: Record<string, VoltResolvedArtifact> = {};
+
+  for (const name of orderedArtifactNames) {
+    const definition = definitions[name];
+    if (!definition) {
+      throw new Error(`Unknown Volt artifact: ${name}`);
+    }
+
+    const context = createArtifactContext(
+      loaded,
+      name,
+      logger,
+      mode,
+      createArtifactRegistry(resolved),
+    );
+    const runner =
+      phase === "dev"
+        ? definition.dev ?? definition.build
+        : definition.build ?? definition.dev;
+
+    if (!runner) {
+      resolved[name] = await normalizeArtifactOutput(loaded, name, definition, undefined);
+      continue;
+    }
+
+    logger.info("resolving artifact", { kind: definition.kind, name, phase });
+    const output = await runner(context);
+    resolved[name] = await normalizeArtifactOutput(loaded, name, definition, output);
+  }
+
+  return createArtifactRegistry(resolved);
 };
 
 export const resolveIntegrationsForPhase = async (
@@ -600,7 +776,7 @@ export const runDaemonRuntime = async (
 ) => {
   const loadedConfigs: LoadedVoltConfig[] = await Promise.all(
     configPaths.map(async (configPath) => ({
-      config: await loadVoltConfig<TargetGraph>("dev", configPath, mode, workspaceRoot),
+      config: await loadVoltConfig("dev", configPath, mode, workspaceRoot),
       configPath,
       rootDir: dirname(configPath),
       workspaceRoot,
@@ -678,11 +854,13 @@ export const runDaemonRuntime = async (
 
   for (const loaded of loadedConfigs) {
     const targetNames = loaded.config.dev ?? [];
+    const artifactNames = collectTargetArtifacts(loaded.config.targets, targetNames);
     const integrationNames = collectTargetIntegrations(loaded.config.targets, targetNames);
     const configId = toConfigId(workspaceRoot, loaded.configPath);
 
     configState[configId] = {
       appRoot: relative(workspaceRoot, loaded.rootDir),
+      artifacts: artifactNames,
       configPath: relative(workspaceRoot, loaded.configPath),
       integrations: integrationNames,
       serviceCount: 0,
@@ -691,6 +869,7 @@ export const runDaemonRuntime = async (
       watcherCount: 0,
     };
 
+    await resolveArtifactsForPhase(loaded, artifactNames, mode, "dev", logger);
     await resolveIntegrationsForPhase(loaded, integrationNames, mode, "dev", logger);
     const loadedServiceHandles = await startDaemonServices(loaded, logger, mode);
     const loadedWatcherHandles = await startIntegrationWatchers(loaded, integrationNames, logger, mode);

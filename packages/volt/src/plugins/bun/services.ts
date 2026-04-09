@@ -5,6 +5,7 @@ import { createVoltLogger } from "../../utils";
 export interface BunBaseServices {
   env: {
     read: (name: string) => string | undefined;
+    require: (name: string) => string;
   };
   fs: {
     exists: (path: string) => boolean;
@@ -30,6 +31,13 @@ export interface BunFullstackServices extends BunBaseServices {
 export const createBunServerServices = (rootDir: string): BunServerServices => ({
   env: {
     read: (name) => process.env[name],
+    require: (name) => {
+      const value = process.env[name];
+      if (value === undefined) {
+        throw new Error(`Missing required environment variable: ${name}`);
+      }
+      return value;
+    },
   },
   fs: {
     exists: existsSync,
@@ -49,6 +57,13 @@ export const createBunFullstackServices = (
 ): BunFullstackServices => ({
   env: {
     read: (name) => process.env[name],
+    require: (name) => {
+      const value = process.env[name];
+      if (value === undefined) {
+        throw new Error(`Missing required environment variable: ${name}`);
+      }
+      return value;
+    },
   },
   fs: {
     exists: existsSync,

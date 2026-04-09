@@ -1,23 +1,30 @@
-import { createBunPlugin, defineVoltConfig } from "volt";
+import { defineProjectConfig } from "volt";
+import { bunFullstackTask } from "volt/bun";
+import webEntrypoint from "./src/web/server.runtime";
 
-const bun = createBunPlugin();
+const webTaskOptions = {
+  env: {
+    PORT: process.env.PORT ?? "3000",
+    VOLT_MODE:
+      process.env.VOLT_MODE === "production" ? "production" : "development",
+  },
+  outdir: "dist/web",
+};
 
-export default defineVoltConfig({
+export default defineProjectConfig({
   defaults: {
-    build: ["web"],
-    dev: ["web"],
+    build: "build:web",
+    dev: "dev:web",
   },
   name: "Forge Workspace",
-  targets: {
-    web: bun.fullstack({
-      env: {
-        PORT: process.env.PORT ?? "3000",
-        VOLT_MODE:
-          process.env.VOLT_MODE === "production" ? "production" : "development",
-      },
-      name: "web",
-      outdir: "dist/web",
-      source: "./src/web/server.runtime.ts",
+  tasks: {
+    "build:web": bunFullstackTask(webEntrypoint, {
+      ...webTaskOptions,
+      command: "build",
+    }),
+    "dev:web": bunFullstackTask(webEntrypoint, {
+      ...webTaskOptions,
+      command: "dev",
     }),
   },
 });

@@ -1,6 +1,5 @@
-import { createBunPlugin, defineVoltConfig } from "volt";
-
-const bun = createBunPlugin();
+import { bunFullstackTarget, defineVoltConfig } from "volt";
+import webEntrypoint from "./src/web/server.runtime";
 
 export default defineVoltConfig({
   defaults: {
@@ -9,15 +8,13 @@ export default defineVoltConfig({
   },
   name: "Dock Demo",
   targets: {
-    web: bun.fullstack({
+    web: bunFullstackTarget(webEntrypoint, {
       env: {
         PORT: process.env.PORT ?? "3400",
         VOLT_MODE:
           process.env.VOLT_MODE === "production" ? "production" : "development",
       },
-      name: "web",
       outdir: "dist/web",
-      source: "./src/web/server.runtime.ts",
     }),
   },
 });

@@ -1,23 +1,30 @@
-import { createBunPlugin, defineVoltConfig } from "volt";
+import { defineProjectConfig } from "volt";
+import { bunFullstackTask } from "volt/bun";
+import siteEntrypoint from "./src/web/server.runtime";
 
-const bun = createBunPlugin();
+const siteTaskOptions = {
+  env: {
+    PORT: process.env.PORT ?? "6401",
+    VOLT_MODE:
+      process.env.VOLT_MODE === "production" ? "production" : "development",
+  },
+  outdir: "dist/site",
+};
 
-export default defineVoltConfig({
+export default defineProjectConfig({
   defaults: {
-    build: ["site"],
-    dev: ["site"],
+    build: "build:site",
+    dev: "dev:site",
   },
   name: "Volt Site",
-  targets: {
-    site: bun.fullstack({
-      env: {
-        PORT: process.env.PORT ?? "6401",
-        VOLT_MODE:
-          process.env.VOLT_MODE === "production" ? "production" : "development",
-      },
-      name: "site",
-      outdir: "dist/site",
-      source: "./src/web/server.runtime.ts",
+  tasks: {
+    "build:site": bunFullstackTask(siteEntrypoint, {
+      ...siteTaskOptions,
+      command: "build",
+    }),
+    "dev:site": bunFullstackTask(siteEntrypoint, {
+      ...siteTaskOptions,
+      command: "dev",
     }),
   },
 });

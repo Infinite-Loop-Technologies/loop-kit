@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 export type VoltCommand = "build" | "dev";
 export type VoltDaemonCommand = "logs" | "start" | "status" | "stop";
 export type VoltMode = "development" | "production";
@@ -39,7 +41,28 @@ export interface VoltIntegrationRegistry {
   require: (name: string) => VoltResolvedIntegration;
 }
 
+export type VoltJsonValue = unknown;
+
+export interface VoltResolvedArtifact<TValue = VoltJsonValue> {
+  artifactPath?: string;
+  generatedModulePath?: string;
+  kind: string;
+  metadata?: Record<string, unknown>;
+  metadataPath?: string;
+  name: string;
+  typesPath?: string;
+  value?: TValue;
+}
+
+export interface VoltArtifactRegistry {
+  all: Record<string, VoltResolvedArtifact>;
+  get: (name: string) => VoltResolvedArtifact | undefined;
+  require: (name: string) => VoltResolvedArtifact;
+  requireValue: <TValue = VoltJsonValue>(name: string) => TValue;
+}
+
 export interface VoltTargetRuntimeDescriptor {
+  artifacts: string[];
   name: string;
   runtime: string;
   target: string;
@@ -51,6 +74,7 @@ export interface VoltTargetContext {
   command: VoltCommand;
   configPath: string;
   currentTarget: VoltTargetRuntimeDescriptor;
+  artifacts: VoltArtifactRegistry;
   integrations: VoltIntegrationRegistry;
   logger: VoltLogger;
   mode: VoltMode;
@@ -60,6 +84,7 @@ export interface VoltTargetContext {
 }
 
 export interface VoltTargetDefinition {
+  artifacts?: string[];
   build: (context: VoltTargetContext) => Promise<void>;
   dependsOn?: string[];
   dev: (context: VoltTargetContext) => Promise<ManagedVoltProcess | void>;
@@ -86,6 +111,35 @@ export interface VoltIntegrationOutput {
   generatedModulePath?: string;
   metadata?: Record<string, unknown>;
   typesPath?: string;
+}
+
+export interface VoltArtifactOutput<TValue = VoltJsonValue> {
+  artifactPath?: string;
+  generatedModulePath?: string;
+  metadata?: Record<string, unknown>;
+  typesPath?: string;
+  value?: TValue;
+}
+
+export interface VoltArtifactContext {
+  appRoot: string;
+  artifacts: VoltArtifactRegistry;
+  configPath: string;
+  logger: VoltLogger;
+  mode: VoltMode;
+  name: string;
+  rootDir: string;
+  spawn: VoltTargetContext["spawn"];
+  workspaceRoot: string;
+  writeGeneratedFile: (relativePath: string, content: string) => Promise<string>;
+  writeMetadata: (data: Record<string, unknown>) => Promise<string>;
+}
+
+export interface VoltArtifactDefinition<TValue = VoltJsonValue> {
+  build?: (context: VoltArtifactContext) => Promise<VoltArtifactOutput<TValue> | void>;
+  dependsOn?: string[];
+  dev?: (context: VoltArtifactContext) => Promise<VoltArtifactOutput<TValue> | void>;
+  kind: string;
 }
 
 export interface VoltIntegrationDefinition {
@@ -176,12 +230,18 @@ export interface VoltConfigContext {
   workspaceRoot: string;
 }
 
-export interface VoltEntrypoint<TServices = unknown> {
+export type VoltEntrypointHandler<TServices = unknown, TResult = void> = (
+  services: TServices,
+) => Promise<TResult> | TResult;
+
+export interface VoltEntrypoint<TServices = unknown, TResult = void> {
+  handler: VoltEntrypointHandler<TServices, TResult>;
+  kind: "entrypoint";
   source: string;
-  types?: TServices;
 }
 
 export interface VoltConfig<TTargets extends Record<string, VoltTargetDefinition>> {
+  artifacts?: Record<string, VoltArtifactDefinition>;
   build: Array<keyof TTargets & string>;
   dev: Array<keyof TTargets & string>;
   integrations?: Record<string, VoltIntegrationDefinition>;
@@ -191,6 +251,7 @@ export interface VoltConfig<TTargets extends Record<string, VoltTargetDefinition
 }
 
 export interface VoltConfigInput<TTargets extends Record<string, VoltTargetDefinition>> {
+  artifacts?: Record<string, VoltArtifactDefinition>;
   build?: Array<keyof TTargets & string>;
   defaults?: {
     build?: Array<keyof TTargets & string>;
@@ -220,10 +281,27 @@ export const defineVoltConfig = <
 
 export const defineVoltPlugin = (plugin: VoltPlugin): VoltPlugin => plugin;
 
-export const defineEntrypoint = <TServices = unknown>(
-  source: string,
-): VoltEntrypoint<TServices> => ({
-  source,
+export const defineArtifact = <TValue = VoltJsonValue>(
+  artifact: VoltArtifactDefinition<TValue>,
+): VoltArtifactDefinition<TValue> => artifact;
+
+export const isVoltEntrypoint = (value: unknown): value is VoltEntrypoint =>
+  typeof value === "object" &&
+  value !== null &&
+  "kind" in value &&
+  (value as { kind?: unknown }).kind === "entrypoint" &&
+  "source" in value &&
+  typeof (value as { source?: unknown }).source === "string" &&
+  "handler" in value &&
+  typeof (value as { handler?: unknown }).handler === "function";
+
+export const defineEntrypoint = <TServices = unknown, TResult = void>(
+  meta: Pick<ImportMeta, "url"> | string,
+  handler: VoltEntrypointHandler<TServices, TResult>,
+): VoltEntrypoint<TServices, TResult> => ({
+  handler,
+  kind: "entrypoint",
+  source: typeof meta === "string" ? meta : fileURLToPath(meta.url),
 });
 
 export const entrypoint = defineEntrypoint;

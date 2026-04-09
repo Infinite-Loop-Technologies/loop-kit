@@ -15,13 +15,20 @@
 - [ ] Prove that ElectroBun works with `apps/volt-demo`.
 - [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
 - [ ] Add richer dev orchestration around readiness, restart policies, and grouped logs for `bun.command()` targets.
+- [x] Add a task-oriented Volt project/workspace model with named tasks, generator flows, and workspace composition.
+- [x] Add `volt task list` / `volt task run` and route `volt dev` / `volt build` through task defaults when available.
+- [x] Prototype TS-first contracts, entrypoint specs, Bun task helpers, and lightweight contract metadata codegen outside config files.
 - [ ] Design Volt's next artifact-aware layer before adding more adapters.
   - [ ] Keep `targets` as runnable and buildable units.
-  - [ ] Add a separate concept for produced artifacts or generated modules.
-  - [ ] Decide whether the user-facing concept should be called `artifacts`, `integrations`, or `loop`.
+  - [x] Prototype config-defined `artifacts` as value/module producers resolved before targets.
+  - [ ] Add a separate concept for produced artifacts or generated modules where `targets`, `artifacts`, and `integrations` stop feeling redundant.
+  - [ ] Decide whether the user-facing concept should be called `artifacts`, `integrations`, `resources`, or `loop`.
 - [ ] Add a lightweight dependency graph for build products, not just process order.
+  - [x] Prototype artifact dependency ordering and target artifact consumption.
 - [ ] Add a plugin-driven workspace daemon model for Volt dev.
 - [ ] Teach the Volt daemon to persist richer task/workflow state on top of its workspace process model.
+- [x] Prototype generator-based fibers with named-step memoization and optional local persistence.
+- [x] Prototype config-provided serializable services flowing into typed entrypoints.
 - [ ] Add code generation as a first-class Volt capability.
 - [ ] Prove the model with WASM components before generalizing further.
 - [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
@@ -30,6 +37,7 @@
 - [ ] Greatly improve the Volt demos and templates.
 - [ ] Add a real docs/content app for Volt, not just the current site shell.
 - [ ] Begin writing Volt documentation about the service dependency pattern, runtimes/platforms, and TypeScript-first dev/build/deploy flows.
+- [x] Create a repo-local Volt Codex skill and use it as the lightweight Volt docs front door. Keep it updated when Volt changes.
 - [ ] Set up AI tooling via the Volt CLI and installable Volt-specific skills or docs surfaces.
 - [ ] Set up npm token and publish packages to prove the Volt release flow works.
 - [ ] Set up an actual GitHub repository for Volt.

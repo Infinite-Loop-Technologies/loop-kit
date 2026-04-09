@@ -276,6 +276,13 @@ Proto stays. Bun is the default runtime.
 - Context7 is only for current external docs, not repo-local truth.
 - Use `jazz-docs` for Jazz-specific API lookup.
 
+### Volt skill
+
+- For Volt tasks and Volt questions, use the repo-local `volt` skill in `.codex/skills/volt`.
+- Treat that skill as the current Volt docs front door for this repo.
+- If you change Volt itself in a way that affects authoring, runtime behavior, daemon behavior, or architecture, update the `volt` skill in the same slice.
+- Keep the skill concise. Put deeper or unsettled design material in `references/` and `CHECKLIST.md`.
+
 ## Theme And Package Boundaries
 
 - Packs, primitives, provider bridges, and reusable UI packages must not hardcode theme names, concrete theme package imports, or app-level CSS assumptions as part of their public behavior.

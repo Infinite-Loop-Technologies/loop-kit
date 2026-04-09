@@ -4,21 +4,46 @@ import {
   type BunFullstackServices,
   type BunServerServices,
 } from "./services";
+import type { VoltEntrypoint } from "../../contracts";
 
-type StartApp<TServices> = (services: TServices) => Promise<void> | void;
+type StartApp<TServices, TResult = void> = (services: TServices) => Promise<TResult> | TResult;
 type RuntimeImportMeta = ImportMeta & { main?: boolean };
 
-const run = async <TServices>(
-  start: StartApp<TServices>,
-  createServices: () => TServices,
+const run = async <TServices, TResult>(
+  start: StartApp<TServices, TResult>,
+  createServices: () => Promise<TServices> | TServices,
 ) => {
   try {
-    await start(createServices());
+    return await start(await createServices());
   } catch (error) {
     console.error(error);
     process.exit(1);
   }
 };
+
+export const runVoltEntrypoint = <TServices, TResult>(
+  entrypoint: VoltEntrypoint<TServices, TResult>,
+  createServices: () => Promise<TServices> | TServices,
+) => run(entrypoint.handler, createServices);
+
+export const loadVoltProvidedServices = async <TServices extends object>(
+  path: string | undefined,
+): Promise<TServices> => {
+  if (!path) {
+    return {} as TServices;
+  }
+
+  return Bun.file(path).json() as Promise<TServices>;
+};
+
+export const combineVoltServices = <TServices extends object>(
+  _entrypoint: VoltEntrypoint<TServices, unknown>,
+  base: object,
+  provided: object,
+): TServices => ({
+  ...base,
+  ...provided,
+}) as TServices;
 
 export const bunServerApp = <TServices extends BunServerServices>(
   meta: RuntimeImportMeta,
