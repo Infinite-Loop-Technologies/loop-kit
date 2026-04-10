@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { defineEntrypoint, isVoltEntrypoint } from "../../contracts";
-import { runVoltEntrypoint } from "./app";
+import { resolveVoltRuntimeRootDir, runVoltEntrypoint } from "./app";
 import { createBunServerServices } from "./services";
 
 describe("Volt Bun entrypoints", () => {
@@ -33,5 +33,19 @@ describe("Volt Bun entrypoints", () => {
     }
 
     process.env.VOLT_TEST_REQUIRED = original;
+  });
+
+  it("prefers VOLT_ROOT_DIR when resolving Bun runtime services", () => {
+    const original = process.env.VOLT_ROOT_DIR;
+    process.env.VOLT_ROOT_DIR = "/tmp/volt-app-root";
+
+    expect(resolveVoltRuntimeRootDir()).toBe("/tmp/volt-app-root");
+
+    if (original === undefined) {
+      delete process.env.VOLT_ROOT_DIR;
+      return;
+    }
+
+    process.env.VOLT_ROOT_DIR = original;
   });
 });

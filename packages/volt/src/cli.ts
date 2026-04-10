@@ -341,6 +341,11 @@ const runInternalDaemon = async (rest: string[]) => {
   await runDaemonRuntime(workspaceRoot, configPaths, mode);
 };
 
+const runDashboardCommand = async (_rest: string[]) => {
+  const { runVoltDashboard } = await import("./dashboard");
+  await runVoltDashboard(workspaceRoot);
+};
+
 const main = async () => {
   const [command, ...rest] = Bun.argv.slice(2);
   if (command === "build" || command === "dev") {
@@ -359,14 +364,13 @@ const main = async () => {
     await runInternalDaemon(rest);
     return;
   }
-  if (command === "dashboard") {
-    const { runVoltDashboard } = await import("./dashboard");
-    await runVoltDashboard(workspaceRoot);
+  if (command === "dashboard" || command === "ui") {
+    await runDashboardCommand(rest);
     return;
   }
 
   throw new Error(
-    "Usage: volt <build|dev|task|daemon|dashboard> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
+    "Usage: volt <build|dev|task|daemon|dashboard|ui> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
   );
 };
 

@@ -85,7 +85,7 @@ That is the contract the experimental dashboard consumes.
 
 ## Dashboard
 
-`volt dashboard` is intentionally experimental.
+`volt dashboard` is intentionally experimental, but it is now the current keyboard-first OpenTUI surface for daemon state.
 
 Its job is to prove that Volt’s daemon state is structured enough for:
 
@@ -93,9 +93,16 @@ Its job is to prove that Volt’s daemon state is structured enough for:
 - per-resource lifecycle status
 - recent logs
 - recent invalidations
+- lightweight task/resource inspection while other shell commands stay available
 - future richer OpenTUI screens
 
 The dashboard should stay a consumer of daemon state, not a second control plane.
+
+Near-term CLI direction:
+
+- keep `volt dashboard` and `volt ui` as the interactive read surface
+- add daemon-backed task sessions before attempting true terminal multiplexing
+- model `start`, `ps`, `attach`, and `stop` around daemon-owned task handles instead of bolting process tables onto foreground-only commands
 
 ## Relationship To Effect And Future Durable Workflows
 

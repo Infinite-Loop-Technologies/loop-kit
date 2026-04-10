@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`loop-kit` is the monorepo for loop-kit and Forge.
+`loop-kit` is the monorepo for Volt, loop-kit, Forge, and other projects.
 
 Treat it as a capability-driven platform for registry-backed software units, WIT-defined contracts, capability-granted composition, and future agentic development infrastructure.
 

@@ -21,6 +21,11 @@
   - [x] Prototype artifact dependency ordering and target artifact consumption.
 - [ ] Add a plugin-driven workspace daemon model for Volt dev.
 - [ ] Teach the Volt daemon to persist richer task/workflow state on top of its workspace process model.
+- [ ] Grow the Volt CLI into a lightweight interactive surface instead of a pure fire-and-block runner.
+  - [x] Upgrade `volt dashboard` into a keyboard-first OpenTUI view for resources, configs, events, and logs.
+  - [ ] Add daemon-backed `volt task start` so dev tasks can keep running after the launch command returns.
+  - [ ] Add `volt task ps`, `attach`, and `stop` around daemon-owned task sessions.
+  - [ ] Decide how lightweight multiplexing should relate to the workspace daemon versus direct foreground task runs.
 - [x] Prototype generator-based fibers with named-step memoization and optional local persistence.
 - [x] Prototype config-provided serializable services flowing into typed entrypoints.
 - [ ] Add code generation as a first-class Volt capability.

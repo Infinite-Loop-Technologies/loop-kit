@@ -64,6 +64,20 @@ const createIntegrationEnv = (context: VoltTargetContext) => {
   return env;
 };
 
+const createTargetEnv = (
+  context: VoltTargetContext,
+  options: BunRuntimeOptions,
+) => ({
+  ...createIntegrationEnv(context),
+  ...options.env,
+  VOLT_PLATFORM_CONFIG: JSON.stringify(
+    resolveScopedTargetValue(context.currentTarget.name, options.platform) ?? {},
+  ),
+  VOLT_ROOT_DIR: context.rootDir,
+  VOLT_TARGET_NAME: context.currentTarget.name,
+  VOLT_WORKSPACE_ROOT: context.workspaceRoot,
+});
+
 type BunEntrypoint<TServices = unknown> = string | VoltEntrypoint<TServices>;
 
 const resolveEntrypointSource = <TServices>(entrypoint: BunEntrypoint<TServices>) =>
@@ -273,15 +287,9 @@ const devDefaultBunTarget = async <TServices>(
       runtimeEntrypoint,
     ],
     {
-      cwd: context.rootDir,
-      env: {
-        ...createIntegrationEnv(context),
-        ...options.env,
-        VOLT_PLATFORM_CONFIG: JSON.stringify(
-          resolveScopedTargetValue(context.currentTarget.name, options.platform) ?? {},
-        ),
-        VOLT_TARGET_NAME: context.currentTarget.name,
-      },
+      // Run Bun from the workspace root so --watch can see sibling workspace packages.
+      cwd: context.workspaceRoot,
+      env: createTargetEnv(context, options),
       readiness: options.readiness,
     },
   );

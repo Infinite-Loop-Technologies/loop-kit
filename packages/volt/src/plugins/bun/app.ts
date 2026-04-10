@@ -9,6 +9,9 @@ import type { VoltEntrypoint } from "../../contracts";
 type StartApp<TServices, TResult = void> = (services: TServices) => Promise<TResult> | TResult;
 type RuntimeImportMeta = ImportMeta & { main?: boolean };
 
+export const resolveVoltRuntimeRootDir = () =>
+  process.env.VOLT_ROOT_DIR?.trim() || process.cwd();
+
 const run = async <TServices, TResult>(
   start: StartApp<TServices, TResult>,
   createServices: () => Promise<TServices> | TServices,
@@ -53,7 +56,7 @@ export const bunServerApp = <TServices extends BunServerServices>(
   start: StartApp<TServices>,
 ) => {
   if (meta.main) {
-    void run(start, () => createBunServerServices(process.cwd()) as TServices);
+    void run(start, () => createBunServerServices(resolveVoltRuntimeRootDir()) as TServices);
   }
   return start;
 };
@@ -63,7 +66,8 @@ export const bunFullstackApp = <TServices extends BunFullstackServices>(
   start: StartApp<TServices>,
 ) => {
   if (meta.main) {
-    void run(start, () => createBunFullstackServices(process.cwd()) as TServices);
+    void run(start, () =>
+      createBunFullstackServices(resolveVoltRuntimeRootDir()) as TServices);
   }
   return start;
 };
