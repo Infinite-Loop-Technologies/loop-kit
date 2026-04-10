@@ -12,6 +12,7 @@
     "./builtins": "./src/builtins.ts",
     "./cli": "./src/cli.ts",
     "./contracts": "./src/schema.ts",
+    "./dashboard": "./src/dashboard.tsx",
     "./entrypoint": "./src/entrypoint.ts",
     "./flow": "./src/flow.ts",
     "./workspace": "./src/workspace.ts"
@@ -23,9 +24,19 @@
   ],
   "scripts": {
     "build": "bun run build:package",
-    "build:package": "bun build ./src/index.ts ./src/cli.ts --outdir ./dist --target bun --format esm",
+    "build:package": "bun build ./src/index.ts ./src/cli.ts ./src/dashboard.tsx --outdir ./dist --target bun --format esm",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check": "bun run typecheck"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.97",
+    "@opentui/react": "^0.1.97",
+    "@parcel/watcher": "^2.5.6",
+    "effect": "^3.21.0",
+    "oxc-parser": "^0.124.0",
+    "react": "^19.2.5",
+    "recast": "^0.23.11",
+    "ts-morph": "^27.0.2"
   },
   "devDependencies": {
     "@bytecodealliance/jco": "^1.15.0"

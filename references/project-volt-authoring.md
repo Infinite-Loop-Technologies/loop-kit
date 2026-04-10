@@ -1,233 +1,144 @@
-# Volt Authoring And Workflow Direction
+# Volt Authoring
 
-This note captures the current authoring model for Volt in `loop-kit` and the main design gaps that still block the more powerful workflow/effect model.
+Read `references/project-volt-project-model.md` first. This note is the practical authoring companion.
 
-For the current preferred public shape, read `references/project-volt-project-model.md` first. This file now mainly explains the older prototype path and the design pressure that led to the new task/project/workspace model.
+## Authoring Rules
 
-## Current decisions
+- Prefer `defineProjectConfig(...)` over `defineVoltConfig(...)`.
+- Prefer runtime bindings over hand-authored target objects.
+- Keep contracts, specs, and runtime code in normal TypeScript modules.
+- Keep `volt.config.ts` and `volt.workspace.ts` focused on composition and orchestration.
+- Prefer plain named functions over builder-heavy DSLs.
 
-- The Volt daemon is workspace substrate, not the agent brain.
-- Runtime choice belongs in `volt.config.ts`.
-- Entrypoints should be authored as typed entrypoint objects with `defineEntrypoint(import.meta, handler)`.
-- `volt.config.ts` should prefer importing entrypoint objects directly instead of only passing relative string paths.
-- Bun targets now have direct creator functions:
-  - `bunFullstackTarget`
-  - `bunServerTarget`
-  - `bunCommandTarget`
-- `createBunPlugin()` remains available, but it is now the compatibility/grouped style.
-- Volt now has an experimental config-to-entrypoint service model via `defineServices(...)`.
-- Volt now has an experimental artifact/value graph via config `artifacts`.
-- Volt now has an experimental generator-based workflow API via `defineFiber(...)` and `runFiber(...)`.
-- Built-in Bun services provide basic runtime capabilities such as:
-  - `env.read`
-  - `env.require`
-  - filesystem helpers
-  - logging
-  - root-relative path helpers
+## Recommended Project Layout
 
-## What this fixes
+- `src/contracts/`
+- `src/entrypoints/`
+- `src/runtime/`
+- `src/dev/`
+  - only when the project really needs local setup helpers
+- `volt.config.ts`
 
-This removes the old split where:
+## Runtime Bindings
 
-- `volt.config.ts` chose a runtime target
-- the entrypoint module also had to opt into a runtime wrapper such as `bunFullstackApp(...)`
+Use one binding instance, then derive named tasks from it.
 
-That split was the main obstacle to making entrypoints feel like reusable typed programs with requirements while keeping runtime choice in config.
+The binding options now carry the metadata the daemon and affected-task layer need:
 
-The new prototype also fixes part of the next gap:
+- `runtimeInputs`
+- `readiness`
+- `inputs`
+- `watch`
+- `outputs`
+- `artifacts`
+- `uses`
 
-- config can now provide typed serializable service objects into runtime entrypoints
-- targets can now consume config-defined artifact values before they run
-- generator-style workflows now exist as a reusable local primitive instead of only being an architectural note
+That keeps the public story concrete:
 
-## Current prototype surfaces
+- what this task depends on
+- what it watches
+- what it produces
+- what runtime values it needs
+- what it waits for before it is considered ready
 
-### 1. Config-provided services
+## Flow Guidance
 
-Volt now supports:
+Use `flow(...)` when orchestration is real.
 
-- `defineServices(({ artifacts, integrations, ...context }) => ({ ... }))`
-- target options like `services: defineServices(...)`
+Preferred primitives:
 
-Current behavior:
+- `yield* ctx.runTask(...)`
+- `yield* ctx.runProjectTask(...)`
+- `yield* ctx.step(...)`
+- `yield* ctx.memo(...)`
+- `yield* ctx.fork(...)`
+- `yield* ctx.forkTask(...)`
+- `yield* ctx.join(...)`
+- `yield* ctx.all(...)`
+- `yield* ctx.race(...)`
+- `yield* ctx.waitFor(...)`
+- `yield* ctx.release(...)`
+- `yield* ctx.log(...)`
 
-- providers run at target build/dev time
-- provider outputs are written under `.volt/state/services/<target>.json`
-- generated runtime bootstraps load those provided values and merge them with the base runtime services
+Use them for:
 
-Current limitation:
+- starting multiple resources
+- waiting for readiness
+- racing helpers
+- keeping cleanup explicit
+- composing project-to-project topologies in the workspace
 
-- this is intentionally a serializable-value model for now
-- config-defined providers do not yet mount arbitrary non-serializable runtime implementations directly
+Do not use flows just to wrap a single async function.
 
-That limitation is acceptable for the current slice because it is enough for config contracts, env/config objects, URLs, ports, feature flags, and artifact-derived values.
+## Runtime Inputs
 
-### 2. Artifacts
+Preferred names:
 
-Volt now supports config-defined artifacts:
+- `runtimeInputs`
+- `defineRuntimeInputs(...)`
 
-```ts
-artifacts: {
-  runtimeSession: defineArtifact({
-    kind: "runtime-session",
-    async build(context) {
-      return { value: ... };
-    },
-  }),
-}
-```
+Compatibility only:
 
-Targets opt into artifact consumption with:
+- `defineServices(...)`
 
-```ts
-artifacts: ["runtimeSession"]
-```
+The preferred values are concrete:
 
-Current behavior:
+- ports
+- URLs
+- health endpoints
+- generated module paths
+- browser config
+- emulator endpoints
+- local tokens or tunnel URLs when needed
 
-- artifacts resolve before targets run
-- artifact values and metadata are written under `.volt/state/artifacts/<name>.json`
-- service providers can read them through `artifacts.require(...)` and `artifacts.requireValue(...)`
+## Topology Example
 
-This is the first real step from pure ordering into dataflow.
+The flagship example in `apps/volt-demo` should read as:
 
-### 3. Fibers
+1. Build a `runtimeSession` artifact.
+2. Use it to derive typed runtime inputs.
+3. Start `dev:game`.
+4. Wait for the managed process to become ready.
+5. Start `dev:web`.
+6. Wait for its readiness.
+7. Keep both handles under the same flow-owned lifecycle.
 
-Volt now has:
+That is the intended value proposition. The config should show the topology directly instead of burying it in shell scripts.
 
-- `defineFiber(...)`
-- `runFiber(...)`
+## Emulator / External Tool Pattern
 
-Current behavior:
+The intended pattern for emulators, tunnels, webhook forwarders, and similar tools is:
 
-- fibers are generator-based
-- named steps are memoized
-- if a `statePath` is provided, step results and final output are persisted to JSON
-- the same API works as a local programming utility even without a durable backend
+- model them as named tasks, artifacts, or integrations
+- own the process lifecycle through Volt
+- expose outputs through runtime inputs or artifact metadata
+- do not pretend Volt itself owns the external product
 
-This is intentionally close to the Resonate mental model:
+## AST / Codegen Strategy
 
-- explicit steps
-- replay/memoization boundary per named step
-- optional persistence
+Volt is not building a generic AST framework.
 
-Current limitation:
+Use:
 
-- there is no daemon worker orchestration, approvals, retries, or remote durable engine backing yet
-- this is a local prototype of the programming model, not the final orchestration system
+- OXC for fast parse/analysis or validation passes
+- recast when Volt must preserve formatting during rewrites
+- ts-morph for narrow TS-aware generation and inspection
 
-## What still blocks the more powerful design
+The current concrete path is `contractBindingsTask(...)`:
 
-Volt still does not have first-class support for:
+- generate the TypeScript module with ts-morph
+- syntax-check the result with OXC
+- write the cheap manifest beside it
 
-1. Non-serializable runtime service provisioning from config into entrypoints
-2. A proper effect model
-3. Durable workflow/fiber execution for dev/build/agents
-4. A richer value-flow graph between targets, artifacts, and integrations
-5. A settled artifact/binding model for local and external WASM components
+That keeps codegen cheap and explicit without inventing another abstraction layer.
 
-More concretely:
+## Effect Stance
 
-- service providers are serializable-value only for now.
-- artifact dependencies exist, but targets still only have `dependsOn` rather than a fully unified graph model.
-- integrations and artifacts still live as separate concepts and have not yet been unified under one clearer user-facing layer.
-- there is no first-class “agent message input”, “approval wait”, “sleep”, “rpc”, or “task dispatch” Volt workflow layer yet.
-- generated runtime bootstraps still embed absolute app-local paths, which is acceptable for the prototype but not the final deployment story.
+Effect is allowed internally where it genuinely helps:
 
-## Resonate options
+- scopes
+- cancellation
+- cleanup ordering
+- supervision
 
-There are four realistic ways to use Resonate here.
-
-### 1. Volt-owned workflow API on top of Resonate
-
-This is the recommended direction.
-
-- Volt exposes its own workflow/effect/fiber API.
-- Resonate provides durable execution under the hood.
-- Volt keeps control over authoring style, plugins, requirements, and daemon integration.
-
-This gives Volt a stable authoring surface while still borrowing the durability model and generator-based step semantics.
-
-### 2. Volt workflow API with optional direct Resonate escape hatches
-
-This is also reasonable.
-
-- Most users stay inside Volt APIs.
-- Advanced users can reach raw Resonate handles where needed.
-
-This is likely the best medium-term compromise if Volt wants to stay extensible without hiding too much.
-
-### 3. Encourage direct Resonate usage as a normal dependency
-
-This is useful for experiments, but not as the main story.
-
-- It fragments the authoring model.
-- It weakens Volt’s ability to provide uniform plugin/runtime behavior.
-- It pushes too much durable execution detail into app code.
-
-### 4. Use Resonate only internally
-
-This is the least desirable long-term option.
-
-- It makes Volt workflows magical.
-- It hides the operational model too much.
-- It makes it harder for users to reason about durability and replay boundaries.
-
-## Recommendation
-
-Treat Resonate as the durable engine for a Volt-owned workflow API.
-
-That API should probably introduce:
-
-- services
-- effects
-- fibers or workflows
-- agents as workflows that can expose effects as tools
-
-The key semantic split should be:
-
-- services are ephemeral and plugin-mounted
-- effects are explicit invocation boundaries
-- workflows/fibers are resumable programs
-- agents are workflows with model orchestration and tool exposure
-
-## Target and entrypoint direction
-
-The long-term goal should be:
-
-- entrypoints express requirements and program shape
-- targets choose runtime, platform, and provisioning strategy
-- the same entrypoint can be reused across multiple targets when the target can satisfy its requirements
-
-This is the important conceptual split:
-
-- entrypoint = typed program
-- target = host/runtime binding
-
-## WASM / bindings direction
-
-The current working distinction should be:
-
-1. External artifact integration
-2. Local target-produced artifact
-
-For external artifacts:
-
-- integrations should generate bindings, manifests, and any runtime loading glue
-- consuming targets should import generated modules as normal code
-
-For locally produced artifacts:
-
-- Volt still needs a clearer artifact model
-- target outputs and integration outputs should not be conflated
-- there likely needs to be a first-class produced-artifact layer or a richer integration/output graph
-
-This is still unsettled and should stay in `references/` until the model is clearer.
-
-## Next prototype slices
-
-1. Add a first-class service token/provider model for entrypoint requirements.
-2. Add effect primitives on top of the current fiber runner rather than letting users hand-roll every step shape.
-3. Let the daemon host workflow workers, approval inboxes, and runtime state once the authoring model is clear.
-4. Add a clearer unified artifact/binding graph for WASM, generated modules, and target-produced values.
-5. Add a Volt inspect surface so config, target graphs, env, integrations, artifacts, and workflow state are visible.
+Do not push it into Volt app authoring. Volt’s public API remains Volt-native and generator-first.

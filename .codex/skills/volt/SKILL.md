@@ -23,24 +23,43 @@ Use CKB early for non-trivial Volt work.
 
 ## Current Model
 
-- Volt entrypoints should be authored with `defineEntrypoint(import.meta, handler)`.
-- Prefer importing entrypoint objects directly into `volt.config.ts` instead of passing only string source paths.
-- Runtime selection belongs in `volt.config.ts`, not inside the entrypoint module.
-- For Bun targets, prefer direct target creators such as `bunFullstackTarget`, `bunServerTarget`, and `bunCommandTarget`.
-- `createBunPlugin()` still exists for grouped `bun.fullstack(...)` style, but it is now the compatibility surface, not the preferred docs surface.
-- Config can now provide serializable service values into entrypoints with `defineServices(...)`.
-- Config can now define value-producing `artifacts` that resolve before targets and can be consumed by service providers.
-- Volt now has an experimental generator-based workflow utility via `defineFiber(...)` and `runFiber(...)`.
+- Volt should feel small:
+  - entrypoint
+  - task
+  - flow
+  - artifact
+  - integration
+  - process/resource
+  - project config
+  - workspace config
+- Prefer project configs with `defineProjectConfig(...)`.
+- Prefer Bun runtime bindings with:
+  - `bunFullstack(...)`
+  - `bunServer(...)`
+  - `bunCommand(...)`
+- Prefer `defineRuntimeInputs(...)` for serializable config-time runtime values.
+- Prefer `flow(...)` for orchestration over named tasks, readiness, concurrency, joins, races, waits, and cleanup.
+- `defineVoltConfig(...)`, direct target helpers, `defineServices(...)`, `defineFiber(...)`, and `createBunPlugin()` are compatibility surfaces.
+- Prefer importing entrypoint values directly into config instead of passing only source strings.
+- Runtime selection belongs in config, not inside the entrypoint module.
 - Bun runtime services currently provide built-in capabilities such as `env.read`, `env.require`, filesystem helpers, logging, and root-relative paths.
-- The workspace daemon is substrate infrastructure. Future durable workflows, effect systems, and agents should layer above it rather than being fused into the daemon itself.
+- Runtime topology is one of Volt’s main reasons to exist. Prefer managed processes/resources with explicit readiness over shell-ordering tricks.
+- The workspace daemon now owns Parcel-watcher snapshots, lightweight affected-task invalidation, and shared resource/status state.
+- `volt dashboard` is experimental OpenTUI UI over daemon state; it is a consumer of the runtime model, not a replacement for it.
+- Effect is internal-only. Do not expose Effect-shaped APIs in Volt’s public story.
+- Current docs front doors:
+  - `references/project-volt-project-model.md`
+  - `references/project-volt-authoring.md`
+  - `references/project-volt-daemon.md`
+  - `references/project-volt-technology-choices.md`
 
 ## Agent / Workflow Direction
 
-- Model tools as effects first. A tool is an effect exposed to a model.
-- Keep service dependencies ephemeral and mounted by Volt/plugin infrastructure.
+- Model tools as small owned process/runtime helpers first, not as giant abstract capability systems.
+- Keep runtime inputs narrow and serializable.
 - Keep durable boundaries explicit. Resonate-like workflow semantics belong around sleeps, waits, RPC/task dispatch, approvals, retries, and resumable steps.
 - The current fiber runner is local and optional-persistence only. Treat it as the prototype programming model, not the final durability story.
-- Do not pretend Volt already has a finished durable workflow API. Check `references/project-volt-authoring.md` for the current recommendation and open questions.
+- Do not pretend Volt already has a finished durable workflow API. Check `references/project-volt-project-model.md` first, then `references/project-volt-authoring.md` for deeper background.
 
 ## When Changing Volt
 

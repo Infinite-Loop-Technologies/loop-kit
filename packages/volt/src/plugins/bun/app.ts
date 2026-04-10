@@ -26,7 +26,7 @@ export const runVoltEntrypoint = <TServices, TResult>(
   createServices: () => Promise<TServices> | TServices,
 ) => run(entrypoint.handler, createServices);
 
-export const loadVoltProvidedServices = async <TServices extends object>(
+export const loadVoltRuntimeInputs = async <TServices extends object>(
   path: string | undefined,
 ): Promise<TServices> => {
   if (!path) {
@@ -36,7 +36,7 @@ export const loadVoltProvidedServices = async <TServices extends object>(
   return Bun.file(path).json() as Promise<TServices>;
 };
 
-export const combineVoltServices = <TServices extends object>(
+export const combineVoltRuntimeInputs = <TServices extends object>(
   _entrypoint: VoltEntrypoint<TServices, unknown>,
   base: object,
   provided: object,
@@ -44,6 +44,9 @@ export const combineVoltServices = <TServices extends object>(
   ...base,
   ...provided,
 }) as TServices;
+
+export const loadVoltProvidedServices = loadVoltRuntimeInputs;
+export const combineVoltServices = combineVoltRuntimeInputs;
 
 export const bunServerApp = <TServices extends BunServerServices>(
   meta: RuntimeImportMeta,

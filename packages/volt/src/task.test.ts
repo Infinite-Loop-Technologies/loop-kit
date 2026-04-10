@@ -28,7 +28,7 @@ describe("Volt tasks", () => {
             const value = yield* ctx.runTask("dev:compute", {
               inputs: 1,
             });
-            const stable = yield* ctx.step("stable-step", () => {
+            const stable = yield* ctx.memo("stable-step", () => {
               calls += 1;
               return Number(value) + 1;
             });
@@ -54,5 +54,47 @@ describe("Volt tasks", () => {
     expect(calls).toBe(1);
 
     await rm(statePath, { force: true });
+  });
+
+  it("supports fork, join, race, and all in flows", async () => {
+    const rootDir = resolve(import.meta.dir, "..", "..");
+
+    const project: LoadedVoltProjectLike = {
+      configPath: resolve(rootDir, "apps", "volt-demo", "volt.config.ts"),
+      defaults: {
+        build: [],
+        dev: ["dev:parallel"],
+      },
+      name: "Task Parallel Test",
+      rootDir,
+      tasks: {
+        "dev:parallel": flow("dev:parallel", function* (ctx) {
+          const slow = yield* ctx.fork("slow", async () => {
+            await Bun.sleep(30);
+            return "slow";
+          });
+          const fast = yield* ctx.fork("fast", async () => {
+            await Bun.sleep(5);
+            return "fast";
+          });
+
+          const first = yield* ctx.race("first-finished", [slow, fast]);
+          const all = yield* ctx.all("collect-all", [slow, fast]);
+          const joined = yield* ctx.join(fast);
+
+          return { all, first, joined };
+        }),
+      },
+      targets: {},
+      workspaceRoot: rootDir,
+    };
+
+    await expect(executeProjectTask(project, "dev:parallel")).resolves.toMatchObject({
+      result: {
+        all: ["slow", "fast"],
+        first: "fast",
+        joined: "fast",
+      },
+    });
   });
 });

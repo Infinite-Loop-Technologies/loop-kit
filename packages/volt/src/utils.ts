@@ -6,6 +6,7 @@ import type {
   VoltSpawnOptions,
   VoltTargetContext,
 } from "./contracts";
+import { startManagedProcess, waitForManagedProcess } from "./process";
 
 export const createVoltLogger = (scope: string): VoltLogger => {
   const write = (
@@ -46,28 +47,17 @@ export const createSpawn = (
   rootDir: string,
   logger: VoltTargetContext["logger"],
 ): VoltTargetContext["spawn"] => (label, cmd, options: VoltSpawnOptions = {}) => {
-  logger.info("spawning process", { cmd, cwd: options.cwd ?? rootDir, label });
-  const child = Bun.spawn({
-    cmd,
-    cwd: options.cwd ?? rootDir,
-    env: mergeEnv(process.env, options.env),
-    stderr: "inherit",
-    stdin: "inherit",
-    stdout: "inherit",
+  return startManagedProcess(label, cmd, {
+    ...options,
+    logger,
+    rootDir,
   });
-
-  return { label, process: child };
 };
 
 export const runSpawnedCommand = async (
   child: ManagedVoltProcess,
   failureLabel = child.label,
-) => {
-  const code = await child.process.exited;
-  if (code !== 0) {
-    throw new Error(`${failureLabel} exited with code ${code}.`);
-  }
-};
+) => waitForManagedProcess(child, failureLabel);
 
 export const resolveFromRoot = (rootDir: string, ...segments: string[]) =>
   resolve(rootDir, ...segments);

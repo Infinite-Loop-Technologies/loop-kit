@@ -27,7 +27,8 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.11",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "volt": "workspace:*"
   },
   "packageManager": "bun@1.3.11",
   "engines": {

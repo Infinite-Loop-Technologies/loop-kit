@@ -1,15 +1,22 @@
 import { defineProjectConfig } from "volt";
-import { bunFullstackTask } from "volt/bun";
+import { bunFullstack } from "volt/bun";
 import siteEntrypoint from "./src/web/server.runtime";
 
-const siteTaskOptions = {
+const site = bunFullstack(siteEntrypoint, {
   env: {
     PORT: process.env.PORT ?? "6401",
     VOLT_MODE:
       process.env.VOLT_MODE === "production" ? "production" : "development",
   },
+  inputs: ["src/**/*", "public/**/*"],
   outdir: "dist/site",
-};
+  outputs: ["dist/site/**"],
+  readiness: {
+    kind: "stdout",
+    pattern: "site server listening",
+  },
+  watch: ["src/**/*", "public/**/*"],
+});
 
 export default defineProjectConfig({
   defaults: {
@@ -18,13 +25,6 @@ export default defineProjectConfig({
   },
   name: "Volt Site",
   tasks: {
-    "build:site": bunFullstackTask(siteEntrypoint, {
-      ...siteTaskOptions,
-      command: "build",
-    }),
-    "dev:site": bunFullstackTask(siteEntrypoint, {
-      ...siteTaskOptions,
-      command: "dev",
-    }),
+    ...site.tasks("site"),
   },
 });

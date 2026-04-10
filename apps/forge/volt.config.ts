@@ -1,15 +1,22 @@
 import { defineProjectConfig } from "volt";
-import { bunFullstackTask } from "volt/bun";
+import { bunFullstack } from "volt/bun";
 import webEntrypoint from "./src/web/server.runtime";
 
-const webTaskOptions = {
+const web = bunFullstack(webEntrypoint, {
   env: {
     PORT: process.env.PORT ?? "3000",
     VOLT_MODE:
       process.env.VOLT_MODE === "production" ? "production" : "development",
   },
+  inputs: ["src/**/*", "public/**/*"],
   outdir: "dist/web",
-};
+  outputs: ["dist/web/**"],
+  readiness: {
+    kind: "stdout",
+    pattern: "forge server listening",
+  },
+  watch: ["src/**/*", "public/**/*"],
+});
 
 export default defineProjectConfig({
   defaults: {
@@ -18,13 +25,6 @@ export default defineProjectConfig({
   },
   name: "Forge Workspace",
   tasks: {
-    "build:web": bunFullstackTask(webEntrypoint, {
-      ...webTaskOptions,
-      command: "build",
-    }),
-    "dev:web": bunFullstackTask(webEntrypoint, {
-      ...webTaskOptions,
-      command: "dev",
-    }),
+    ...web.tasks("web"),
   },
 });

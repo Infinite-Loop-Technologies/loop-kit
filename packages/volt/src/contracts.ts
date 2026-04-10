@@ -10,20 +10,126 @@ export interface VoltLogger {
   warn: (message: string, data?: Record<string, unknown>) => void;
 }
 
+export type VoltHandleStatus =
+  | "failed"
+  | "idle"
+  | "ready"
+  | "running"
+  | "starting"
+  | "stopped"
+  | "stopping";
+
+export type VoltRuntimeEventType =
+  | "handle-ready"
+  | "handle-start"
+  | "handle-stop"
+  | "handle-wait"
+  | "log"
+  | "readiness"
+  | "status";
+
+export interface VoltRuntimeEvent {
+  at: string;
+  data?: Record<string, unknown>;
+  label: string;
+  message?: string;
+  scope: "daemon" | "flow" | "process" | "runtime" | "task";
+  status?: VoltHandleStatus;
+  stream?: "stderr" | "stdout";
+  type: VoltRuntimeEventType;
+}
+
+export interface VoltLogEntry {
+  at: string;
+  label: string;
+  line: string;
+  stream: "stderr" | "stdout";
+}
+
+export interface VoltOwnerSnapshot {
+  activeLabels: string[];
+  label: string;
+}
+
+export interface VoltRuntimeOwner {
+  add: <THandle extends ResourceHandle>(handle: THandle) => THandle;
+  emit: (event: Omit<VoltRuntimeEvent, "at">) => void;
+  events: () => VoltRuntimeEvent[];
+  release: (handle: ResourceHandle) => Promise<void>;
+  releaseAll: () => Promise<void>;
+  snapshot: () => VoltOwnerSnapshot;
+}
+
+export type VoltReadinessProbe =
+  | {
+      kind: "delay";
+      label?: string;
+      ms: number;
+    }
+  | {
+      kind: "http";
+      timeoutMs?: number;
+      url: string;
+    }
+  | {
+      host?: string;
+      kind: "port";
+      port: number;
+      timeoutMs?: number;
+    }
+  | {
+      kind: "predicate";
+      label?: string;
+      run: (handle: ProcessHandle) => Promise<boolean> | boolean;
+      timeoutMs?: number;
+    }
+  | {
+      kind: "stdout";
+      pattern: RegExp | string;
+      stream?: "stderr" | "stdout";
+      timeoutMs?: number;
+    };
+
 export interface VoltSpawnOptions {
   cwd?: string;
   env?: Record<string, string | undefined>;
+  forwardOutput?: boolean;
+  owner?: VoltRuntimeOwner;
+  readiness?: VoltReadinessProbe | VoltReadinessProbe[];
+  signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
-export interface ManagedVoltProcess {
+export interface ResourceHandle {
+  events: () => VoltRuntimeEvent[];
   label: string;
+  logs: () => VoltLogEntry[];
+  status: () => VoltHandleStatus;
+  stop: () => Promise<void>;
+  wait: () => Promise<unknown>;
+}
+
+export interface VoltProcessMetadata {
+  cmd: string[];
+  cwd: string;
+  exitCode?: number | null;
+  pid?: number;
+  startedAt: string;
+  stoppedAt?: string;
+}
+
+export interface ProcessHandle extends ResourceHandle {
+  kill: (signal?: number | NodeJS.Signals) => Promise<void>;
+  metadata: () => VoltProcessMetadata;
   process: Bun.Subprocess;
+  ready: Promise<void>;
+  stderr?: ReadableStream<Uint8Array>;
+  stdout?: ReadableStream<Uint8Array>;
 }
 
-export interface VoltDaemonHandle {
-  label: string;
-  stop?: () => Promise<void> | void;
-}
+export type ManagedVoltProcess = ProcessHandle;
+
+export type VoltDaemonHandle = ResourceHandle;
 
 export interface VoltResolvedIntegration {
   artifactPath?: string;
@@ -79,7 +185,7 @@ export interface VoltTargetContext {
   logger: VoltLogger;
   mode: VoltMode;
   rootDir: string;
-  spawn: (label: string, cmd: string[], options?: VoltSpawnOptions) => ManagedVoltProcess;
+  spawn: (label: string, cmd: string[], options?: VoltSpawnOptions) => ProcessHandle;
   workspaceRoot: string;
 }
 

@@ -1,5 +1,5 @@
-import { defineProjectConfig, defineServices } from "volt";
-import { bunFullstackTask, bunServerTask } from "volt/bun";
+import { defineProjectConfig, defineRuntimeInputs, type ProcessHandle } from "volt";
+import { bunFullstack, bunServer } from "volt/bun";
 import { contractBindingsTask } from "volt/contracts";
 import { flow } from "volt/flow";
 import {
@@ -27,7 +27,7 @@ const sessionArtifact = createDemoSessionArtifact({
   shareProvider,
 });
 
-const gameServices = defineServices(({ artifacts }) => {
+const gameRuntimeInputs = defineRuntimeInputs(({ artifacts }) => {
   const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
   return {
     demoGame: {
@@ -39,7 +39,7 @@ const gameServices = defineServices(({ artifacts }) => {
   };
 });
 
-const webServices = defineServices(({ artifacts }) => {
+const webRuntimeInputs = defineRuntimeInputs(({ artifacts }) => {
   const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
   return {
     demoWeb: {
@@ -48,6 +48,32 @@ const webServices = defineServices(({ artifacts }) => {
       port: session.web.port,
     },
   };
+});
+
+const game = bunServer(GameServer, {
+  artifacts: ["runtimeSession"],
+  inputs: ["src/contracts/**/*.ts", "src/dev/**/*.ts", "src/entrypoints/gameServer.ts", "src/game-server/**/*.ts", "src/runtime/gameServer.ts"],
+  outdir: "dist/game-server",
+  outputs: ["dist/game-server/**", ".volt/generated/browser-config.ts"],
+  readiness: {
+    kind: "stdout",
+    pattern: "game server listening",
+  },
+  runtimeInputs: gameRuntimeInputs,
+  watch: ["src/contracts/**/*.ts", "src/dev/**/*.ts", "src/entrypoints/gameServer.ts", "src/game-server/**/*.ts", "src/runtime/gameServer.ts"],
+});
+
+const web = bunFullstack(WebApp, {
+  artifacts: ["runtimeSession"],
+  inputs: ["src/app.tsx", "src/browser/**/*.ts", "src/browser/**/*.tsx", "src/entrypoints/webApp.ts", "src/runtime/webApp.ts", "src/web/**/*.ts", "src/**/*.css", "src/**/*.html"],
+  outdir: "dist/web",
+  outputs: ["dist/web/**"],
+  readiness: {
+    kind: "stdout",
+    pattern: "Server running at",
+  },
+  runtimeInputs: webRuntimeInputs,
+  watch: ["src/app.tsx", "src/browser/**/*.ts", "src/browser/**/*.tsx", "src/entrypoints/webApp.ts", "src/runtime/webApp.ts", "src/web/**/*.ts", "src/**/*.css", "src/**/*.html"],
 });
 
 export default defineProjectConfig({
@@ -60,41 +86,30 @@ export default defineProjectConfig({
   },
   name: "Volt Demo",
   tasks: {
-    "build:game": bunServerTask(GameServer, {
-      artifacts: ["runtimeSession"],
-      command: "build",
-      outdir: "dist/game-server",
-      services: gameServices,
-    }),
-    "build:web": bunFullstackTask(WebApp, {
-      artifacts: ["runtimeSession"],
-      command: "build",
-      outdir: "dist/web",
-      services: webServices,
-    }),
+    ...game.tasks("game"),
+    ...web.tasks("web"),
     "codegen:demo": contractBindingsTask({
       contracts: [GameApi, BrowserRuntime],
       jsonPath: ".volt/state/contracts/demo-contracts.json",
       tsPath: ".volt/generated/contracts/demo-contracts.ts",
     }),
     "dev:full": flow("dev:full", function* (ctx) {
-      const game = yield* ctx.runTask("dev:game");
-      const web = yield* ctx.runTask("dev:web", {
+      yield* ctx.log("topology-start", "starting Volt demo topology");
+      const gameTask = yield* ctx.forkTask("dev:game");
+      const game = (yield* ctx.join(gameTask)) as ProcessHandle;
+      yield* ctx.waitFor("wait-for-game-readiness", game, {
+        timeoutMs: 15_000,
+      });
+      yield* ctx.log("game-ready", "game server is ready");
+      const webTask = yield* ctx.forkTask("dev:web", {
         inputs: { game },
       });
+      const web = (yield* ctx.join(webTask)) as ProcessHandle;
+      yield* ctx.waitFor("wait-for-web-readiness", web, {
+        timeoutMs: 15_000,
+      });
+      yield* ctx.log("topology-ready", "demo topology is ready");
       return { game, web };
-    }),
-    "dev:game": bunServerTask(GameServer, {
-      artifacts: ["runtimeSession"],
-      command: "dev",
-      outdir: "dist/game-server",
-      services: gameServices,
-    }),
-    "dev:web": bunFullstackTask(WebApp, {
-      artifacts: ["runtimeSession"],
-      command: "dev",
-      outdir: "dist/web",
-      services: webServices,
     }),
   },
 });

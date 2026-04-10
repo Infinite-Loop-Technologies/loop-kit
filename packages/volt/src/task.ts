@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import type {
   ManagedVoltProcess,
+  ResourceHandle,
   VoltArtifactDefinition,
   VoltConfig,
   VoltCommand,
@@ -12,6 +13,7 @@ import type {
 } from "./contracts";
 import type { VoltFlowTaskDefinition } from "./flow";
 import { runFlow } from "./flow";
+import { waitForManagedProcesses } from "./process";
 import {
   collectTargetArtifacts,
   collectTargetIntegrations,
@@ -33,18 +35,24 @@ export interface VoltTaskContext<TInputs = unknown> {
 export interface VoltTaskDefinition<TInputs = unknown, TResult = unknown> {
   command?: VoltCommand;
   dependsOn?: string[];
+  inputs?: string[];
   kind: "task";
+  outputs?: string[];
   run: (context: VoltTaskContext<TInputs>) => Promise<TResult> | TResult;
+  watch?: string[];
 }
 
 export interface VoltTargetTaskDefinition<TResult = unknown> {
   artifacts?: string[];
   command: VoltCommand;
   dependsOn?: string[];
+  inputs?: string[];
   kind: "target-task";
+  outputs?: string[];
   target: VoltTargetDefinition;
   uses?: string[];
   value?: TResult;
+  watch?: string[];
 }
 
 export type VoltAnyTaskDefinition =
@@ -74,12 +82,12 @@ export interface LoadedVoltProjectLike {
 }
 
 export interface VoltTaskExecutionResult<TResult = unknown> {
-  activeHandles: Array<ManagedVoltProcess | VoltDaemonHandle>;
+  activeHandles: ResourceHandle[];
   result: TResult;
 }
 
 interface VoltTaskExecutionState {
-  activeHandles: Array<ManagedVoltProcess | VoltDaemonHandle>;
+  activeHandles: ResourceHandle[];
   completed: Map<string, unknown>;
   inFlight: Set<string>;
   logger: VoltLogger;
@@ -94,38 +102,10 @@ const isManagedProcess = (
 ): value is ManagedVoltProcess => "process" in value;
 
 const waitForActiveHandles = async (
-  handles: Array<ManagedVoltProcess | VoltDaemonHandle>,
+  handles: ResourceHandle[],
 ) => {
   const processes = handles.filter(isManagedProcess);
-  if (!processes.length) {
-    return;
-  }
-
-  const shutdown = () => {
-    for (const handle of processes) {
-      handle.process.kill();
-    }
-  };
-
-  const onSignal = () => {
-    shutdown();
-    process.exit(0);
-  };
-
-  process.on("SIGINT", onSignal);
-  process.on("SIGTERM", onSignal);
-
-  const firstExit = await Promise.race(
-    processes.map(async (handle) => ({
-      code: await handle.process.exited,
-      label: handle.label,
-    })),
-  );
-
-  shutdown();
-  if (firstExit.code !== 0) {
-    throw new Error(`${firstExit.label} exited with code ${firstExit.code}.`);
-  }
+  await waitForManagedProcesses(processes);
 };
 
 export const task = <TInputs = unknown, TResult = unknown>(
@@ -365,7 +345,7 @@ export const executeProjectCommand = async (
     throw new Error(`No default ${command} tasks configured in ${project.configPath}.`);
   }
 
-  const handles: Array<ManagedVoltProcess | VoltDaemonHandle> = [];
+  const handles: ResourceHandle[] = [];
   for (const taskName of selected) {
     const executed = await executeProjectTask(project, taskName, { logger });
     handles.push(...executed.activeHandles);

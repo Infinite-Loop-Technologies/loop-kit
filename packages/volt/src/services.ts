@@ -3,40 +3,47 @@ import type {
   VoltTargetContext,
 } from "./contracts";
 
-export interface VoltServiceProvider<
-  TServices extends Record<string, VoltJsonValue> = Record<string, VoltJsonValue>,
+export interface VoltRuntimeInputProvider<
+  TValues extends Record<string, VoltJsonValue> = Record<string, VoltJsonValue>,
 > {
   resolve: (
     context: VoltTargetContext,
-  ) => Promise<TServices> | TServices;
+  ) => Promise<TValues> | TValues;
 }
 
-export const defineServices = <
-  TServices extends Record<string, VoltJsonValue>,
+export const defineRuntimeInputs = <
+  TValues extends Record<string, VoltJsonValue>,
 >(
-  resolve: VoltServiceProvider<TServices>["resolve"],
-): VoltServiceProvider<TServices> => ({
+  resolve: VoltRuntimeInputProvider<TValues>["resolve"],
+): VoltRuntimeInputProvider<TValues> => ({
   resolve,
 });
 
-type ServicesFromProviders<TProviders extends readonly VoltServiceProvider[]> =
+type RuntimeInputsFromProviders<TProviders extends readonly VoltRuntimeInputProvider[]> =
   TProviders extends readonly [infer TFirst, ...infer TRest]
-    ? TFirst extends VoltServiceProvider<infer TFirstServices>
-      ? TRest extends readonly VoltServiceProvider[]
-        ? TFirstServices & ServicesFromProviders<TRest>
-        : TFirstServices
+    ? TFirst extends VoltRuntimeInputProvider<infer TFirstValues>
+      ? TRest extends readonly VoltRuntimeInputProvider[]
+        ? TFirstValues & RuntimeInputsFromProviders<TRest>
+        : TFirstValues
       : {}
     : {};
 
-export const mergeServices = <
-  const TProviders extends readonly VoltServiceProvider[],
+export const mergeRuntimeInputs = <
+  const TProviders extends readonly VoltRuntimeInputProvider[],
 >(
   ...providers: TProviders
-): VoltServiceProvider<ServicesFromProviders<TProviders>> =>
-  defineServices(async (context) => {
+): VoltRuntimeInputProvider<RuntimeInputsFromProviders<TProviders>> =>
+  defineRuntimeInputs(async (context) => {
     const resolved = await Promise.all(
       providers.map((provider) => provider.resolve(context)),
     );
 
-    return Object.assign({}, ...resolved) as ServicesFromProviders<TProviders>;
+    return Object.assign({}, ...resolved) as RuntimeInputsFromProviders<TProviders>;
   });
+
+export type VoltServiceProvider<
+  TServices extends Record<string, VoltJsonValue> = Record<string, VoltJsonValue>,
+> = VoltRuntimeInputProvider<TServices>;
+
+export const defineServices = defineRuntimeInputs;
+export const mergeServices = mergeRuntimeInputs;

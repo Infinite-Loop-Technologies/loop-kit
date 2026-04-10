@@ -1,218 +1,223 @@
-# Volt Project / Workspace Model
+# Volt Project Model
 
-This note captures the current preferred Volt authoring model after the task/runtime rework in this repo.
+Volt in one sentence:
 
-It is intentionally honest about what is implemented now, what is compatibility surface, and what is still scaffolding for later work.
+Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks, flows, artifacts, integrations, and workspace-aware local workflows.
 
-## New Mental Model
+## What Volt Is
 
-Prefer thinking about Volt in this order:
+- a library-first programmable runtime layer
+- strong at local runtime topology and supervision
+- strong at typed task and flow composition in TypeScript
+- strong at turning external build/codegen/runtime helpers into named artifacts and integrations
+- strong at workspace-aware local change detection and selective invalidation
+- a good substrate for daemon-backed tooling and future agent workflows
 
-- contracts and resources live in normal TypeScript modules
-- entrypoint specs and implementations live in normal TypeScript modules
-- project config composes named tasks plus higher-level flows
-- workspace config composes projects plus workspace-level flows
-- targets still exist, but mostly as adapter internals or compatibility surface
+## What Volt Is Not
 
-The preferred split is now:
+- not a generic task runner
+- not a Moonrepo/Turbo replacement
+- not a deployment platform replacement
+- not a public Effect framework
+- not a giant schema or AST framework
+- not a secret manager
 
-- contract/interface/resource = typed boundary description
-- entrypoint = typed program module
-- task = runnable unit
-- flow = generator-based orchestration over tasks and stable steps
-- project config = composition and defaults
-- workspace config = cross-project composition
+## Core Concepts
 
-## Project Config vs Workspace Config
+- `entrypoint`
+  - a typed runnable program module
+- `task`
+  - a named unit for dev, build, codegen, automation, or resource startup
+- `flow`
+  - a generator-based orchestration task with memoized steps, concurrency, joins, races, waits, and cleanup
+- `artifact`
+  - a produced value or generated file/module resolved before dependent tasks
+- `integration`
+  - an external bridge that produces metadata, generated bindings, or runtime-facing outputs
+- `process/resource`
+  - an owned runtime handle with status, logs, readiness, wait, and stop semantics
+- `project config`
+  - per-app composition of tasks, flows, artifacts, integrations, and runtime bindings
+- `workspace config`
+  - thin cross-project composition and workspace-level flows
 
-Use `defineProjectConfig(...)` inside app-local `volt.config.ts`.
+## Runtime Topology First
 
-Project config should mainly express:
+Runtime topology is the main reason Volt exists.
 
-- named tasks
-- named flows
-- defaults like `dev` and `build`
-- artifacts and integrations
-- plugin composition
+The intended shape is:
 
-Use `defineWorkspaceConfig(...)` in a workspace-level file such as `volt.workspace.ts`.
+1. Start one or more managed resources.
+2. Wait for concrete readiness, not wishful ordering.
+3. Capture ports, URLs, generated paths, and runtime metadata as typed values.
+4. Inject those values into dependent tasks and entrypoints.
+5. Supervise the whole topology together.
+6. Stop it cleanly without leaking child processes.
 
-Workspace config should mainly express:
+This is why Volt now centers on:
 
-- imported project configs
-- workspace-level task aliases
-- workspace-level flows that run project tasks
+- runtime bindings like `bunServer(...)` and `bunFullstack(...)`
+- `managedProcess(...)` and runtime owners
+- explicit readiness probes
+- flow primitives like `fork`, `join`, `all`, `race`, `waitFor`, and `release`
 
-Workspace config currently works by importing project config values directly in TypeScript. That is deliberate. It does not require codegen first.
+## Preferred API
 
-## Tasks, Flows, Targets, And Entrypoints
+Preferred public surfaces:
 
-- task
-  - the unit the CLI runs
-  - examples: `dev:web`, `build:site`, `codegen:demo`
-- flow
-  - a generator-based task that orchestrates stable named steps and nested tasks
-  - examples: `dev:full`, `dev:demo+forge`
-- target
-  - still the runtime binding shape used by adapters such as Bun
-  - current Bun task helpers compile down to target-backed tasks internally
-- entrypoint
-  - the program module a runtime target executes
-  - now has a preferred `defineEntrypointSpec(...)` + `implementEntrypoint(...)` surface
+- `defineProjectConfig(...)`
+- `defineWorkspaceConfig(...)`
+- `bunServer(...)`, `bunFullstack(...)`, `bunCommand(...)`
+- `task(...)`
+- `flow(...)`
+- `defineRuntimeInputs(...)`
+- `defineEntrypointSpec(...)`, `implementEntrypoint(...)`
+- `defineArtifact(...)`
+- `defineInterface(...)`, `defineContract(...)`, `contractBindingsTask(...)`
 
-## Where Contracts And Specs Live
-
-Preferred project layout:
-
-- `src/contracts/`
-- `src/entrypoints/`
-- `src/runtime/`
-- `src/tasks/` when task helpers are large enough to deserve their own modules
-- `volt.config.ts`
-
-Rules:
-
-- domain contracts do not belong in `volt.config.ts`
-- entrypoint specs do not belong in `volt.config.ts`
-- `volt.config.ts` should stay focused on composition, orchestration, and high-level wiring
-
-## Type Inference Today
-
-`volt/contracts` is currently a TypeScript-first schema/value layer.
-
-Implemented now:
-
-- `t.string()`
-- `t.number().int().min(...)`
-- `t.boolean()`
-- `t.literal(...)`
-- `t.object(...)`
-- `t.array(...)`
-- `t.fn({ input, output })`
-- `defineInterface(...)`
-- `defineResource(...)`
-- `defineContract(...)`
-
-What is inferred purely in TypeScript today:
-
-- object shapes
-- function input/output types
-- branded primitive types
-
-What is not solved fully yet:
-
-- lossless lowering into WIT or component-model artifacts
-- automatic runtime validation
-- automatic lowering/raising of rich resource semantics
-
-That gap is intentional. Volt now has a cheap metadata/codegen path instead of pretending the full WASM story is already finished.
-
-## Codegen And Integrations
-
-There is now one concrete codegen path:
-
-- `contractBindingsTask(...)` writes TypeScript metadata and optional JSON manifests from contract definitions
-
-This is used in `apps/volt-demo` as `codegen:demo`.
-
-What it proves:
-
-- contracts can live outside config
-- config can compose a codegen task
-- generated outputs can be placed under `.volt/generated` and `.volt/state`
-- the workflow is cheap enough to use before a full WIT/component pipeline exists
-
-What it does not claim yet:
-
-- it is not WIT generation
-- it is not a full component ABI compiler
-- it is not a deployment/runtime bridge by itself
-
-## Flow Model
-
-Preferred flow surface:
-
-- `flow("name", function* (ctx) { ... })`
-- `yield* ctx.step("name", fn)`
-- `yield* ctx.memo("name", fn)`
-- `yield* ctx.runTask("task:name")`
-- `yield* ctx.runProjectTask("project", "task:name")`
-- `yield* ctx.sleep("name", ms)`
-
-What the generator model already buys:
-
-- stable named steps
-- persisted memoization for step outputs when a flow persists state
-- nested orchestration over project tasks
-- a plausible path toward richer resumable semantics later
-
-What is still future work:
-
-- durable distributed execution
-- retries/backoff policies
-- approvals/inboxes
-- remote worker coordination
-
-## Daemon Fit
-
-The daemon remains workspace substrate.
-
-It is still responsible for:
-
-- workspace process state
-- integration watches
-- plugin daemon services
-- status/logs
-
-It is not yet the full flow engine.
-
-The current model is:
-
-- tasks and flows are the public execution API
-- target-backed dev tasks ensure the workspace daemon is running
-- richer durable orchestration can still layer above this later
-
-## Old API To New API
-
-Current compatibility map:
+Compatibility surfaces, not the preferred story:
 
 - `defineVoltConfig(...)`
-  - still works
-  - now normalizes into generated task names like `dev:web` and `build:web`
-- `bunFullstackTarget(...)`, `bunServerTarget(...)`, `bunCommandTarget(...)`
-  - still work
-  - preferred new surface is `bunFullstackTask(...)`, `bunServerTask(...)`, `bunCommandTask(...)`
-- `defineEntrypoint(import.meta, handler)`
-  - still works
-  - preferred new surface is entrypoint spec + implementation modules
-- `defineFiber(...)` / `runFiber(...)`
-  - still work
-  - preferred new orchestration surface is `flow(...)`
+- `bun*Target(...)`
+- `bun*Task(...)`
+- `defineServices(...)`
+- `defineFiber(...)`, `runFiber(...)`
+- `createBunPlugin()`
 
-## What Is Fully Implemented Now
+## Preferred Authoring Shape
 
-- project configs with named tasks and defaults
-- task-oriented CLI commands:
-  - `volt task list`
-  - `volt task run <name>`
-- `volt dev` and `volt build` resolving through task defaults
-- Bun task helpers
-- workspace config with project composition and workspace-level flows
-- a TypeScript-first contract/resource surface
-- entrypoint spec + implementation authoring
-- one real contract metadata codegen task
+```ts
+import { defineProjectConfig, defineRuntimeInputs, flow } from "volt";
+import { bunFullstack, bunServer } from "volt/bun";
 
-## What Is Compatibility Surface
+const gameInputs = defineRuntimeInputs(({ artifacts }) => ({
+  demoGame: artifacts.requireValue("runtimeSession").game,
+}));
 
-- target-first `defineVoltConfig(...)`
-- direct target helpers
-- legacy entrypoint authoring with `defineEntrypoint(import.meta, ...)`
-- legacy fibers
+const game = bunServer(GameServer, {
+  artifacts: ["runtimeSession"],
+  readiness: { kind: "stdout", pattern: "game server listening" },
+  runtimeInputs: gameInputs,
+  watch: ["src/game-server/**/*.ts", "src/runtime/gameServer.ts"],
+});
 
-## What Is Still Scaffolding
+const web = bunFullstack(WebApp, {
+  artifacts: ["runtimeSession"],
+  readiness: { kind: "stdout", pattern: "web app listening" },
+  runtimeInputs: webInputs,
+  watch: ["src/web/**/*.ts", "src/browser/**/*.tsx"],
+});
 
-- richer runtime/resource matching between entrypoint specs and concrete runtime service objects
-- stronger inspect/debug tooling for resolved task graphs
-- broader plugin/adapter libraries beyond Bun
-- real WIT/WASM/component lowering
-- durable execution beyond local persisted flow state
+export default defineProjectConfig({
+  defaults: {
+    build: ["build:game", "build:web"],
+    dev: "dev:full",
+  },
+  name: "Volt Demo",
+  tasks: {
+    ...game.tasks("game"),
+    ...web.tasks("web"),
+    "dev:full": flow("dev:full", function* (ctx) {
+      const gameTask = yield* ctx.forkTask("dev:game");
+      const gameHandle = yield* ctx.join(gameTask);
+      yield* ctx.waitFor("game-ready", gameHandle, { timeoutMs: 15_000 });
+
+      const webTask = yield* ctx.forkTask("dev:web");
+      const webHandle = yield* ctx.join(webTask);
+      yield* ctx.waitFor("web-ready", webHandle, { timeoutMs: 15_000 });
+
+      return { gameHandle, webHandle };
+    }),
+  },
+});
+```
+
+## Runtime Inputs
+
+`runtimeInputs` is the preferred name and story.
+
+Use it for serializable, concrete runtime values:
+
+- ports
+- URLs
+- browser config
+- feature flags
+- generated paths
+- emulator endpoints
+- tokens or local connection details when appropriate
+
+Do not treat it as a giant dependency injection container.
+
+## Workspace-Aware Change Detection
+
+Volt now owns a lightweight affected-task layer for local workflows.
+
+Current stance:
+
+- explicit task `inputs`, `watch`, and `outputs`
+- explicit task/project dependencies
+- `@parcel/watcher` snapshots and `getEventsSince(...)`
+- selective invalidation and refresh
+- daemon-backed workspace state
+
+Non-goals:
+
+- remote cache
+- giant inferred repo graph
+- generalized scheduler platform
+
+Volt differs from Moonrepo/Turbo here:
+
+- Volt cares first about runtime topology, typed runtime values, and owned local process/resource orchestration
+- broader monorepo execution platforms can still sit above or beside Volt
+
+## Bun, Effect, and OpenTUI
+
+Bun:
+
+- Bun is the default runtime and process substrate
+- Volt uses Bun-native spawn/build/runtime behavior directly
+
+Effect:
+
+- Effect is an internal implementation tool only
+- use it for scopes, cleanup, cancellation, and supervision internals
+- do not make Volt’s public API feel like renamed Effect
+
+OpenTUI:
+
+- OpenTUI is the direction for Volt UX
+- it sits on top of structured runtime status, resource state, and log/event streams
+- the dashboard is explicitly experimental, but the event/status model is not
+
+## Contracts And Codegen
+
+Contracts stay practical:
+
+- normal TypeScript modules, not config DSL
+- cheap generated bindings
+- narrow bridge toward future WIT/component work
+
+Current tooling stance:
+
+- OXC for fast analysis and syntax validation
+- recast for formatting-preserving rewrites when Volt edits user code
+- ts-morph for narrow TS-aware generation and inspection
+- SWC is not part of the default Volt path in this slice
+
+## Daemon Role
+
+The daemon remains:
+
+- workspace-scoped
+- explicit about ownership
+- responsible for watchers, invalidation state, and shared runtime status
+- not allowed to leak orphan processes
+
+Use `references/project-volt-daemon.md` for the daemon-specific guarantees and state model.
+
+## Proto Stance
+
+- Proto stays the repo-level toolchain bootstrap story
+- Volt should be easy to call from Proto-managed environments
+- Volt should integrate with external tools cleanly, not absorb ownership of every tool

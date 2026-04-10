@@ -1,6 +1,7 @@
-import { existsSync, watch } from "node:fs";
+import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { basename, dirname, relative, resolve } from "node:path";
+import parcelWatcher from "@parcel/watcher";
 import type {
   VoltArtifactContext,
   VoltArtifactDefinition,
@@ -20,7 +21,9 @@ import type {
   VoltResolvedIntegration,
   VoltTargetDefinition,
 } from "./contracts";
-import { loadVoltConfig } from "./config";
+import { loadVoltConfig, loadVoltProject } from "./config";
+import { createResourceHandle, stopManagedProcess } from "./process";
+import type { LoadedVoltProjectLike, VoltAnyTaskDefinition } from "./task";
 import {
   createRootLogger,
   createSpawn,
@@ -36,6 +39,7 @@ type TargetGraph = VoltConfig<Record<string, VoltTargetDefinition>>["targets"];
 interface LoadedVoltConfig {
   config: VoltConfig<TargetGraph>;
   configPath: string;
+  project?: LoadedVoltProjectLike;
   rootDir: string;
   workspaceRoot: string;
 }
@@ -43,14 +47,30 @@ interface LoadedVoltConfig {
 interface WorkspaceDaemonPaths {
   logPath: string;
   pidPath: string;
+  snapshotPath: string;
   statePath: string;
 }
 
 interface WorkspaceDaemonState {
+  affectedTasks?: string[];
   configs: string[];
+  events?: Array<{
+    at: string;
+    label: string;
+    message?: string;
+    scope: string;
+    status?: string;
+    type: string;
+  }>;
+  lastChangedFiles?: string[];
   mode: "development" | "production";
   pid?: number;
   reason?: string;
+  resources?: Array<{
+    kind: "process" | "resource";
+    label: string;
+    status: string;
+  }>;
   serviceCount?: number;
   status: "running" | "starting" | "stopped" | "stopping";
   updatedAt?: string;
@@ -59,9 +79,16 @@ interface WorkspaceDaemonState {
     string,
     {
       appRoot: string;
+      affectedTasks?: string[];
       artifacts?: string[];
       configPath: string;
       integrations: string[];
+      lastChangedFiles?: string[];
+      resources?: Array<{
+        kind: "process" | "resource";
+        label: string;
+        status: string;
+      }>;
       serviceCount: number;
       status: "running" | "starting" | "stopped" | "stopping";
       targets: string[];
@@ -115,6 +142,7 @@ const createWorkspaceDaemonPaths = (workspaceRoot: string): WorkspaceDaemonPaths
   return {
     logPath: resolve(daemonRoot, "workspace.log"),
     pidPath: resolve(daemonRoot, "workspace.pid"),
+    snapshotPath: resolve(daemonRoot, "workspace.snapshot"),
     statePath: resolve(daemonRoot, "workspace.json"),
   };
 };
@@ -147,6 +175,56 @@ const resolveRequestedConfigPaths = async (
   }
 
   return discoverVoltConfigPaths(workspaceRoot);
+};
+
+const normalizeToProjectRelative = (project: LoadedVoltProjectLike, absolutePath: string) => {
+  const relativePath = relative(project.rootDir, absolutePath).replace(/\\/g, "/");
+  return relativePath.startsWith("..") ? undefined : relativePath;
+};
+
+const getTaskPatterns = (taskDefinition: VoltAnyTaskDefinition) => [
+  ...(taskDefinition.inputs ?? []),
+  ...(taskDefinition.watch ?? []),
+];
+
+const matchesTaskPatterns = (
+  taskDefinition: VoltAnyTaskDefinition,
+  changedFiles: string[],
+) => {
+  const patterns = getTaskPatterns(taskDefinition);
+  if (!patterns.length) {
+    return false;
+  }
+
+  return changedFiles.some((changedFile) =>
+    patterns.some((pattern) => new Bun.Glob(pattern).match(changedFile)),
+  );
+};
+
+export const computeAffectedTaskNames = (
+  project: LoadedVoltProjectLike,
+  changedFiles: string[],
+) => {
+  const direct = Object.entries(project.tasks)
+    .filter(([, definition]) => matchesTaskPatterns(definition, changedFiles))
+    .map(([taskName]) => taskName);
+  const affected = new Set(direct);
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [taskName, definition] of Object.entries(project.tasks)) {
+      if (affected.has(taskName)) {
+        continue;
+      }
+      if ((definition.dependsOn ?? []).some((dependency) => affected.has(dependency))) {
+        affected.add(taskName);
+        changed = true;
+      }
+    }
+  }
+
+  return [...affected].sort((left, right) => left.localeCompare(right));
 };
 
 const createIntegrationContext = (
@@ -439,7 +517,7 @@ const isManagedProcess = (
 
 const stopHandle = async (handle: ManagedVoltProcess | VoltDaemonHandle) => {
   if (isManagedProcess(handle)) {
-    handle.process.kill();
+    stopManagedProcess(handle);
     return;
   }
 
@@ -523,10 +601,12 @@ const startIntegrationWatchers = async (
       if (customHandle) {
         handles.push(
           isManagedProcess(customHandle)
-            ? {
+            ? createResourceHandle({
+                initialStatus: "running",
                 label: customHandle.label,
-                stop: () => customHandle.process.kill(),
-              }
+                stop: () => stopManagedProcess(customHandle),
+                wait: () => customHandle.wait(),
+              })
             : customHandle,
         );
       }
@@ -542,61 +622,63 @@ const startIntegrationWatchers = async (
       kind: definition.kind,
       name,
       paths: watchPaths,
-      source: "fs-watch",
+      source: "parcel-watcher",
     });
 
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const watchers = watchPaths
-      .filter((path) => existsSync(path))
-      .map((path) => {
-        try {
-          return watch(path, { recursive: true }, () => {
-            if (timer) {
-              clearTimeout(timer);
-            }
-            timer = setTimeout(async () => {
-              try {
-                await resolveIntegrationsForPhase(loaded, [name], mode, "dev", logger);
-                logger.info("integration refreshed", { name });
-              } catch (error) {
-                logger.error("integration refresh failed", {
-                  error: error instanceof Error ? error.message : String(error),
+    const subscriptions = await Promise.all(
+      watchPaths
+        .filter((path) => existsSync(path))
+        .map((path) =>
+          parcelWatcher.subscribe(
+            path,
+            async (error) => {
+              if (error) {
+                logger.error("integration watch failed", {
+                  error: error.message,
                   name,
+                  path,
                 });
+                return;
               }
-            }, 150);
-          });
-        } catch {
-          return watch(path, () => {
-            if (timer) {
-              clearTimeout(timer);
-            }
-            timer = setTimeout(async () => {
-              try {
-                await resolveIntegrationsForPhase(loaded, [name], mode, "dev", logger);
-                logger.info("integration refreshed", { name });
-              } catch (error) {
-                logger.error("integration refresh failed", {
-                  error: error instanceof Error ? error.message : String(error),
-                  name,
-                });
+              if (timer) {
+                clearTimeout(timer);
               }
-            }, 150);
-          });
-        }
-      });
+              timer = setTimeout(async () => {
+                try {
+                  await resolveIntegrationsForPhase(loaded, [name], mode, "dev", logger);
+                  logger.info("integration refreshed", { name });
+                } catch (refreshError) {
+                  logger.error("integration refresh failed", {
+                    error:
+                      refreshError instanceof Error
+                        ? refreshError.message
+                        : String(refreshError),
+                    name,
+                  });
+                }
+              }, 150);
+            },
+            {
+              ignore: ["**/.git/**", "**/.volt/**", "**/node_modules/**"],
+            },
+          ),
+        ),
+    );
 
-    handles.push({
+    handles.push(createResourceHandle({
+      initialStatus: "running",
       label: `integration:${name}`,
-      stop: () => {
+      stop: async () => {
         if (timer) {
           clearTimeout(timer);
         }
-        for (const watcher of watchers) {
-          watcher.close();
+        for (const subscription of subscriptions) {
+          await subscription.unsubscribe();
         }
       },
-    });
+      wait: async () => undefined,
+    }));
   }
 
   return handles;
@@ -778,6 +860,7 @@ export const runDaemonRuntime = async (
     configPaths.map(async (configPath) => ({
       config: await loadVoltConfig("dev", configPath, mode, workspaceRoot),
       configPath,
+      project: await loadVoltProject("dev", configPath, mode, workspaceRoot),
       rootDir: dirname(configPath),
       workspaceRoot,
     })),
@@ -785,20 +868,49 @@ export const runDaemonRuntime = async (
   const logger = createRootLogger();
   const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
   const configState: NonNullable<WorkspaceDaemonState["byConfig"]> = {};
+  const persistState = async (
+    status: WorkspaceDaemonState["status"],
+    reason?: string,
+  ) => {
+    const resources = [...serviceHandles, ...integrationHandles].map((handle) => ({
+      kind: "process" in handle ? ("process" as const) : ("resource" as const),
+      label: handle.label,
+      status: handle.status(),
+    }));
+    await writeDaemonState(daemonPaths.statePath, {
+      affectedTasks: Object.values(configState).flatMap(
+        (state) => state.affectedTasks ?? [],
+      ),
+      configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
+      events: resources.map((resource) => ({
+        at: new Date().toISOString(),
+        label: resource.label,
+        message: `${resource.kind}:${resource.status}`,
+        scope: "daemon",
+        status: resource.status,
+        type: "status",
+      })),
+      lastChangedFiles: Object.values(configState).flatMap(
+        (state) => state.lastChangedFiles ?? [],
+      ),
+      mode,
+      pid: process.pid,
+      reason,
+      resources,
+      serviceCount: serviceHandles.length,
+      status,
+      watcherCount: integrationHandles.length,
+      byConfig: configState,
+    });
+  };
 
   await ensureDirectory(dirname(daemonPaths.pidPath));
   await writeTextFile(daemonPaths.pidPath, String(process.pid));
-  await writeDaemonState(daemonPaths.statePath, {
-    configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
-    mode,
-    pid: process.pid,
-    status: "starting",
-    byConfig: {},
-  });
-
   const serviceHandles: Array<ManagedVoltProcess | VoltDaemonHandle> = [];
   const integrationHandles: VoltDaemonHandle[] = [];
   let shuttingDown = false;
+
+  await persistState("starting");
 
   const shutdown = async (reason: string) => {
     if (shuttingDown) {
@@ -806,19 +918,13 @@ export const runDaemonRuntime = async (
     }
     shuttingDown = true;
     logger.info("stopping daemon", { reason });
-    await writeDaemonState(daemonPaths.statePath, {
-      configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
-      mode,
-      pid: process.pid,
-      reason,
-      status: "stopping",
-      byConfig: Object.fromEntries(
-        Object.entries(configState).map(([configId, state]) => [
-          configId,
-          { ...state, status: "stopping" as const },
-        ]),
-      ),
-    });
+    for (const configId of Object.keys(configState)) {
+      configState[configId] = {
+        ...configState[configId],
+        status: "stopping",
+      };
+    }
+    await persistState("stopping", reason);
 
     for (const handle of integrationHandles) {
       await stopHandle(handle);
@@ -828,19 +934,13 @@ export const runDaemonRuntime = async (
     }
 
     await rm(daemonPaths.pidPath, { force: true });
-    await writeDaemonState(daemonPaths.statePath, {
-      configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
-      mode,
-      pid: process.pid,
-      reason,
-      status: "stopped",
-      byConfig: Object.fromEntries(
-        Object.entries(configState).map(([configId, state]) => [
-          configId,
-          { ...state, status: "stopped" as const },
-        ]),
-      ),
-    });
+    for (const configId of Object.keys(configState)) {
+      configState[configId] = {
+        ...configState[configId],
+        status: "stopped",
+      };
+    }
+    await persistState("stopped", reason);
     process.exit(0);
   };
 
@@ -860,9 +960,12 @@ export const runDaemonRuntime = async (
 
     configState[configId] = {
       appRoot: relative(workspaceRoot, loaded.rootDir),
+      affectedTasks: [],
       artifacts: artifactNames,
       configPath: relative(workspaceRoot, loaded.configPath),
       integrations: integrationNames,
+      lastChangedFiles: [],
+      resources: [],
       serviceCount: 0,
       status: "starting",
       targets: targetNames,
@@ -878,21 +981,111 @@ export const runDaemonRuntime = async (
 
     configState[configId] = {
       ...configState[configId],
+      resources: [...loadedServiceHandles, ...loadedWatcherHandles].map((handle) => ({
+        kind: "process" in handle ? ("process" as const) : ("resource" as const),
+        label: handle.label,
+        status: handle.status(),
+      })),
       serviceCount: loadedServiceHandles.length,
       status: "running",
       watcherCount: loadedWatcherHandles.length,
     };
   }
+  await ensureDirectory(dirname(daemonPaths.snapshotPath));
+  const watcherIgnore = ["**/.git/**", "**/.volt/**", "**/node_modules/**", "**/dist/**"];
+  const processChangedFiles = async (changedAbsolutePaths: string[]) => {
+    const changedWorkspaceFiles = changedAbsolutePaths
+      .map((path) => relative(workspaceRoot, path).replace(/\\/g, "/"))
+      .filter((path) => path && !path.startsWith(".."));
 
-  await writeDaemonState(daemonPaths.statePath, {
-    configs: loadedConfigs.map((loaded) => relative(workspaceRoot, loaded.configPath)),
-    mode,
-    pid: process.pid,
-    serviceCount: serviceHandles.length,
-    status: "running",
-    watcherCount: integrationHandles.length,
-    byConfig: configState,
+    for (const loaded of loadedConfigs) {
+      if (!loaded.project) {
+        continue;
+      }
+      const project = loaded.project;
+      const configId = toConfigId(workspaceRoot, loaded.configPath);
+      const changedProjectFiles = changedAbsolutePaths
+        .map((path) => normalizeToProjectRelative(project, path))
+        .filter((path): path is string => Boolean(path));
+      const affectedTasks = computeAffectedTaskNames(project, changedProjectFiles);
+
+      configState[configId] = {
+        ...configState[configId],
+        affectedTasks,
+        lastChangedFiles: changedProjectFiles,
+      };
+
+      const affectedTargetNames = affectedTasks
+        .map((taskName) => project.tasks[taskName])
+        .filter(
+          (taskDefinition): taskDefinition is Extract<VoltAnyTaskDefinition, { kind: "target-task" }> =>
+            Boolean(taskDefinition) && taskDefinition.kind === "target-task",
+        )
+        .filter((taskDefinition) => taskDefinition.command === "dev")
+        .map((taskDefinition) => taskDefinition.target)
+        .map((targetDefinition) =>
+          Object.entries(loaded.config.targets).find(([, candidate]) => candidate === targetDefinition)?.[0],
+        )
+        .filter((targetName): targetName is string => Boolean(targetName));
+
+      if (affectedTargetNames.length > 0) {
+        const artifactNames = collectTargetArtifacts(loaded.config.targets, affectedTargetNames);
+        const integrationNames = collectTargetIntegrations(
+          loaded.config.targets,
+          affectedTargetNames,
+        );
+        await resolveArtifactsForPhase(loaded, artifactNames, mode, "dev", logger);
+        await resolveIntegrationsForPhase(loaded, integrationNames, mode, "dev", logger);
+      }
+    }
+
+    await persistState("running");
+    logger.info("workspace watcher invalidated tasks", {
+      changedFiles: changedWorkspaceFiles,
+    });
+  };
+
+  if (existsSync(daemonPaths.snapshotPath)) {
+    const previousEvents = await parcelWatcher.getEventsSince(
+      workspaceRoot,
+      daemonPaths.snapshotPath,
+      { ignore: watcherIgnore },
+    );
+    if (previousEvents.length > 0) {
+      await processChangedFiles(previousEvents.map((event) => event.path));
+    }
+  }
+  await parcelWatcher.writeSnapshot(workspaceRoot, daemonPaths.snapshotPath, {
+    ignore: watcherIgnore,
   });
+  const workspaceSubscription = await parcelWatcher.subscribe(
+    workspaceRoot,
+    async (error, events) => {
+      if (error) {
+        logger.error("workspace watcher failed", { error: error.message });
+        return;
+      }
+      if (!events.length) {
+        return;
+      }
+      await processChangedFiles(events.map((event) => event.path));
+      await parcelWatcher.writeSnapshot(workspaceRoot, daemonPaths.snapshotPath, {
+        ignore: watcherIgnore,
+      });
+    },
+    { ignore: watcherIgnore },
+  );
+  integrationHandles.push(
+    createResourceHandle({
+      initialStatus: "running",
+      label: "workspace-watcher",
+      stop: async () => {
+        await workspaceSubscription.unsubscribe();
+      },
+      wait: async () => undefined,
+    }),
+  );
+  await persistState("running");
 
   // Keep the daemon process alive while watchers/services run.
   while (true) {

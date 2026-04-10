@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import type { VoltCommand } from "./contracts";
+import type { ProcessHandle, ResourceHandle, VoltCommand } from "./contracts";
 import {
   createVoltConfigContext,
   loadVoltProject,
@@ -11,6 +11,7 @@ import {
 } from "./config";
 import { handleDaemonCommand, runDaemonRuntime } from "./daemon";
 import { normalizeLoadedProjectDefinition } from "./project";
+import { waitForManagedProcesses } from "./process";
 import { runFlow } from "./flow";
 import type { LoadedVoltProjectLike, VoltAnyTaskDefinition } from "./task";
 import { executeProjectCommand, executeProjectTask, listProjectTasks } from "./task";
@@ -24,40 +25,11 @@ const normalizeValues = (values: readonly string[] | string | undefined): string
     .map((value) => value.trim())
     .filter(Boolean);
 
-const waitForActiveProcesses = async (
-  handles: Array<{ label: string; process?: Bun.Subprocess }>,
-) => {
-  const processes = handles.filter((handle) => handle.process);
-  if (!processes.length) {
-    return;
-  }
+const isProcessHandle = (handle: ResourceHandle): handle is ProcessHandle =>
+  "process" in handle;
 
-  const shutdown = () => {
-    for (const handle of processes) {
-      handle.process?.kill();
-    }
-  };
-
-  const onSignal = () => {
-    shutdown();
-    process.exit(0);
-  };
-
-  process.on("SIGINT", onSignal);
-  process.on("SIGTERM", onSignal);
-
-  const firstExit = await Promise.race(
-    processes.map(async (handle) => ({
-      code: await handle.process?.exited,
-      label: handle.label,
-    })),
-  );
-
-  shutdown();
-  if (firstExit.code !== 0) {
-    throw new Error(`${firstExit.label} exited with code ${firstExit.code}.`);
-  }
-};
+const waitForActiveProcesses = async (handles: ResourceHandle[]) =>
+  waitForManagedProcesses(handles.filter(isProcessHandle));
 
 const getDefaultWorkspaceConfigPath = () => resolve(workspaceRoot, "volt.workspace.ts");
 
@@ -122,7 +94,7 @@ const executeWorkspaceTask = async (
   const logger = options.logger ?? createRootLogger();
   const completed = new Map<string, unknown>();
   const inFlight = new Set<string>();
-  const handles: Array<{ label: string; process?: Bun.Subprocess }> = [];
+  const handles: ResourceHandle[] = [];
 
   const executeTaskInternal = async (
     name: string,
@@ -175,13 +147,7 @@ const executeWorkspaceTask = async (
                 inputs: nestedOptions?.inputs,
                 logger,
               });
-              handles.push(
-                ...executed.activeHandles.map((handle) =>
-                  "process" in handle
-                    ? { label: handle.label, process: handle.process }
-                    : { label: handle.label },
-                ),
-              );
+              handles.push(...executed.activeHandles);
               return executed.result;
             },
             runTask: async (nestedTaskName, nestedOptions) =>
@@ -234,7 +200,7 @@ const runProjectCommand = async (command: VoltCommand, rest: string[]) => {
       throw new Error(`No default ${command} tasks configured in ${workspaceConfigPath}.`);
     }
 
-    const handles: Array<{ label: string; process?: Bun.Subprocess }> = [];
+    const handles: ResourceHandle[] = [];
     for (const taskName of selected) {
       const executed = await executeWorkspaceTask(workspaceConfigPath, taskName, {
         logger: createRootLogger(),
@@ -312,13 +278,7 @@ const runTaskCommand = async (rest: string[]) => {
     const executed = await executeProjectTask(project, taskName, {
       logger: createRootLogger(),
     });
-    await waitForActiveProcesses(
-      executed.activeHandles.map((handle) =>
-        "process" in handle
-          ? { label: handle.label, process: handle.process }
-          : { label: handle.label },
-      ),
-    );
+    await waitForActiveProcesses(executed.activeHandles);
     return;
   }
 
@@ -399,9 +359,14 @@ const main = async () => {
     await runInternalDaemon(rest);
     return;
   }
+  if (command === "dashboard") {
+    const { runVoltDashboard } = await import("./dashboard");
+    await runVoltDashboard(workspaceRoot);
+    return;
+  }
 
   throw new Error(
-    "Usage: volt <build|dev|task|daemon> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
+    "Usage: volt <build|dev|task|daemon|dashboard> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
   );
 };
 

@@ -3,13 +3,11 @@
 ## Repository Cleanup, Improvements, and Refactoring
 
 - [ ] Delete `packages/graphite` and `packages/react`, but only after making sure nothing is still depending on them.
-- [x] Delete `loopkit-capabilities` and `loopkit-oci`. These are useless experiments.
+- [ ] Check if anything is depending on `packages/loom-interactions`.
 
 ## Volt
 
-- [x] This repo is at the path `C:\Users\ijhar\Desktop\loop-kit`. Volt is at the path `C:\Users\ijhar\Desktop\volt`. Integrate Volt into this repository. Do not bring over AGENTS.md, or ARCHITECTURE.md. Do merge the CHECKLIST.md underneath the Volt category in our checklist, though. When merging it, do some renaming. There are Volt demo apps - make it clear that that's what they are. Same with the Volt site. Potentially integrate /docs/prototypes/loop-daemon-prototype.md into our knowledge management workflow here - but don't just blindly copy. Do take the /scripts folder though, because it has a handy npm package publishing script that we should absolutely have in this repo - and document that we have that someplace where we document our tooling workflows (AGENTS or ARCHITECTURE or other).
-- [x] Convert `apps/loom-demo` and `apps/forge` into Volt apps instead of Vite/Next.js apps.
-- [x] Convert `apps/dock-demo` into a Volt app instead of a Vite app.
+- [x] Get Volt CLI working via bun link or one of many options so that we can use it here easily.
 - [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
 - [ ] Integrate Resonate into the repo as durable execution infrastructure for daemon-backed workflows, AI jobs, and Forge automation.
 - [ ] Prove that ElectroBun works with `apps/volt-demo`.
@@ -18,6 +16,7 @@
 - [x] Add a task-oriented Volt project/workspace model with named tasks, generator flows, and workspace composition.
 - [x] Add `volt task list` / `volt task run` and route `volt dev` / `volt build` through task defaults when available.
 - [x] Prototype TS-first contracts, entrypoint specs, Bun task helpers, and lightweight contract metadata codegen outside config files.
+- [x] Simplify Volt's public model around runtime bindings, flows, runtime inputs, and thin workspace composition instead of expanding target/task/service surface area.
 - [ ] Design Volt's next artifact-aware layer before adding more adapters.
   - [ ] Keep `targets` as runnable and buildable units.
   - [x] Prototype config-defined `artifacts` as value/module producers resolved before targets.
