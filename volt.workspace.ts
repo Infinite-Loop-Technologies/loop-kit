@@ -15,6 +15,10 @@ export default defineWorkspaceConfig({
     site: siteProject,
   },
   tasks: {
+    "dev:forge": flow("dev:forge", function* (ctx) {
+      ctx.log("dev:forge", "Starting Forge development server...");
+      return yield* ctx.runProjectTask("forge", "dev:web");
+    }),
     "dev:demo+forge": flow("dev:demo+forge", function* (ctx) {
       yield* ctx.log("workspace-topology-start", "starting workspace topology");
       const forgeTask = yield* ctx.forkProjectTask("forge", "dev:web");

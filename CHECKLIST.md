@@ -7,16 +7,11 @@
 
 ## Volt
 
-- [x] Get Volt CLI working via bun link or one of many options so that we can use it here easily.
 - [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
 - [ ] Integrate Resonate into the repo as durable execution infrastructure for daemon-backed workflows, AI jobs, and Forge automation.
 - [ ] Prove that ElectroBun works with `apps/volt-demo`.
 - [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
 - [ ] Add richer dev orchestration around readiness, restart policies, and grouped logs for `bun.command()` targets.
-- [x] Add a task-oriented Volt project/workspace model with named tasks, generator flows, and workspace composition.
-- [x] Add `volt task list` / `volt task run` and route `volt dev` / `volt build` through task defaults when available.
-- [x] Prototype TS-first contracts, entrypoint specs, Bun task helpers, and lightweight contract metadata codegen outside config files.
-- [x] Simplify Volt's public model around runtime bindings, flows, runtime inputs, and thin workspace composition instead of expanding target/task/service surface area.
 - [ ] Design Volt's next artifact-aware layer before adding more adapters.
   - [ ] Keep `targets` as runnable and buildable units.
   - [x] Prototype config-defined `artifacts` as value/module producers resolved before targets.
@@ -31,7 +26,6 @@
 - [ ] Add code generation as a first-class Volt capability.
 - [ ] Prove the model with WASM components before generalizing further.
 - [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
-- [ ] Add stronger app templates: multiplayer/fullstack starter, docs starter, and library starter.
 - [ ] Add an inspect/debug surface in the CLI so target graphs, resolved env, and dependency order are visible.
 - [ ] Greatly improve the Volt demos and templates.
 - [ ] Add a real docs/content app for Volt, not just the current site shell.
@@ -39,7 +33,6 @@
 - [x] Create a repo-local Volt Codex skill and use it as the lightweight Volt docs front door. Keep it updated when Volt changes.
 - [ ] Set up AI tooling via the Volt CLI and installable Volt-specific skills or docs surfaces.
 - [ ] Set up npm token and publish packages to prove the Volt release flow works.
-- [ ] Set up an actual GitHub repository for Volt.
 - [ ] Set up GitHub Actions workflows for publishing Volt packages.
 - [ ] Set up deployed Volt examples and choose a hosting story for the longer-running demos.
 
@@ -57,6 +50,7 @@
 
 - [ ] Build Forge up to be an AI agentic coding driver
   - [ ] Add a new target/entrypoint into Forge. This will be the "AI server". Set up HTTP, websockets, or perhaps some kind of RPC if we wanna go that direction with Volt. Wire up the Codex SDK and make it so you can add a project location in the Forge sidebar using the concept of a "connector" that can sync from filesystem into Forge and create a sort of view.
+  - [ ] Set up a durable workflow style system so that if the AI app crashes the AI workflow can continue running.
 - [ ] The architecture of Forge is messy and gimmicky, because it's simply a demo. We should improve it:
   - [ ] Implement a simple client-side state store with `@loop-kit/state`.
   - [ ] Implement a service dependency injection pattern inspired by [this](https://www.evolu.dev/docs/dependency-injection) Evolu page.
