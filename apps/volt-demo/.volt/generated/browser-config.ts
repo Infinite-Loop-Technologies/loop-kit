@@ -10,12 +10,12 @@ export interface BrowserRuntimeConfig {
 }
 
 export const browserRuntimeConfig: BrowserRuntimeConfig = {
-  "gameHttpUrl": "http://127.0.0.1:64280",
+  "gameHttpUrl": "http://127.0.0.1:55477",
   "gamePublicHttpUrl": null,
   "gamePublicWsUrl": null,
-  "gameWsUrl": "ws://127.0.0.1:64280/ws",
+  "gameWsUrl": "ws://127.0.0.1:55477/ws",
   "mode": "development",
   "shareEnabled": false,
   "webPublicUrl": null,
-  "webUrl": "http://127.0.0.1:64279"
+  "webUrl": "http://127.0.0.1:55476"
 };

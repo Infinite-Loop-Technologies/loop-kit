@@ -49,9 +49,14 @@
   - [ ] Show off all of dock's features in dock-demo.
     - [ ] The system of panels, and how panels belong to groups, sometimes implicitly, with policy. Show off a main panel view where you can split panels. Then a sidebar panel in a different group on the left, with policy to make it its own group that isn't interopable with the panels from the main group.
     - [ ] Show off the layers system which dock should have. Ensure dock supports this. Specifically, some groups should be allowed to be on separate layers. Use this to show off a modal, and a side peek. The side peek should have the background behind it still interactable.
+- [ ] Create a better site for dock that doubles as both a set of demos and documentation for the packages.
+  - [ ] Show off themeability via the loom-pack example themed Dock implementation.
+- [ ] Gain feature parity with Dockview. <https://dockview.dev/docs/overview/introduction>
 
 ## Forge
 
+- [ ] Build Forge up to be an AI agentic coding driver
+  - [ ] Add a new target/entrypoint into Forge. This will be the "AI server". Set up HTTP, websockets, or perhaps some kind of RPC if we wanna go that direction with Volt. Wire up the Codex SDK and make it so you can add a project location in the Forge sidebar using the concept of a "connector" that can sync from filesystem into Forge and create a sort of view.
 - [ ] The architecture of Forge is messy and gimmicky, because it's simply a demo. We should improve it:
   - [ ] Implement a simple client-side state store with `@loop-kit/state`.
   - [ ] Implement a service dependency injection pattern inspired by [this](https://www.evolu.dev/docs/dependency-injection) Evolu page.
@@ -66,3 +71,7 @@
   - [ ] Set up a lightweight concept of "actions". Actions can contextually dispatch commands. Use the concept of actions to create a keybindings manager and a real command pallette. This would involve having an actions registry.
   - [ ] Upon loading Forge, the command palette instantly opens up. It should stay closed until toggled via a command, Ctrl+K by default. Use the new keybindings system for this.
   - [ ] Make sure `loom-pack-dock` is being taken advantage of fully, including the drag and drop, and panel splitting. Set up actions and register them to the keybindings system and thew command palette to do things like contextually splitting the panel the user is currently working in. Wire up drag and drop of panels, but make sure that the "node view" panels can't be swapped with panels that aren't compatible such as the sidebar or side peek. Dock is supposed to have a system of layers and groups with policy to prevent this - make sure it's working properly.
+
+## Loom
+
+- [ ] Start building an experimental package for building TUIs with Loom. A good option could be [OpenTUI](https://opentui.com/). The goal of loop-kit is to be able to write a UI how you like, and use it with different themes or renderers. And we can take this a step further by making the same, or similar interaction code work too. But the same theme might not work in both React and TUI. The different renderer support is basically done by themes now! So themes are renderer specific. But the same theme package could export themes for multiple renderers, probably - or something like that. Maybe there's a better solution.
