@@ -1,0 +1,7 @@
+[volt] spawning process {"cmd":["bun","--watch","--feature","VOLT_TARGET_BUN","--feature","VOLT_RUNTIME_BUN_FULLSTACK","--feature","VOLT_MODE_DEVELOPMENT","C:\\Users\\ijhar\\Desktop\\loop-kit\\apps\\forge\\.volt\\generated\\targets\\dev-web.bun-fullstack.entry.ts"],"cwd":"C:\\Users\\ijhar\\Desktop\\loop-kit\\apps\\forge","label":"dev:web","pid":69188}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}
+[volt:dev:web] [volt:bun-fullstack] forge server listening {"mode":"development","port":3000,"url":"http://localhost:3000/"}

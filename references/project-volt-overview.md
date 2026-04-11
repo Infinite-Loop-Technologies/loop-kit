@@ -24,6 +24,7 @@ It is already useful for:
 
 - Bun fullstack/server/command runtimes
 - config-time artifacts and runtime inputs
+- workspace and project `.env` loading for config-time and runtime env injection
 - workspace-aware daemon state
 - local flows and memoized setup steps
 - typed local orchestration that can sit above `dev`, `build`, `lint`, `test`, codegen, and future agent runs
@@ -66,6 +67,7 @@ The intended user-facing shape is:
 
 - `volt` with no subcommand opens the OpenTUI
 - explicit subcommands remain available for direct shell usage
+- bare task names can be run directly, so `volt dev:forge` resolves like `volt task run dev:forge`
 - projects declare runtime topology and orchestration in config
 - the daemon owns local state, resource/session ownership, and invalidation
 - tasks stay useful for deterministic work

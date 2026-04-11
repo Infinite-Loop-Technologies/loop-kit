@@ -10,6 +10,14 @@ Use these files:
 - `ARCHITECTURE.md` for repo map, architectural direction, and invariants
 - `references/` for durable support material when it does not belong in a package
 
+Defaults:
+
+- scan `references/` filenames first, then open only the obviously relevant docs
+- keep reference filenames descriptive enough that a quick scan is useful
+- use markdown checkboxes in `HUMAN_INBOX.md` for actionable human tasks
+- add a short `(followup: message me "...")` note on human tasks when it helps the next handoff
+- if an inbox capture becomes long, move it into `references/inbox/` and keep only a pointer in the inbox
+
 ## Slice Semantics
 
 A slice is the smallest bounded unit of repo work worth tracking across:
@@ -31,8 +39,8 @@ At session start:
 1. glance `AGENT_INBOX.md`
 2. glance `HUMAN_INBOX.md`
 3. glance the relevant part of `CHECKLIST.md`
-4. read `ARCHITECTURE.md` if the work is architectural or unfamiliar
-5. read an obvious relevant doc in `references/` if one exists
+4. scan `references/` filenames and open only the obvious relevant docs
+5. read `ARCHITECTURE.md` if the work is architectural or unfamiliar
 6. identify the next coherent slice before coding
 
 ## Inbox Processing

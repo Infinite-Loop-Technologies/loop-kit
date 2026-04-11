@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { useRegisterActionHandler, useScopedShortcutMap } from '@loop-kit/interaction-react';
+import { useDispatchAction, useRegisterActionHandler, useScopedShortcutMap } from '@loop-kit/interaction-react';
 import type { DockPanelRendererProps, DockPanelRegistry } from '@loop-kit/loom-pack-dock';
 import {
     Avatar,
@@ -24,17 +24,23 @@ import {
 } from '@loop-kit/loom-react';
 
 import { forgeMockData, type ForgeTask } from '../lib/forge-mocks';
+import { forgeActionIds, forgeCommandItems } from '../lib/forge-actions';
 import {
     dockForgeInspector,
     forgeGroupIds,
+    forgePanelIds,
     getForgeWorkspaceMode,
     isForgeGroupOpen,
     openForgeCommandPalette,
+    openForgeSettings,
     toggleForgeCommandPalette,
     toggleForgeInspector,
+    toggleForgeSettings,
     toggleForgeSidePeek,
     toggleForgeWorkspaceMode,
 } from '../lib/forge-dock-model';
+import { useForgeRouter } from '../lib/forge-router';
+import { useForgeSession } from '../lib/forge-session';
 
 const chrome = {
     background: 'var(--loom-color-surface-sunken)',
@@ -50,6 +56,24 @@ const chrome = {
     successForeground: '#041612',
     warning: '#ffb86b',
 };
+
+function useForgeWorkspaceContext() {
+    const { navigate, route } = useForgeRouter();
+    const { signOut, updateWorkspace, user, workspaces } = useForgeSession();
+    const currentWorkspace =
+        route.kind === 'workspace'
+            ? workspaces.find((workspace) => workspace.slug === route.slug) ?? workspaces[0] ?? null
+            : workspaces[0] ?? null;
+
+    return {
+        currentWorkspace,
+        navigate,
+        signOut,
+        updateWorkspace,
+        user,
+        workspaces,
+    };
+}
 
 function ForgePill({
     children,
@@ -549,6 +573,8 @@ function OutlineContent({ compact = false }: { compact?: boolean }) {
 }
 
 function ForgeSidebarPanel({ controller }: DockPanelRendererProps) {
+    const { currentWorkspace, navigate, user, workspaces } = useForgeWorkspaceContext();
+
     return (
         <Box
             style={{
@@ -590,7 +616,7 @@ function ForgeSidebarPanel({ controller }: DockPanelRendererProps) {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                     }}>
-                    Forge Workspace
+                    {currentWorkspace?.name ?? 'Forge Workspace'}
                 </Text>
                 <IconButton
                     kind='soft'
@@ -633,10 +659,12 @@ function ForgeSidebarPanel({ controller }: DockPanelRendererProps) {
                     <Stack gap='2'>
                         <SectionLabel>Favorites</SectionLabel>
                         <Stack gap='1'>
-                            {forgeMockData.favorites.map((item) => (
+                            {(currentWorkspace?.nodes ?? [])
+                                .filter((item: any) => item.pinned)
+                                .map((item: any) => (
                                 <SidebarItem key={item.id}>
-                                    <Icon name='star' size='sm' style={{ color: chrome.warning }} />
-                                    <span>{item.label}</span>
+                                    <Icon name={(item.icon as any) ?? 'star'} size='sm' style={{ color: chrome.warning }} />
+                                    <span>{item.title}</span>
                                 </SidebarItem>
                             ))}
                         </Stack>
@@ -645,20 +673,26 @@ function ForgeSidebarPanel({ controller }: DockPanelRendererProps) {
                     <Stack gap='2'>
                         <SectionLabel>Workspace</SectionLabel>
                         <Stack gap='1'>
-                            <SidebarItem>
+                            <SidebarItem active>
                                 <Icon name='chevronRight' size='sm' tone='muted' />
                                 <Icon name='fileText' size='sm' tone='muted' />
-                                <span>Personal Notes</span>
+                                <span>{currentWorkspace?.name ?? 'Workspace'}</span>
                             </SidebarItem>
-                            <SidebarItem active>
+                            <SidebarItem>
                                 <Icon name='chevronDown' size='sm' tone='muted' />
                                 <Icon name='folderOpen' size='sm' tone='info' />
-                                <span>Projects</span>
+                                <span>Workspaces</span>
                             </SidebarItem>
-                            {forgeMockData.workspaceItems[1]?.children?.map((child) => (
-                                <SidebarItem key={child.id} indent={1}>
-                                    <Icon name={child.icon} size='sm' tone='muted' />
-                                    <span>{child.label}</span>
+                            {workspaces.map((workspace: any) => (
+                                <SidebarItem
+                                    active={workspace.id === currentWorkspace?.id}
+                                    indent={1}
+                                    key={workspace.id}
+                                    onClick={() => {
+                                        navigate(`/workspaces/${workspace.slug}`);
+                                    }}>
+                                    <Icon name='file' size='sm' tone='muted' />
+                                    <span>{workspace.name}</span>
                                 </SidebarItem>
                             ))}
                         </Stack>
@@ -678,16 +712,33 @@ function ForgeSidebarPanel({ controller }: DockPanelRendererProps) {
                     <Icon name='blocks' size='sm' tone='muted' />
                     <span>Extensions</span>
                 </SidebarItem>
-                <SidebarItem>
+                <SidebarItem
+                    onClick={() => {
+                        openForgeSettings(controller);
+                    }}>
                     <Icon name='settings' size='sm' tone='muted' />
                     <span>Settings</span>
                 </SidebarItem>
+                <Box
+                    style={{
+                        borderTop: chrome.border,
+                        marginTop: '0.5rem',
+                        padding: '0.75rem 0.75rem 0',
+                    }}>
+                    <Text as='div' size='sm' tone='muted' style={{ marginBottom: '0.25rem' }}>
+                        Signed in as
+                    </Text>
+                    <Text as='div' emphasis='strong' style={{ fontSize: '13px' }}>
+                        {user?.email ?? 'Unknown user'}
+                    </Text>
+                </Box>
             </Box>
         </Box>
     );
 }
 
 function ForgeFocusWorkspace({ controller, state }: DockPanelRendererProps) {
+    const { currentWorkspace } = useForgeWorkspaceContext();
     const split = getForgeWorkspaceMode(state) === 'split';
     const inspectorOpen = isForgeGroupOpen(state, forgeGroupIds.inspector);
 
@@ -713,8 +764,8 @@ function ForgeFocusWorkspace({ controller, state }: DockPanelRendererProps) {
                 <Breadcrumbs
                     items={[
                         { id: 'workspace', label: 'Workspace' },
-                        { id: 'projects', label: 'Projects' },
-                        { id: 'forge-redesign', label: 'Forge Redesign' },
+                        { id: 'projects', label: 'Workspaces' },
+                        { id: 'forge-redesign', label: currentWorkspace?.name ?? 'Forge Workspace' },
                     ]}
                     size='sm'
                 />
@@ -734,6 +785,14 @@ function ForgeFocusWorkspace({ controller, state }: DockPanelRendererProps) {
                         label='Command'
                         onClick={() => {
                             toggleForgeCommandPalette(controller);
+                        }}
+                    />
+                    <HeaderAction
+                        active={isForgeGroupOpen(state, forgeGroupIds.settings)}
+                        icon='settings'
+                        label='Settings'
+                        onClick={() => {
+                            toggleForgeSettings(controller);
                         }}
                     />
                     <HeaderAction
@@ -785,8 +844,8 @@ function ForgeFocusWorkspace({ controller, state }: DockPanelRendererProps) {
                         <Breadcrumbs
                             items={[
                                 { id: 'workspace-card', label: 'Workspace' },
-                                { id: 'projects-card', label: 'Projects' },
-                                { id: 'forge-redesign-card', label: 'Forge Redesign' },
+                                { id: 'projects-card', label: 'Workspaces' },
+                                { id: 'forge-redesign-card', label: currentWorkspace?.name ?? 'Forge Workspace' },
                             ]}
                             size='sm'
                         />
@@ -1164,10 +1223,22 @@ function ForgeSidePeekPanel({ controller }: DockPanelRendererProps) {
 
 function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
     const [activeIndex, setActiveIndex] = React.useState(0);
+    const dispatchAction = useDispatchAction();
 
     const closePalette = React.useCallback(() => {
         toggleForgeCommandPalette(controller);
     }, [controller]);
+
+    const commitActiveItem = React.useCallback(() => {
+        const item = forgeCommandItems[activeIndex];
+        if (!item) {
+            return;
+        }
+        dispatchAction(item.actionId);
+        if (item.actionId !== forgeActionIds.toggleCommandPalette) {
+            closePalette();
+        }
+    }, [activeIndex, closePalette, dispatchAction]);
 
     useScopedShortcutMap([
         { actionId: 'forge.command-palette.close', gesture: 'Escape' },
@@ -1181,17 +1252,17 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
         return { handled: true };
     });
     useRegisterActionHandler('forge.command-palette.next', () => {
-        setActiveIndex((current) => (current + 1) % forgeMockData.commandItems.length);
+        setActiveIndex((current) => (current + 1) % forgeCommandItems.length);
         return { handled: true };
     });
     useRegisterActionHandler('forge.command-palette.previous', () => {
         setActiveIndex((current) =>
-            current === 0 ? forgeMockData.commandItems.length - 1 : current - 1,
+            current === 0 ? forgeCommandItems.length - 1 : current - 1,
         );
         return { handled: true };
     });
     useRegisterActionHandler('forge.command-palette.commit', () => {
-        closePalette();
+        commitActiveItem();
         return { handled: true };
     });
 
@@ -1215,7 +1286,7 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
                 }}>
                 <Icon name='search' size='md' tone='muted' />
                 <Text as='div' emphasis='strong' style={{ flex: 1, fontSize: '15px' }}>
-                    Convert view to
+                    Forge commands
                 </Text>
                 <Kbd size='sm'>ESC</Kbd>
             </Box>
@@ -1234,13 +1305,18 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
                     Views
                 </Text>
                 <Stack gap='1'>
-                    {forgeMockData.commandItems.map((item, index) => {
+                    {forgeCommandItems.map((item, index) => {
                         const active = index === activeIndex;
                         return (
                             <Button
                                 key={item.id}
                                 kind='ghost'
-                                onClick={closePalette}
+                                onClick={() => {
+                                    dispatchAction(item.actionId);
+                                    if (item.actionId !== forgeActionIds.toggleCommandPalette) {
+                                        closePalette();
+                                    }
+                                }}
                                 size='sm'
                                 style={{
                                     background: active ? chrome.sidebarActive : 'transparent',
@@ -1254,11 +1330,19 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
                                 }}>
                                 <Inline align='center' gap='3' style={{ flexWrap: 'nowrap' }}>
                                     <Icon name={item.icon} size='md' tone={active ? 'info' : 'muted'} />
-                                    <Text as='span' style={{ fontSize: '14px' }}>
-                                        {item.title}
-                                    </Text>
+                                    <Stack gap='0' style={{ alignItems: 'flex-start' }}>
+                                        <Text as='span' style={{ fontSize: '14px' }}>
+                                            {item.title}
+                                        </Text>
+                                        <Text as='span' size='sm' tone='muted'>
+                                            {item.description}
+                                        </Text>
+                                    </Stack>
                                 </Inline>
-                                {active ? <Kbd size='sm'>↵</Kbd> : null}
+                                <Inline align='center' gap='2'>
+                                    {item.shortcut ? <Kbd size='sm'>{item.shortcut}</Kbd> : null}
+                                    {active ? <Kbd size='sm'>↵</Kbd> : null}
+                                </Inline>
                             </Button>
                         );
                     })}
@@ -1268,11 +1352,180 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
     );
 }
 
+function ForgeSettingsPanel({ controller }: DockPanelRendererProps) {
+    const { currentWorkspace, signOut, updateWorkspace, user } = useForgeWorkspaceContext();
+
+    if (!currentWorkspace) {
+        return null;
+    }
+
+    return (
+        <Box
+            style={{
+                background: chrome.sidebar,
+                borderRadius: '18px',
+                boxShadow: chrome.shadow,
+                display: 'flex',
+                flex: 1,
+                flexDirection: 'column',
+                minHeight: 0,
+                overflow: 'hidden',
+            }}>
+            <Box
+                style={{
+                    alignItems: 'center',
+                    borderBottom: chrome.border,
+                    display: 'flex',
+                    height: '56px',
+                    justifyContent: 'space-between',
+                    padding: '0 16px',
+                }}>
+                <Text as='div' emphasis='strong'>
+                    Settings
+                </Text>
+                <IconButton
+                    kind='ghost'
+                    label='Close settings'
+                    name='close'
+                    onClick={() => {
+                        toggleForgeSettings(controller);
+                    }}
+                    size='sm'
+                />
+            </Box>
+            <ScrollArea style={{ flex: 1, minHeight: 0 }}>
+                <Box style={{ padding: '18px' }}>
+                    <Stack gap='5'>
+                        <Stack gap='2'>
+                            <Text as='div' size='sm' tone='muted'>
+                                Workspace
+                            </Text>
+                            <Heading level={2} size='md'>
+                                {currentWorkspace.name}
+                            </Heading>
+                            <Text as='div' tone='muted'>
+                                {currentWorkspace.description ?? 'Forge workspace preferences and account controls.'}
+                            </Text>
+                        </Stack>
+
+                        <Stack gap='3'>
+                            <Text as='div' emphasis='strong' size='sm'>
+                                Appearance
+                            </Text>
+                            <Inline align='center' gap='2'>
+                                <Button
+                                    kind={currentWorkspace.colorMode === 'dark' ? 'solid' : 'outline'}
+                                    onClick={() => {
+                                        void updateWorkspace(currentWorkspace.id, { colorMode: 'dark' });
+                                    }}
+                                    size='sm'>
+                                    Dark
+                                </Button>
+                                <Button
+                                    kind={currentWorkspace.colorMode === 'light' ? 'solid' : 'outline'}
+                                    onClick={() => {
+                                        void updateWorkspace(currentWorkspace.id, { colorMode: 'light' });
+                                    }}
+                                    size='sm'>
+                                    Light
+                                </Button>
+                            </Inline>
+                        </Stack>
+
+                        <Stack gap='3'>
+                            <Text as='div' emphasis='strong' size='sm'>
+                                Dock defaults
+                            </Text>
+                            <Inline align='center' justify='space-between'>
+                                <Text as='span'>Open command palette on load</Text>
+                                <Button
+                                    kind={currentWorkspace.commandPaletteDefaultOpen ? 'solid' : 'outline'}
+                                    onClick={() => {
+                                        void updateWorkspace(currentWorkspace.id, {
+                                            commandPaletteDefaultOpen: !currentWorkspace.commandPaletteDefaultOpen,
+                                        });
+                                    }}
+                                    size='sm'>
+                                    {currentWorkspace.commandPaletteDefaultOpen ? 'Enabled' : 'Disabled'}
+                                </Button>
+                            </Inline>
+                            <Inline align='center' justify='space-between'>
+                                <Text as='span'>Open side peek by default</Text>
+                                <Button
+                                    kind={currentWorkspace.sidePeekDefaultOpen ? 'solid' : 'outline'}
+                                    onClick={() => {
+                                        void updateWorkspace(currentWorkspace.id, {
+                                            sidePeekDefaultOpen: !currentWorkspace.sidePeekDefaultOpen,
+                                        });
+                                    }}
+                                    size='sm'>
+                                    {currentWorkspace.sidePeekDefaultOpen ? 'Enabled' : 'Disabled'}
+                                </Button>
+                            </Inline>
+                            <Inline align='center' justify='space-between'>
+                                <Text as='span'>Inspector dock side</Text>
+                                <Inline align='center' gap='2'>
+                                    <Button
+                                        kind={currentWorkspace.inspectorDock === 'left' ? 'solid' : 'outline'}
+                                        onClick={() => {
+                                            void updateWorkspace(currentWorkspace.id, { inspectorDock: 'left' });
+                                        }}
+                                        size='sm'>
+                                        Left
+                                    </Button>
+                                    <Button
+                                        kind={currentWorkspace.inspectorDock !== 'left' ? 'solid' : 'outline'}
+                                        onClick={() => {
+                                            void updateWorkspace(currentWorkspace.id, { inspectorDock: 'right' });
+                                        }}
+                                        size='sm'>
+                                        Right
+                                    </Button>
+                                </Inline>
+                            </Inline>
+                        </Stack>
+
+                        <Stack gap='3'>
+                            <Text as='div' emphasis='strong' size='sm'>
+                                Account
+                            </Text>
+                            <Surface
+                                emphasis='subtle'
+                                style={{
+                                    background: chrome.card,
+                                    padding: '1rem',
+                                }}>
+                                <Stack gap='2'>
+                                    <Text as='div' size='sm' tone='muted'>
+                                        Signed in as
+                                    </Text>
+                                    <Text as='div' emphasis='strong'>
+                                        {user?.email ?? 'Unknown user'}
+                                    </Text>
+                                </Stack>
+                            </Surface>
+                            <Button
+                                kind='outline'
+                                onClick={() => {
+                                    void signOut();
+                                }}
+                                size='sm'>
+                                Log out
+                            </Button>
+                        </Stack>
+                    </Stack>
+                </Box>
+            </ScrollArea>
+        </Box>
+    );
+}
+
 export function createForgePanelRegistry(): DockPanelRegistry {
     return {
         kinds: {
             'command-palette': ForgeCommandPalettePanel,
             inspector: ForgeInspectorPanel,
+            settings: ForgeSettingsPanel,
             sidebar: ForgeSidebarPanel,
             'side-peek': ForgeSidePeekPanel,
             'workspace-browser': ForgeBrowserPanel,

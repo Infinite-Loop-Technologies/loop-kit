@@ -1,5 +1,13 @@
-import { ForgeWorkspace } from "./components/forge-workspace";
+import { ForgeRoot } from './components/forge-root';
+import { ForgeRouterProvider } from './lib/forge-router';
+import { ForgeSessionProvider } from './lib/forge-session';
 
 export function App() {
-  return <ForgeWorkspace />;
+    return (
+        <ForgeRouterProvider>
+            <ForgeSessionProvider>
+                <ForgeRoot />
+            </ForgeSessionProvider>
+        </ForgeRouterProvider>
+    );
 }

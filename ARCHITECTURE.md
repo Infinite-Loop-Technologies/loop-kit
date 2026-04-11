@@ -33,17 +33,40 @@ The repo is trying to grow reusable capability-oriented packages without letting
 
 - Bun is the default repo runtime for scripts, tests, and small automation.
 - Reusable packages should stay smaller, clearer, and less app-coupled than the demos built on top of them.
-- Forge should move toward clearer state, services, commands, and provider boundaries rather than ad hoc demo wiring.
+- Shared interaction behavior should live in reusable packages instead of being reimplemented per app.
+- Forge should resolve product architecture pressure first and move toward clearer state, services, actions, commands, workflows, and provider boundaries rather than ad hoc demo wiring.
 - Dock should prove real interaction behavior in `apps/dock-demo`, not only in package internals.
 - Loom should stay themeable from the outside instead of choosing themes internally.
 - Volt should stay Bun-native, explicit, and plugin-driven while absorbing loop-kit’s artifact and contract model instead of becoming a second disconnected platform.
 - Volt’s daemon should be workspace-scoped infrastructure. Higher-level durable orchestration can then sit on top, rather than re-encoding daemon state inside ad hoc local watchers.
 
+## Interaction runtime split
+
+- `packages/interaction` is the headless interaction runtime for scopes, actions, shortcuts, surfaces, overlays, and drag sessions.
+- `packages/interaction-react` is the React bridge for DOM ingress, scope registration, shortcut ingress, drag wiring, and overlay hosting.
+- Apps should extend this shared runtime when interaction behavior is reusable instead of inventing app-local alternatives.
+
+## Product pressure and proving grounds
+
+- `apps/forge` is the main app where product architecture pressure should resolve first.
+- `apps/dock-demo` is the proving ground for dock behavior and the new interaction runtime in practice.
+- Reusable packages should be hardened through Forge and dock-demo pressure, then kept smaller and less app-coupled than those apps.
+
+## Separation of concerns
+
+- Providers are composition boundaries and bridges into UI frameworks.
+- Services own durable stateful behavior and authoritative mutations.
+- Actions represent semantic user intent.
+- Commands are authoritative mutations against services/stores.
+- Workflows own async or multi-step orchestration.
+- Reusable interaction and dock policy should live in shared packages rather than being rebuilt per app screen.
+
 ## Invariants / non-negotiables
 
 - Packs, primitives, provider bridges, and reusable UI packages must not hardcode theme names, concrete theme package imports, or app-level CSS assumptions as part of their public behavior.
 - Theme selection belongs to the app shell or outer Loom provider. Reusable packages may consume Loom context, but they must not choose the active theme for the caller.
-- Headless packages must stay React-free unless React is the declared purpose of the package. `@loop-kit/dock` is headless; `@loop-kit/loom-pack-dock` is the React bridge.
+- Headless packages must stay React-free unless React is the declared purpose of the package. `@loop-kit/interaction` and `@loop-kit/dock` are headless; `@loop-kit/interaction-react` and `@loop-kit/loom-pack-dock` are the React bridges.
+- Providers must not become logic sinks. Keep policy, store logic, and orchestration outside provider components.
 - Project support docs should stay lightweight. Durable repo-wide truth belongs here or in one obvious file under `references/`, not scattered across many linked notes.
 
 ## Subsystem map

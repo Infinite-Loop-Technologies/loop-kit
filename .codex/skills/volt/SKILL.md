@@ -46,7 +46,10 @@ Use CKB early for non-trivial Volt work.
 - Runtime topology is one of Volt’s main reasons to exist. Prefer managed processes/resources with explicit readiness over shell-ordering tricks.
 - The workspace daemon now owns Parcel-watcher snapshots, lightweight affected-task invalidation, and shared resource/status state.
 - Dev Bun targets now execute from the workspace root so Bun watch mode can see sibling workspace packages; Volt passes `VOLT_ROOT_DIR` for per-project runtime services.
-- `volt dashboard` / `volt ui` is the experimental keyboard-first OpenTUI UI over daemon state; it is a consumer of the runtime model, not a replacement for it.
+- running `volt` with no subcommand now opens the keyboard-first OpenTUI by default
+- `volt dashboard` / `volt ui` remain aliases for the same UI surface
+- bare task names now resolve through `volt task run`, so `volt dev:forge` is valid
+- Volt now loads workspace and project `.env` files during config evaluation and Bun target spawning, with project-local values overriding workspace defaults
 - Effect is internal-only. Do not expose Effect-shaped APIs in Volt’s public story.
 - Current docs front doors:
   - `references/project-volt-project-model.md`

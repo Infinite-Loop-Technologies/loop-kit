@@ -20,23 +20,24 @@ import {
   type LoadedVoltWorkspaceLike,
 } from "./workspace";
 import type { LoadedVoltProjectLike } from "./task";
+import { loadVoltEnv, withScopedProcessEnv } from "./env";
 
 type TargetGraph = Record<string, VoltTargetDefinition>;
 
 const normalizeSelection = (values: readonly string[] | undefined): string[] =>
   (values ?? []).map((value) => value.trim()).filter(Boolean);
 
-const createEnvReader = () => ({
+const createEnvReader = (env: Record<string, string>) => ({
   boolean: (name: string) => {
-    const value = process.env[name]?.trim().toLowerCase();
+    const value = env[name]?.trim().toLowerCase();
     return value === "1" || value === "true" || value === "yes";
   },
   number: (name: string, fallback: number) => {
-    const value = process.env[name];
+    const value = env[name];
     const parsed = value ? Number(value) : Number.NaN;
     return Number.isFinite(parsed) ? parsed : fallback;
   },
-  read: (name: string, fallback?: string) => process.env[name] ?? fallback,
+  read: (name: string, fallback?: string) => env[name] ?? fallback,
 });
 
 export const resolveMode = (value: string | undefined, command: VoltCommand): VoltMode =>
@@ -53,10 +54,11 @@ export const createVoltConfigContext = (
   configPath: string,
   mode: VoltMode,
   workspaceRoot: string,
+  env: Record<string, string>,
 ): VoltConfigContext => ({
   command,
   configPath,
-  env: createEnvReader(),
+  env: createEnvReader(env),
   mode,
   rootDir: dirname(configPath),
   workspaceRoot,
@@ -92,11 +94,31 @@ export const loadVoltConfig = async (
   mode: VoltMode,
   workspaceRoot: string,
 ): Promise<VoltConfig<TargetGraph>> => {
-  const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
+  const scopedEnv = loadVoltEnv({
+    mode,
+    rootDir: dirname(configPath),
+    workspaceRoot,
+  });
+  const loaded = await withScopedProcessEnv(scopedEnv, () =>
+    import(`${pathToFileURL(configPath).href}?t=${Date.now()}`),
+  );
   const definition = loaded.default as
     | VoltConfigDefinition<TargetGraph>
     | VoltProjectConfigDefinition;
-  const context = createVoltConfigContext(command, configPath, mode, workspaceRoot);
+  const context = createVoltConfigContext(
+    command,
+    configPath,
+    mode,
+    workspaceRoot,
+    {
+      ...Object.fromEntries(
+        Object.entries(process.env).filter((entry): entry is [string, string] =>
+          typeof entry[1] === "string"
+        ),
+      ),
+      ...scopedEnv,
+    },
+  );
   const input =
     typeof definition === "function" ? await definition(context) : definition;
 
@@ -123,10 +145,24 @@ export const loadVoltProject = async (
   mode: VoltMode,
   workspaceRoot: string,
 ): Promise<LoadedVoltProjectLike> => {
-  const loaded = await import(`${pathToFileURL(configPath).href}?t=${Date.now()}`);
+  const scopedEnv = loadVoltEnv({
+    mode,
+    rootDir: dirname(configPath),
+    workspaceRoot,
+  });
+  const loaded = await withScopedProcessEnv(scopedEnv, () =>
+    import(`${pathToFileURL(configPath).href}?t=${Date.now()}`),
+  );
   return normalizeLoadedProjectDefinition(
     loaded.default as VoltConfigDefinition<TargetGraph> | VoltProjectConfigDefinition,
-    createVoltConfigContext(command, configPath, mode, workspaceRoot),
+    createVoltConfigContext(command, configPath, mode, workspaceRoot, {
+      ...Object.fromEntries(
+        Object.entries(process.env).filter((entry): entry is [string, string] =>
+          typeof entry[1] === "string"
+        ),
+      ),
+      ...scopedEnv,
+    }),
     configPath,
     workspaceRoot,
   );

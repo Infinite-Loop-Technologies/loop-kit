@@ -29,6 +29,7 @@
     "check": "bun run typecheck"
   },
   "dependencies": {
+    "@loop-kit/interaction": "workspace:*",
     "@opentui/core": "^0.1.97",
     "@opentui/react": "^0.1.97",
     "@parcel/watcher": "^2.5.6",

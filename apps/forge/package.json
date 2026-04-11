@@ -9,6 +9,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@instantdb/admin": "^1.0.1",
+    "@instantdb/react": "^1.0.1",
     "@loop-kit/dock": "workspace:*",
     "@loop-kit/interaction-react": "workspace:*",
     "@loop-kit/loom-pack-dock": "workspace:*",
@@ -18,8 +20,8 @@
     "@loop-kit/loom-theme-foundry-react": "workspace:*",
     "@loop-kit/loom-theme-neumorph-react": "workspace:*",
     "jazz-tools": "^0.20.15",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
     "volt": "workspace:*",
     "workflow": "^4.2.0-beta.73"
   },

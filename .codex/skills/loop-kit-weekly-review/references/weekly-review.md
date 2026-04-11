@@ -12,6 +12,8 @@ Review these layers:
 6. local Git branch state
 7. remote branch and PR state when relevant
 
+Before opening reference docs, scan the `references/` filenames and only load the ones that are obviously relevant to the stale work, blockers, or architectural drift you are reviewing.
+
 Questions to answer:
 
 - What is still open?
@@ -40,3 +42,13 @@ Expected outputs:
 - pruned or updated reference docs
 - explicit follow-up captures where needed
 - a concise review summary to the user
+
+Allowed during the review:
+
+- small, obvious cleanup actions that take only a few minutes
+- low-risk file cleanup or markdown cleanup that can be validated immediately
+
+Not allowed during the review:
+
+- hiding risky refactors or destructive cleanup inside the ritual
+- leaving human-owned blockers out of `HUMAN_INBOX.md`

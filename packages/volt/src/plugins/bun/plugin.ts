@@ -7,6 +7,7 @@ import type {
   VoltTargetContext,
 } from "../../contracts";
 import { isVoltEntrypoint } from "../../contracts";
+import { loadVoltEnv } from "../../env";
 import { resolveScopedTargetValue } from "../../platform/scoped";
 import type { VoltRuntimeInputProvider, VoltServiceProvider } from "../../services";
 import { defineTargetTask } from "../../task";
@@ -68,6 +69,11 @@ const createTargetEnv = (
   context: VoltTargetContext,
   options: BunRuntimeOptions,
 ) => ({
+  ...loadVoltEnv({
+    mode: context.mode,
+    rootDir: context.rootDir,
+    workspaceRoot: context.workspaceRoot,
+  }),
   ...createIntegrationEnv(context),
   ...options.env,
   VOLT_PLATFORM_CONFIG: JSON.stringify(
@@ -329,6 +335,11 @@ const buildCommandTarget = async (
   const child = context.spawn(context.currentTarget.name, options.commands.build, {
     cwd: resolveCommandCwd(context, options.cwd),
     env: {
+      ...loadVoltEnv({
+        mode: context.mode,
+        rootDir: context.rootDir,
+        workspaceRoot: context.workspaceRoot,
+      }),
       ...createIntegrationEnv(context),
       ...options.env,
     },
@@ -347,6 +358,11 @@ const devCommandTarget = (
   return context.spawn(context.currentTarget.name, options.commands.dev, {
     cwd: resolveCommandCwd(context, options.cwd),
     env: {
+      ...loadVoltEnv({
+        mode: context.mode,
+        rootDir: context.rootDir,
+        workspaceRoot: context.workspaceRoot,
+      }),
       ...createIntegrationEnv(context),
       ...options.env,
     },

@@ -2,17 +2,30 @@
 
 ## Repository Cleanup, Improvements, and Refactoring
 
-- [x] Delete `packages/graphite` and `packages/graphite-react` after migrating remaining usages.
-- [x] Check and remove anything depending on `packages/loom-interactions`.
-- [ ] Remove remaining Graphite-era residue from repo docs/tests (`README.md`, `packages/dock/test/graphite.fixture.ts`, and stale generated index references).
+- [x] Refresh the root docs/control-plane surface so `README.md` matches the current Bun/Volt workspace shape, `platform-api`, and repo knowledge-management workflow.
+- [ ] Remove remaining Graphite-era residue from tests/generated references (`packages/dock/test/graphite.fixture.ts` and stale generated index references).
 - [ ] Reconcile the documented `dev` workflow with GitHub reality. `AGENTS.md` says `dev` is the working integration branch, but the remote currently has no `origin/dev`.
+- [ ] Clean up the temp log files that we don't need.
+- [ ] Decide whether `apps/platform-api` is a real part of the product topology that should be surfaced in more repo docs/scripts, or whether it should remain an isolated experiment.
+- [ ] Decide whether `apps/dock-demo`, `apps/loom-demo`, and `apps/platform-api` should join `volt.workspace.ts` or stay as intentionally separate app-local entrypoints.
+- [ ] Add a lightweight repo garbage-collection workflow for temp artifacts, stale branches, stale inbox items, and stale checklist residue.
 
 ## Volt
 
+- [ ] Improve `packages/create-volt`
+  - [ ] Set up a better method of `create-volt` being able to spawn templates. Perhaps the templates could be higher up in a root `templates` or `examples` folder. These projects could be deployed onto a CDN, perhaps via Vercel Blob. Or, we could compress them and include them in the `create-volt` build. If we keep them lightweight, including them in `create-volt` in a compressed format is my preferred option.
+  - [ ] Set up some kind of system that lets us use templates and addons to spawn Volt templates. Perhaps we use EJS, Plop, or something else.
+  - [ ] Investigate the concept of integrating `create-volt` with the actual Volt CLI - perhaps they both use could the same code under the hood.
+  - [ ] Investigate the concept of being able to spawn templates and install files/code into Volt projects via any URL, perhaps adding a shadcn-like registry system. This could be a similar setup to integrations, meaning you basically can program the CLI in volt.workspace.ts, or volt.config.ts, or elsewhere, and that lets you add new plugins, or extend certain functionality. Investigate this for a lot of cool features. Maybe even some currently built-in Volt CLI features could be moved to plugin functions that are configureable and overridable by the user, just like our runtime/target adapters and so on.
+- [ ] Improve the Volt CLI
+  - [ ] Fix the Volt TUI's responsive layout - it is glitching and not working correctly.
+  - [ ] Set up a simple Volt help command - perhaps this shouldn't open the TUI because that might be jarring. By having this - users who don't wanna use the TUI can quickly learn the flag for non-TUI usage, and quickly see the CLI surface.
+  - [ ] Set up the TUI embedded shell to act as a real terminal, not just calling Volt commands.
+  - [ ] Spice up Volt TUI with easter eggs and more
+    - [ ] Set up  ASCII art and animations. Something with a lightning bolt, perhaps.
+- [ ] Build Volt plugin model and programmability of the CLI
+  - [ ] Set up a simple, lightweight embedded Snake game, showing off a "plugin" or function that can be set up perhaps in volt.workspace.ts or elsewhere, and hook into the TUI, in a panel, perhaps.
 - [ ] Clarify Volt's core product shape in the CLI, docs, and demos: a Bun-native runtime-topology and workflow layer for tasks, managed resources, artifacts, integrations, and future agent workflows.
-- [ ] Make `volt` open the interactive TUI by default when launched without an explicit subcommand.
-  - [ ] Keep a simple flag to force plain CLI mode.
-  - [ ] Decide later whether persistent user config for default mode is worth adding.
 - [ ] Add a clear agent-workflow story to Volt.
   - [ ] Decide whether agent workflows should be first-class alongside tasks/flows or a specialized flow/task convention.
   - [ ] Keep agent workflows wired from `volt.config.ts` or workspace config instead of inventing a second hidden control plane.
@@ -77,7 +90,11 @@
 - [ ] Replace the workspace demo with a real workspace.
   - [ ] Set up InstantDB using the information [here](https://www.instantdb.com/llms-full.txt).
   - [ ] Use a service and provider pattern. Again, arbitrary React components should go through hooks from the providers.
-  - [ ] Set up an authentication workflow using InstantDB's Clerk support. Set up example API keys and I will fill them in. Reorganize the routing layout so that when not logged in, you land on a landing page (very basic). The landing page can have a login/signup button. Have a simple Clerk-powered authentication flow. If the user is logged in, they should be immediately redirected to the workspace route. Users should always have at least one workspace so if they have none, one should be created for them on the backend. Set up the InstantDB admin SDK for Next.js on the backend only for managing users and things.
+  - [ ] Decide and implement the Forge auth direction.
+    - [ ] Decide whether Forge should keep InstantDB magic-code auth, move to Clerk-backed auth, or support both with a clear boundary. Current in-flight code uses InstantDB magic code in Forge while `apps/platform-api` is wired around Clerk.
+    - [ ] Reorganize routing so logged-out users land on a small landing/auth screen and logged-in users go straight to the workspace.
+    - [ ] Ensure users always get a bootstrapped workspace on first sign-in.
+    - [ ] Keep backend-only bootstrap/admin logic out of leaf UI code and make the service boundary explicit.
   - [ ] Create a simple InstantDB schema and queries, and wire it up with providers to populate the workspace with real data. Create commands and potentially actions too for various things.
 - [ ] Add interactivity to the workspace UI.
   - [ ] Set up a lightweight concept of "actions". Actions can contextually dispatch commands. Use the concept of actions to create a keybindings manager and a real command pallette. This would involve having an actions registry.
@@ -87,3 +104,7 @@
 ## Loom
 
 - [ ] Start building an experimental package for building TUIs with Loom. A good option could be [OpenTUI](https://opentui.com/). The goal of loop-kit is to be able to write a UI how you like, and use it with different themes or renderers. And we can take this a step further by making the same, or similar interaction code work too. But the same theme might not work in both React and TUI. The different renderer support is basically done by themes now! So themes are renderer specific. But the same theme package could export themes for multiple renderers, probably - or something like that. Maybe there's a better solution.
+
+## Building More Demos
+
+- [ ] Build a demo with Volt, ElectroBun, Dock, and others. Goal: It shows off Dock usage but in an infinite canvas.

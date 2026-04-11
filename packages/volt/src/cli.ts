@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { ProcessHandle, ResourceHandle, VoltCommand } from "./contracts";
 import {
@@ -10,6 +10,7 @@ import {
   resolveMode,
 } from "./config";
 import { handleDaemonCommand, runDaemonRuntime } from "./daemon";
+import { loadVoltEnv } from "./env";
 import { normalizeLoadedProjectDefinition } from "./project";
 import { waitForManagedProcesses } from "./process";
 import { runFlow } from "./flow";
@@ -18,6 +19,15 @@ import { executeProjectCommand, executeProjectTask, listProjectTasks } from "./t
 import { createRootLogger } from "./utils";
 
 const workspaceRoot = process.cwd();
+const knownTopLevelCommands = new Set([
+  "build",
+  "daemon",
+  "dashboard",
+  "dev",
+  "task",
+  "ui",
+  "__daemon-run",
+]);
 
 const normalizeValues = (values: readonly string[] | string | undefined): string[] =>
   (Array.isArray(values) ? values : values ? [values] : [])
@@ -75,7 +85,17 @@ const resolveProjectFromWorkspaceValue = async (
 
   return normalizeLoadedProjectDefinition(
     value as Parameters<typeof normalizeLoadedProjectDefinition>[0],
-    createVoltConfigContext("dev", source, mode, workspaceRoot),
+    createVoltConfigContext(
+      "dev",
+      source,
+      mode,
+      workspaceRoot,
+      loadVoltEnv({
+        mode,
+        rootDir: dirname(source),
+        workspaceRoot,
+      }),
+    ),
     source,
     workspaceRoot,
   );
@@ -346,8 +366,40 @@ const runDashboardCommand = async (_rest: string[]) => {
   await runVoltDashboard(workspaceRoot);
 };
 
-const main = async () => {
-  const [command, ...rest] = Bun.argv.slice(2);
+export const resolveVoltCliInvocation = (args: string[]) => {
+  const [command, ...rest] = args;
+
+  if (!command || command.startsWith("-")) {
+    return {
+      command: "ui" as const,
+      rest: command ? [command, ...rest] : rest,
+    };
+  }
+
+  if (knownTopLevelCommands.has(command)) {
+    return {
+      command: command as
+        | "__daemon-run"
+        | "build"
+        | "daemon"
+        | "dashboard"
+        | "dev"
+        | "task"
+        | "ui",
+      rest,
+    };
+  }
+
+  return {
+    command: "task-run" as const,
+    rest: [command, ...rest],
+  };
+};
+
+export const main = async () => {
+  const invocation = resolveVoltCliInvocation(Bun.argv.slice(2));
+  const { command, rest } = invocation;
+
   if (command === "build" || command === "dev") {
     await runProjectCommand(command, rest);
     return;
@@ -368,10 +420,16 @@ const main = async () => {
     await runDashboardCommand(rest);
     return;
   }
+  if (command === "task-run") {
+    await runTaskCommand(["run", ...rest]);
+    return;
+  }
 
   throw new Error(
     "Usage: volt <build|dev|task|daemon|dashboard|ui> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
   );
 };
 
-await main();
+if (import.meta.main) {
+  await main();
+}

@@ -18,8 +18,8 @@
     "@loop-kit/loom-theme-aquatic-react": "workspace:*",
     "@loop-kit/loom-theme-base-react": "workspace:*",
     "@loop-kit/loom-theme-neumorph-react": "workspace:*",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
     "volt": "workspace:*"
   },
   "devDependencies": {

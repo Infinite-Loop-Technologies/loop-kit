@@ -1,0 +1,26 @@
+[volt:dev:web] [0.34ms] bundle index.html 1594.81 KB
+[volt:dev:web] 18 | ) => {
+[volt:dev:web] 19 |   const port = Number(services.env.read("PORT") ?? "3000");
+[volt:dev:web] 20 |   const mode =
+[volt:dev:web] 21 |     services.env.read("VOLT_MODE") === "production" ? "production" : "development";
+[volt:dev:web] 22 | 
+[volt:dev:web] 23 |   const server = Bun.serve({
+[volt:dev:web]                           ^
+[volt:dev:web] error: Failed to start server. Is port 3000 in use?
+[volt:dev:web]  syscall: "listen",
+[volt:dev:web]    errno: 0,
+[volt:dev:web]     code: "EADDRINUSE"
+[volt:dev:web]       at startWebServer (C:\Users\ijhar\Desktop\loop-kit\apps\forge\src\web\startWebServer.ts:23:22)
+[volt:dev:web]       at <anonymous> (C:\Users\ijhar\Desktop\loop-kit\apps\forge\src\web\server.runtime.ts:6:3)
+[volt:dev:web]       at <anonymous> (C:\Users\ijhar\Desktop\loop-kit\packages\volt\src\plugins\bun\app.ts:20:18)
+542 |     })),
+543 |   );
+544 | 
+545 |   await owner.releaseAll();
+546 |   if (firstExit.code !== 0) {
+547 |     throw new Error(`${firstExit.label} exited with code ${firstExit.code}.`);
+                    ^
+error: dev:web exited with code 1.
+      at <anonymous> (C:\Users\ijhar\Desktop\loop-kit\packages\volt\src\process.ts:547:15)
+
+Bun v1.3.11 (Windows x64)

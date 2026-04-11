@@ -1,2 +1,4 @@
 #!/usr/bin/env bun
-import "../src/cli.ts";
+import { main } from "../src/cli.ts";
+
+await main();
