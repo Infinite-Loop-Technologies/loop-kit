@@ -243,6 +243,37 @@ function closeGroupInternal(
     return success(next);
 }
 
+function detachPanelFromGroup(
+    state: DockV2State,
+    groupId: DockV2GroupId,
+    panelId: DockV2PanelId,
+) {
+    const group = state.groups[groupId];
+    if (!group) {
+        return;
+    }
+
+    const updated = removePanelReference(group, panelId);
+    if (updated.panelIds.length <= 0) {
+        const owningLayer = state.layers[group.layerId];
+        if (owningLayer) {
+            owningLayer.groupIds = removeItem(owningLayer.groupIds, groupId);
+        }
+        delete state.groups[groupId];
+        if (state.activeGroupId === groupId) {
+            state.activeGroupId = owningLayer?.groupIds[0];
+        }
+        if (state.focusedPanelId === panelId) {
+            state.focusedPanelId = state.activeGroupId
+                ? state.groups[state.activeGroupId]?.activePanelId
+                : undefined;
+        }
+        return;
+    }
+
+    state.groups[groupId] = updated;
+}
+
 function createImplicitGroup(
     state: DockV2State,
     layerId: DockV2LayerId,
@@ -677,6 +708,11 @@ export function createDockV2Controller(
                         'splitPanel requires an existing sibling panel or a new panel payload.',
                     ),
                 );
+            }
+
+            const sourceGroup = findGroupContainingPanel(next, newPanelId);
+            if (sourceGroup && sourceGroup.id !== group.id) {
+                detachPanelFromGroup(next, sourceGroup.id, newPanelId);
             }
 
             const updated = ensureGroupModeReadyForSplit(group);

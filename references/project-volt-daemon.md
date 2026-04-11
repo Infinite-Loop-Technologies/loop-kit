@@ -8,6 +8,7 @@ The daemon remains part of Volt because shared local state, watchers, and owned 
 - affected-task invalidation
 - integration refresh
 - shared status for runtime resources
+- owned task/flow/session lifecycle
 - structured state that a dashboard or future agent surface can consume
 
 ## What The Daemon Is Not For
@@ -15,7 +16,7 @@ The daemon remains part of Volt because shared local state, watchers, and owned 
 - replacing `volt dev`
 - hiding process ownership
 - inventing a magical background platform
-- durable workflow execution in this slice
+- pretending durable workflows are solved just because local session state exists
 
 ## Current Guarantees
 
@@ -100,9 +101,10 @@ The dashboard should stay a consumer of daemon state, not a second control plane
 
 Near-term CLI direction:
 
-- keep `volt dashboard` and `volt ui` as the interactive read surface
+- move toward `volt` opening the interactive surface by default while explicit subcommands remain scriptable
 - add daemon-backed task sessions before attempting true terminal multiplexing
-- model `start`, `ps`, `attach`, and `stop` around daemon-owned task handles instead of bolting process tables onto foreground-only commands
+- model `start`, `ps`, `attach`, and `stop` around daemon-owned handles instead of bolting process tables onto foreground-only commands
+- make room for flow and future agent-workflow sessions in the same ownership model
 
 ## Relationship To Effect And Future Durable Workflows
 
@@ -113,4 +115,6 @@ Future durable workflows can layer above the daemon.
 Good split:
 
 - daemon owns local watchers, resources, and shared workspace state
-- future durable engine owns waits, approvals, retries, and resumability
+- future durable engine owns long waits, approvals, retries, and resumability
+
+For agent workflows, the daemon should own the local session, logs, and live state even if a future durable engine owns resumability semantics.

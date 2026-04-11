@@ -24,6 +24,7 @@
         "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
+        "@loop-kit/interaction": "workspace:*",
         "@loop-kit/state": "workspace:*"
     },
     "devDependencies": {

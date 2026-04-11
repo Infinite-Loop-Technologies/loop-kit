@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { useKeyboardScope } from '@loop-kit/loom-interactions';
+import { useRegisterActionHandler, useScopedShortcutMap } from '@loop-kit/interaction-react';
 import type { DockPanelRendererProps, DockPanelRegistry } from '@loop-kit/loom-pack-dock';
 import {
     Avatar,
@@ -1169,39 +1169,31 @@ function ForgeCommandPalettePanel({ controller }: DockPanelRendererProps) {
         toggleForgeCommandPalette(controller);
     }, [controller]);
 
-    useKeyboardScope(
-        'forge-command-palette',
-        (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                closePalette();
-                return true;
-            }
+    useScopedShortcutMap([
+        { actionId: 'forge.command-palette.close', gesture: 'Escape' },
+        { actionId: 'forge.command-palette.next', gesture: 'ArrowDown' },
+        { actionId: 'forge.command-palette.previous', gesture: 'ArrowUp' },
+        { actionId: 'forge.command-palette.commit', gesture: 'Enter' },
+    ]);
 
-            if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                setActiveIndex((current) => (current + 1) % forgeMockData.commandItems.length);
-                return true;
-            }
-
-            if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                setActiveIndex((current) =>
-                    current === 0 ? forgeMockData.commandItems.length - 1 : current - 1,
-                );
-                return true;
-            }
-
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                closePalette();
-                return true;
-            }
-
-            return false;
-        },
-        true,
-    );
+    useRegisterActionHandler('forge.command-palette.close', () => {
+        closePalette();
+        return { handled: true };
+    });
+    useRegisterActionHandler('forge.command-palette.next', () => {
+        setActiveIndex((current) => (current + 1) % forgeMockData.commandItems.length);
+        return { handled: true };
+    });
+    useRegisterActionHandler('forge.command-palette.previous', () => {
+        setActiveIndex((current) =>
+            current === 0 ? forgeMockData.commandItems.length - 1 : current - 1,
+        );
+        return { handled: true };
+    });
+    useRegisterActionHandler('forge.command-palette.commit', () => {
+        closePalette();
+        return { handled: true };
+    });
 
     return (
         <Box

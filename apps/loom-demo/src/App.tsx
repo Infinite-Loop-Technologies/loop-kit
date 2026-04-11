@@ -8,9 +8,9 @@ import {
 } from '@loop-kit/dock';
 import {
     InteractionProvider,
-    useMeasuredView,
-    useViewSnapshot,
-} from '@loop-kit/loom-interactions';
+    useRegisterSurface,
+    useSurfaceRect,
+} from '@loop-kit/interaction-react';
 import { DockProvider, DockStage, type DockPanelRegistry } from '@loop-kit/loom-pack-dock';
 import {
     DataTable,
@@ -234,8 +234,13 @@ function ArchitectureNote() {
 }
 
 function ViewRegistryCard() {
-    const ref = useMeasuredView<HTMLDivElement>('loom-demo-registry-card');
-    const snapshot = useViewSnapshot('loom-demo-registry-card');
+    const { id, ref } = useRegisterSurface({
+        id: 'loom-demo-registry-card',
+        metadata: {
+            role: 'demo-card',
+        },
+    });
+    const rect = useSurfaceRect(id);
 
     return (
         <div
@@ -256,12 +261,11 @@ function ViewRegistryCard() {
                         </Heading>
                     </Inline>
                     <Text tone='muted' size='sm'>
-                        This card registers itself through `loom-interactions` and reports live
+                        This card registers itself through the interaction runtime and reports live
                         measured bounds.
                     </Text>
                     <Badge kind='outline' tone='info'>
-                        {Math.round(snapshot?.rect?.width ?? 0)} x{' '}
-                        {Math.round(snapshot?.rect?.height ?? 0)}
+                        {Math.round(rect?.width ?? 0)} x {Math.round(rect?.height ?? 0)}
                     </Badge>
                 </Stack>
             </Panel>

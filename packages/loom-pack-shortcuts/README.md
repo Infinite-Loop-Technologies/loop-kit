@@ -1,3 +1,3 @@
 # @loop-kit/loom-pack-shortcuts
 
-Shortcut routing and management surfaces for Graphite-backed Loom apps.
+Shortcut routing and management surfaces for interaction-runtime-backed Loom apps.

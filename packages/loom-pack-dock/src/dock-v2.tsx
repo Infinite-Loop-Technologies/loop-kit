@@ -3,24 +3,39 @@
 import * as React from 'react';
 
 import {
+    createCommandBus,
+    type OverlaySpec,
+} from '@loop-kit/interaction';
+import {
+    InteractionOverlayHost,
+    InteractionProvider,
+    ScopedRegion,
+    useDispatchAction,
+    useInteractionRuntime,
+    useRegisterActionHandler,
+    useRegisterDragSource,
+    useRegisterDropSurface,
+    useScopedShortcutMap,
+} from '@loop-kit/interaction-react';
+import {
     createDockState,
     createDockStore,
+    defaultDockPolicy,
+    dockActionIds,
+    getDockGroupForPanel,
+    getDockPanel,
     normalizeDockPolicies,
-    type DockAttachPanelOptions,
+    resolveDockDrop,
+    type DockCommand,
     type DockCommandResult,
-    type DockController,
-    type DockDismissLayerOptions,
-    type DockEnsurePanelOptions,
+    type DockDropZone,
     type DockGroup,
     type DockLayer,
     type DockOpenPanelOptions,
     type DockPanel,
-    type DockResizeGroupOptions,
-    type DockResizeSplitOptions,
-    type DockSetGroupModeOptions,
+    type DockService,
     type DockSplitChild,
     type DockSplitNode,
-    type DockSplitPanelOptions,
     type DockState,
     type DockStore,
 } from '@loop-kit/dock';
@@ -36,12 +51,6 @@ import {
     Toolbar,
     useLoomTokens,
 } from '@loop-kit/loom-react';
-import {
-    InteractionProvider,
-    createFrameQueue,
-    useKeyboardScope,
-    usePointerRecognizer,
-} from '@loop-kit/loom-interactions';
 
 export type DockPanelRendererProps = {
     closePanel: () => DockCommandResult;
@@ -65,94 +74,48 @@ export type DockPanelRegistry = {
 type DockContextValue = {
     onError?: (result: DockCommandResult) => void;
     registry: DockPanelRegistry;
-    store: DockStore;
+    store: DockService;
 };
 
 const DockContext = React.createContext<DockContextValue | null>(null);
 
-export type DockProviderProps = {
-    children: React.ReactNode;
-    initialState: DockState;
-    onError?: (result: DockCommandResult) => void;
-    onStateChange?: (state: DockState) => void;
-    registry?: DockPanelRegistry;
-    store?: DockStore;
+type DockDropSurfaceData = {
+    groupId: string;
+    panelId?: string;
+    zone: DockDropZone;
 };
 
-export function DockProvider({
-    children,
-    initialState,
-    onError,
-    onStateChange,
-    registry,
-    store,
-}: DockProviderProps) {
-    const dockStore = React.useMemo(
-        () => store ?? createDockStore(createDockState(initialState)),
-        [initialState, store],
-    );
+type DockTabDragPayload = {
+    groupId: string;
+    panelId: string;
+};
 
-    React.useEffect(() => {
-        if (!onStateChange) {
-            return;
-        }
-        return dockStore.subscribe(() => {
-            onStateChange(dockStore.getState());
-        });
-    }, [dockStore, onStateChange]);
+const DROP_SURFACE_PREFIX = 'dock-drop';
 
-    const value = React.useMemo<DockContextValue>(
-        () => ({
-            onError,
-            registry: registry ?? {},
-            store: dockStore,
-        }),
-        [dockStore, onError, registry],
-    );
-
-    return (
-        <InteractionProvider>
-            <DockContext.Provider value={value}>{children}</DockContext.Provider>
-        </InteractionProvider>
-    );
+function createDropSurfaceId({ groupId, panelId, zone }: DockDropSurfaceData) {
+    return `${DROP_SURFACE_PREFIX}:${groupId}:${panelId ?? '_'}:${zone}`;
 }
 
-export function useDock() {
-    const value = React.useContext(DockContext);
-    if (!value) {
-        throw new Error('DockProvider is required before using dock renderer components.');
+function parseDropSurfaceId(id?: string): DockDropSurfaceData | null {
+    if (!id || !id.startsWith(`${DROP_SURFACE_PREFIX}:`)) {
+        return null;
     }
-    return value;
+    const [, groupId, panelId, zone] = id.split(':');
+    if (!groupId || !zone) {
+        return null;
+    }
+    return {
+        groupId,
+        panelId: panelId && panelId !== '_' ? panelId : undefined,
+        zone: zone as DockDropZone,
+    };
 }
 
-export function useDockStore() {
-    return useDock().store;
-}
-
-export function useDockSelector<TSelected>(selector: (state: DockState) => TSelected) {
-    const store = useDockStore();
-    return React.useSyncExternalStore(
-        store.subscribe,
-        () => selector(store.getState()),
-        () => selector(store.getState()),
-    );
-}
-
-function activePanelId(group: DockGroup) {
-    return group.activePanelId ?? group.panelIds[0];
-}
-
-function resolveRenderer(
-    registry: DockPanelRegistry,
-    panel: DockPanel,
-) {
+function resolveRenderer(registry: DockPanelRegistry, panel: DockPanel) {
     return registry.ids?.[panel.id] ?? registry.kinds?.[panel.kind] ?? registry.fallback;
 }
 
-function runAction(
-    result: DockCommandResult,
-    onError?: (result: DockCommandResult) => void,
-) {
+function runCommand(result: DockCommandResult, onError?: (result: DockCommandResult) => void) {
     if (!result.ok) {
         onError?.(result);
     }
@@ -170,26 +133,8 @@ function normalizeSplitWeights(weights: [number, number]) {
     return [left / sum, right / sum] as [number, number];
 }
 
-function computeSplitWeights(
-    direction: DockSplitNode['direction'],
-    splitSize: number,
-    startPoint: { x: number; y: number },
-    weights: DockSplitNode['weights'],
-    point: { x: number; y: number },
-) {
-    const left = Number.isFinite(weights[0]) ? Math.max(0.01, weights[0]) : 0.5;
-    const right = Number.isFinite(weights[1]) ? Math.max(0.01, weights[1]) : 0.5;
-    const total = left + right;
-    const normalized =
-        total > 0 ? ([left / total, right / total] as const) : ([0.5, 0.5] as const);
-    const deltaPx =
-        direction === 'row'
-            ? point.x - startPoint.x
-            : point.y - startPoint.y;
-    const deltaRatio = deltaPx / Math.max(1, splitSize);
-    const minWeight = Math.min(0.1, total / 2);
-    const nextLeft = clampWeight(normalized[0] + deltaRatio, minWeight, total - minWeight);
-    return normalizeSplitWeights([nextLeft, total - nextLeft]);
+function activePanelId(group: DockGroup) {
+    return group.activePanelId ?? group.panelIds[0];
 }
 
 function flowLayerStyle(layer: DockLayer, tokens: ReturnType<typeof useLoomTokens>) {
@@ -197,9 +142,7 @@ function flowLayerStyle(layer: DockLayer, tokens: ReturnType<typeof useLoomToken
         display: 'flex',
         flex: 1,
         flexDirection:
-            (layer.flow?.direction === 'vertical'
-                ? 'column'
-                : 'row') as React.CSSProperties['flexDirection'],
+            (layer.flow?.direction === 'vertical' ? 'column' : 'row') as React.CSSProperties['flexDirection'],
         gap: layer.flow?.gap ?? tokens.space[3],
         minHeight: 0,
         minWidth: 0,
@@ -284,7 +227,7 @@ function overlayGroupStyle(group: DockGroup) {
         return style;
     }
 
-    if (placement.kind !== 'floating') {
+    if (placement.kind === 'inline') {
         return {
             inset: 0,
             position: 'absolute' as const,
@@ -301,16 +244,236 @@ function overlayGroupStyle(group: DockGroup) {
     };
 }
 
-function panelTitle(group: DockGroup, panel: DockPanel | undefined) {
-    return group.title ?? panel?.title ?? 'Panel';
+function computeSplitWeights(
+    direction: DockSplitNode['direction'],
+    splitSize: number,
+    startPoint: { x: number; y: number },
+    weights: DockSplitNode['weights'],
+    point: { x: number; y: number },
+) {
+    const left = Number.isFinite(weights[0]) ? Math.max(0.01, weights[0]) : 0.5;
+    const right = Number.isFinite(weights[1]) ? Math.max(0.01, weights[1]) : 0.5;
+    const total = left + right;
+    const normalized =
+        total > 0 ? ([left / total, right / total] as const) : ([0.5, 0.5] as const);
+    const deltaPx = direction === 'row' ? point.x - startPoint.x : point.y - startPoint.y;
+    const deltaRatio = deltaPx / Math.max(1, splitSize);
+    const minWeight = Math.min(0.1, total / 2);
+    const nextLeft = clampWeight(normalized[0] + deltaRatio, minWeight, total - minWeight);
+    return normalizeSplitWeights([nextLeft, total - nextLeft]);
 }
 
-function panelCanClose(
-    group: DockGroup,
-    panel: DockPanel | undefined,
-) {
-    const policies = normalizeDockPolicies(group.policies);
-    return policies.closeable && panel?.closeable !== false;
+function DockRuntimeBridge() {
+    const runtime = useInteractionRuntime<DockCommand, DockCommandResult>();
+    const dock = useDock();
+
+    React.useEffect(() => {
+        return runtime.registerDragEventListener((event: { kind: 'cancel' | 'end' | 'move' | 'start'; session: { dropSurfaceId?: string; payload: unknown; point: { x: number; y: number } } }) => {
+            const payload = event.session.payload as DockTabDragPayload;
+            const state = dock.store.getState();
+            const dragPanel = getDockPanel(state, payload.panelId);
+            const dragGroup = getDockGroupForPanel(state, payload.panelId);
+            const dropData = parseDropSurfaceId(event.session.dropSurfaceId);
+
+            if (!dragPanel || !dragGroup) {
+                runtime.setOverlay(undefined);
+                return;
+            }
+
+            if (!dropData) {
+                if (event.kind === 'end' || event.kind === 'cancel') {
+                    runtime.setOverlay(undefined);
+                }
+                return;
+            }
+
+            const dropGroup = state.groups[dropData.groupId];
+            const dropPanel = dropData.panelId ? state.panels[dropData.panelId] : undefined;
+            if (!dropGroup) {
+                runtime.setOverlay(undefined);
+                return;
+            }
+
+            const resolution = resolveDockDrop(
+                state,
+                {
+                    group: dragGroup,
+                    panel: dragPanel,
+                },
+                {
+                    group: dropGroup,
+                    panel: dropPanel,
+                    zone: dropData.zone,
+                },
+                dock.store.policy ?? defaultDockPolicy,
+            );
+
+            if (!resolution.ok) {
+                runtime.setOverlay(undefined);
+                return;
+            }
+
+            const overlay = resolution.value.overlay
+                ? {
+                      ...resolution.value.overlay,
+                      position: event.session.point,
+                  }
+                : undefined;
+
+            if (event.kind === 'end') {
+                runCommand(dock.store.dispatch(resolution.value.command), dock.onError);
+                runtime.setOverlay(undefined);
+                return;
+            }
+
+            if (event.kind === 'cancel') {
+                runtime.setOverlay(undefined);
+                return;
+            }
+
+            runtime.setOverlay(overlay);
+        });
+    }, [dock, runtime]);
+
+    return null;
+}
+
+export type DockProviderProps = {
+    children: React.ReactNode;
+    initialState: DockState;
+    onError?: (result: DockCommandResult) => void;
+    onStateChange?: (state: DockState) => void;
+    registry?: DockPanelRegistry;
+    store?: DockStore;
+};
+
+export function DockProvider({
+    children,
+    initialState,
+    onError,
+    onStateChange,
+    registry,
+    store,
+}: DockProviderProps) {
+    const dockStore = React.useMemo(
+        () => store ?? createDockStore(createDockState(initialState)),
+        [initialState, store],
+    );
+
+    React.useEffect(() => {
+        if (!onStateChange) {
+            return;
+        }
+        return dockStore.subscribe(() => {
+            onStateChange(dockStore.getState());
+        });
+    }, [dockStore, onStateChange]);
+
+    const commandBus = React.useMemo(
+        () => createCommandBus<DockCommand, DockCommandResult>((command: DockCommand) => dockStore.dispatch(command)),
+        [dockStore],
+    );
+
+    const value = React.useMemo<DockContextValue>(
+        () => ({
+            onError,
+            registry: registry ?? {},
+            store: dockStore,
+        }),
+        [dockStore, onError, registry],
+    );
+
+    return (
+        <InteractionProvider commandBus={commandBus}>
+            <DockContext.Provider value={value}>
+                <DockRuntimeBridge />
+                {children}
+            </DockContext.Provider>
+        </InteractionProvider>
+    );
+}
+
+export function useDock() {
+    const value = React.useContext(DockContext);
+    if (!value) {
+        throw new Error('DockProvider is required before using dock renderer components.');
+    }
+    return value;
+}
+
+export function useDockStore() {
+    return useDock().store;
+}
+
+export function useDockSelector<TSelected>(selector: (state: DockState) => TSelected) {
+    const store = useDockStore();
+    return React.useSyncExternalStore(
+        store.subscribe,
+        () => selector(store.getState()),
+        () => selector(store.getState()),
+    );
+}
+
+export function usePanelControls(panelId?: string) {
+    const store = useDockStore();
+    const { onError } = useDock();
+    const action = useDispatchAction();
+    return React.useMemo(
+        () => ({
+            close() {
+                if (!panelId) {
+                    return;
+                }
+                runCommand(store.closePanel(panelId), onError);
+            },
+            focus() {
+                if (!panelId) {
+                    return;
+                }
+                action(dockActionIds.focusPanel, { panelId });
+            },
+            split(direction: 'col' | 'row') {
+                if (!panelId) {
+                    return;
+                }
+                action(dockActionIds.splitPanel, {
+                    direction,
+                    panelId,
+                });
+            },
+        }),
+        [action, onError, panelId, store],
+    );
+}
+
+function DockHeaderDragHandle({
+    group,
+    panel,
+    children,
+}: {
+    children: React.ReactNode;
+    group: DockGroup;
+    panel?: DockPanel;
+}) {
+    const drag = useRegisterDragSource<DockTabDragPayload>({
+        createOverlay: ({ payload }: { payload: DockTabDragPayload }) => ({
+            id: `dock-drag-${payload.panelId}`,
+            label: panel?.title ?? payload.panelId,
+            mode: 'ghost',
+            position: { x: 0, y: 0 },
+        }),
+        getPayload: () => ({
+            groupId: group.id,
+            panelId: panel?.id ?? activePanelId(group) ?? '',
+        }),
+        type: 'dock-panel',
+    });
+
+    return (
+        <div {...drag} style={{ display: 'contents' }}>
+            {children}
+        </div>
+    );
 }
 
 function DockGroupHeader({
@@ -323,70 +486,84 @@ function DockGroupHeader({
     const controller = useDockStore();
     const { onError } = useDock();
     const policies = normalizeDockPolicies(group.policies);
-    const canClose = panelCanClose(group, panel);
+    const canClose = policies.closeable && panel?.closeable !== false;
 
     return (
-        <Toolbar
-            density='compact'
-            emphasis='subtle'
-            style={{
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0,
-                borderLeft: 'none',
-                borderRight: 'none',
-                borderTop: 'none',
-            }}>
-            <Inline
-                align='center'
-                gap='2'
+        <DockHeaderDragHandle group={group} panel={panel}>
+            <Toolbar
+                density='compact'
+                emphasis='subtle'
                 style={{
-                    minWidth: 0,
+                    borderBottomLeftRadius: 0,
+                    borderBottomRightRadius: 0,
+                    borderLeft: 'none',
+                    borderRight: 'none',
+                    borderTop: 'none',
                 }}>
-                <Text
-                    emphasis='strong'
-                    size='sm'
-                    style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                    }}>
-                    {panelTitle(group, panel)}
-                </Text>
-            </Inline>
-            <Inline
-                align='center'
-                gap='1'
-                justify='flex-end'
-                style={{
-                    marginLeft: 'auto',
-                }}>
-                {policies.splittable ? (
-                    <Icon
-                        name='panelRight'
+                <Inline align='center' gap='2' style={{ minWidth: 0 }}>
+                    <Text
+                        emphasis='strong'
                         size='sm'
-                        tone='muted'
-                    />
-                ) : null}
-                {canClose ? (
-                    <IconButton
-                        data-dock-close-group={group.id}
-                        kind='ghost'
-                        label={`Close ${panelTitle(group, panel)}`}
-                        name='close'
-                        onClick={() => {
-                            runAction(controller.closeGroup(group.id), onError);
-                        }}
-                        size='sm'
-                    />
-                ) : null}
-            </Inline>
-        </Toolbar>
+                        style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                        }}>
+                        {group.title ?? panel?.title ?? 'Panel'}
+                    </Text>
+                </Inline>
+                <Inline align='center' gap='1' justify='flex-end' style={{ marginLeft: 'auto' }}>
+                    {policies.splittable ? <Icon name='panelRight' size='sm' tone='muted' /> : null}
+                    {canClose ? (
+                        <IconButton
+                            kind='ghost'
+                            label={`Close ${group.title ?? panel?.title ?? 'panel'}`}
+                            name='close'
+                            onClick={() => {
+                                runCommand(controller.closeGroup(group.id), onError);
+                            }}
+                            size='sm'
+                        />
+                    ) : null}
+                </Inline>
+            </Toolbar>
+        </DockHeaderDragHandle>
+    );
+}
+
+function DockTabButton({ group, panel, selected }: { group: DockGroup; panel: DockPanel; selected: boolean }) {
+    const controller = useDockStore();
+    const { onError } = useDock();
+    const drag = useRegisterDragSource<DockTabDragPayload>({
+        createOverlay: () => ({
+            id: `dock-drag-${panel.id}`,
+            label: panel.title,
+            mode: 'ghost',
+            position: { x: 0, y: 0 },
+        }),
+        getPayload: () => ({
+            groupId: group.id,
+            panelId: panel.id,
+        }),
+        type: 'dock-panel',
+    });
+
+    return (
+        <Button
+            {...drag}
+            aria-selected={selected}
+            kind={selected ? 'soft' : 'ghost'}
+            onClick={() => {
+                runCommand(controller.focusPanel(panel.id, { history: false }), onError);
+            }}
+            size='sm'
+            tone={selected ? 'neutral' : 'muted'}>
+            {panel.title}
+        </Button>
     );
 }
 
 function DockTabsRow({ group }: { group: DockGroup }) {
-    const controller = useDockStore();
-    const { onError } = useDock();
     const state = useDockSelector((current) => current);
     const currentPanelId = activePanelId(group);
 
@@ -400,261 +577,71 @@ function DockTabsRow({ group }: { group: DockGroup }) {
             }}>
             {group.panelIds.map((panelId) => {
                 const panel = state.panels[panelId];
-                const selected = currentPanelId === panelId;
-                return (
-                    <Button
-                        key={panelId}
-                        aria-selected={selected}
-                        kind={selected ? 'soft' : 'ghost'}
-                        onClick={() => {
-                            runAction(controller.focusPanel(panelId, { history: false }), onError);
-                        }}
-                        size='sm'
-                        tone={selected ? 'neutral' : 'muted'}>
-                        {panel?.title ?? panelId}
-                    </Button>
-                );
+                if (!panel) {
+                    return null;
+                }
+                return <DockTabButton key={panelId} group={group} panel={panel} selected={currentPanelId === panelId} />;
             })}
         </Inline>
     );
 }
 
-type SplitResizePayload = {
-    groupId: DockGroup['id'];
-    splitId: DockSplitNode['id'];
-    weights: DockSplitNode['weights'];
-};
-
-type SplitResizeSession = {
-    direction: DockSplitNode['direction'];
-    groupId: DockGroup['id'];
-    splitId: DockSplitNode['id'];
-    splitSize: number;
-    startPoint: {
-        x: number;
-        y: number;
-    };
-    weights: DockSplitNode['weights'];
-};
-
-function DockSplitResizeHandle({
-    containerRef,
-    groupId,
-    node,
+function DockDropSurface({
+    group,
+    panel,
+    zone,
 }: {
-    containerRef: React.RefObject<HTMLDivElement | null>;
-    groupId: DockGroup['id'];
-    node: DockSplitNode;
+    group: DockGroup;
+    panel?: DockPanel;
+    zone: DockDropZone;
 }) {
-    const controller = useDockStore();
-    const [active, setActive] = React.useState(false);
-    const frameQueue = React.useMemo(
-        () =>
-            createFrameQueue<SplitResizePayload>((payload) => {
-                controller.resizeSplit(payload);
-            }),
-        [controller],
-    );
-
-    React.useEffect(() => () => frameQueue.clear(), [frameQueue]);
-
-    const recognizer = usePointerRecognizer<SplitResizePayload, SplitResizeSession>({
-        createSession: (event) => {
-            const rect = containerRef.current?.getBoundingClientRect();
-            if (!rect) {
-                return null;
-            }
-
-            setActive(true);
-            return {
-                direction: node.direction,
-                groupId,
-                splitId: node.id,
-                splitSize: node.direction === 'row' ? Math.max(1, rect.width) : Math.max(1, rect.height),
-                startPoint: {
-                    x: event.clientX,
-                    y: event.clientY,
-                },
-                weights: node.weights,
-            };
-        },
-        onMove: (session, event) => ({
-            groupId: session.groupId,
-            splitId: session.splitId,
-            weights: computeSplitWeights(
-                session.direction,
-                session.splitSize,
-                session.startPoint,
-                session.weights,
-                {
-                    x: event.clientX,
-                    y: event.clientY,
-                },
-            ),
+    const { ref } = useRegisterDropSurface({
+        accepts: ['dock-panel'],
+        id: createDropSurfaceId({
+            groupId: group.id,
+            panelId: panel?.id,
+            zone,
         }),
-        onEnd: (session, event) => {
-            setActive(false);
-            return {
-                groupId: session.groupId,
-                splitId: session.splitId,
-                weights: computeSplitWeights(
-                    session.direction,
-                    session.splitSize,
-                    session.startPoint,
-                    session.weights,
-                    {
-                        x: event.clientX,
-                        y: event.clientY,
-                    },
-                ),
-            };
+        metadata: {
+            groupId: group.id,
+            panelId: panel?.id,
+            zone,
         },
-        onCancel: () => {
-            setActive(false);
-        },
-        dispatch: (payload) => {
-            controller.resizeSplit(payload);
-        },
-        dispatchFrame: (payload) => {
-            frameQueue.queue(payload);
-        },
-        flushFrame: () => {
-            frameQueue.flush();
-        },
+        zIndex: zone === 'center' || zone === 'tab' ? 1 : 2,
     });
 
-    const vertical = node.direction === 'row';
+    const style: React.CSSProperties =
+        zone === 'center' || zone === 'tab'
+            ? { inset: '18%', position: 'absolute' }
+            : zone === 'left'
+              ? { bottom: 0, left: 0, position: 'absolute', top: 0, width: '18%' }
+              : zone === 'right'
+                ? { bottom: 0, position: 'absolute', right: 0, top: 0, width: '18%' }
+                : zone === 'top'
+                  ? { height: '18%', left: 0, position: 'absolute', right: 0, top: 0 }
+                  : { bottom: 0, height: '18%', left: 0, position: 'absolute', right: 0 };
 
+    return <div ref={ref} style={{ ...style, pointerEvents: 'none' }} />;
+}
+
+function DockPanelDropSurfaces({ group, panel }: { group: DockGroup; panel: DockPanel }) {
+    const policies = normalizeDockPolicies(group.policies);
     return (
-        <Box
-            style={{
-                alignItems: 'stretch',
-                cursor: vertical ? 'col-resize' : 'row-resize',
-                display: 'flex',
-                flex: '0 0 0.5rem',
-                justifyContent: 'center',
-                minHeight: vertical ? '100%' : '0.5rem',
-                minWidth: vertical ? '0.5rem' : '100%',
-                position: 'relative',
-            }}>
-            <button
-                aria-label='Resize split'
-                data-dock-split-handle={node.id}
-                onPointerDown={recognizer.onPointerDown}
-                style={{
-                    alignItems: 'center',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: vertical ? 'col-resize' : 'row-resize',
-                    display: 'flex',
-                    flex: 1,
-                    justifyContent: 'center',
-                    padding: 0,
-                    width: '100%',
-                }}
-                type='button'>
-                <Box
-                    aria-hidden
-                    style={{
-                        background: active
-                            ? 'var(--loom-color-accent-default)'
-                            : 'var(--loom-color-border-strong)',
-                        borderRadius: '999px',
-                        height: vertical ? '2.5rem' : '2px',
-                        transition: 'background 140ms ease',
-                        width: vertical ? '2px' : '2.5rem',
-                    }}
-                />
-            </button>
-        </Box>
+        <>
+            <DockDropSurface group={group} panel={panel} zone='center' />
+            {policies.splittable ? (
+                <>
+                    <DockDropSurface group={group} panel={panel} zone='left' />
+                    <DockDropSurface group={group} panel={panel} zone='right' />
+                    <DockDropSurface group={group} panel={panel} zone='top' />
+                    <DockDropSurface group={group} panel={panel} zone='bottom' />
+                </>
+            ) : null}
+        </>
     );
 }
 
-function DockSplitNodeView({
-    child,
-    group,
-    layer,
-}: {
-    child: DockSplitChild;
-    group: DockGroup;
-    layer: DockLayer;
-}) {
-    const state = useDockSelector((current) => current);
-
-    if (child.kind === 'panel') {
-        const panel = state.panels[child.panelId];
-        if (!panel) {
-            return null;
-        }
-        return (
-            <Panel
-                density='compact'
-                emphasis='subtle'
-                style={{
-                    display: 'flex',
-                    flex: 1,
-                    flexDirection: 'column',
-                    minHeight: 0,
-                }}>
-                <DockPanelView group={group} layer={layer} panel={panel} />
-            </Panel>
-        );
-    }
-
-    const node = group.splitNodes?.[child.splitId];
-    if (!node) {
-        return null;
-    }
-
-    return <DockSplitView group={group} layer={layer} node={node} />;
-}
-
-function DockSplitView({
-    group,
-    layer,
-    node,
-}: {
-    group: DockGroup;
-    layer: DockLayer;
-    node: DockSplitNode;
-}) {
-    const containerRef = React.useRef<HTMLDivElement | null>(null);
-
-    return (
-        <div
-            ref={containerRef}
-            style={{
-                display: 'flex',
-                flex: 1,
-                flexDirection: node.direction === 'col' ? 'column' : 'row',
-                minHeight: 0,
-                minWidth: 0,
-            }}>
-            {node.children.map((child, index) => {
-                const key = child.kind === 'panel' ? child.panelId : child.splitId;
-                return (
-                    <React.Fragment key={key}>
-                        <Box
-                            style={{
-                                display: 'flex',
-                                flex: node.weights[index] ?? 1,
-                                minHeight: 0,
-                                minWidth: 0,
-                                overflow: 'hidden',
-                            }}>
-                            <DockSplitNodeView child={child} group={group} layer={layer} />
-                        </Box>
-                        {index < node.children.length - 1 ? (
-                            <DockSplitResizeHandle containerRef={containerRef} groupId={group.id} node={node} />
-                        ) : null}
-                    </React.Fragment>
-                );
-            })}
-        </div>
-    );
-}
-
-export function DockPanelView({
+function DockPanelView({
     group,
     isActive = true,
     layer,
@@ -674,58 +661,215 @@ export function DockPanelView({
         return (
             <Stack gap='3'>
                 <Text emphasis='strong'>{panel.title}</Text>
-                <Text tone='muted'>
-                    No renderer is registered for panel kind "{panel.kind}".
-                </Text>
+                <Text tone='muted'>No renderer is registered for panel kind "{panel.kind}".</Text>
             </Stack>
         );
     }
 
-    return React.createElement(renderer, {
-        closePanel: () => runAction(controller.closePanel(panel.id), onError),
-        controller,
-        group,
-        isActive,
-        layer,
-        openPanel: (input) => runAction(controller.openPanel(input), onError),
-        panel,
-        state,
-    });
+    return (
+        <ScopedRegion
+            capabilities={{ blocksGlobalShortcuts: layer.overlay?.interaction === 'modal' }}
+            scopeId={`dock-panel-${panel.id}`}
+            scopeKind='dock-panel'
+            style={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
+            <DockPanelDropSurfaces group={group} panel={panel} />
+            {React.createElement(renderer, {
+                closePanel: () => runCommand(controller.closePanel(panel.id), onError),
+                controller,
+                group,
+                isActive,
+                layer,
+                openPanel: (input) => runCommand(controller.openPanel(input), onError),
+                panel,
+                state,
+            })}
+        </ScopedRegion>
+    );
 }
 
-export function DockGroupView({
-    group,
-    layer,
+function DockSplitResizeHandle({
+    containerRef,
+    groupId,
+    node,
 }: {
-    group: DockGroup;
-    layer: DockLayer;
+    containerRef: React.RefObject<HTMLDivElement | null>;
+    groupId: DockGroup['id'];
+    node: DockSplitNode;
 }) {
+    const controller = useDockStore();
+    const [active, setActive] = React.useState(false);
+
+    const onPointerDown = React.useCallback(
+        (event: React.PointerEvent<HTMLButtonElement>) => {
+            if (event.button !== 0) {
+                return;
+            }
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (!rect) {
+                return;
+            }
+
+            setActive(true);
+            const pointerId = event.pointerId;
+            const startPoint = { x: event.clientX, y: event.clientY };
+            const splitSize = node.direction === 'row' ? Math.max(1, rect.width) : Math.max(1, rect.height);
+
+            const onMove = (moveEvent: PointerEvent) => {
+                if (moveEvent.pointerId !== pointerId) {
+                    return;
+                }
+                controller.resizeSplit(
+                    {
+                        groupId,
+                        splitId: node.id,
+                        weights: computeSplitWeights(
+                            node.direction,
+                            splitSize,
+                            startPoint,
+                            node.weights,
+                            {
+                                x: moveEvent.clientX,
+                                y: moveEvent.clientY,
+                            },
+                        ),
+                    },
+                    { history: false },
+                );
+            };
+
+            const clear = () => {
+                setActive(false);
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+                document.removeEventListener('pointercancel', onCancel);
+            };
+
+            const onUp = () => clear();
+            const onCancel = () => clear();
+
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+            document.addEventListener('pointercancel', onCancel);
+        },
+        [containerRef, controller, groupId, node.direction, node.id, node.weights],
+    );
+
+    const vertical = node.direction === 'row';
+
+    return (
+        <Box
+            style={{
+                alignItems: 'stretch',
+                cursor: vertical ? 'col-resize' : 'row-resize',
+                display: 'flex',
+                flex: '0 0 0.5rem',
+                justifyContent: 'center',
+                minHeight: vertical ? '100%' : '0.5rem',
+                minWidth: vertical ? '0.5rem' : '100%',
+                position: 'relative',
+            }}>
+            <button
+                aria-label='Resize split'
+                data-dock-split-handle={node.id}
+                onPointerDown={onPointerDown}
+                style={{
+                    alignItems: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: vertical ? 'col-resize' : 'row-resize',
+                    display: 'flex',
+                    flex: 1,
+                    justifyContent: 'center',
+                    padding: 0,
+                    width: '100%',
+                }}
+                type='button'>
+                <Box
+                    aria-hidden
+                    style={{
+                        background: active ? 'var(--loom-color-accent-default)' : 'var(--loom-color-border-strong)',
+                        borderRadius: '999px',
+                        height: vertical ? '2.5rem' : '2px',
+                        transition: 'background 140ms ease',
+                        width: vertical ? '2px' : '2.5rem',
+                    }}
+                />
+            </button>
+        </Box>
+    );
+}
+
+function DockSplitNodeView({ child, group, layer }: { child: DockSplitChild; group: DockGroup; layer: DockLayer }) {
+    const state = useDockSelector((current) => current);
+
+    if (child.kind === 'panel') {
+        const panel = state.panels[child.panelId];
+        if (!panel) {
+            return null;
+        }
+        return (
+            <Panel density='compact' emphasis='subtle' style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0 }}>
+                <DockPanelView group={group} layer={layer} panel={panel} />
+            </Panel>
+        );
+    }
+
+    const node = group.splitNodes?.[child.splitId];
+    if (!node) {
+        return null;
+    }
+    return <DockSplitView group={group} layer={layer} node={node} />;
+}
+
+function DockSplitView({ group, layer, node }: { group: DockGroup; layer: DockLayer; node: DockSplitNode }) {
+    const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+    return (
+        <div
+            ref={containerRef}
+            style={{
+                display: 'flex',
+                flex: 1,
+                flexDirection: node.direction === 'col' ? 'column' : 'row',
+                minHeight: 0,
+                minWidth: 0,
+            }}>
+            {node.children.map((child, index) => {
+                const key = child.kind === 'panel' ? child.panelId : child.splitId;
+                return (
+                    <React.Fragment key={key}>
+                        <Box style={{ display: 'flex', flex: node.weights[index] ?? 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+                            <DockSplitNodeView child={child} group={group} layer={layer} />
+                        </Box>
+                        {index < node.children.length - 1 ? (
+                            <DockSplitResizeHandle containerRef={containerRef} groupId={group.id} node={node} />
+                        ) : null}
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+}
+
+function DockGroupView({ group, layer }: { group: DockGroup; layer: DockLayer }) {
     const state = useDockSelector((current) => current);
     const currentPanel = state.panels[activePanelId(group) ?? ''];
-    const showTitlebar =
-        group.chrome?.titlebarMode !== 'none' && group.chrome?.showTitlebar !== false;
+    const showTitlebar = group.chrome?.titlebarMode !== 'none' && group.chrome?.showTitlebar !== false;
     const showTabs = group.chrome?.showTabs !== false && group.panelIds.length > 1;
     const framed = group.chrome?.framed !== false;
+    const { ref: groupDropRef } = useRegisterDropSurface({
+        accepts: ['dock-panel'],
+        id: createDropSurfaceId({ groupId: group.id, zone: 'tab' }),
+        metadata: { groupId: group.id, zone: 'tab' },
+    });
 
     const body = (
         <>
             {showTitlebar ? <DockGroupHeader group={group} panel={currentPanel} /> : null}
             {showTabs ? <DockTabsRow group={group} /> : null}
-            <Box
-                style={{
-                    display: 'flex',
-                    flex: 1,
-                    minHeight: 0,
-                    minWidth: 0,
-                    overflow: 'hidden',
-                    padding: framed ? '0.75rem' : '0',
-                }}>
+            <Box style={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', padding: framed ? '0.75rem' : '0' }}>
                 {group.mode === 'split' && group.splitRootId && group.splitNodes?.[group.splitRootId] ? (
-                    <DockSplitView
-                        group={group}
-                        layer={layer}
-                        node={group.splitNodes[group.splitRootId]}
-                    />
+                    <DockSplitView group={group} layer={layer} node={group.splitNodes[group.splitRootId]} />
                 ) : currentPanel ? (
                     <DockPanelView group={group} layer={layer} panel={currentPanel} />
                 ) : (
@@ -735,22 +879,25 @@ export function DockGroupView({
         </>
     );
 
+    const content = (
+        <ScopedRegion
+            capabilities={{ blocksGlobalShortcuts: layer.overlay?.interaction === 'modal' }}
+            metadata={{ groupId: group.id, layerId: layer.id }}
+            scopeId={`dock-group-${group.id}`}
+            scopeKind='dock-group'
+            style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
+            <div ref={groupDropRef} style={{ inset: 0, pointerEvents: 'none', position: 'absolute' }} />
+            {body}
+        </ScopedRegion>
+    );
+
     if (!framed) {
         return (
             <Box
                 data-dock-group={group.id}
-                data-dock-group-closeable={panelCanClose(group, currentPanel)}
                 data-dock-group-mode={group.mode}
-                data-dock-group-splittable={normalizeDockPolicies(group.policies).splittable}
-                style={{
-                    display: 'flex',
-                    flex: 1,
-                    flexDirection: 'column',
-                    minHeight: 0,
-                    minWidth: 0,
-                    overflow: 'hidden',
-                }}>
-                {body}
+                style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+                {content}
             </Box>
         );
     }
@@ -758,57 +905,58 @@ export function DockGroupView({
     return (
         <Panel
             data-dock-group={group.id}
-            data-dock-group-closeable={panelCanClose(group, currentPanel)}
-            data-dock-group-mode={group.mode}
-            data-dock-group-splittable={normalizeDockPolicies(group.policies).splittable}
             density='compact'
             emphasis='strong'
-            style={{
-                display: 'flex',
-                flex: 1,
-                flexDirection: 'column',
-                minHeight: 0,
-                minWidth: 0,
-                overflow: 'hidden',
-            }}>
-            {body}
+            style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+            {content}
         </Panel>
     );
 }
 
-export function DockLayerView({ layer }: { layer: DockLayer }) {
+function DockLayerShortcuts({ layer }: { layer: DockLayer }) {
+    const enabled = layer.kind === 'overlay' && layer.overlay?.interaction === 'modal' && layer.groupIds.length > 0;
+    useScopedShortcutMap(
+        enabled
+            ? [
+                  {
+                      actionId: dockActionIds.dismissLayer,
+                      gesture: 'Escape',
+                  },
+              ]
+            : [],
+    );
+    useRegisterActionHandler<DockCommand, DockCommandResult>(dockActionIds.dismissLayer, () => ({
+        command: {
+            input: {
+                layerId: layer.id,
+            },
+            type: 'dock.dismiss-layer',
+        },
+        handled: true,
+    }));
+    return null;
+}
+
+function DockLayerView({ layer }: { layer: DockLayer }) {
     const { onError } = useDock();
     const controller = useDockStore();
     const state = useDockSelector((current) => current);
     const tokens = useLoomTokens();
     const isFlow = layer.kind === 'flow';
-    const keyboardActive =
-        layer.kind === 'overlay' &&
-        layer.overlay?.interaction === 'modal' &&
-        layer.groupIds.length > 0;
-
-    useKeyboardScope(
-        `dock-layer-${layer.id}`,
-        (event) => {
-            if (!keyboardActive || event.key !== 'Escape') {
-                return false;
-            }
-            event.preventDefault();
-            runAction(controller.dismissLayer({ layerId: layer.id }), onError);
-            return true;
-        },
-        keyboardActive,
-    );
 
     return (
-        <Box
-            data-dock-layer={layer.id}
+        <ScopedRegion
+            capabilities={{ blocksGlobalShortcuts: layer.overlay?.interaction === 'modal' }}
+            metadata={{ layerId: layer.id, layerKind: layer.kind }}
+            scopeId={`dock-layer-${layer.id}`}
+            scopeKind='dock-layer'
             style={isFlow ? flowLayerStyle(layer, tokens) : overlayLayerStyle(layer)}>
+            <DockLayerShortcuts layer={layer} />
             {!isFlow && layer.overlay?.interaction === 'modal' && layer.groupIds.length > 0 ? (
                 <Box
                     data-dock-layer-backdrop={layer.id}
                     onClick={() => {
-                        runAction(controller.dismissLayer({ layerId: layer.id }), onError);
+                        runCommand(controller.dismissLayer({ layerId: layer.id }), onError);
                     }}
                     style={{
                         backdropFilter: 'blur(10px)',
@@ -823,65 +971,66 @@ export function DockLayerView({ layer }: { layer: DockLayer }) {
                 if (!group) {
                     return null;
                 }
-
                 return (
-                    <Box
-                        key={group.id}
-                        style={
-                            isFlow
-                                ? flowGroupStyle(group)
-                                : overlayGroupStyle(group)
-                        }>
+                    <Box key={group.id} style={isFlow ? flowGroupStyle(group) : overlayGroupStyle(group)}>
                         <DockGroupView group={group} layer={layer} />
                     </Box>
                 );
             })}
-        </Box>
+        </ScopedRegion>
     );
 }
 
-export function DockStage({
-    className,
-    style,
-}: {
-    className?: string;
-    style?: React.CSSProperties;
-}) {
+export function DockStage({ className, style }: { className?: string; style?: React.CSSProperties }) {
     const state = useDockSelector((current) => current);
     const tokens = useLoomTokens();
     const flowLayers = state.layerOrder
-        .map((layerId: string) => state.layers[layerId])
-        .filter((layer: DockLayer | undefined): layer is DockLayer => layer != null && layer.kind === 'flow');
+        .map((layerId) => state.layers[layerId])
+        .filter((layer): layer is DockLayer => layer != null && layer.kind === 'flow');
     const floatingLayers = state.layerOrder
-        .map((layerId: string) => state.layers[layerId])
-        .filter((layer: DockLayer | undefined): layer is DockLayer => layer != null && layer.kind !== 'flow');
+        .map((layerId) => state.layers[layerId])
+        .filter((layer): layer is DockLayer => layer != null && layer.kind !== 'flow');
 
     return (
-        <Box
-            className={className}
-            style={{
-                background: tokens.color.surface.sunken,
-                color: tokens.color.text.default,
-                display: 'flex',
-                minHeight: '100vh',
-                minWidth: 0,
-                overflow: 'hidden',
-                position: 'relative',
-                ...style,
-            }}>
-            <Stack
+        <ScopedRegion className={className} scopeId='dock-stage' scopeKind='dock-stage' style={{ display: 'contents' }}>
+            <Box
+                className={className}
                 style={{
-                    flex: 1,
-                    minHeight: 0,
+                    background: tokens.color.surface.sunken,
+                    color: tokens.color.text.default,
+                    display: 'flex',
+                    minHeight: '100vh',
                     minWidth: 0,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    ...style,
                 }}>
-                {flowLayers.map((layer: DockLayer) => (
+                <Stack style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+                    {flowLayers.map((layer: DockLayer) => (
+                        <DockLayerView key={layer.id} layer={layer} />
+                    ))}
+                </Stack>
+                {floatingLayers.map((layer: DockLayer) => (
                     <DockLayerView key={layer.id} layer={layer} />
                 ))}
-            </Stack>
-            {floatingLayers.map((layer: DockLayer) => (
-                <DockLayerView key={layer.id} layer={layer} />
-            ))}
-        </Box>
+                <InteractionOverlayHost
+                    renderOverlay={(overlay: OverlaySpec) => (
+                        <div
+                            style={{
+                                background: 'rgba(8, 12, 18, 0.92)',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                borderRadius: '12px',
+                                boxShadow: '0 24px 50px rgba(0, 0, 0, 0.36)',
+                                color: 'white',
+                                fontSize: '0.875rem',
+                                minWidth: '12rem',
+                                padding: '0.625rem 0.875rem',
+                            }}>
+                            {overlay.label ?? 'Dragging'}
+                        </div>
+                    )}
+                />
+            </Box>
+        </ScopedRegion>
     );
 }

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@loop-kit/dock": "workspace:*",
-    "@loop-kit/loom-interactions": "workspace:*",
+    "@loop-kit/interaction-react": "workspace:*",
     "@loop-kit/loom-pack-dock": "workspace:*",
     "@loop-kit/loom-react": "workspace:*",
     "@loop-kit/loom-theme-aquatic-react": "workspace:*",

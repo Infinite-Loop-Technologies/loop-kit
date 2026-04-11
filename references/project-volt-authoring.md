@@ -9,6 +9,7 @@ Read `references/project-volt-project-model.md` first. This note is the practica
 - Keep contracts, specs, and runtime code in normal TypeScript modules.
 - Keep `volt.config.ts` and `volt.workspace.ts` focused on composition and orchestration.
 - Prefer plain named functions over builder-heavy DSLs.
+- Do not let `volt.config.ts` become a giant implementation file; push real logic into nearby modules and keep config declarative.
 
 ## Recommended Project Layout
 
@@ -70,6 +71,18 @@ Use them for:
 
 Do not use flows just to wrap a single async function.
 
+## Agent Workflow Guidance
+
+If Volt adds first-class agent workflows, author them with the same discipline:
+
+- config wires the workflow into the project or workspace
+- prompts, policies, schemas, and orchestration helpers live in normal modules
+- agent workflows call named Volt tasks/flows instead of re-embedding `dev`, `build`, `lint`, or `test` logic inside prompts
+- approval and user-input boundaries stay explicit
+- structured logs/events are required; plain terminal transcripts are not enough
+
+For simple local AI automation, config wiring may be enough. For anything non-trivial, keep the workflow implementation out of `volt.config.ts`.
+
 ## Runtime Inputs
 
 Preferred names:
@@ -104,6 +117,8 @@ The flagship example in `apps/volt-demo` should read as:
 7. Keep both handles under the same flow-owned lifecycle.
 
 That is the intended value proposition. The config should show the topology directly instead of burying it in shell scripts.
+
+The same principle should hold for future agent workflows: the config should show what the agent owns, depends on, and may invoke, instead of hiding the shape in a giant prompt.
 
 ## Emulator / External Tool Pattern
 

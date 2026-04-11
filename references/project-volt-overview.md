@@ -2,28 +2,33 @@
 
 Preferred current docs front door: `references/project-volt-project-model.md`.
 
-This overview still contains useful background on the older target-centric model, but the preferred authoring direction in this repo is now project tasks, flows, normal-module contracts, and workspace composition.
+This overview is the short product-facing description. Use it for the high-level shape, then drop into the other Volt docs for detail.
 
-Volt is currently a Bun-first metaframework for defining app targets in `volt.config.ts`, then running them through a shared CLI/runtime layer.
+Volt is a Bun-native runtime-topology and workflow layer for local software projects. It is meant to make runtime dependencies, generated values, managed resources, and future agent workflows feel explicit, typed, and composable instead of buried in shell scripts.
+
+The preferred direction in this repo is:
+
+- project and workspace config as the composition surface
+- tasks and flows as the execution surface
+- artifacts, integrations, and runtime inputs as the value/dataflow surface
+- a workspace daemon plus OpenTUI as the runtime UX surface
+- agent workflows as a future first-class orchestration surface built on top of the same substrate
 
 The practical split is:
 
-- `volt.config.ts` decides what targets exist, which ones run for `dev` and `build`, what artifacts and integrations are resolved first, and what runtime-specific options each target gets.
+- `volt.config.ts` or workspace config decides what runnable things exist and how they compose.
 - entrypoint files define typed programs with `defineEntrypoint(import.meta, handler)`.
-- Volt’s Bun runtime layer generates the final bootstraps, merges built-in runtime services with config-provided serializable services, and starts the target.
+- Volt’s runtime layer resolves artifacts/integrations/runtime inputs, starts managed resources, and supervises the resulting topology.
 
 It is already useful for:
 
-- Bun fullstack targets
-- Bun server targets
-- Bun command targets
-- target dependency ordering
-- config-time artifacts
-- config-provided serializable services
-- a workspace daemon substrate
-- an experimental fiber/workflow helper
+- Bun fullstack/server/command runtimes
+- config-time artifacts and runtime inputs
+- workspace-aware daemon state
+- local flows and memoized setup steps
+- typed local orchestration that can sit above `dev`, `build`, `lint`, `test`, codegen, and future agent runs
 
-It is not yet a finished deploy/effect/workflow platform. The useful thing today is the authoring model.
+It is not yet a finished deploy platform, durable workflow engine, or agent runtime. The useful thing today is the model: make local topology and orchestration legible instead of magical.
 
 ## The Smallest Mental Model
 
@@ -48,111 +53,24 @@ export default defineVoltConfig({
 });
 ```
 
-That is the current core story:
+That is the current minimum story:
 
 1. Define a config.
-2. Define named targets.
-3. Point a target at an entrypoint.
-4. Run `volt dev` or `volt build`.
+2. Define named runnable units.
+3. Point them at typed entrypoints or commands.
+4. Run them through Volt.
 
-## How Apps Run Volt Today
+## High-Level Product Direction
 
-In this repo, app scripts usually call the Volt CLI directly from the workspace package:
+The intended user-facing shape is:
 
-```json
-{
-  "scripts": {
-    "dev": "bun run ../../packages/volt/src/cli.ts dev --config ./volt.config.ts",
-    "build": "bun run ../../packages/volt/src/cli.ts build --config ./volt.config.ts"
-  }
-}
-```
-
-From the workspace root there are convenience scripts like:
-
-```json
-{
-  "scripts": {
-    "volt:demo:dev": "bun run --cwd apps/volt-demo dev",
-    "volt:demo:build": "bun run --cwd apps/volt-demo build",
-    "volt:site:dev": "bun run --cwd apps/volt-site dev"
-  }
-}
-```
-
-The CLI currently supports:
-
-- `volt dev`
-- `volt build`
-- `volt daemon start`
-- `volt daemon status`
-- `volt daemon logs`
-- `volt daemon stop`
-
-## What `volt.config.ts` Does
-
-`defineVoltConfig(...)` returns the full app graph.
-
-Current top-level fields:
-
-- `name`
-- `defaults.build`
-- `defaults.dev`
-- `targets`
-- `artifacts`
-- `integrations`
-- `plugins`
-
-The key piece is `targets`.
-
-Each target is a `VoltTargetDefinition` with:
-
-- `runtime`
-- `target`
-- `build(context)`
-- `dev(context)`
-- optional `dependsOn`
-- optional `uses`
-- optional `artifacts`
-
-You usually do not author those objects by hand. You use helpers like:
-
-- `bunFullstackTarget(...)`
-- `bunServerTarget(...)`
-- `bunCommandTarget(...)`
-
-## Preferred Config Style
-
-The preferred style now is to import entrypoint objects directly into config instead of only passing relative string paths.
-
-```ts
-import {
-  bunFullstackTarget,
-  bunServerTarget,
-  defineVoltConfig,
-} from "volt";
-import gameEntrypoint from "./src/game-server/server.runtime";
-import webEntrypoint from "./src/web/server.runtime";
-
-export default defineVoltConfig({
-  defaults: {
-    build: ["web", "game"],
-    dev: ["web"],
-  },
-  name: "Volt Demo",
-  targets: {
-    game: bunServerTarget(gameEntrypoint, {
-      outdir: "dist/game-server",
-    }),
-    web: bunFullstackTarget(webEntrypoint, {
-      dependsOn: ["game"],
-      outdir: "dist/web",
-    }),
-  },
-});
-```
-
-This is an important design choice. Runtime selection lives in config, not in the entrypoint module.
+- `volt` with no subcommand opens the OpenTUI
+- explicit subcommands remain available for direct shell usage
+- projects declare runtime topology and orchestration in config
+- the daemon owns local state, resource/session ownership, and invalidation
+- tasks stay useful for deterministic work
+- flows handle orchestration
+- future agent workflows build on the same config, task, daemon, and TUI substrate instead of inventing a separate AI-only platform
 
 ## Entrypoints
 
@@ -524,27 +442,6 @@ Resolved integration state is written under `.volt/state/integrations/...`, and 
 
 This is the current route for things like WASM/component/binding-style workflows rather than treating everything as just another app target.
 
-## The Workspace Daemon
-
-Volt now has a workspace-scoped daemon, not one daemon per app config.
-
-Current daemon behavior:
-
-- root-level `volt daemon start|status|logs|stop` can discover `apps/*/volt.config.ts`
-- state lives under root `/.volt/daemon/`
-- `volt dev` ensures the workspace daemon is running
-- daemon state tracks the managed config set and per-config watcher/service counts
-
-This matters in a monorepo because the daemon is becoming shared workspace substrate instead of app-local background state.
-
-The daemon is important, but today it is infrastructure, not the main authoring concept. The day-to-day authoring surface is still mostly:
-
-- config
-- entrypoints
-- targets
-- artifacts
-- services
-
 ## A Concrete Entrypoint Pattern
 
 A good current Volt entrypoint pattern is:
@@ -593,11 +490,12 @@ That is why target-level config providers can compute values from artifacts and 
 
 ## Current Volt Direction In One Paragraph
 
-Right now Volt is best understood as a Bun-native host layer for typed entrypoints and config-defined targets, with an emerging value graph around artifacts/integrations/services and a workspace daemon beneath it. The most important part to understand is not a grand philosophy; it is the concrete authoring split:
+Right now Volt is best understood as a Bun-native host layer for typed entrypoints, project-defined runtime topology, and local workflows, with an emerging value graph around artifacts/integrations/runtime inputs and a workspace daemon beneath it. The most important split is:
 
 - entrypoint = typed program
-- target = runtime binding
-- `volt.config.ts` = graph, defaults, ordering, artifacts, services, integrations
+- task/flow = executable orchestration unit
+- runtime binding = how code becomes an owned local resource
+- `volt.config.ts` = graph, defaults, ordering, artifacts, integrations, runtime inputs, and future agent workflow composition
 
 ## Best Files To Read Next
 

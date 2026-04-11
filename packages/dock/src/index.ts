@@ -25,6 +25,24 @@ export {
     normalizeDockV2Policies,
 } from './v2/model.js';
 
+export { dockActionIds, type DockActionId } from './actions.js';
+export type { DockCommand } from './commands.js';
+export { resolveDockDrop, type DockDropResolution } from './drop-resolution.js';
+export { defaultDockPolicy } from './policy/default-dock-policy.js';
+export type {
+    DockDragDescriptor,
+    DockDropDescriptor,
+    DockDropPlan,
+    DockDropZone,
+    DockPolicy,
+    DockPolicyContext,
+} from './policy/dock-policy.js';
+export { getDockGroup, getDockGroupForPanel, getDockPanel } from './selectors.js';
+export {
+    createDockService,
+    type DockService,
+    type DockServiceOptions,
+} from './service.js';
 export { createDockStore, type DockStateStore, type DockStore, type DockStoreOptions } from './store.js';
 
 export type {

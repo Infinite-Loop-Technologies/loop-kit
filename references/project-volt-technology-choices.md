@@ -76,6 +76,24 @@ Role:
 
 The dashboard remains experimental, but the event/status model it consumes is part of the real product direction.
 
+Likely direction:
+
+- `volt` with no subcommand opens the TUI
+- direct CLI commands remain available for scripts, CI, and explicit shell usage
+- the TUI consumes daemon state rather than inventing its own model
+
+## Codex / AI Backend Stance
+
+Volt should treat AI backends as implementation choices behind an agent-workflow surface, not as the product model itself.
+
+Current likely path:
+
+- start with Codex CLI for simple integration because it already provides non-interactive runs and structured JSON event output
+- evaluate the Codex SDK later if Volt needs tighter in-process control
+- keep structured run logs, outputs, and policy wiring in Volt instead of depending on opaque terminal scraping
+
+Do not hardwire Volt's public model to one AI vendor's SDK if the underlying semantics are really task/flow/session oriented.
+
 ## Proto
 
 Proto remains the repo-level toolchain bootstrap mechanism.

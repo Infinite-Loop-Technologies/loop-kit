@@ -1,12 +1,12 @@
 # @loop-kit/dock
 
-Dock state, layout, and interaction helpers used by the current Loop Kit
+Dock state, layout, policy, and interaction helpers used by the current Loop Kit
 workbench demos.
 
 ## What Lives Here
 
 - graph-shaped dock state builders
-- dock intent registration on top of `@loop-kit/graphite`
+- dock command, policy, and drop-resolution helpers for the shared interaction runtime
 - layout rectangle computation
 - drop indicator helpers
 - interaction controller for panel drag and resize flows

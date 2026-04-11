@@ -62,10 +62,14 @@ The repo is trying to grow reusable capability-oriented packages without letting
   - Volt integration demo for generated bindings and JCO-style artifact flows
 - `packages/dock`
   - headless dock model and behavior
+- `packages/interaction`
+  - headless interaction runtime for scopes, actions, shortcuts, surfaces, drag sessions, overlays, and command bus facades
+- `packages/interaction-react`
+  - React bridge for interaction providers, scope registration, DOM ingress, and overlay hosts
 - `packages/loom-pack-dock`
   - React bridge and Loom-facing dock integration
 - `packages/loom-*`
-  - Loom contracts, renderer, interactions, and themes
+  - Loom contracts, renderer, packs, and themes
 - `packages/state`
   - emerging shared state package; useful for simplifying Forge architecture
 - `packages/volt`

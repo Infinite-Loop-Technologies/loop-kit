@@ -2,41 +2,53 @@
 
 ## Repository Cleanup, Improvements, and Refactoring
 
-- [ ] Delete `packages/graphite` and `packages/react`, but only after making sure nothing is still depending on them.
-- [ ] Check if anything is depending on `packages/loom-interactions`.
+- [x] Delete `packages/graphite` and `packages/graphite-react` after migrating remaining usages.
+- [x] Check and remove anything depending on `packages/loom-interactions`.
+- [ ] Remove remaining Graphite-era residue from repo docs/tests (`README.md`, `packages/dock/test/graphite.fixture.ts`, and stale generated index references).
+- [ ] Reconcile the documented `dev` workflow with GitHub reality. `AGENTS.md` says `dev` is the working integration branch, but the remote currently has no `origin/dev`.
 
 ## Volt
 
-- [ ] Develop the Volt site a little more. Add a description of what it is, perhaps sentences like: "Make external capabilities feel local, typed, and composable across environments." or "a Bun-native host/metaframework for contract-bound artifacts and services."
-- [ ] Integrate Resonate into the repo as durable execution infrastructure for daemon-backed workflows, AI jobs, and Forge automation.
+- [ ] Clarify Volt's core product shape in the CLI, docs, and demos: a Bun-native runtime-topology and workflow layer for tasks, managed resources, artifacts, integrations, and future agent workflows.
+- [ ] Make `volt` open the interactive TUI by default when launched without an explicit subcommand.
+  - [ ] Keep a simple flag to force plain CLI mode.
+  - [ ] Decide later whether persistent user config for default mode is worth adding.
+- [ ] Add a clear agent-workflow story to Volt.
+  - [ ] Decide whether agent workflows should be first-class alongside tasks/flows or a specialized flow/task convention.
+  - [ ] Keep agent workflows wired from `volt.config.ts` or workspace config instead of inventing a second hidden control plane.
+  - [ ] Make agent workflows able to call normal Volt tasks like `dev`, `build`, `lint`, and `test`.
+  - [ ] Design how agent workflows can pause for human input, approvals, or follow-up commands without collapsing back into shell scripts.
+- [ ] Add a daemon-backed task and workflow session model.
+  - [ ] Add `volt task start` so dev-style tasks can keep running after the launch command returns.
+  - [ ] Add `volt task ps`, `attach`, and `stop` around daemon-owned task handles.
+  - [ ] Add the equivalent session story for flows and future agent workflows.
+  - [ ] Make task and workflow sessions render cleanly in the OpenTUI instead of living only in shell output.
 - [ ] Prove that ElectroBun works with `apps/volt-demo`.
 - [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
-- [ ] Add richer dev orchestration around readiness, restart policies, and grouped logs for `bun.command()` targets.
-- [ ] Design Volt's next artifact-aware layer before adding more adapters.
-  - [ ] Keep `targets` as runnable and buildable units.
+- [ ] Add richer dev orchestration around readiness, restart policies, owned resource lifecycle, and grouped logs for Bun runtimes.
+- [ ] Finish the public model transition from target-first compatibility APIs to the preferred project/task/flow/runtime-input story.
+  - [ ] Keep targets as a compatibility surface, not the main mental model.
   - [x] Prototype config-defined `artifacts` as value/module producers resolved before targets.
-  - [ ] Add a separate concept for produced artifacts or generated modules where `targets`, `artifacts`, and `integrations` stop feeling redundant.
-  - [ ] Decide whether the user-facing concept should be called `artifacts`, `integrations`, `resources`, or `loop`.
+  - [ ] Decide where `tasks`, `flows`, `artifacts`, `integrations`, `resources`, and future `agents` are meaningfully different versus redundant.
+  - [ ] Tighten naming so Volt feels coherent instead of like several partially overlapping abstractions.
 - [ ] Add a lightweight dependency graph for build products, not just process order.
   - [x] Prototype artifact dependency ordering and target artifact consumption.
-- [ ] Add a plugin-driven workspace daemon model for Volt dev.
-- [ ] Teach the Volt daemon to persist richer task/workflow state on top of its workspace process model.
-- [ ] Grow the Volt CLI into a lightweight interactive surface instead of a pure fire-and-block runner.
-  - [x] Upgrade `volt dashboard` into a keyboard-first OpenTUI view for resources, configs, events, and logs.
-  - [ ] Add daemon-backed `volt task start` so dev tasks can keep running after the launch command returns.
-  - [ ] Add `volt task ps`, `attach`, and `stop` around daemon-owned task sessions.
-  - [ ] Decide how lightweight multiplexing should relate to the workspace daemon versus direct foreground task runs.
+- [ ] Add a plugin-driven workspace daemon model for Volt dev and workspace tooling.
+- [x] Upgrade `volt dashboard` into a keyboard-first OpenTUI view for resources, configs, events, and logs.
 - [x] Prototype generator-based fibers with named-step memoization and optional local persistence.
 - [x] Prototype config-provided serializable services flowing into typed entrypoints.
-- [ ] Add code generation as a first-class Volt capability.
+- [ ] Add code generation as a first-class Volt capability without turning Volt into a generic AST framework.
 - [ ] Prove the model with WASM components before generalizing further.
 - [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
-- [ ] Add an inspect/debug surface in the CLI so target graphs, resolved env, and dependency order are visible.
+- [ ] Add an inspect/debug surface in the CLI and TUI so runtime graphs, resolved env, dependency order, and generated inputs are visible.
 - [ ] Greatly improve the Volt demos and templates.
 - [ ] Add a real docs/content app for Volt, not just the current site shell.
-- [ ] Begin writing Volt documentation about the service dependency pattern, runtimes/platforms, and TypeScript-first dev/build/deploy flows.
+- [ ] Keep the Volt reference docs aligned with the actual preferred public model and trim stale compatibility-heavy explanations.
 - [x] Create a repo-local Volt Codex skill and use it as the lightweight Volt docs front door. Keep it updated when Volt changes.
-- [ ] Set up AI tooling via the Volt CLI and installable Volt-specific skills or docs surfaces.
+- [ ] Prototype AI tooling around Volt and Codex.
+  - [ ] Prove a minimal Codex CLI integration that can run agent workflows against a Volt workspace or project.
+  - [ ] Decide later whether the Codex SDK is the default Volt integration path or just another backend.
+  - [ ] Capture structured run logs and workflow events instead of treating AI runs as plain terminal text.
 - [ ] Set up npm token and publish packages to prove the Volt release flow works.
 - [ ] Set up GitHub Actions workflows for publishing Volt packages.
 - [ ] Set up deployed Volt examples and choose a hosting story for the longer-running demos.
@@ -50,6 +62,7 @@
 - [ ] Create a better site for dock that doubles as both a set of demos and documentation for the packages.
   - [ ] Show off themeability via the loom-pack example themed Dock implementation.
 - [ ] Gain feature parity with Dockview. <https://dockview.dev/docs/overview/introduction>
+- [x] Introduce a reusable interaction runtime split with headless `@loop-kit/interaction`, React bridge `@loop-kit/interaction-react`, headless dock policy/service/commands, and a `loom-pack-dock` drag/drop bridge.
 
 ## Forge
 

@@ -1,7 +1,7 @@
 {
     "name": "@loop-kit/loom-pack-shortcuts",
     "version": "0.1.0",
-    "description": "Shortcut and intent-browser surfaces for Graphite-backed Loom apps.",
+    "description": "Shortcut and action-browser surfaces for interaction-runtime-backed Loom apps.",
     "type": "module",
     "sideEffects": false,
     "main": "./src/index.tsx",
@@ -23,8 +23,7 @@
         "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
-        "@loop-kit/graphite": "workspace:*",
-        "@loop-kit/graphite-react": "workspace:*",
+        "@loop-kit/interaction-react": "workspace:*",
         "@loop-kit/loom-pack-data": "workspace:*",
         "@loop-kit/loom-react": "workspace:*"
     },

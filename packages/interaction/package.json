@@ -1,7 +1,7 @@
 {
-    "name": "@loop-kit/loom-interactions",
+    "name": "@loop-kit/interaction",
     "version": "0.1.0",
-    "description": "Headless interaction coordination managers and React bindings for Loom.",
+    "description": "Headless interaction runtime for scopes, actions, shortcuts, surfaces, overlays, and drag sessions.",
     "type": "module",
     "sideEffects": false,
     "main": "./src/index.ts",
@@ -23,14 +23,7 @@
         "test": "bun test",
         "prepack": "bun run clean && bun run build"
     },
-    "dependencies": {
-        "react": "^19.1.0"
-    },
-    "peerDependencies": {
-        "react-dom": "^18.2.0 || ^19.0.0"
-    },
     "devDependencies": {
-        "@types/react": "^19.1.2",
         "typescript": "^5.9.3"
     }
 }

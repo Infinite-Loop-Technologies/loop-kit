@@ -2,7 +2,7 @@
 
 Volt in one sentence:
 
-Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks, flows, artifacts, integrations, and workspace-aware local workflows.
+Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks, flows, artifacts, integrations, workspace-aware local workflows, and future agent workflows.
 
 ## What Volt Is
 
@@ -30,6 +30,8 @@ Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks,
   - a named unit for dev, build, codegen, automation, or resource startup
 - `flow`
   - a generator-based orchestration task with memoized steps, concurrency, joins, races, waits, and cleanup
+- `agent workflow`
+  - a workflow that delegates reasoning-heavy work to an AI backend while still living inside Volt's normal task/flow/daemon/runtime model
 - `artifact`
   - a produced value or generated file/module resolved before dependent tasks
 - `integration`
@@ -40,6 +42,21 @@ Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks,
   - per-app composition of tasks, flows, artifacts, integrations, and runtime bindings
 - `workspace config`
   - thin cross-project composition and workspace-level flows
+
+## Product Shape Constraints
+
+Volt should not become spaghetti. The practical guardrails are:
+
+- one obvious public mental model
+- config as composition, not a dumping ground for all implementation
+- tasks for deterministic execution
+- flows for orchestration
+- runtime bindings for owned resources
+- artifacts/integrations/runtime inputs for dataflow
+- daemon/TUI for visibility and lifecycle
+- agent workflows built on the same substrate rather than a disconnected AI sidecar
+
+If a new Volt feature does not fit one of those buckets cleanly, that is a design smell.
 
 ## Runtime Topology First
 
@@ -70,6 +87,7 @@ Preferred public surfaces:
 - `bunServer(...)`, `bunFullstack(...)`, `bunCommand(...)`
 - `task(...)`
 - `flow(...)`
+- future `agent(...)` or similarly explicit agent-workflow declaration if the distinction proves real
 - `defineRuntimeInputs(...)`
 - `defineEntrypointSpec(...)`, `implementEntrypoint(...)`
 - `defineArtifact(...)`
@@ -83,6 +101,8 @@ Compatibility surfaces, not the preferred story:
 - `defineServices(...)`
 - `defineFiber(...)`, `runFiber(...)`
 - `createBunPlugin()`
+
+The point of the compatibility layer is migration, not permanent concept sprawl.
 
 ## Preferred Authoring Shape
 
@@ -147,6 +167,25 @@ Use it for serializable, concrete runtime values:
 - tokens or local connection details when appropriate
 
 Do not treat it as a giant dependency injection container.
+
+## Agent Workflows
+
+Volt should grow an agent-workflow story, but not by pretending every AI run is just a shell command and not by creating a separate hidden control plane.
+
+Current preferred direction:
+
+- define agent workflows from project/workspace config
+- let agent workflows call normal Volt tasks and flows
+- let them inherit runtime topology, artifacts, runtime inputs, logs, and daemon ownership
+- let them pause for human input or approval
+- expose them in the OpenTUI as first-class sessions
+- keep backend choice pluggable enough that Codex CLI, Codex SDK, or other future engines are implementation details rather than the product model
+
+Open question:
+
+- whether agent workflows deserve a first-class top-level concept or should remain a specialized flow/task convention
+
+That decision should be made based on semantics, not novelty. If agent workflows need distinct lifecycle, approval, pause/resume, or session UI behavior, they likely deserve a first-class concept.
 
 ## Workspace-Aware Change Detection
 
@@ -213,6 +252,18 @@ The daemon remains:
 - explicit about ownership
 - responsible for watchers, invalidation state, and shared runtime status
 - not allowed to leak orphan processes
+
+The daemon should eventually own task, flow, and agent-workflow sessions in the same workspace-local state model.
+
+## CLI And TUI Direction
+
+The likely long-term CLI posture is:
+
+- `volt` opens the TUI by default
+- explicit subcommands remain for direct command-line workflows
+- plain output mode stays easy to force for scripts and CI
+
+The reason is simple: Volt is trying to be a real local runtime/workflow surface, not just a one-shot argument parser.
 
 Use `references/project-volt-daemon.md` for the daemon-specific guarantees and state model.
 

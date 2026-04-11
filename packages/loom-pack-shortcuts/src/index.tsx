@@ -1,10 +1,6 @@
 import * as React from 'react';
 
-import type { DispatchIntentOptions, GraphState } from '@loop-kit/graphite';
-import {
-    useIntentShortcuts,
-    type IntentShortcut,
-} from '@loop-kit/graphite-react';
+import { useScopedShortcutMap } from '@loop-kit/interaction-react';
 import {
     Button,
     Heading,
@@ -23,42 +19,40 @@ import {
     type QueryBuilderModel,
 } from '@loop-kit/loom-pack-data';
 
-export interface GraphiteIntentRegistryEntry<
-    TState extends GraphState = GraphState,
-    TPayload = unknown,
-> {
-    id: string;
-    intent: string;
-    title: string;
-    description?: string;
+export interface ActionRegistryEntry<TContext extends Record<string, unknown> = Record<string, unknown>, TPayload = unknown> {
+    actionId: string;
     category?: string;
+    description?: string;
+    id: string;
     keywords?: readonly string[];
-    payload?: TPayload | ((state: Readonly<TState>) => TPayload);
-    dispatchOptions?: DispatchIntentOptions<TState>;
+    payload?: TPayload | ((context: Readonly<TContext>) => TPayload);
+    title: string;
 }
 
-export function resolveIntentPayload<
-    TState extends GraphState = GraphState,
-    TPayload = unknown,
->(
-    entry: GraphiteIntentRegistryEntry<TState, TPayload>,
-    state: Readonly<TState>,
+export type GraphiteIntentRegistryEntry<TContext extends Record<string, unknown> = Record<string, unknown>, TPayload = unknown> =
+    ActionRegistryEntry<TContext, TPayload>;
+
+export function resolveActionPayload<TContext extends Record<string, unknown>, TPayload>(
+    entry: ActionRegistryEntry<TContext, TPayload>,
+    context: Readonly<TContext>,
 ): TPayload | undefined {
     if (typeof entry.payload === 'function') {
-        return (entry.payload as (state: Readonly<TState>) => TPayload)(state);
+        return (entry.payload as (context: Readonly<TContext>) => TPayload)(context);
     }
     return entry.payload;
 }
 
-export interface GraphiteShortcutBinding {
-    id: string;
-    shortcut: string;
-    intentId: string;
+export interface ShortcutBinding {
+    actionEntryId: string;
     description?: string;
-    preventDefault: boolean;
     enabled: boolean;
+    id: string;
+    preventDefault: boolean;
+    shortcut: string;
     when: QueryBuilderModel;
 }
+
+export type GraphiteShortcutBinding = ShortcutBinding;
 
 let shortcutBindingCounter = 0;
 
@@ -67,179 +61,154 @@ function nextShortcutBindingId() {
     return `shortcut_${Date.now().toString(36)}_${shortcutBindingCounter.toString(36)}`;
 }
 
-export function createShortcutBinding(
-    intentId: string,
-    shortcut = '',
-): GraphiteShortcutBinding {
+export function createShortcutBinding(actionEntryId: string, shortcut = ''): ShortcutBinding {
     return {
+        actionEntryId,
         id: nextShortcutBindingId(),
-        shortcut,
-        intentId,
         description: '',
-        preventDefault: true,
         enabled: true,
+        preventDefault: true,
+        shortcut,
         when: createQueryBuilderModel(),
     };
 }
 
-type UseGraphiteShortcutBindingsOptions<
-    TState extends GraphState = GraphState,
-> = {
-    allowInEditable?: boolean;
-    bindings: readonly GraphiteShortcutBinding[];
-    contextSelector: (state: Readonly<TState>) => Record<string, unknown>;
+type UseShortcutBindingsOptions<TContext extends Record<string, unknown> = Record<string, unknown>> = {
+    bindings: readonly ShortcutBinding[];
+    context: TContext;
     enabled?: boolean;
-    intents: readonly GraphiteIntentRegistryEntry<TState>[];
+    entries: readonly ActionRegistryEntry<TContext>[];
 };
 
-export function useGraphiteShortcutBindings<
-    TState extends GraphState = GraphState,
->({
-    allowInEditable = false,
+export function useShortcutBindings<TContext extends Record<string, unknown> = Record<string, unknown>>({
     bindings,
-    contextSelector,
+    context,
     enabled = true,
-    intents,
-}: UseGraphiteShortcutBindingsOptions<TState>) {
-    const intentMap = React.useMemo(() => {
-        const map = new Map<string, GraphiteIntentRegistryEntry<TState>>();
-        for (const entry of intents) {
+    entries,
+}: UseShortcutBindingsOptions<TContext>) {
+    const entryMap = React.useMemo(() => {
+        const map = new Map<string, ActionRegistryEntry<TContext>>();
+        for (const entry of entries) {
             map.set(entry.id, entry);
         }
         return map;
-    }, [intents]);
+    }, [entries]);
 
-    const shortcuts = React.useMemo(() => {
-        const next: IntentShortcut<unknown, TState>[] = [];
-        for (const binding of bindings) {
-            if (!binding.enabled || !binding.shortcut.trim()) {
-                continue;
-            }
-            const intent = intentMap.get(binding.intentId);
-            if (!intent) {
-                continue;
-            }
+    const shortcuts = React.useMemo(
+        () =>
+            bindings
+                .filter((binding) => binding.enabled && binding.shortcut.trim())
+                .map((binding) => {
+                    const entry = entryMap.get(binding.actionEntryId);
+                    if (!entry) {
+                        return null;
+                    }
+                    return {
+                        actionId: entry.actionId,
+                        description: binding.description || entry.description,
+                        enabled,
+                        gesture: binding.shortcut,
+                        payload: resolveActionPayload(entry, context),
+                        when: () => evaluateQueryBuilder(binding.when, context),
+                    };
+                })
+                .filter((binding): binding is NonNullable<typeof binding> => binding != null),
+        [bindings, context, enabled, entryMap],
+    );
 
-            next.push({
-                shortcut: binding.shortcut,
-                intent: intent.intent,
-                description: binding.description || intent.description,
-                dispatchOptions: intent.dispatchOptions,
-                payload: ({ state }: { state: Readonly<TState> }) =>
-                    resolveIntentPayload(intent, state),
-                preventDefault: binding.preventDefault,
-                when: ({ state }: { state: Readonly<TState> }) =>
-                    evaluateQueryBuilder(binding.when, contextSelector(state)),
-            });
-        }
-        return next;
-    }, [bindings, contextSelector, intentMap]);
-
-    useIntentShortcuts(shortcuts, {
-        enabled,
-        allowInEditable,
-    });
-
+    useScopedShortcutMap(shortcuts);
     return shortcuts;
 }
 
-export type ShortcutSettingsPanelProps<
-    TState extends GraphState = GraphState,
-> = {
-    bindings: readonly GraphiteShortcutBinding[];
+export const useGraphiteShortcutBindings = useShortcutBindings;
+
+export type ShortcutSettingsPanelProps<TContext extends Record<string, unknown> = Record<string, unknown>> = {
+    bindings: readonly ShortcutBinding[];
     className?: string;
     contextFields: readonly QueryBuilderField[];
-    intents: readonly GraphiteIntentRegistryEntry<TState>[];
-    onBindingsChange: (next: GraphiteShortcutBinding[]) => void;
+    entries: readonly ActionRegistryEntry<TContext>[];
+    onBindingsChange: (next: ShortcutBinding[]) => void;
 };
 
-export function ShortcutSettingsPanel<
-    TState extends GraphState = GraphState,
->({
+export function ShortcutSettingsPanel<TContext extends Record<string, unknown> = Record<string, unknown>>({
     bindings,
     className,
     contextFields,
-    intents,
+    entries,
     onBindingsChange,
-}: ShortcutSettingsPanelProps<TState>) {
+}: ShortcutSettingsPanelProps<TContext>) {
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
     const selected = bindings.find((binding) => binding.id === selectedId) ?? null;
 
-    const columns = React.useMemo<DataTableColumn<GraphiteShortcutBinding>[]>(
+    const columns = React.useMemo<DataTableColumn<ShortcutBinding>[]>(
         () => [
             {
                 key: 'shortcut',
                 header: 'Shortcut',
                 sortable: true,
-                sortValue: (row: GraphiteShortcutBinding) => row.shortcut,
-                cell: (row: GraphiteShortcutBinding) => row.shortcut || 'unset',
+                sortValue: (row) => row.shortcut,
+                cell: (row) => row.shortcut || 'unset',
             },
             {
-                key: 'intent',
-                header: 'Intent',
+                key: 'action',
+                header: 'Action',
                 sortable: true,
-                sortValue: (row: GraphiteShortcutBinding) => row.intentId,
-                cell: (row: GraphiteShortcutBinding) =>
-                    intents.find((entry) => entry.id === row.intentId)?.title ?? row.intentId,
+                sortValue: (row) => row.actionEntryId,
+                cell: (row) =>
+                    entries.find((entry) => entry.id === row.actionEntryId)?.title ?? row.actionEntryId,
             },
             {
                 key: 'when',
                 header: 'When',
                 sortable: true,
-                sortValue: (row: GraphiteShortcutBinding) => row.when.rules.length,
-                cell: (row: GraphiteShortcutBinding) => summarizeQueryBuilder(row.when),
+                sortValue: (row) => row.when.rules.length,
+                cell: (row) => summarizeQueryBuilder(row.when),
             },
             {
                 key: 'enabled',
                 header: 'Enabled',
                 sortable: true,
-                sortValue: (row: GraphiteShortcutBinding) => Number(row.enabled),
-                cell: (row: GraphiteShortcutBinding) => (row.enabled ? 'yes' : 'no'),
+                sortValue: (row) => Number(row.enabled),
+                cell: (row) => (row.enabled ? 'yes' : 'no'),
             },
         ],
-        [intents],
+        [entries],
     );
 
     const addBinding = () => {
-        const firstIntent = intents[0];
-        if (!firstIntent) {
+        const firstEntry = entries[0];
+        if (!firstEntry) {
             return;
         }
-        const created = createShortcutBinding(firstIntent.id);
+        const created = createShortcutBinding(firstEntry.id);
         onBindingsChange([...bindings, created]);
         setSelectedId(created.id);
     };
 
-    const updateSelected = (updater: (binding: GraphiteShortcutBinding) => GraphiteShortcutBinding) => {
+    const updateSelected = (updater: (binding: ShortcutBinding) => ShortcutBinding) => {
         if (!selected) {
             return;
         }
-        onBindingsChange(
-            bindings.map((binding) => (binding.id === selected.id ? updater(binding) : binding)),
-        );
+        onBindingsChange(bindings.map((binding) => (binding.id === selected.id ? updater(binding) : binding)));
     };
 
     return (
         <Stack className={className} gap='3'>
             <InlineHeader
                 onAdd={addBinding}
+                subtitle='Map shortcuts to registered interaction actions with optional query-based conditions.'
                 title='Shortcut Browser'
-                subtitle='Map shortcuts to registered Graphite intents with optional query-based conditions.'
             />
 
-            <DataTable
-                columns={columns}
-                emptyMessage='No shortcuts configured.'
-                rows={bindings}
-            />
+            <DataTable columns={columns} emptyMessage='No shortcuts configured.' rows={bindings} />
 
             {selected ? (
                 <Panel emphasis='subtle'>
                     <Stack gap='3'>
                         <Heading level={3} size='sm'>
-                            Edit {selected.shortcut || selected.intentId}
+                            Edit {selected.shortcut || selected.actionEntryId}
                         </Heading>
-                        <Text size='sm'>Intent: {selected.intentId}</Text>
+                        <Text size='sm'>Action: {selected.actionEntryId}</Text>
                         <QueryBuilder
                             fields={contextFields}
                             onChange={(next: QueryBuilderModel) =>
@@ -252,9 +221,7 @@ export function ShortcutSettingsPanel<
                         />
                         <Button
                             kind='outline'
-                            onClick={() =>
-                                onBindingsChange(bindings.filter((binding) => binding.id !== selected.id))
-                            }
+                            onClick={() => onBindingsChange(bindings.filter((binding) => binding.id !== selected.id))}
                             type='button'>
                             Remove shortcut
                         </Button>
@@ -284,8 +251,7 @@ export function ShortcutSettingsPanel<
                                 {binding.shortcut || 'unset'}
                             </Text>
                             <Text as='span' size='sm' tone='muted'>
-                                {intents.find((entry) => entry.id === binding.intentId)?.title ??
-                                    binding.intentId}
+                                {entries.find((entry) => entry.id === binding.actionEntryId)?.title ?? binding.actionEntryId}
                             </Text>
                         </Stack>
                     </Button>

@@ -1,6 +1,6 @@
 # loop-kit
 
-`loop-kit` is the prototype monorepo for Forge, Graphite, Dock, Loom, and the next OCI/WASM runtime experiments.
+`loop-kit` is the prototype monorepo for Forge, Dock, Loom, Volt, and related capability-oriented runtime experiments.
 
 The repo now treats Bun as the default scripting, test, and workspace runtime. Proto stays in place to pin tool versions, but Moon, the old template generator flow, and the Rust `experiments/oci-lab` lab are gone.
 
@@ -9,14 +9,14 @@ The repo now treats Bun as the default scripting, test, and workspace runtime. P
 - `apps/forge`: Forge prototype app
 - `apps/loom-demo`: Loom architecture demo surface
 - `apps/dock-demo`: dock-focused demo surface built on `loom-pack-dock`
-- `packages/graphite*`: retained Graphite runtime work
+- `apps/volt-*`: Volt demo and site surfaces
 - `packages/dock`: retained Dock work
-- `packages/loom-*`: Loom contracts, renderer, themes, interactions, and higher-level packs
+- `packages/interaction*`: headless interaction runtime and React bridge
+- `packages/loom-*`: Loom contracts, renderer, themes, and higher-level packs
+- `packages/volt`: Bun-native host/metaframework work
 - `experiments/`: Bun-first prototype labs and notes
-- `tests/`: repo-level smoke and orchestration tests
-- `fixtures/`: shared test and experiment fixtures when they are worth centralizing
 - `tools/`: small Bun scripts for repo automation
-- `docs/`: plans, references, and rewrite direction
+- `references/`: durable repo support material that does not fit cleanly in `ARCHITECTURE.md`
 
 ## Quickstart
 
@@ -60,11 +60,13 @@ localhost:5000/loop/shell-container:dev
 
 ## Planning
 
-The rewrite direction lives in:
+The lightweight control plane lives in:
 
-- `docs/visions/active/000-forge-local-oci-capability-platform.md`
-- `docs/project-plans/on-hold/003-loop-refactor.md`
-- `docs/ref/loop-kit-fundamentals/index.md`
+- `CHECKLIST.md`
+- `ARCHITECTURE.md`
+- `AGENT_INBOX.md`
+- `HUMAN_INBOX.md`
+- `references/`
 
 ## Backlinks
 
