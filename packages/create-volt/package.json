@@ -1,0 +1,31 @@
+{
+  "name": "create-volt",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "Project scaffolder for Volt templates.",
+  "bin": {
+    "create-volt": "./bin/create-volt.js"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src",
+    "templates"
+  ],
+  "scripts": {
+    "build": "bun run build:package",
+    "build:package": "bun build ./src/index.ts ./src/cli.ts --outdir ./dist --target bun --format esm",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "volt": "^0.4.0",
+    "zod": "^4.1.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "x-publish": true
+}

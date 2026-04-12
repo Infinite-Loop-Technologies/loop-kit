@@ -4,7 +4,6 @@
 **/npm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
-**/pnpm-debug.log*
 /.pnp
 .pnp.*
 .yarn/*
@@ -23,8 +22,11 @@
 
 # production
 /build
+**/build/
 /dist
 **/dist/
+**/.output/
+**/.swc/
 **/target/
 **/tmp/
 **/src-tauri/target/
@@ -42,7 +44,6 @@ apps/workbench/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -52,6 +53,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# root-level Volt daemon/runtime state
+/.volt/
+**/.volt/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -59,9 +64,12 @@ next-env.d.ts
 # stash
 /vault
 
-# moon
-.moon/cache/
-.moon/docker/
+# local CKB artifacts
+.ckb/
+index.scip
+
+# local workflow artifacts
+**/.workflow-data/
 
 # loop auth material
 loop/auth.json

@@ -1,0 +1,49 @@
+{
+  "name": "volt",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "A Bun-first metaframework for orchestrating multi-target apps.",
+  "bin": {
+    "volt": "./bin/volt.js"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./bun": "./src/plugins/bun/index.ts",
+    "./builtins": "./src/builtins.ts",
+    "./cli": "./src/cli.ts",
+    "./contracts": "./src/schema.ts",
+    "./dashboard": "./src/dashboard.tsx",
+    "./entrypoint": "./src/entrypoint.ts",
+    "./flow": "./src/flow.ts",
+    "./workspace": "./src/workspace.ts"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "bun run build:package",
+    "build:package": "bun build ./src/index.ts ./src/cli.ts ./src/dashboard.tsx --outdir ./dist --target bun --format esm",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "bun run typecheck"
+  },
+  "dependencies": {
+    "@loop-kit/interaction": "workspace:*",
+    "@opentui/core": "^0.1.97",
+    "@opentui/react": "^0.1.97",
+    "@parcel/watcher": "^2.5.6",
+    "effect": "^3.21.0",
+    "oxc-parser": "^0.124.0",
+    "react": "^19.2.5",
+    "recast": "^0.23.11",
+    "ts-morph": "^27.0.2"
+  },
+  "devDependencies": {
+    "@bytecodealliance/jco": "^1.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "x-publish": true
+}

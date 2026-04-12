@@ -1,0 +1,21 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+}
+
+.dock-demo-shell {
+    margin: 0 auto;
+    max-width: 112rem;
+    min-height: 100vh;
+    padding: 1rem;
+}

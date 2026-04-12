@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop-Kit Weekly Review"
+  short_description: "Run the loop-kit markdown weekly review"
+  default_prompt: "Use this skill to run the loop-kit weekly review: process AGENT_INBOX.md and HUMAN_INBOX.md, review CHECKLIST.md, ARCHITECTURE.md, relevant references, and Git state, then reconcile drift and summarize cleanup instead of performing risky cleanup silently."

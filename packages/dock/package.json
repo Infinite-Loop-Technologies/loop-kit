@@ -1,7 +1,7 @@
 {
     "name": "@loop-kit/dock",
     "version": "0.1.0",
-    "description": "Graphite-powered docking facet, recognizers, and React view bindings.",
+    "description": "Headless dock state, command, and layout primitives.",
     "type": "module",
     "sideEffects": false,
     "main": "./src/index.ts",
@@ -19,25 +19,16 @@
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "typecheck": "tsc -p tsconfig.json --noEmit",
-        "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-        "test": "node --import tsx --test ./test/**/*.test.ts",
-        "prepack": "pnpm run clean && pnpm run build"
+        "clean": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
+        "test": "bun test",
+        "prepack": "bun run clean && bun run build"
     },
     "dependencies": {
-        "@loop-kit/graphite": "workspace:*",
-        "@loop-kit/graphite-core": "workspace:*",
-        "@loop-kit/graphite-react": "workspace:*",
-        "@loop-kit/graphite-systems": "workspace:*"
-    },
-    "peerDependencies": {
-        "react": "^18.2.0 || ^19.0.0",
-        "react-dom": "^18.2.0 || ^19.0.0"
+        "@loop-kit/interaction": "workspace:*",
+        "@loop-kit/state": "workspace:*"
     },
     "devDependencies": {
         "@types/node": "^22.17.0",
-        "@types/react": "^19.1.2",
-        "@types/react-dom": "^19.1.2",
-        "tsx": "^4.20.6",
         "typescript": "^5.9.3"
     },
     "license": "MIT"

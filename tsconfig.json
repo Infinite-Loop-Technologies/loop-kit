@@ -1,0 +1,30 @@
+{
+    "files": [],
+    "references": [
+        { "path": "./tsconfig.bun.json" },
+        { "path": "./apps/dock-demo/tsconfig.json" },
+        { "path": "./apps/forge/tsconfig.json" },
+        { "path": "./packages/interaction/tsconfig.json" },
+        { "path": "./packages/interaction-react/tsconfig.json" },
+        { "path": "./apps/loom-demo/tsconfig.json" },
+        { "path": "./apps/platform-api/tsconfig.json" },
+        { "path": "./packages/dock/tsconfig.json" },
+        { "path": "./packages/loom-core/tsconfig.json" },
+        { "path": "./packages/loom-pack-data/tsconfig.json" },
+        { "path": "./packages/loom-pack-dock/tsconfig.json" },
+        { "path": "./packages/loom-pack-settings/tsconfig.json" },
+        { "path": "./packages/loom-pack-shortcuts/tsconfig.json" },
+        { "path": "./packages/loom-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-foundry-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-aquatic-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-base-react/tsconfig.json" },
+        { "path": "./packages/loom-theme-neumorph-react/tsconfig.json" },
+        { "path": "./packages/state/tsconfig.json" },
+        { "path": "./packages/volt/tsconfig.json" },
+        { "path": "./packages/create-volt/tsconfig.json" },
+        { "path": "./apps/volt-canvas-demo/tsconfig.json" },
+        { "path": "./apps/volt-demo/tsconfig.json" },
+        { "path": "./apps/volt-site/tsconfig.json" },
+        { "path": "./apps/volt-jco-demo/tsconfig.json" }
+    ]
+}

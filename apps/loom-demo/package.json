@@ -1,0 +1,30 @@
+{
+  "name": "@loop-kit/loom-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ../../packages/volt/src/cli.ts dev --config ./volt.config.ts",
+    "build": "bun run ../../packages/volt/src/cli.ts build --config ./volt.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@loop-kit/dock": "workspace:*",
+    "@loop-kit/interaction-react": "workspace:*",
+    "@loop-kit/loom-pack-data": "workspace:*",
+    "@loop-kit/loom-pack-dock": "workspace:*",
+    "@loop-kit/loom-pack-settings": "workspace:*",
+    "@loop-kit/loom-react": "workspace:*",
+    "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+    "@loop-kit/loom-theme-base-react": "workspace:*",
+    "@loop-kit/loom-theme-neumorph-react": "workspace:*",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "volt": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "^5.9.3"
+  }
+}

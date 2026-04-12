@@ -1,0 +1,32 @@
+{
+  "name": "@loop-kit/volt-canvas-demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ../../packages/volt/src/cli.ts dev --config ./volt.config.ts",
+    "build": "bun run ../../packages/volt/src/cli.ts build --config ./volt.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@loop-kit/dock": "workspace:*",
+    "@loop-kit/interaction-react": "workspace:*",
+    "@loop-kit/loom-core": "workspace:*",
+    "@loop-kit/loom-pack-dock": "workspace:*",
+    "@loop-kit/loom-react": "workspace:*",
+    "@loop-kit/loom-theme-aquatic-react": "workspace:*",
+    "@loop-kit/loom-theme-base-react": "workspace:*",
+    "@loop-kit/loom-theme-foundry-react": "workspace:*",
+    "@loop-kit/state": "workspace:*",
+    "@types/bun": "^1.3.12",
+    "electrobun": "1.16.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "volt": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "^5.9.3"
+  }
+}

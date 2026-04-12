@@ -1,0 +1,32 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(18, 62, 119, 0.18), transparent 32%),
+    linear-gradient(160deg, #07111d 0%, #0d1724 52%, #121923 100%);
+  color: #f4f7fb;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+electrobun-webview {
+  display: block;
+  flex: 1;
+  min-height: 22rem;
+  width: 100%;
+}

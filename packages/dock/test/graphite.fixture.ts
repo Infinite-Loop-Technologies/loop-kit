@@ -1,84 +1,98 @@
-import {
-    createDockState,
-    createGroupNode,
-    createPanelNode,
-    createSplitNode,
-    type DockState,
-} from '../src/index.js';
-
-export type GraphiteDockFixture = {
-    dock: DockState;
-    ids: {
-        panelExplorer: string;
-        panelEditor: string;
-        panelPreview: string;
-        panelConsole: string;
-        groupLeft: string;
-        groupCenter: string;
-        groupBottom: string;
-        splitCenter: string;
-        splitRoot: string;
-    };
-};
-
-export function createGraphiteDockFixture(): GraphiteDockFixture {
-    const panelExplorer = createPanelNode('panel-explorer', 'Explorer');
-    const panelEditor = createPanelNode('panel-editor', 'Editor');
-    const panelPreview = createPanelNode('panel-preview', 'Preview');
-    const panelConsole = createPanelNode('panel-console', 'Console');
-
-    const groupLeft = createGroupNode('group-left', [panelExplorer.id], panelExplorer.id);
-    const groupCenter = createGroupNode(
-        'group-center',
-        [panelEditor.id, panelPreview.id],
-        panelEditor.id,
-    );
-    const groupBottom = createGroupNode(
-        'group-bottom',
-        [panelConsole.id],
-        panelConsole.id,
-    );
-
-    const splitCenter = createSplitNode(
-        'split-center',
-        'col',
-        [groupCenter.id, groupBottom.id],
-        [0.72, 0.28],
-    );
-    const splitRoot = createSplitNode(
-        'split-root',
-        'row',
-        [groupLeft.id, splitCenter.id],
-        [0.26, 0.74],
-    );
-
-    const dock = createDockState({
-        rootId: splitRoot.id,
+export function createGraphiteDockFixture() {
+    const dock = {
+        floatRootId: 'float-root-main',
+        rootId: 'split-root',
         nodes: {
-            [panelExplorer.id]: panelExplorer,
-            [panelEditor.id]: panelEditor,
-            [panelPreview.id]: panelPreview,
-            [panelConsole.id]: panelConsole,
-            [groupLeft.id]: groupLeft,
-            [groupCenter.id]: groupCenter,
-            [groupBottom.id]: groupBottom,
-            [splitCenter.id]: splitCenter,
-            [splitRoot.id]: splitRoot,
+            'group-center': {
+                data: {
+                    activePanelId: 'panel-preview',
+                },
+                id: 'group-center',
+                kind: 'group' as const,
+                links: {
+                    children: ['panel-preview', 'panel-settings'],
+                },
+            },
+            'group-left': {
+                data: {
+                    activePanelId: 'panel-catalog',
+                },
+                id: 'group-left',
+                kind: 'group' as const,
+                links: {
+                    children: ['panel-catalog', 'panel-notes'],
+                },
+            },
+            'group-bottom': {
+                data: {
+                    activePanelId: 'panel-shortcuts',
+                },
+                id: 'group-bottom',
+                kind: 'group' as const,
+                links: {
+                    children: ['panel-shortcuts'],
+                },
+            },
+            'panel-catalog': {
+                data: { title: 'Catalog' },
+                id: 'panel-catalog',
+                kind: 'panel' as const,
+                links: { children: [] },
+            },
+            'panel-notes': {
+                data: { title: 'Notes' },
+                id: 'panel-notes',
+                kind: 'panel' as const,
+                links: { children: [] },
+            },
+            'panel-preview': {
+                data: { title: 'Preview' },
+                id: 'panel-preview',
+                kind: 'panel' as const,
+                links: { children: [] },
+            },
+            'panel-settings': {
+                data: { title: 'Settings' },
+                id: 'panel-settings',
+                kind: 'panel' as const,
+                links: { children: [] },
+            },
+            'panel-shortcuts': {
+                data: { title: 'Shortcuts' },
+                id: 'panel-shortcuts',
+                kind: 'panel' as const,
+                links: { children: [] },
+            },
+            'split-center': {
+                data: {
+                    direction: 'col' as const,
+                    weights: [0.7, 0.3],
+                },
+                id: 'split-center',
+                kind: 'split' as const,
+                links: {
+                    children: ['group-center', 'group-bottom'],
+                },
+            },
+            'split-root': {
+                data: {
+                    direction: 'row' as const,
+                    weights: [0.34, 0.66],
+                },
+                id: 'split-root',
+                kind: 'split' as const,
+                links: {
+                    children: ['group-left', 'split-center'],
+                },
+            },
         },
-    });
+    };
 
     return {
         dock,
         ids: {
-            panelExplorer: panelExplorer.id,
-            panelEditor: panelEditor.id,
-            panelPreview: panelPreview.id,
-            panelConsole: panelConsole.id,
-            groupLeft: groupLeft.id,
-            groupCenter: groupCenter.id,
-            groupBottom: groupBottom.id,
-            splitCenter: splitCenter.id,
-            splitRoot: splitRoot.id,
+            groupLeft: 'group-left',
+            panelEditor: 'panel-preview',
         },
     };
 }

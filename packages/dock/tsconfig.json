@@ -14,5 +14,12 @@
         "rootDir": ".",
         "skipLibCheck": true
     },
-    "include": ["src", "test"]
+    "include": [
+        "src/index.ts",
+        "src/store.ts",
+        "src/v2/controller.ts",
+        "src/v2/model.ts",
+        "src/v2/result.ts",
+        "src/v2/types.ts"
+    ]
 }

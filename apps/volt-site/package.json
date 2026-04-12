@@ -1,0 +1,20 @@
+{
+  "name": "@loop-kit/volt-site",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ../../packages/volt/src/cli.ts dev --config ./volt.config.ts",
+    "build": "bun run ../../packages/volt/src/cli.ts build --config ./volt.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "volt": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2"
+  }
+}
