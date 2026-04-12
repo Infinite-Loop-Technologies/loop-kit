@@ -10,8 +10,6 @@ AI-NOTE:
 
 - [x] Refresh the root docs/control-plane surface so `README.md` matches the current Bun/Volt workspace shape, `platform-api`, and repo knowledge-management workflow.
 - [ ] Remove remaining Graphite-era residue from tests/generated references (`packages/dock/test/graphite.fixture.ts` and stale generated index references).
-- [ ] Reconcile the documented `dev` workflow with GitHub reality. `AGENTS.md` says `dev` is the working integration branch, but the remote currently has no `origin/dev`.
-  - [ ] Push the current local `dev` branch to `origin` as a backup unless a concrete remote history/size blocker proves cleanup is required first.
 - [ ] Clean up the temp log files that we don't need.
 - [ ] Decide whether `apps/platform-api` is a real part of the product topology that should be surfaced in more repo docs/scripts, or whether it should remain an isolated experiment.
 - [ ] Decide whether `apps/dock-demo`, `apps/loom-demo`, and `apps/platform-api` should join `volt.workspace.ts` or stay as intentionally separate app-local entrypoints.
@@ -23,14 +21,15 @@ AI-NOTE:
 
 ## Volt
 
+- [ ] Split Volt into multiple packages, specifically separate the Volt core + CLI from the various target implementations.
 - [ ] Refactor Volt to have a more codegen-centric system, and even build utilities/frameworks for working with codegen, as it is extremely useful.
-  - [ ] We should start with straightforward templates, and a model for on-the-fly code generation, e.g. generating files that go in .volt as an step before calling Bun.build or the ElectroBun CLI.
-    - [ ] Start by creating an ElectroBun target builder that generates the ElectroBun entry file, the ElectroBun config file, and whatever else we need. End goal: you can get a whole ElectroBun app despite only having a volt.config.ts and an App.tsx React component. Pretty sweet!
-    - [ ] Investigate pushing the limits of codegen, within reason. Type generation is a big one. Goal: expose an elegant API for users to write their own codegen macros, even ones that can run and update when files change (implemented in volt.config.ts and/or a folder for metaprogramming/automations/etc scripts in their project).
+  - [ ] Set up template-based code generation using template literals.
+    - [ ] Start by creating an ElectroBun target builder that generates the ElectroBun entry file, the ElectroBun config file, and whatever else we need. End goal: you can get a whole ElectroBun app despite only having a volt.config.ts and an App.tsx React component. Pretty sweet! This codegen should be generated super quickly on the fly in a `.volt` directory, or something.
+- [ ] Experiment with elegant and useful APIs in Volt:
+  - [ ] Tagged template literals for codegen, and/or `ts-morph` for generating TS-aware output.
+  - [ ] Improve Volt's system of tasks, flows, etc. Keep the generator pattern, but improve the ergonomics.
 - [ ] Add more ways to elegantly modify and customize Volt with plugins:
   - [ ] Add persistence to the Volt CLI so that we can begin having user settings.  This requires deciding on a model: what do we store per-workspace? Should Volt be able to work without a workspace? What do we do then? What should we store per-project? And obviously - what should we store per-machine? Should we just store everything per-machine? I'm a fan of workspace/project config because you can back it up in Git. Nobody wants to manually fetch their dotfiles in their home directory and back those up manually. However, copying over user settings from one workspace to another could get annoying, but we could have a simple "copy settings from" feature or something like that.
-- [ ] Improve Volt's API in general:
-- [ ] Improve Volt's system of tasks, flows, etc.
 - [ ] Make `packages/create-volt` and `packages/volt` both be able to create templates, perhaps have them both just pull from templates in a top level `templates` or `examples` folder. Keep things simple. Templates will be lightweight due to codegen and reusing things from Volt and Loom packages. Use Bun's archive compression and just have the template files stored in the package itself for now. No massive assets or anything to weigh things down.
   - [ ] Add lightweight features into this template/project creation experience.
     - [ ] Dependency installation via "bun install". Or post-install scripts and that sort of thing via defined manifests, perhaps?
@@ -58,16 +57,9 @@ AI-NOTE:
 - [ ] Add richer dev orchestration around readiness, restart policies, owned resource lifecycle, and grouped logs for Bun runtimes.
 - [ ] Finish the public model transition from target-first compatibility APIs to the preferred project/task/flow/runtime-input story.
   - [ ] Keep targets as a compatibility surface, not the main mental model.
-  - [x] Prototype config-defined `artifacts` as value/module producers resolved before targets.
   - [ ] Decide where `tasks`, `flows`, `artifacts`, `integrations`, `resources`, and future `agents` are meaningfully different versus redundant.
   - [ ] Tighten naming so Volt feels coherent instead of like several partially overlapping abstractions.
 - [ ] Add a lightweight dependency graph for build products, not just process order.
-  - [x] Prototype artifact dependency ordering and target artifact consumption.
-- [ ] Add a plugin-driven workspace daemon model for Volt dev and workspace tooling.
-- [x] Upgrade `volt dashboard` into a keyboard-first OpenTUI view for resources, configs, events, and logs.
-- [x] Prototype generator-based fibers with named-step memoization and optional local persistence.
-- [x] Prototype config-provided serializable services flowing into typed entrypoints.
-- [ ] Add code generation as a first-class Volt capability without turning Volt into a generic AST framework.
 - [ ] Prove the model with WASM components before generalizing further.
 - [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
 - [ ] Add an inspect/debug surface in the CLI and TUI so runtime graphs, resolved env, dependency order, and generated inputs are visible.
@@ -108,7 +100,7 @@ AI-NOTE:
   - [ ] Set up InstantDB using the information here: [InstantDB Docs](https://www.instantdb.com/llms-full.txt).
   - [ ] Use a service and provider pattern. Again, arbitrary React components should go through hooks from the providers.
   - [ ] Decide and implement the Forge auth direction.
-    - [ ] Decide whether Forge should keep InstantDB magic-code auth, move to Clerk-backed auth, or support both with a clear boundary. Current in-flight code uses InstantDB magic code in Forge while `apps/platform-api` is wired around Clerk.
+    - [ ] Decide whether Forge should keep InstantDB magic-code auth, move to Clerk-backed auth, or support both with a clear boundary. Feedback from human: use InstantDB auth for the prototype, but InstantDB integrates elegantly with Clerk and we'll want that eventually.
     - [ ] Reorganize routing so logged-out users land on a small landing/auth screen and logged-in users go straight to the workspace.
     - [ ] Ensure users always get a bootstrapped workspace on first sign-in.
     - [ ] Keep backend-only bootstrap/admin logic out of leaf UI code and make the service boundary explicit.
