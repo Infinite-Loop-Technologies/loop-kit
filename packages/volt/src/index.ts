@@ -64,6 +64,12 @@ export {
   type BunCommandRuntimeOptions,
   type BunRuntimeOptions,
 } from "./plugins/bun/plugin";
+export {
+  electrobun,
+  electrobunTask,
+  ElectrobunRuntime,
+  type ElectrobunTargetOptions,
+} from "./example-runtimes/electrobun";
 
 export {
   createBunFullstackServices,

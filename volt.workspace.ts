@@ -1,6 +1,7 @@
 import demoProject from "./apps/volt-demo/volt.config";
 import forgeProject from "./apps/forge/volt.config";
 import siteProject from "./apps/volt-site/volt.config";
+import canvasProject from "./apps/volt-canvas-demo/volt.config";
 import { flow } from "volt/flow";
 import { defineWorkspaceConfig } from "volt/workspace";
 
@@ -10,11 +11,16 @@ export default defineWorkspaceConfig({
   },
   name: "Loop Kit Volt Workspace",
   projects: {
+    canvas: canvasProject,
     demo: demoProject,
     forge: forgeProject,
     site: siteProject,
   },
   tasks: {
+    "canvas-demo": flow("dev:canvas", function* (ctx) {
+      ctx.log("canvas-demo", "Starting Canvas Demo...");
+      return yield* ctx.runProjectTask("canvas", "dev:desktop");
+    }),
     "dev:forge": flow("dev:forge", function* (ctx) {
       ctx.log("dev:forge", "Starting Forge development server...");
       return yield* ctx.runProjectTask("forge", "dev:web");

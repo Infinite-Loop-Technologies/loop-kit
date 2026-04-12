@@ -137,6 +137,18 @@ function activePanelId(group: DockGroup) {
     return group.activePanelId ?? group.panelIds[0];
 }
 
+function isFloatingGroup(group: DockGroup) {
+    return group.layout?.placement?.kind === 'floating';
+}
+
+function parsePixelLength(value: string | undefined, fallback: number) {
+    if (!value) {
+        return fallback;
+    }
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function flowLayerStyle(layer: DockLayer, tokens: ReturnType<typeof useLoomTokens>) {
     return {
         display: 'flex',
@@ -478,15 +490,78 @@ function DockHeaderDragHandle({
 
 function DockGroupHeader({
     group,
+    layer,
     panel,
 }: {
     group: DockGroup;
+    layer: DockLayer;
     panel: DockPanel | undefined;
 }) {
     const controller = useDockStore();
     const { onError } = useDock();
     const policies = normalizeDockPolicies(group.policies);
     const canClose = policies.closeable && panel?.closeable !== false;
+    const startFloatingMove = React.useCallback(
+        (event: React.PointerEvent<HTMLButtonElement>) => {
+            if (event.button !== 0 || !isFloatingGroup(group)) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const placement = group.layout?.placement;
+            if (!placement || placement.kind !== 'floating') {
+                return;
+            }
+
+            const startPoint = { x: event.clientX, y: event.clientY };
+            const startLeft = parsePixelLength(placement.left, 24);
+            const startTop = parsePixelLength(placement.top, 24);
+            let frame = 0;
+            let nextPoint = startPoint;
+
+            const commitMove = () => {
+                frame = 0;
+                controller.resizeGroup(
+                    {
+                        groupId: group.id,
+                        layout: {
+                            placement: {
+                                ...placement,
+                                left: `${Math.round(startLeft + (nextPoint.x - startPoint.x))}px`,
+                                top: `${Math.round(startTop + (nextPoint.y - startPoint.y))}px`,
+                            },
+                        },
+                    },
+                    { history: false },
+                );
+            };
+
+            const onMove = (moveEvent: PointerEvent) => {
+                nextPoint = { x: moveEvent.clientX, y: moveEvent.clientY };
+                if (frame) {
+                    return;
+                }
+                frame = window.requestAnimationFrame(commitMove);
+            };
+
+            const clear = () => {
+                if (frame) {
+                    window.cancelAnimationFrame(frame);
+                    frame = 0;
+                }
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', clear);
+                document.removeEventListener('pointercancel', clear);
+            };
+
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', clear);
+            document.addEventListener('pointercancel', clear);
+        },
+        [controller, group],
+    );
 
     return (
         <DockHeaderDragHandle group={group} panel={panel}>
@@ -511,11 +586,22 @@ function DockGroupHeader({
                         }}>
                         {group.title ?? panel?.title ?? 'Panel'}
                     </Text>
+                    {group.mode !== 'single' ? (
+                        <Text size='sm' tone='muted'>
+                            {group.mode}
+                        </Text>
+                    ) : null}
                 </Inline>
                 <Inline align='center' gap='1' justify='flex-end' style={{ marginLeft: 'auto' }}>
+                    {layer.kind === 'floating' && isFloatingGroup(group) ? (
+                        <Button kind='ghost' onPointerDown={startFloatingMove} size='sm' type='button'>
+                            Move
+                        </Button>
+                    ) : null}
                     {policies.splittable ? <Icon name='panelRight' size='sm' tone='muted' /> : null}
                     {canClose ? (
                         <IconButton
+                            data-dock-close-group={group.id}
                             kind='ghost'
                             label={`Close ${group.title ?? panel?.title ?? 'panel'}`}
                             name='close'
@@ -855,7 +941,7 @@ function DockGroupView({ group, layer }: { group: DockGroup; layer: DockLayer })
     const state = useDockSelector((current) => current);
     const currentPanel = state.panels[activePanelId(group) ?? ''];
     const showTitlebar = group.chrome?.titlebarMode !== 'none' && group.chrome?.showTitlebar !== false;
-    const showTabs = group.chrome?.showTabs !== false && group.panelIds.length > 1;
+    const showTabs = group.mode === 'tabs' && group.chrome?.showTabs !== false && group.panelIds.length > 1;
     const framed = group.chrome?.framed !== false;
     const { ref: groupDropRef } = useRegisterDropSurface({
         accepts: ['dock-panel'],
@@ -865,11 +951,35 @@ function DockGroupView({ group, layer }: { group: DockGroup; layer: DockLayer })
 
     const body = (
         <>
-            {showTitlebar ? <DockGroupHeader group={group} panel={currentPanel} /> : null}
+            {showTitlebar ? <DockGroupHeader group={group} layer={layer} panel={currentPanel} /> : null}
             {showTabs ? <DockTabsRow group={group} /> : null}
             <Box style={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', padding: framed ? '0.75rem' : '0' }}>
                 {group.mode === 'split' && group.splitRootId && group.splitNodes?.[group.splitRootId] ? (
                     <DockSplitView group={group} layer={layer} node={group.splitNodes[group.splitRootId]} />
+                ) : group.mode === 'stack' ? (
+                    <Stack gap='3' style={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto' }}>
+                        {group.panelIds.map((panelId) => {
+                            const stackedPanel = state.panels[panelId];
+                            if (!stackedPanel) {
+                                return null;
+                            }
+                            return (
+                                <Panel
+                                    data-dock-stack-panel={stackedPanel.id}
+                                    density='compact'
+                                    emphasis={stackedPanel.id === currentPanel?.id ? 'strong' : 'subtle'}
+                                    key={stackedPanel.id}
+                                    style={{ display: 'flex', flexDirection: 'column', minHeight: '14rem' }}>
+                                    <DockPanelView
+                                        group={group}
+                                        isActive={stackedPanel.id === currentPanel?.id}
+                                        layer={layer}
+                                        panel={stackedPanel}
+                                    />
+                                </Panel>
+                            );
+                        })}
+                    </Stack>
                 ) : currentPanel ? (
                     <DockPanelView group={group} layer={layer} panel={currentPanel} />
                 ) : (
@@ -894,8 +1004,10 @@ function DockGroupView({ group, layer }: { group: DockGroup; layer: DockLayer })
     if (!framed) {
         return (
             <Box
+                data-dock-group-closeable={String(normalizeDockPolicies(group.policies).closeable)}
                 data-dock-group={group.id}
                 data-dock-group-mode={group.mode}
+                data-dock-group-splittable={String(normalizeDockPolicies(group.policies).splittable)}
                 style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
                 {content}
             </Box>
@@ -904,7 +1016,10 @@ function DockGroupView({ group, layer }: { group: DockGroup; layer: DockLayer })
 
     return (
         <Panel
+            data-dock-group-closeable={String(normalizeDockPolicies(group.policies).closeable)}
             data-dock-group={group.id}
+            data-dock-group-mode={group.mode}
+            data-dock-group-splittable={String(normalizeDockPolicies(group.policies).splittable)}
             density='compact'
             emphasis='strong'
             style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
@@ -972,7 +1087,10 @@ function DockLayerView({ layer }: { layer: DockLayer }) {
                     return null;
                 }
                 return (
-                    <Box key={group.id} style={isFlow ? flowGroupStyle(group) : overlayGroupStyle(group)}>
+                    <Box
+                        data-dock-layer={layer.id}
+                        key={group.id}
+                        style={isFlow ? flowGroupStyle(group) : overlayGroupStyle(group)}>
                         <DockGroupView group={group} layer={layer} />
                     </Box>
                 );

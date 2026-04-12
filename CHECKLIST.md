@@ -1,5 +1,11 @@
 # Checklist
 
+<!--
+AI-NOTE:
+ - Always use markdown checkboxes: (`- [ ]`)
+ - Don't create new checklist items in past tense to log work, only add follow-up work.
+-->
+
 ## Repository Cleanup, Improvements, and Refactoring
 
 - [x] Refresh the root docs/control-plane surface so `README.md` matches the current Bun/Volt workspace shape, `platform-api`, and repo knowledge-management workflow.
@@ -88,7 +94,7 @@
   - [ ] Implement several services. Do not let services be used from arbitrary React components. They should be created and provided to React Context providers near the app boundary (perhaps in `layout.tsx` for example). Organize providers in a folder, and have a single file for composing them together so that `layout.tsx` doesn't fill up with them.
   - [ ] Implement a simple command pattern. Commands can do side effects, mutations, and more. Arbitrary UI components shouldn't directly use commands, they should go through providers via hooks.
 - [ ] Replace the workspace demo with a real workspace.
-  - [ ] Set up InstantDB using the information [here](https://www.instantdb.com/llms-full.txt).
+  - [ ] Set up InstantDB using the information here: [InstantDB Docs](https://www.instantdb.com/llms-full.txt).
   - [ ] Use a service and provider pattern. Again, arbitrary React components should go through hooks from the providers.
   - [ ] Decide and implement the Forge auth direction.
     - [ ] Decide whether Forge should keep InstantDB magic-code auth, move to Clerk-backed auth, or support both with a clear boundary. Current in-flight code uses InstantDB magic code in Forge while `apps/platform-api` is wired around Clerk.
@@ -105,6 +111,20 @@
 
 - [ ] Start building an experimental package for building TUIs with Loom. A good option could be [OpenTUI](https://opentui.com/). The goal of loop-kit is to be able to write a UI how you like, and use it with different themes or renderers. And we can take this a step further by making the same, or similar interaction code work too. But the same theme might not work in both React and TUI. The different renderer support is basically done by themes now! So themes are renderer specific. But the same theme package could export themes for multiple renderers, probably - or something like that. Maybe there's a better solution.
 
+## Extension System
+
+- [ ] Build an extension system and start integrating it into demos.
+  - [ ] Create a design document for this. Brainstorm what the package could look like. We need the ability to support different extension runtimes and security tiers. Such as iFrame, WASM, and others. I would like the API for the extension system to be headless and imperative, and perhaps use the service DI pattern. Then higher-level implementations could exist, such as a React provider that makes this easy, by wiring up the ability to create sandboxed iFrames and connecting them to the extension service.
+
 ## Building More Demos
 
 - [ ] Build a demo with Volt, ElectroBun, Dock, and others. Goal: It shows off Dock usage but in an infinite canvas.
+  - Started `apps/volt-canvas-demo` on `dev`: Volt-managed Electrobun desktop app with an infinite-canvas panel, floating Dock groups, auto-tiling, command palette layer, passthrough peek layer, and an embedded `electrobun-webview` browser panel.
+  - Dock slice landed so far: public Volt export/task helper for Electrobun, floating-group move chrome in `loom-pack-dock`, and stacked group rendering for `mode: "stack"`.
+  - Validation so far: `bun test packages/loom-pack-dock/test/dock-v2-renderer.test.tsx`, `bun run --cwd packages/volt typecheck`, `bun run --cwd apps/volt-canvas-demo build`, `bun run tsc -b --pretty false`.
+  - Desktop renderer fixes landed: stable `useStoreSelector` usage, in-window error boundary logging, valid canvas node markup without nested buttons, and frame-throttled floating moves to reduce native webview repaint churn.
+  - Loom follow-up resolved in this slice: the repo-wide React/Radix type mismatch in `packages/loom-react/src/primitives.tsx` is fixed and the workspace typecheck passes again.
+
+## Build more reusable systems and services
+
+- [ ] The system for a surface that embeds a browser into an application. Perhaps this could use some kind of service pattern, so that it can support different contexts. In a web page, the "embedded browser" would be a normal iFrame. But in ElectroBun, it would be a native webview or CEF window with a synchronized position.

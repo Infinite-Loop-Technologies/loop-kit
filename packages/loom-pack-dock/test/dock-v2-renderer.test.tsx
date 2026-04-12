@@ -216,3 +216,47 @@ test('dock v2 renderer includes split resize handles for split groups', () => {
 
     expect(markup).toContain('data-dock-split-handle="split-main"');
 });
+
+test('dock v2 renderer renders every panel for stack mode and exposes floating move chrome', () => {
+    const state = createRendererState();
+    state.layerOrder = ['layer-main', 'layer-floating'];
+    state.layers['layer-floating'] = createDockV2Layer({
+        groupIds: ['group-floating'],
+        id: 'layer-floating',
+        kind: 'floating',
+    });
+    state.groups['group-floating'] = createDockV2Group({
+        chrome: {
+            showTabs: false,
+            showTitlebar: true,
+        },
+        id: 'group-floating',
+        layerId: 'layer-floating',
+        layout: {
+            placement: {
+                kind: 'floating',
+                left: '120px',
+                top: '80px',
+                width: '360px',
+            },
+        },
+        mode: 'stack',
+        panelIds: ['panel-main', 'panel-secondary'],
+        policies: {
+            closeable: true,
+        },
+        title: 'Floating Stack',
+    });
+    state.panels['panel-secondary'] = createDockV2Panel({
+        id: 'panel-secondary',
+        kind: 'sample',
+        title: 'Secondary Stack',
+    });
+
+    const markup = renderDock(state);
+
+    expect(markup).toContain('data-dock-group-mode="stack"');
+    expect(markup).toContain('data-dock-stack-panel="panel-main"');
+    expect(markup).toContain('data-dock-stack-panel="panel-secondary"');
+    expect(markup).toContain('Move');
+});

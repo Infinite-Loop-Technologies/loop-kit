@@ -59,6 +59,12 @@ function mergeRootProps(
     };
 }
 
+// Radix ships declaration trees that can resolve a different ReactNode identity
+// than the workspace one under Bun. Keep that mismatch localized at the bridge.
+function toLibraryNode<T = unknown>(value: React.ReactNode): T {
+    return value as unknown as T;
+}
+
 function stripInternalProps<TProps extends object>(
     props: LoomPrimitiveImplementationProps<TProps>,
 ) {
@@ -999,14 +1005,14 @@ const DialogImplementation: LoomPrimitiveImplementation<DialogProps> = ({
     variants: _variants,
 }) => (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
-        {trigger ? <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger> : null}
+        {trigger ? <RadixDialog.Trigger asChild>{toLibraryNode(trigger)}</RadixDialog.Trigger> : null}
         <RadixDialog.Portal>
             <RadixDialog.Overlay className={styles.overlay?.className} style={toReactStyle(styles.overlay?.style)} />
             <RadixDialog.Content className={cx(styles.content?.className, className)} style={toReactStyle(styles.content?.style)}>
-                {title ? <RadixDialog.Title>{title}</RadixDialog.Title> : null}
-                {description ? <RadixDialog.Description>{description}</RadixDialog.Description> : null}
+                {title ? <RadixDialog.Title>{toLibraryNode(title)}</RadixDialog.Title> : null}
+                {description ? <RadixDialog.Description>{toLibraryNode(description)}</RadixDialog.Description> : null}
                 <div style={toReactStyle(styles.body?.style)}>{children}</div>
-                {footer ? <div style={toReactStyle(styles.footer?.style)}>{footer}</div> : null}
+                {footer ? <div style={toReactStyle(styles.footer?.style)}>{toLibraryNode(footer)}</div> : null}
             </RadixDialog.Content>
         </RadixDialog.Portal>
     </RadixDialog.Root>
@@ -1024,7 +1030,7 @@ const MenuImplementation: LoomPrimitiveImplementation<MenuProps> = ({
     variants: _variants,
 }) => (
     <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
+        <DropdownMenu.Trigger asChild>{toLibraryNode(trigger)}</DropdownMenu.Trigger>
         <DropdownMenu.Portal>
             <DropdownMenu.Content className={cx(styles.content?.className, className)} style={toReactStyle(styles.content?.style)}>
                 {items.map((item) => (
@@ -1033,7 +1039,7 @@ const MenuImplementation: LoomPrimitiveImplementation<MenuProps> = ({
                         disabled={item.disabled}
                         onSelect={item.onSelect}
                         style={toReactStyle(styles.item?.style)}>
-                        {item.label}
+                        {toLibraryNode(item.label)}
                     </DropdownMenu.Item>
                 ))}
             </DropdownMenu.Content>
@@ -1064,7 +1070,7 @@ const TabsImplementation: LoomPrimitiveImplementation<TabsProps> = ({
                         className={styles.trigger?.className}
                         style={toReactStyle(styles.trigger?.style)}
                         value={item.id}>
-                        {item.label}
+                        {toLibraryNode(item.label)}
                     </RadixTabs.Trigger>
                 ))}
             </RadixTabs.List>
@@ -1074,7 +1080,7 @@ const TabsImplementation: LoomPrimitiveImplementation<TabsProps> = ({
                     className={styles.content?.className}
                     style={toReactStyle(styles.content?.style)}
                     value={item.id}>
-                    {item.content}
+                    {toLibraryNode(item.content)}
                 </RadixTabs.Content>
             ))}
         </RadixTabs.Root>

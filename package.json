@@ -17,6 +17,8 @@
     "platform:dev": "bun run --cwd apps/platform-api dev",
     "dock:dev": "bun run --cwd apps/dock-demo dev",
     "loom:dev": "bun run --cwd apps/loom-demo dev",
+    "volt:canvas:build": "bun run --cwd apps/volt-canvas-demo build",
+    "volt:canvas:dev": "bun run --cwd apps/volt-canvas-demo dev",
     "volt:demo:dev": "bun run --cwd apps/volt-demo dev",
     "volt:site:dev": "bun run --cwd apps/volt-site dev",
     "volt:jco-demo:dev": "bun run --cwd apps/volt-jco-demo dev",
@@ -31,6 +33,8 @@
     "volt": "workspace:*"
   },
   "overrides": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
     "react": "19.2.5",
     "react-dom": "19.2.5"
   },

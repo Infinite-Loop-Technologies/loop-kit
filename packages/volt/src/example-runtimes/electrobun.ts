@@ -1,8 +1,11 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import type { VoltTargetContext } from "../contracts";
+import { loadVoltEnv } from "../env";
+import type { VoltReadinessProbe, VoltTargetContext } from "../contracts";
+import { defineTargetTask } from "../task";
 
 export interface ElectrobunTargetOptions {
+  artifacts?: string[];
   build?: (context: VoltTargetContext) => Promise<void>;
   buildArgs?: string[];
   configPath?: string;
@@ -11,9 +14,30 @@ export interface ElectrobunTargetOptions {
   dev?: (context: VoltTargetContext) => Promise<import("../contracts").ManagedVoltProcess | void>;
   devArgs?: string[];
   env?: Record<string, string>;
+  inputs?: string[];
+  outputs?: string[];
+  readiness?: VoltReadinessProbe | VoltReadinessProbe[];
+  uses?: string[];
+  watch?: string[];
 }
 
+const createElectrobunEnv = (
+  context: VoltTargetContext,
+  env?: Record<string, string>,
+) => ({
+  ...loadVoltEnv({
+    mode: context.mode,
+    rootDir: context.rootDir,
+    workspaceRoot: context.workspaceRoot,
+  }),
+  ...env,
+  VOLT_ROOT_DIR: context.rootDir,
+  VOLT_TARGET_NAME: context.currentTarget.name,
+  VOLT_WORKSPACE_ROOT: context.workspaceRoot,
+});
+
 export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
+  artifacts: options.artifacts,
   async build(context: VoltTargetContext) {
     if (options.build) {
       await options.build(context);
@@ -37,7 +61,7 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       ...(options.buildArgs ?? []),
     ], {
       cwd,
-      env: options.env,
+      env: createElectrobunEnv(context, options.env),
     });
 
     const exitCode = await child.process.exited;
@@ -59,13 +83,33 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       );
     }
 
-    return context.spawn(context.currentTarget.name, ["bunx", "electrobun", "dev", ...(options.devArgs ?? [])], {
-      cwd,
-      env: options.env,
-    });
+    return context.spawn(
+      context.currentTarget.name,
+      ["bunx", "electrobun", "dev", ...(options.devArgs ?? [])],
+      {
+        cwd,
+        env: createElectrobunEnv(context, options.env),
+        readiness: options.readiness,
+      },
+    );
   },
   runtime: "electrobun",
   target: "bun",
+  uses: options.uses,
 });
 
 export const electrobun = ElectrobunRuntime;
+
+export const electrobunTask = (
+  options: ElectrobunTargetOptions & { command: "build" | "dev" },
+) =>
+  defineTargetTask({
+    artifacts: options.artifacts,
+    command: options.command,
+    dependsOn: options.dependsOn,
+    inputs: options.inputs,
+    outputs: options.outputs,
+    target: ElectrobunRuntime(options),
+    uses: options.uses,
+    watch: options.watch,
+  });

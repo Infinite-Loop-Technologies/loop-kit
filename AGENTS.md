@@ -4,14 +4,12 @@
 
 `loop-kit` is the monorepo for Volt, loop-kit, Forge, and other projects.
 
-Treat it as a capability-driven platform for registry-backed software units, WIT-defined contracts, capability-granted composition, and future agentic development infrastructure.
-
 ## Required Control Plane
 
 For work in this repo, the control plane is repo-local markdown and CKB is the primary repo-understanding layer.
 
 - If CKB is unavailable for non-trivial repo work, stop and report.
-- If GitHub MCP is unavailable, stop only for remote GitHub work that depends on it.
+- If GitHub MCP or CLI is unavailable, stop only for remote GitHub work that depends on it.
 - Do not invent extra planning systems when the existing markdown files are enough.
 
 ### Control-Plane Files
