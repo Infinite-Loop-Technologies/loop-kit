@@ -33,6 +33,7 @@ For work in this repo, the control plane is repo-local markdown and CKB is the p
   - optional support material for project-specific or general durable reference docs
   - scan filenames first and open only the obviously relevant docs for the current task
   - use obvious filenames instead of links or deep folder trees
+  - always do a quick filename scan before coding so you do not miss recent architecture notes
 
 ### Minimal Semantics
 
@@ -344,6 +345,9 @@ Proto stays. Bun is the default runtime.
 - Services should hold durable behavior and state access, but leaf UI should not reach into raw services directly.
 - Prefer app-facing hooks and thin feature APIs over exposing raw services to leaf components.
 - Keep policy decisions in policy modules, store state in stores, and orchestration in workflows instead of burying them in providers.
+- For app work, prefer app-first service contracts plus provider composition before extracting shared abstractions into packages.
+- External interaction surfaces such as native browser views, iframes, and extension outlets are host-managed surfaces, not normal DOM. Keep their lifecycle and policy in services/workflows, not in leaf components.
+- Entry shells such as `App.tsx`, `layout.tsx`, or provider composition files are the right place to provide service implementations. Leaf UI should consume hooks/view models, not raw host APIs.
 
 ### Forge Shape
 

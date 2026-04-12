@@ -1,5 +1,7 @@
 export const canvasActionIds = {
   autoTileWindows: "canvas.windows.auto-tile",
+  browserRedo: "canvas.browser.redo",
+  browserUndo: "canvas.browser.undo",
   closeFocusedGroup: "canvas.group.close-focused",
   deleteFocusedPanel: "canvas.panel.delete-focused",
   openBrowserPanel: "canvas.panel.open-browser",
@@ -57,6 +59,22 @@ export const canvasCommandItems: CanvasCommandItem[] = [
     keywords: ["close", "remove", "panel"],
     shortcut: "Delete",
     title: "Delete focused panel",
+  },
+  {
+    actionId: canvasActionIds.browserUndo,
+    description: "Undo the most recent browser-slice change, such as navigation draft edits.",
+    id: "browser-undo",
+    keywords: ["undo", "browser", "history"],
+    shortcut: "Mod+Z",
+    title: "Browser history undo",
+  },
+  {
+    actionId: canvasActionIds.browserRedo,
+    description: "Redo the most recent browser-slice change after an undo.",
+    id: "browser-redo",
+    keywords: ["redo", "browser", "history"],
+    shortcut: "Mod+Shift+Z",
+    title: "Browser history redo",
   },
   {
     actionId: canvasActionIds.closeFocusedGroup,

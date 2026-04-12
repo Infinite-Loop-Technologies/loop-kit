@@ -16,7 +16,6 @@
 
 - The repo root is accumulating `.tmp-forge-*.log` files plus `.tmp-chrome-netlog.json`. A small Bun cleanup tool or a documented temp-artifact convention would prevent this from becoming background sludge.
 - `examples/volt-jco-node-fetch-upstream` exists but is still effectively invisible from the top-level docs. Either document why it exists or decide whether it still deserves to live here.
-- `references/README.md` is generic and low-signal compared with the more descriptive `project-*` docs. It may be worth deleting or replacing with a sharper repo-support-docs index only if one is actually useful.
 
 ## Automation / Ritual Ideas
 

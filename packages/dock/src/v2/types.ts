@@ -92,6 +92,11 @@ export type DockV2GroupLayout = {
 };
 
 export type DockV2GroupChrome = {
+    /**
+     * Renderer-facing shell config for a group. This is presentation-only
+     * chrome, not behavioral policy: it controls whether the renderer draws a
+     * frame, tabs, and titlebar around the group.
+     */
     framed?: boolean;
     showTabs?: boolean;
     showTitlebar?: boolean;

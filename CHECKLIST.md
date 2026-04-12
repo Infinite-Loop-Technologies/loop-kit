@@ -11,6 +11,7 @@ AI-NOTE:
 - [x] Refresh the root docs/control-plane surface so `README.md` matches the current Bun/Volt workspace shape, `platform-api`, and repo knowledge-management workflow.
 - [ ] Remove remaining Graphite-era residue from tests/generated references (`packages/dock/test/graphite.fixture.ts` and stale generated index references).
 - [ ] Reconcile the documented `dev` workflow with GitHub reality. `AGENTS.md` says `dev` is the working integration branch, but the remote currently has no `origin/dev`.
+  - [ ] Push the current local `dev` branch to `origin` as a backup unless a concrete remote history/size blocker proves cleanup is required first.
 - [ ] Clean up the temp log files that we don't need.
 - [ ] Decide whether `apps/platform-api` is a real part of the product topology that should be surfaced in more repo docs/scripts, or whether it should remain an isolated experiment.
 - [ ] Decide whether `apps/dock-demo`, `apps/loom-demo`, and `apps/platform-api` should join `volt.workspace.ts` or stay as intentionally separate app-local entrypoints.
@@ -119,12 +120,14 @@ AI-NOTE:
 ## Building More Demos
 
 - [ ] Build a demo with Volt, ElectroBun, Dock, and others. Goal: It shows off Dock usage but in an infinite canvas.
-  - Started `apps/volt-canvas-demo` on `dev`: Volt-managed Electrobun desktop app with an infinite-canvas panel, floating Dock groups, auto-tiling, command palette layer, passthrough peek layer, and an embedded `electrobun-webview` browser panel.
-  - Dock slice landed so far: public Volt export/task helper for Electrobun, floating-group move chrome in `loom-pack-dock`, and stacked group rendering for `mode: "stack"`.
-  - Validation so far: `bun test packages/loom-pack-dock/test/dock-v2-renderer.test.tsx`, `bun run --cwd packages/volt typecheck`, `bun run --cwd apps/volt-canvas-demo build`, `bun run tsc -b --pretty false`.
-  - Desktop renderer fixes landed: stable `useStoreSelector` usage, in-window error boundary logging, valid canvas node markup without nested buttons, and frame-throttled floating moves to reduce native webview repaint churn.
-  - Loom follow-up resolved in this slice: the repo-wide React/Radix type mismatch in `packages/loom-react/src/primitives.tsx` is fixed and the workspace typecheck passes again.
+  - [ ] Keep hardening `apps/volt-canvas-demo` around the new external-surface service/provider architecture until browser panels stay visually and interactively in sync during drag-heavy sessions.
+  - [ ] Decide whether the Electrobun webview-tag path is good enough after service/runtime cleanup, or whether the desktop host should switch to a direct `BrowserView` manager.
+  - [ ] Add browser-slice restore/session workflows so the demo proves commands, state history, and service-driven restoration together.
+  - [ ] Keep trimming app-local styling in the demo where Loom packs or better primitives would clearly help future apps.
 
 ## Build more reusable systems and services
 
 - [ ] The system for a surface that embeds a browser into an application. Perhaps this could use some kind of service pattern, so that it can support different contexts. In a web page, the "embedded browser" would be a normal iFrame. But in ElectroBun, it would be a native webview or CEF window with a synchronized position.
+  - [ ] Decide whether the app-first external-surface contract from `apps/volt-canvas-demo` should be promoted into a shared package once a browser/iframe second implementation exists.
+  - [ ] Add a lightweight workflow layer for external-surface attach/restore/navigation orchestration using cancellable tasks/results instead of leaf-component effects.
+  - [ ] Extend `packages/state` further with ergonomic slice-history helpers once a second app proves the new API shape.

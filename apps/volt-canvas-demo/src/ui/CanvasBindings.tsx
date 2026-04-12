@@ -6,15 +6,19 @@ import {
   useScopedShortcutMap,
 } from "@loop-kit/interaction-react";
 import { canvasActionIds } from "../actions/canvas-actions";
-import { useCanvasDemoStore } from "../app/store";
+import { useCanvasDemoDeps } from "../providers/app-deps";
 import {
+  closePanelContextMenu,
   closeFocusedGroup,
   deleteFocusedPanel,
+  redoBrowserState,
+  resetViewport,
   runAutoTile,
   runOpenBrowserPanel,
   runToggleCommandPalette,
   runToggleHelpPeek,
   setBrowserMode,
+  undoBrowserState,
 } from "../commands/canvas-commands";
 
 export function CanvasBindings({
@@ -24,18 +28,21 @@ export function CanvasBindings({
   children: React.ReactNode;
   dockStore: DockStore;
 }) {
-  const store = useCanvasDemoStore();
+  const deps = useCanvasDemoDeps();
 
   useScopedShortcutMap([
     { actionId: canvasActionIds.toggleCommandPalette, gesture: "Mod+K" },
     { actionId: canvasActionIds.toggleHelpPeek, gesture: "Mod+/" },
     { actionId: canvasActionIds.autoTileWindows, gesture: "Mod+Shift+T" },
     { actionId: canvasActionIds.openBrowserPanel, gesture: "Mod+Shift+B" },
+    { actionId: canvasActionIds.browserUndo, gesture: "Mod+Z" },
+    { actionId: canvasActionIds.browserRedo, gesture: "Mod+Shift+Z" },
     { actionId: canvasActionIds.deleteFocusedPanel, gesture: "Delete" },
   ]);
 
   useRegisterActionHandler(canvasActionIds.toggleCommandPalette, () => {
-    runToggleCommandPalette(dockStore, store);
+    closePanelContextMenu(deps);
+    runToggleCommandPalette(dockStore, deps);
     return { handled: true };
   });
   useRegisterActionHandler(canvasActionIds.toggleHelpPeek, () => {
@@ -47,7 +54,7 @@ export function CanvasBindings({
     return { handled: true };
   });
   useRegisterActionHandler(canvasActionIds.openBrowserPanel, () => {
-    runOpenBrowserPanel(dockStore, store);
+    runOpenBrowserPanel(dockStore, deps);
     return { handled: true };
   });
   useRegisterActionHandler(canvasActionIds.deleteFocusedPanel, () => {
@@ -79,14 +86,15 @@ export function CanvasBindings({
     return { handled: true };
   });
   useRegisterActionHandler(canvasActionIds.resetViewport, () => {
-    store.setState((current) => ({
-      ...current,
-      viewport: {
-        scale: 1,
-        x: 260,
-        y: 180,
-      },
-    }));
+    resetViewport(deps);
+    return { handled: true };
+  });
+  useRegisterActionHandler(canvasActionIds.browserUndo, () => {
+    undoBrowserState(deps);
+    return { handled: true };
+  });
+  useRegisterActionHandler(canvasActionIds.browserRedo, () => {
+    redoBrowserState(deps);
     return { handled: true };
   });
 

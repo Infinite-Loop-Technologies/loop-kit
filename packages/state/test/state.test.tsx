@@ -7,7 +7,9 @@ import {
     $delete,
     $patch,
     $set,
+    createStateSlice,
     createStateStore,
+    createStoreContext,
     diff,
     getUpdateKeys,
     patch,
@@ -80,6 +82,60 @@ describe('@loop-kit/state store', () => {
         expect(store.redo()).toBe(true);
         expect(store.getState()).toEqual({ count: 2 });
     });
+
+    test('tracks focused undo and redo for a state slice', () => {
+        const store = createStateStore({
+            browser: {
+                activeId: 'a',
+            },
+            ui: {
+                scale: 1,
+                x: 0,
+                y: 0,
+            },
+        });
+
+        const viewport = createStateSlice(store, {
+            replace: (state, slice) => ({
+                ...state,
+                ui: slice,
+            }),
+            select: (state) => state.ui,
+        });
+
+        viewport.setState((current) => ({
+            ...current,
+            x: 120,
+        }));
+        viewport.setState((current) => ({
+            ...current,
+            y: 80,
+        }));
+
+        expect(store.getState()).toEqual({
+            browser: {
+                activeId: 'a',
+            },
+            ui: {
+                scale: 1,
+                x: 120,
+                y: 80,
+            },
+        });
+
+        expect(viewport.undo()).toBe(true);
+        expect(store.getState().ui).toEqual({
+            scale: 1,
+            x: 120,
+            y: 0,
+        });
+        expect(viewport.redo()).toBe(true);
+        expect(store.getState().ui).toEqual({
+            scale: 1,
+            x: 120,
+            y: 80,
+        });
+    });
 });
 
 describe('@loop-kit/state react helpers', () => {
@@ -117,5 +173,27 @@ describe('@loop-kit/state react helpers', () => {
         renderToString(React.createElement(Example));
 
         expect(snapshots).toEqual([1, 2]);
+    });
+
+    test('createStoreContext exposes provider, store hook, and selector hook', () => {
+        const store = createStateStore({ count: 2 });
+        const CounterStore = createStoreContext<{ count: number }>('CounterStore');
+        const snapshots: number[] = [];
+
+        function Example() {
+            const count = CounterStore.useSelector((state) => state.count);
+            snapshots.push(count);
+            return React.createElement('div', null, count);
+        }
+
+        renderToString(
+            React.createElement(
+                CounterStore.Provider,
+                { store },
+                React.createElement(Example),
+            ),
+        );
+
+        expect(snapshots).toEqual([2]);
     });
 });

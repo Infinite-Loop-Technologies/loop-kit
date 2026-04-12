@@ -10,10 +10,9 @@ import { aquaticReactTheme } from "@loop-kit/loom-theme-aquatic-react";
 import { baseReactTheme } from "@loop-kit/loom-theme-base-react";
 import { foundryReactTheme } from "@loop-kit/loom-theme-foundry-react";
 import {
-  CanvasDemoStoreProvider,
-  createCanvasDemoStore,
   useCanvasDemoSelector,
 } from "../app/store";
+import { CanvasDemoProviders } from "../app/providers";
 import { createCanvasDemoDockState } from "../features/dock/layout";
 import { CanvasBindings } from "./CanvasBindings";
 import { createPanelRegistry, PanelContextMenu } from "./panels";
@@ -36,8 +35,8 @@ function AppShell({
 }: {
   dockStore: ReturnType<typeof createDockStore>;
 }) {
-  const colorMode = useCanvasDemoSelector((current) => current.colorMode);
-  const themeId = useCanvasDemoSelector((current) => current.themeId);
+  const colorMode = useCanvasDemoSelector((current) => current.appearance.colorMode);
+  const themeId = useCanvasDemoSelector((current) => current.appearance.themeId);
   const registry = React.useMemo(() => createPanelRegistry(), []);
   const initialState = React.useMemo(() => createCanvasDemoDockState(), []);
 
@@ -56,7 +55,6 @@ function AppShell({
 }
 
 export function App() {
-  const store = React.useMemo(() => createCanvasDemoStore(), []);
   const initialDockState = React.useMemo(() => createCanvasDemoDockState(), []);
   const dockStore = React.useMemo(
     () => createDockStore(createDockState(initialDockState)),
@@ -64,8 +62,8 @@ export function App() {
   );
 
   return (
-    <CanvasDemoStoreProvider store={store}>
+    <CanvasDemoProviders dockStore={dockStore}>
       <AppShell dockStore={dockStore} />
-    </CanvasDemoStoreProvider>
+    </CanvasDemoProviders>
   );
 }

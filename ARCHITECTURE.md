@@ -60,6 +60,14 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - Commands are authoritative mutations against services/stores.
 - Workflows own async or multi-step orchestration.
 - Reusable interaction and dock policy should live in shared packages rather than being rebuilt per app screen.
+- Prefer app-first service contracts and provider composition before promoting abstractions into shared packages.
+
+## External interaction surfaces
+
+- Embedded browser contexts, iframes, native webviews, extension outlets, and similar integrations are external interaction surfaces.
+- External surfaces are not normal DOM. They may render in host-managed overlays, with their own hit-testing, compositor timing, and stacking behavior.
+- UI components should not directly own native-surface lifecycle or policy. Treat those concerns as services/workflows provided near the app boundary.
+- Shared packages may offer helpers for coordinating overlays, passthrough, and focus, but host-specific lifecycle should stay outside Loom primitives.
 
 ## Invariants / non-negotiables
 
@@ -68,6 +76,7 @@ The repo is trying to grow reusable capability-oriented packages without letting
 - Headless packages must stay React-free unless React is the declared purpose of the package. `@loop-kit/interaction` and `@loop-kit/dock` are headless; `@loop-kit/interaction-react` and `@loop-kit/loom-pack-dock` are the React bridges.
 - Providers must not become logic sinks. Keep policy, store logic, and orchestration outside provider components.
 - Project support docs should stay lightweight. Durable repo-wide truth belongs here or in one obvious file under `references/`, not scattered across many linked notes.
+- If a feature depends on external surfaces, model the capability explicitly instead of pretending CSS z-index and pointer-events are enough.
 
 ## Subsystem map
 

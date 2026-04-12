@@ -18,9 +18,24 @@ import {
   TextArea,
 } from "@loop-kit/loom-react";
 import { canvasActionIds, canvasCommandItems } from "../actions/canvas-actions";
-import { useCanvasDemoSelector, useCanvasDemoStore } from "../app/store";
+import { useCanvasDemoSelector } from "../app/store";
+import {
+  closePanelContextMenu,
+  cycleTheme,
+  navigateBrowserPanel,
+  openPanelContextMenu,
+  redoBrowserState,
+  setCommandQuery,
+  setBrowserDraftUrl,
+  setBrowserDragging,
+  setViewport,
+  toggleColorMode,
+  undoBrowserState,
+} from "../commands/canvas-commands";
+import { EmbeddedBrowserSurface } from "../features/browser/EmbeddedBrowserSurface";
 import { readFloatingRect } from "../features/dock/layout";
 import { groupIds, layerIds } from "../features/dock/schema";
+import { useCanvasDemoDeps } from "../providers/app-deps";
 
 const defaultBrowserPanelState = {
   draftUrl: "https://blackboard.sh/electrobun",
@@ -37,34 +52,28 @@ function isInteractiveTarget(target: EventTarget | null) {
   ) != null;
 }
 
-function isElectrobunContext() {
-  return typeof window !== "undefined" && typeof window.__electrobunWindowId === "number";
-}
-
 function usePanelContextMenu(panelId: string) {
-  const store = useCanvasDemoStore();
+  const deps = useCanvasDemoDeps();
 
   return React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
-      store.setState(
-        (current) => ({
-          ...current,
-          contextMenu: {
-            panelId,
-            x: event.clientX,
-            y: event.clientY,
-          },
-        }),
-        { history: false },
-      );
+      openPanelContextMenu(deps, panelId, event.clientX, event.clientY);
     },
-    [panelId, store],
+    [deps, panelId],
+  );
+}
+
+function useBrowserPanelState(panelId: string) {
+  return (
+    useCanvasDemoSelector((current) => current.browser.panels[panelId]) ??
+    defaultBrowserPanelState
   );
 }
 
 function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGroup }) {
   const action = useDispatchAction();
+  const deps = useCanvasDemoDeps();
   const rect = readFloatingRect(group);
   if (!rect) {
     return null;
@@ -77,11 +86,18 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
       }
 
       event.preventDefault();
+      const browserPanelIds = group.panelIds.filter(
+        (panelId) => dockStore.getState().panels[panelId]?.kind === "browser-view",
+      );
       const startPoint = { x: event.clientX, y: event.clientY };
       const startLeft = rect.left;
       const startTop = rect.top;
       let frame = 0;
       let nextPoint = startPoint;
+
+      if (browserPanelIds.length > 0) {
+        setBrowserDragging(deps, browserPanelIds, true);
+      }
 
       const commitMove = () => {
         frame = 0;
@@ -102,6 +118,19 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
         );
       };
 
+      const clear = () => {
+        if (frame) {
+          window.cancelAnimationFrame(frame);
+          frame = 0;
+        }
+        if (browserPanelIds.length > 0) {
+          setBrowserDragging(deps, browserPanelIds, false);
+        }
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", clear);
+        document.removeEventListener("pointercancel", clear);
+      };
+
       const onMove = (moveEvent: PointerEvent) => {
         nextPoint = { x: moveEvent.clientX, y: moveEvent.clientY };
         if (frame) {
@@ -110,21 +139,11 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
         frame = window.requestAnimationFrame(commitMove);
       };
 
-      const clear = () => {
-        if (frame) {
-          window.cancelAnimationFrame(frame);
-          frame = 0;
-        }
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerup", clear);
-        document.removeEventListener("pointercancel", clear);
-      };
-
       document.addEventListener("pointermove", onMove);
       document.addEventListener("pointerup", clear);
       document.addEventListener("pointercancel", clear);
     },
-    [dockStore, group.id, rect.height, rect.left, rect.top, rect.width],
+    [deps, dockStore, group.id, group.panelIds, rect.height, rect.left, rect.top, rect.width],
   );
 
   return (
@@ -210,10 +229,10 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
 
 function CanvasPanel({ controller, state }: DockPanelRendererProps) {
   const action = useDispatchAction();
-  const store = useCanvasDemoStore();
-  const colorMode = useCanvasDemoSelector((current) => current.colorMode);
-  const themeId = useCanvasDemoSelector((current) => current.themeId);
-  const viewport = useCanvasDemoSelector((current) => current.viewport);
+  const deps = useCanvasDemoDeps();
+  const colorMode = useCanvasDemoSelector((current) => current.appearance.colorMode);
+  const themeId = useCanvasDemoSelector((current) => current.appearance.themeId);
+  const viewport = useCanvasDemoSelector((current) => current.workspace.viewport);
 
   const onBackgroundPointerDown = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -222,19 +241,17 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
       }
 
       const startPoint = { x: event.clientX, y: event.clientY };
-      const startViewport = store.getState().viewport;
+      const startViewport = deps.state.workspace.getState().viewport;
 
       const onMove = (moveEvent: PointerEvent) => {
-        store.setState(
-          (current) => ({
-            ...current,
-            viewport: {
-              ...current.viewport,
-              x: startViewport.x + (moveEvent.clientX - startPoint.x),
-              y: startViewport.y + (moveEvent.clientY - startPoint.y),
-            },
+        setViewport(
+          deps,
+          () => ({
+            scale: startViewport.scale,
+            x: startViewport.x + (moveEvent.clientX - startPoint.x),
+            y: startViewport.y + (moveEvent.clientY - startPoint.y),
           }),
-          { history: false },
+          false,
         );
       };
 
@@ -248,7 +265,7 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
       document.addEventListener("pointerup", clear);
       document.addEventListener("pointercancel", clear);
     },
-    [store],
+    [deps],
   );
 
   const floatingGroups =
@@ -289,15 +306,13 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
         onWheel={(event) => {
           event.preventDefault();
           const delta = event.deltaY > 0 ? -0.08 : 0.08;
-          store.setState(
+          setViewport(
+            deps,
             (current) => ({
               ...current,
-              viewport: {
-                ...current.viewport,
-                scale: Math.max(0.5, Math.min(1.8, current.viewport.scale + delta)),
-              },
+              scale: Math.max(0.5, Math.min(1.8, current.scale + delta)),
             }),
-            { history: false },
+            false,
           );
         }}
         style={{
@@ -338,11 +353,13 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
                 Infinite Canvas Bridge
               </Heading>
               <Text tone="muted">
-                The canvas mirrors the floating Dock groups instead of owning a second window model.
-                Drag nodes to move free-floating groups. Auto-tile is app-level policy driven by Dock APIs.
+                The canvas mirrors the floating Dock groups instead of owning a second
+                window model. Drag nodes to move free-floating groups. Auto-tile is
+                app-level policy driven by Dock APIs.
               </Text>
               <Text tone="muted">
-                Active dock layer: {state.activeLayerId ?? "none"} · focused panel: {state.focusedPanelId ?? "none"}
+                Active dock layer: {state.activeLayerId ?? "none"} · focused panel:{" "}
+                {state.focusedPanelId ?? "none"}
               </Text>
             </Stack>
           </Panel>
@@ -353,72 +370,9 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
 }
 
 function BrowserPanel({ panel }: DockPanelRendererProps) {
-  const store = useCanvasDemoStore();
-  const storedBrowserState = useCanvasDemoSelector(
-    (current) => current.browserPanels[panel.id],
-  );
-  const browserState = storedBrowserState ?? defaultBrowserPanelState;
+  const deps = useCanvasDemoDeps();
+  const browserState = useBrowserPanelState(panel.id);
   const onContextMenu = usePanelContextMenu(panel.id);
-  const hostRef = React.useRef<HTMLDivElement | null>(null);
-  const webviewRef = React.useRef<ElectrobunWebviewElement | null>(null);
-
-  React.useEffect(() => {
-    const webview = webviewRef.current;
-    if (!webview || !isElectrobunContext()) {
-      return;
-    }
-    webview.setNavigationRules(["^file://*", "^http://*", "*://*/*"]);
-    if ("toggleTransparent" in webview && typeof webview.toggleTransparent === "function") {
-      webview.toggleTransparent(true);
-    }
-    webview.loadURL(browserState.url);
-  }, [browserState.url]);
-
-  React.useLayoutEffect(() => {
-    const webview = webviewRef.current;
-    const host = hostRef.current;
-    if (!webview || !host || !isElectrobunContext()) {
-      return;
-    }
-
-    let frame = 0;
-    const sync = (force = false) => {
-      if ("syncDimensions" in webview && typeof webview.syncDimensions === "function") {
-        webview.syncDimensions(force);
-      }
-    };
-
-    const requestSync = (force = false) => {
-      if (frame) {
-        window.cancelAnimationFrame(frame);
-      }
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        sync(force);
-      });
-    };
-    const handleWindowResize = () => requestSync();
-    const handleWindowScroll = () => requestSync();
-
-    requestSync(true);
-
-    const observer = new ResizeObserver(() => {
-      requestSync();
-    });
-
-    observer.observe(host);
-    window.addEventListener("resize", handleWindowResize);
-    window.addEventListener("scroll", handleWindowScroll, true);
-
-    return () => {
-      if (frame) {
-        window.cancelAnimationFrame(frame);
-      }
-      observer.disconnect();
-      window.removeEventListener("resize", handleWindowResize);
-      window.removeEventListener("scroll", handleWindowScroll, true);
-    };
-  }, []);
 
   return (
     <Stack
@@ -429,36 +383,13 @@ function BrowserPanel({ panel }: DockPanelRendererProps) {
       <Inline gap="2">
         <Input
           onChange={(event) => {
-            const value = event.currentTarget.value;
-            store.setState(
-              (current) => ({
-                ...current,
-                browserPanels: {
-                  ...current.browserPanels,
-                  [panel.id]: {
-                    draftUrl: value,
-                    url: current.browserPanels[panel.id]?.url ?? value,
-                  },
-                },
-              }),
-              { history: false },
-            );
+            setBrowserDraftUrl(deps, panel.id, event.currentTarget.value);
           }}
           onKeyDown={(event) => {
             if (event.key !== "Enter") {
               return;
             }
-            const value = event.currentTarget.value.trim();
-            store.setState((current) => ({
-              ...current,
-              browserPanels: {
-                ...current.browserPanels,
-                [panel.id]: {
-                  draftUrl: value,
-                  url: value,
-                },
-              },
-            }));
+            navigateBrowserPanel(deps, panel.id, event.currentTarget.value.trim());
           }}
           placeholder="https://..."
           value={browserState.draftUrl}
@@ -466,16 +397,7 @@ function BrowserPanel({ panel }: DockPanelRendererProps) {
         <Button
           kind="outline"
           onClick={() => {
-            store.setState((current) => ({
-              ...current,
-              browserPanels: {
-                ...current.browserPanels,
-                [panel.id]: {
-                  draftUrl: browserState.draftUrl,
-                  url: browserState.draftUrl,
-                },
-              },
-            }));
+            navigateBrowserPanel(deps, panel.id, browserState.draftUrl.trim());
           }}
           type="button"
         >
@@ -486,54 +408,17 @@ function BrowserPanel({ panel }: DockPanelRendererProps) {
           label={`Open panel menu for ${panel.title}`}
           name="moreHorizontal"
           onClick={(event) => {
-            store.setState(
-              (current) => ({
-                ...current,
-                contextMenu: {
-                  panelId: panel.id,
-                  x: event.currentTarget.getBoundingClientRect().right - 8,
-                  y: event.currentTarget.getBoundingClientRect().bottom + 8,
-                },
-              }),
-              { history: false },
+            openPanelContextMenu(
+              deps,
+              panel.id,
+              event.currentTarget.getBoundingClientRect().right - 8,
+              event.currentTarget.getBoundingClientRect().bottom + 8,
             );
           }}
           size="sm"
         />
       </Inline>
-      {isElectrobunContext() ? (
-        <div
-          ref={hostRef}
-          style={{
-            background: "#05080d",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
-            borderRadius: "18px",
-            display: "flex",
-            flex: 1,
-            minHeight: 0,
-            overflow: "hidden",
-            padding: "1px",
-          }}
-        >
-          {React.createElement("electrobun-webview", {
-            ref: webviewRef,
-            sandbox: true,
-            style: { background: "#05080d", borderRadius: "17px", overflow: "hidden" },
-          })}
-        </div>
-      ) : (
-        <Panel emphasis="subtle">
-          <Stack gap="2">
-            <Heading level={3} size="sm">
-              Electrobun-only panel
-            </Heading>
-            <Text tone="muted">
-              This embedded browser uses the custom <code>electrobun-webview</code> element.
-              Run the app through the Electrobun desktop target to see the real browser surface.
-            </Text>
-          </Stack>
-        </Panel>
-      )}
+      <EmbeddedBrowserSurface panelId={panel.id} url={browserState.url} />
     </Stack>
   );
 }
@@ -548,9 +433,9 @@ function ReferencePanel({ panel }: DockPanelRendererProps) {
           Dock Notes
         </Heading>
         <Text tone="muted">
-          Dock already has floating layers, overlay layers, closable groups, group modes, and the
-          state/controller primitives required for auto-tiling. This demo keeps auto-tiling
-          external so policy stays app-owned.
+          Dock already has floating layers, overlay layers, closable groups, group modes,
+          and the state/controller primitives required for auto-tiling. This demo keeps
+          auto-tiling external so policy stays app-owned.
         </Text>
         <Inline gap="2">
           <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeTabs)} type="button">
@@ -578,7 +463,7 @@ function NotesPanel({ panel }: DockPanelRendererProps) {
   const onContextMenu = usePanelContextMenu(panel.id);
   return (
     <TextArea
-      defaultValue={`- Floating groups are real Dock groups on a floating layer.\n- The canvas mirrors them instead of replacing Dock state.\n- The browser panel uses Electrobun's custom webview tag.`}
+      defaultValue={`- Floating groups are real Dock groups on a floating layer.\n- The canvas mirrors them instead of replacing Dock state.\n- Browser surfaces are attached through an external surface service.`}
       onContextMenu={onContextMenu}
       style={{ flex: 1, minHeight: "16rem", resize: "vertical" }}
     />
@@ -592,7 +477,7 @@ function TimelinePanel({ panel }: DockPanelRendererProps) {
       <Badge tone="accent">Activity</Badge>
       <Text tone="muted">Auto-tile arranged floating groups.</Text>
       <Text tone="muted">Context menu actions stay semantic and mutate Dock through commands.</Text>
-      <Text tone="muted">The passthrough peek layer keeps the canvas interactive underneath.</Text>
+      <Text tone="muted">Native browser surfaces are coordinated through a provider/runtime layer.</Text>
     </Stack>
   );
 }
@@ -617,29 +502,10 @@ function InspectorPanel({ panel, state }: DockPanelRendererProps) {
 }
 
 function HelpPeekPanel() {
-  const store = useCanvasDemoStore();
-  const colorMode = useCanvasDemoSelector((current) => current.colorMode);
-  const themeId = useCanvasDemoSelector((current) => current.themeId);
+  const deps = useCanvasDemoDeps();
+  const colorMode = useCanvasDemoSelector((current) => current.appearance.colorMode);
+  const themeId = useCanvasDemoSelector((current) => current.appearance.themeId);
   const action = useDispatchAction();
-
-  const cycleTheme = React.useCallback(() => {
-    store.setState((current) => ({
-      ...current,
-      themeId:
-        current.themeId === "base"
-          ? "aquatic"
-          : current.themeId === "aquatic"
-            ? "foundry"
-            : "base",
-    }));
-  }, [store]);
-
-  const toggleColorMode = React.useCallback(() => {
-    store.setState((current) => ({
-      ...current,
-      colorMode: current.colorMode === "dark" ? "light" : "dark",
-    }));
-  }, [store]);
 
   return (
     <Stack gap="3">
@@ -647,14 +513,14 @@ function HelpPeekPanel() {
         Passthrough Peek
       </Heading>
       <Text tone="muted">
-        This layer uses Dock's overlay semantics with passthrough interaction, so the canvas remains
-        interactive while the helper panel stays open.
+        This layer uses Dock's overlay semantics with passthrough interaction, so the
+        canvas remains interactive while the helper panel stays open.
       </Text>
       <Inline gap="2">
-        <Button kind="outline" onClick={cycleTheme} type="button">
+        <Button kind="outline" onClick={() => cycleTheme(deps)} type="button">
           Theme: {themeId}
         </Button>
-        <Button kind="outline" onClick={toggleColorMode} type="button">
+        <Button kind="outline" onClick={() => toggleColorMode(deps)} type="button">
           Color: {colorMode}
         </Button>
       </Inline>
@@ -671,9 +537,9 @@ function HelpPeekPanel() {
 }
 
 function CommandPalettePanel({ controller }: DockPanelRendererProps) {
-  const store = useCanvasDemoStore();
+  const deps = useCanvasDemoDeps();
   const action = useDispatchAction();
-  const query = useCanvasDemoSelector((current) => current.commandQuery);
+  const query = useCanvasDemoSelector((current) => current.workspace.commandQuery);
 
   const filteredItems = React.useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -697,14 +563,7 @@ function CommandPalettePanel({ controller }: DockPanelRendererProps) {
         <Input
           autoFocus
           onChange={(event) => {
-            const value = event.currentTarget.value;
-            store.setState(
-              (current) => ({
-                ...current,
-                commandQuery: value,
-              }),
-              { history: false },
-            );
+            setCommandQuery(deps, event.currentTarget.value);
           }}
           placeholder="Search actions, modes, and layout commands..."
           value={query}
@@ -763,9 +622,9 @@ export function createPanelRegistry(): DockPanelRegistry {
 }
 
 export function PanelContextMenu({ dockStore }: { dockStore: DockStore }) {
-  const store = useCanvasDemoStore();
+  const deps = useCanvasDemoDeps();
   const action = useDispatchAction();
-  const contextMenu = useCanvasDemoSelector((current) => current.contextMenu);
+  const contextMenu = useCanvasDemoSelector((current) => current.workspace.contextMenu);
 
   React.useEffect(() => {
     if (!contextMenu) {
@@ -773,18 +632,12 @@ export function PanelContextMenu({ dockStore }: { dockStore: DockStore }) {
     }
 
     const dismiss = () => {
-      store.setState(
-        (current) => ({
-          ...current,
-          contextMenu: null,
-        }),
-        { history: false },
-      );
+      closePanelContextMenu(deps);
     };
 
     document.addEventListener("pointerdown", dismiss);
     return () => document.removeEventListener("pointerdown", dismiss);
-  }, [contextMenu, store]);
+  }, [contextMenu, deps]);
 
   if (!contextMenu) {
     return null;
@@ -816,6 +669,12 @@ export function PanelContextMenu({ dockStore }: { dockStore: DockStore }) {
           </Button>
           <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeStack)} type="button">
             Browser mode: stack
+          </Button>
+          <Button kind="ghost" onClick={() => undoBrowserState(deps)} type="button">
+            Undo browser changes
+          </Button>
+          <Button kind="ghost" onClick={() => redoBrowserState(deps)} type="button">
+            Redo browser changes
           </Button>
         </Stack>
       </Panel>
