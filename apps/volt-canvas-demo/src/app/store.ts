@@ -38,6 +38,10 @@ export type CanvasDemoBrowserState = {
 export type CanvasDemoWorkspaceState = {
   commandQuery: string;
   contextMenu: ContextMenuState | null;
+  diagnostics: {
+    browserForcePassthrough: boolean;
+    browserLogVisible: boolean;
+  };
   viewport: ViewportState;
 };
 
@@ -86,6 +90,10 @@ export function createCanvasDemoStore() {
     workspace: {
       commandQuery: "",
       contextMenu: null,
+      diagnostics: {
+        browserForcePassthrough: true,
+        browserLogVisible: true,
+      },
       viewport: {
         scale: 1,
         x: 260,

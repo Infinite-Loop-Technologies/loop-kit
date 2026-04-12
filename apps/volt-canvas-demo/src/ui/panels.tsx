@@ -23,12 +23,20 @@ import {
   closePanelContextMenu,
   cycleTheme,
   navigateBrowserPanel,
+  resetViewport,
+  runAutoTile,
+  runOpenBrowserPanel,
+  runToggleCommandPalette,
+  runToggleHelpPeek,
+  setBrowserMode,
   openPanelContextMenu,
   redoBrowserState,
   setCommandQuery,
   setBrowserDraftUrl,
   setBrowserDragging,
   setViewport,
+  toggleBrowserDiagnostics,
+  toggleBrowserPassthroughDebug,
   toggleColorMode,
   undoBrowserState,
 } from "../commands/canvas-commands";
@@ -72,7 +80,6 @@ function useBrowserPanelState(panelId: string) {
 }
 
 function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGroup }) {
-  const action = useDispatchAction();
   const deps = useCanvasDemoDeps();
   const rect = readFloatingRect(group);
   if (!rect) {
@@ -203,7 +210,7 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
           kind="ghost"
           onClick={(event) => {
             event.stopPropagation();
-            action(canvasActionIds.autoTileWindows);
+            runAutoTile(dockStore);
           }}
           size="sm"
           type="button"
@@ -215,7 +222,7 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
           kind="ghost"
           onClick={(event) => {
             event.stopPropagation();
-            action(canvasActionIds.setBrowserModeStack);
+            setBrowserMode(dockStore, "stack");
           }}
           size="sm"
           type="button"
@@ -228,15 +235,20 @@ function CanvasNode({ dockStore, group }: { dockStore: DockStore; group: DockGro
 }
 
 function CanvasPanel({ controller, state }: DockPanelRendererProps) {
-  const action = useDispatchAction();
   const deps = useCanvasDemoDeps();
   const colorMode = useCanvasDemoSelector((current) => current.appearance.colorMode);
   const themeId = useCanvasDemoSelector((current) => current.appearance.themeId);
+  const browserForcePassthrough = useCanvasDemoSelector(
+    (current) => current.workspace.diagnostics.browserForcePassthrough,
+  );
+  const browserDiagnosticsVisible = useCanvasDemoSelector(
+    (current) => current.workspace.diagnostics.browserLogVisible,
+  );
   const viewport = useCanvasDemoSelector((current) => current.workspace.viewport);
 
   const onBackgroundPointerDown = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.target !== event.currentTarget || event.button !== 0) {
+      if (event.button !== 0 || isInteractiveTarget(event.target)) {
         return;
       }
 
@@ -286,16 +298,30 @@ function CanvasPanel({ controller, state }: DockPanelRendererProps) {
           </Badge>
         </Inline>
         <Inline gap="2">
-          <Button onClick={() => action(canvasActionIds.openBrowserPanel)} type="button">
+          <Button
+            kind={browserForcePassthrough ? "outline" : "ghost"}
+            onClick={() => toggleBrowserPassthroughDebug(deps)}
+            type="button"
+          >
+            Browser Hit-Test {browserForcePassthrough ? "Off" : "On"}
+          </Button>
+          <Button
+            kind={browserDiagnosticsVisible ? "outline" : "ghost"}
+            onClick={() => toggleBrowserDiagnostics(deps)}
+            type="button"
+          >
+            Browser Debug
+          </Button>
+          <Button onClick={() => runOpenBrowserPanel(controller, deps)} type="button">
             Add Browser
           </Button>
-          <Button kind="outline" onClick={() => action(canvasActionIds.autoTileWindows)} type="button">
+          <Button kind="outline" onClick={() => runAutoTile(controller)} type="button">
             Auto Tile
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.toggleCommandPalette)} type="button">
+          <Button kind="ghost" onClick={() => runToggleCommandPalette(controller, deps)} type="button">
             Command Palette
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.toggleHelpPeek)} type="button">
+          <Button kind="ghost" onClick={() => runToggleHelpPeek(controller)} type="button">
             Peek
           </Button>
         </Inline>
@@ -423,9 +449,8 @@ function BrowserPanel({ panel }: DockPanelRendererProps) {
   );
 }
 
-function ReferencePanel({ panel }: DockPanelRendererProps) {
+function ReferencePanel({ controller, panel }: DockPanelRendererProps) {
   const onContextMenu = usePanelContextMenu(panel.id);
-  const action = useDispatchAction();
   return (
     <Panel emphasis="subtle" onContextMenu={onContextMenu}>
       <Stack gap="3">
@@ -438,19 +463,19 @@ function ReferencePanel({ panel }: DockPanelRendererProps) {
           auto-tiling external so policy stays app-owned.
         </Text>
         <Inline gap="2">
-          <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeTabs)} type="button">
+          <Button kind="ghost" onClick={() => setBrowserMode(controller, "tabs")} type="button">
             Tabs
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeSingle)} type="button">
+          <Button kind="ghost" onClick={() => setBrowserMode(controller, "single")} type="button">
             No Stack
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeStack)} type="button">
+          <Button kind="ghost" onClick={() => setBrowserMode(controller, "stack")} type="button">
             Stack
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeQueue)} type="button">
+          <Button kind="ghost" onClick={() => setBrowserMode(controller, "queue")} type="button">
             Queue
           </Button>
-          <Button kind="ghost" onClick={() => action(canvasActionIds.setBrowserModeSwap)} type="button">
+          <Button kind="ghost" onClick={() => setBrowserMode(controller, "swap")} type="button">
             Swap
           </Button>
         </Inline>
@@ -501,11 +526,10 @@ function InspectorPanel({ panel, state }: DockPanelRendererProps) {
   );
 }
 
-function HelpPeekPanel() {
+function HelpPeekPanel({ controller }: DockPanelRendererProps) {
   const deps = useCanvasDemoDeps();
   const colorMode = useCanvasDemoSelector((current) => current.appearance.colorMode);
   const themeId = useCanvasDemoSelector((current) => current.appearance.themeId);
-  const action = useDispatchAction();
 
   return (
     <Stack gap="3">
@@ -525,10 +549,10 @@ function HelpPeekPanel() {
         </Button>
       </Inline>
       <Inline gap="2">
-        <Button kind="ghost" onClick={() => action(canvasActionIds.resetViewport)} type="button">
+        <Button kind="ghost" onClick={() => resetViewport(deps)} type="button">
           Reset Canvas
         </Button>
-        <Button kind="ghost" onClick={() => action(canvasActionIds.autoTileWindows)} type="button">
+        <Button kind="ghost" onClick={() => runAutoTile(controller)} type="button">
           Tile Windows
         </Button>
       </Inline>

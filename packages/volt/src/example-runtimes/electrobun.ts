@@ -19,6 +19,7 @@ export interface ElectrobunTargetOptions {
   readiness?: VoltReadinessProbe | VoltReadinessProbe[];
   uses?: string[];
   watch?: string[];
+  watchElectrobun?: boolean;
 }
 
 const createElectrobunEnv = (
@@ -83,9 +84,17 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       );
     }
 
+    const electrobunDevArgs = [
+      "bunx",
+      "electrobun",
+      "dev",
+      ...(options.watchElectrobun ? ["--watch"] : []),
+      ...(options.devArgs ?? []),
+    ];
+
     return context.spawn(
       context.currentTarget.name,
-      ["bunx", "electrobun", "dev", ...(options.devArgs ?? [])],
+      electrobunDevArgs,
       {
         cwd,
         env: createElectrobunEnv(context, options.env),

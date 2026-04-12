@@ -132,6 +132,32 @@ export function resetViewport(deps: CanvasDemoAppDeps) {
   );
 }
 
+export function toggleBrowserPassthroughDebug(deps: CanvasDemoAppDeps) {
+  deps.state.workspace.setState(
+    (current) => ({
+      ...current,
+      diagnostics: {
+        ...current.diagnostics,
+        browserForcePassthrough: !current.diagnostics.browserForcePassthrough,
+      },
+    }),
+    { history: false },
+  );
+}
+
+export function toggleBrowserDiagnostics(deps: CanvasDemoAppDeps) {
+  deps.state.workspace.setState(
+    (current) => ({
+      ...current,
+      diagnostics: {
+        ...current.diagnostics,
+        browserLogVisible: !current.diagnostics.browserLogVisible,
+      },
+    }),
+    { history: false },
+  );
+}
+
 export function cycleTheme(deps: CanvasDemoAppDeps) {
   deps.state.appearance.setState((current) => ({
     ...current,
@@ -186,7 +212,6 @@ export function navigateBrowserPanel(
       },
     },
   }));
-  deps.externalSurfaces.navigate(panelId, nextUrl);
 }
 
 export function undoBrowserState(deps: CanvasDemoAppDeps) {

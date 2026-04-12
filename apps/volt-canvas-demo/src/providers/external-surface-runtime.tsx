@@ -2,10 +2,7 @@ import * as React from "react";
 import type { DockState, DockStore } from "@loop-kit/dock";
 import { useCanvasDemoSelector } from "../app/store";
 import { layerIds } from "../features/dock/schema";
-import {
-  listBrowserPanelIds,
-  listVisibleBrowserPanelIds,
-} from "../features/browser/surface-policy";
+import { listBrowserPanelIds } from "../features/browser/surface-policy";
 import { useCanvasDemoDeps } from "./app-deps";
 
 function useDockState(store: DockStore) {
@@ -34,23 +31,23 @@ export function ExternalSurfaceRuntime({
 }) {
   const dockState = useDockState(dockStore);
   const contextMenu = useCanvasDemoSelector((state) => state.workspace.contextMenu);
+  const browserForcePassthrough = useCanvasDemoSelector(
+    (state) => state.workspace.diagnostics.browserForcePassthrough,
+  );
   const { externalSurfaces } = useCanvasDemoDeps();
 
   React.useLayoutEffect(() => {
     const allBrowserPanels = listBrowserPanelIds(dockState);
-    const visibleBrowserPanels = listVisibleBrowserPanelIds(dockState);
     const overlaysWantPassthrough = contextMenu != null || hasModalOverlay(dockState);
 
     for (const panelId of allBrowserPanels) {
       externalSurfaces.setPresentation(panelId, {
-        active: visibleBrowserPanels.has(panelId),
-        hidden: !visibleBrowserPanels.has(panelId),
-        passthrough: overlaysWantPassthrough,
+        active: true,
+        hidden: false,
+        passthrough: overlaysWantPassthrough || browserForcePassthrough,
       });
     }
-
-    externalSurfaces.syncAll();
-  }, [contextMenu, dockState, externalSurfaces]);
+  }, [browserForcePassthrough, contextMenu, dockState, externalSurfaces]);
 
   return null;
 }

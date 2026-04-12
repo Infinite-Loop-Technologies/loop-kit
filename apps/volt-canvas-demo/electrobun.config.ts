@@ -1,21 +1,16 @@
 import type { ElectrobunConfig } from "electrobun";
+import packageJson from "./package.json" with { type: "json" };
 
 export default {
   app: {
     identifier: "dev.loopkit.volt-canvas-demo",
     name: "volt-canvas-demo",
-    version: "0.0.1",
+    "version": packageJson.version
   },
   build: {
     copy: {
       "src/mainview/index.css": "views/mainview/index.css",
       "src/mainview/index.html": "views/mainview/index.html",
-    },
-    linux: {
-      bundleCEF: false,
-    },
-    mac: {
-      bundleCEF: false,
     },
     views: {
       mainview: {
@@ -24,6 +19,9 @@ export default {
     },
     win: {
       bundleCEF: false,
-    },
+    }
+  },
+  "runtime": {
+    exitOnLastWindowClosed: false
   },
 } satisfies ElectrobunConfig;

@@ -14,6 +14,7 @@ declare global {
   interface ElectrobunWebviewElement extends HTMLElement {
     canGoBack: () => Promise<boolean>;
     canGoForward: () => Promise<boolean>;
+    html?: string;
     goBack: () => void;
     goForward: () => void;
     loadURL: (url: string) => void;
@@ -27,7 +28,9 @@ declare global {
     ) => void;
     reload: () => void;
     setNavigationRules: (rules: string[]) => void;
+    src?: string;
     syncDimensions?: (force?: boolean) => void;
+    transparent?: boolean;
     toggleHidden?: (enabled?: boolean) => void;
     togglePassthrough?: (enabled?: boolean) => void;
     toggleTransparent?: (enabled: boolean) => void;

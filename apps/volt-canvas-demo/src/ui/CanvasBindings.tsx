@@ -18,6 +18,8 @@ import {
   runToggleCommandPalette,
   runToggleHelpPeek,
   setBrowserMode,
+  toggleBrowserDiagnostics,
+  toggleBrowserPassthroughDebug,
   undoBrowserState,
 } from "../commands/canvas-commands";
 
@@ -35,6 +37,8 @@ export function CanvasBindings({
     { actionId: canvasActionIds.toggleHelpPeek, gesture: "Mod+/" },
     { actionId: canvasActionIds.autoTileWindows, gesture: "Mod+Shift+T" },
     { actionId: canvasActionIds.openBrowserPanel, gesture: "Mod+Shift+B" },
+    { actionId: canvasActionIds.toggleBrowserPassthrough, gesture: "Mod+Shift+P" },
+    { actionId: canvasActionIds.toggleBrowserDiagnostics, gesture: "Mod+Shift+D" },
     { actionId: canvasActionIds.browserUndo, gesture: "Mod+Z" },
     { actionId: canvasActionIds.browserRedo, gesture: "Mod+Shift+Z" },
     { actionId: canvasActionIds.deleteFocusedPanel, gesture: "Delete" },
@@ -95,6 +99,14 @@ export function CanvasBindings({
   });
   useRegisterActionHandler(canvasActionIds.browserRedo, () => {
     redoBrowserState(deps);
+    return { handled: true };
+  });
+  useRegisterActionHandler(canvasActionIds.toggleBrowserPassthrough, () => {
+    toggleBrowserPassthroughDebug(deps);
+    return { handled: true };
+  });
+  useRegisterActionHandler(canvasActionIds.toggleBrowserDiagnostics, () => {
+    toggleBrowserDiagnostics(deps);
     return { handled: true };
   });
 

@@ -76,9 +76,7 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 
 createRoot(container).render(
-  <React.StrictMode>
-    <RendererBoundary>
-      <App />
-    </RendererBoundary>
-  </React.StrictMode>,
+  <RendererBoundary>
+    <App />
+  </RendererBoundary>,
 );

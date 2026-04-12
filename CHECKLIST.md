@@ -16,14 +16,24 @@ AI-NOTE:
 - [ ] Decide whether `apps/platform-api` is a real part of the product topology that should be surfaced in more repo docs/scripts, or whether it should remain an isolated experiment.
 - [ ] Decide whether `apps/dock-demo`, `apps/loom-demo`, and `apps/platform-api` should join `volt.workspace.ts` or stay as intentionally separate app-local entrypoints.
 - [ ] Add a lightweight repo garbage-collection workflow for temp artifacts, stale branches, stale inbox items, and stale checklist residue.
+- [ ] Add some handy reusable systems to this repo for the various problems that constantly keep appearing.
+  - [ ] Services/dependency injection. This is an elegant way to create reusable systems that are basically imperative libraries. Platform APIs are a good option here (could be inspired by WASI).
+    - [ ] A filesystem one for sure!
+    - [ ] Perhaps a keyvalue store.
 
 ## Volt
 
-- [ ] Improve `packages/create-volt`
-  - [ ] Set up a better method of `create-volt` being able to spawn templates. Perhaps the templates could be higher up in a root `templates` or `examples` folder. These projects could be deployed onto a CDN, perhaps via Vercel Blob. Or, we could compress them and include them in the `create-volt` build. If we keep them lightweight, including them in `create-volt` in a compressed format is my preferred option.
-  - [ ] Set up some kind of system that lets us use templates and addons to spawn Volt templates. Perhaps we use EJS, Plop, or something else.
-  - [ ] Investigate the concept of integrating `create-volt` with the actual Volt CLI - perhaps they both use could the same code under the hood.
-  - [ ] Investigate the concept of being able to spawn templates and install files/code into Volt projects via any URL, perhaps adding a shadcn-like registry system. This could be a similar setup to integrations, meaning you basically can program the CLI in volt.workspace.ts, or volt.config.ts, or elsewhere, and that lets you add new plugins, or extend certain functionality. Investigate this for a lot of cool features. Maybe even some currently built-in Volt CLI features could be moved to plugin functions that are configureable and overridable by the user, just like our runtime/target adapters and so on.
+- [ ] Refactor Volt to have a more codegen-centric system, and even build utilities/frameworks for working with codegen, as it is extremely useful.
+  - [ ] We should start with straightforward templates, and a model for on-the-fly code generation, e.g. generating files that go in .volt as an step before calling Bun.build or the ElectroBun CLI.
+    - [ ] Start by creating an ElectroBun target builder that generates the ElectroBun entry file, the ElectroBun config file, and whatever else we need. End goal: you can get a whole ElectroBun app despite only having a volt.config.ts and an App.tsx React component. Pretty sweet!
+    - [ ] Investigate pushing the limits of codegen, within reason. Type generation is a big one. Goal: expose an elegant API for users to write their own codegen macros, even ones that can run and update when files change (implemented in volt.config.ts and/or a folder for metaprogramming/automations/etc scripts in their project).
+- [ ] Add more ways to elegantly modify and customize Volt with plugins:
+  - [ ] Add persistence to the Volt CLI so that we can begin having user settings.  This requires deciding on a model: what do we store per-workspace? Should Volt be able to work without a workspace? What do we do then? What should we store per-project? And obviously - what should we store per-machine? Should we just store everything per-machine? I'm a fan of workspace/project config because you can back it up in Git. Nobody wants to manually fetch their dotfiles in their home directory and back those up manually. However, copying over user settings from one workspace to another could get annoying, but we could have a simple "copy settings from" feature or something like that.
+- [ ] Improve Volt's API in general:
+- [ ] Improve Volt's system of tasks, flows, etc.
+- [ ] Make `packages/create-volt` and `packages/volt` both be able to create templates, perhaps have them both just pull from templates in a top level `templates` or `examples` folder. Keep things simple. Templates will be lightweight due to codegen and reusing things from Volt and Loom packages. Use Bun's archive compression and just have the template files stored in the package itself for now. No massive assets or anything to weigh things down.
+  - [ ] Add lightweight features into this template/project creation experience.
+    - [ ] Dependency installation via "bun install". Or post-install scripts and that sort of thing via defined manifests, perhaps?
 - [ ] Improve the Volt CLI
   - [ ] Fix the Volt TUI's responsive layout - it is glitching and not working correctly.
   - [ ] Set up a simple Volt help command - perhaps this shouldn't open the TUI because that might be jarring. By having this - users who don't wanna use the TUI can quickly learn the flag for non-TUI usage, and quickly see the CLI surface.
@@ -111,6 +121,18 @@ AI-NOTE:
 ## Loom
 
 - [ ] Start building an experimental package for building TUIs with Loom. A good option could be [OpenTUI](https://opentui.com/). The goal of loop-kit is to be able to write a UI how you like, and use it with different themes or renderers. And we can take this a step further by making the same, or similar interaction code work too. But the same theme might not work in both React and TUI. The different renderer support is basically done by themes now! So themes are renderer specific. But the same theme package could export themes for multiple renderers, probably - or something like that. Maybe there's a better solution.
+- [ ] Make sure icons are working nicely.
+- [ ] Create a new category in HUMAN_INBOX for assets or design references that need to be created for the various themes.
+- [ ] Brainstorm the concept of various Loom utilities to help themes do tricky stuff performantly, and allow Loom to be extremely fast. For example, [pretext](https://github.com/chenglou/pretext) is going viral to some extent due to its ability to optimize UI layouts.
+- [ ] Investigate generative UI as a concept with Loom. Reference [json-render](https://json-render.dev/). This is fairly straightforward as a concept: you have a catalog of components, and a way to create it from data, e.g. JSON.
+  - [ ] Pretty straightforward in theory. Go ahead and create a demo showing it off, perhaps in `apps/loom-demo` or elsewhere. I think we should have it work with the concept of actions, and maybe scopes, and perhaps even data binding like `json-render` itself does.
+- [ ] Add more themeable/changeable semantic primitives.
+  - [ ] Values that drive animations yet are semantic, such as "zoom" and things like that.
+- [ ] Create more packs and improve existing packs. Reminder: Packs are still themeable, but they're not exactly "primitives" that every application using Loom would want. They're extensions, in a way.
+  - [ ] Perhaps a pack for typography: `loom-pack-typography`
+  - [ ] A pack for more advanced animations, maybe?
+- [ ] Play with the idea of allowing Loom to target more frameworks and renderers than just React - but by using some kind of codegen or compilation setup.
+  - [ ] Loom intentionally separates `loom-core` from the themes, like `loom-theme-base-react`. Creating a "base theme" for a framework is basically the same as adding support for it. The only problem is that we would have to rewrite every theme and component pack and keep them updated! I don't think it's worth it to maintain packs for more frameworks. However, perhaps we could investigate webcomponent generation/wrapping, or some other way of bridging to other frameworks. But more important than framework support, is platform support, such as TUIs, or native UIs, or rendering into a canvas, or rendering via WebGPU. What if we just extract the Loom primitives and the values for them that are created by the themes? That'll get us pretty far, actually - we'll have layout  data, and plenty of style data. The only thing we'll be missing is custom component implementations that skip using Loom primitives and instead use lots of custom CSS and textures and animations. But we can help solve this by just adding Loom primitives that help with these types of things. So ideally by the end of all of this, we're dealing with a descriptive UI state in Loom, and sets of tokens and values, and we can just write adapters. We won't be able to cover every use case in a theme, but we can also just provide ways for theme devs to use cross-platform APIs as much as they can, and have easy fallbacks when they can't. This concept of a sort of "UI IR" is fun. It would probably be compiled data from a theme or a pack, then. Perhaps turned into JSON. So we would need a compiler of sorts. And this doesn't simply allow using React to write a TUI. But it would allow for writing a TUI renderer that simply goes off of a UI description with everything necessary provided as data. So it's a nice substrate/framework for building code generators and more in a way that requires the last amount of maintenance and effort. So this should be considered another addition to this repos long list of future code generation experiments!
 
 ## Extension System
 

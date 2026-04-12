@@ -12,8 +12,6 @@ import {
 type ElectrobunSurfaceElement = ElectrobunWebviewElement & HTMLElement;
 
 type SurfaceEntry = {
-  frame: number;
-  host: HTMLElement;
   spec: ExternalSurfaceAttachment["spec"];
   surface: ElectrobunSurfaceElement;
   snapshot: ExternalSurfaceSnapshot;
@@ -41,26 +39,16 @@ function createDefaultInteraction(): ExternalSurfaceInteractionState {
 
 function applyPresentation(entry: SurfaceEntry, force = false) {
   const { surface } = entry;
-  const hidden = entry.snapshot.presentation.hidden || entry.snapshot.interaction.dragging;
+  const hidden = entry.snapshot.presentation.hidden;
   const passthrough =
     entry.snapshot.presentation.passthrough || entry.snapshot.interaction.dragging;
 
-  surface.style.pointerEvents = passthrough ? "none" : "auto";
   surface.toggleHidden?.(hidden);
   surface.togglePassthrough?.(passthrough);
   surface.toggleTransparent?.(true);
-  surface.syncDimensions?.(force);
-}
-
-function scheduleSync(entry: SurfaceEntry, force = false) {
-  if (entry.frame) {
-    window.cancelAnimationFrame(entry.frame);
+  if (force) {
+    surface.syncDimensions?.(true);
   }
-
-  entry.frame = window.requestAnimationFrame(() => {
-    entry.frame = 0;
-    applyPresentation(entry, force);
-  });
 }
 
 /**
@@ -95,8 +83,6 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
       attachment.surface.setNavigationRules(["^file://*", "^http://*", "*://*/*"]);
 
       const entry: SurfaceEntry = {
-        frame: 0,
-        host: attachment.host,
         snapshot: {
           interaction: createDefaultInteraction(),
           presentation: createDefaultPresentation(),
@@ -107,8 +93,7 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
       };
 
       entries.set(attachment.spec.id, entry);
-      attachment.surface.loadURL(attachment.spec.url);
-      scheduleSync(entry, true);
+      applyPresentation(entry, true);
 
       return ok({
         capabilities,
@@ -120,9 +105,6 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
       const entry = entries.get(surfaceId);
       if (!entry) {
         return;
-      }
-      if (entry.frame) {
-        window.cancelAnimationFrame(entry.frame);
       }
       entry.surface.toggleHidden?.(true);
       entries.delete(surfaceId);
@@ -142,8 +124,8 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
         },
       };
       entry.spec = entry.snapshot.spec;
-      entry.surface.loadURL(url);
-      scheduleSync(entry, true);
+      entry.surface.src = url;
+      applyPresentation(entry, true);
       return ok(undefined);
     },
     setInteractionState: (surfaceId, interaction) => {
@@ -158,7 +140,7 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
           ...interaction,
         },
       };
-      scheduleSync(entry, false);
+      applyPresentation(entry, false);
       return ok(undefined);
     },
     setPresentation: (surfaceId, presentation) => {
@@ -173,7 +155,7 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
           ...presentation,
         },
       };
-      scheduleSync(entry, false);
+      applyPresentation(entry, false);
       return ok(undefined);
     },
     sync: (surfaceId, force = false) => {
@@ -181,12 +163,12 @@ export function createElectrobunWebviewSurfaceService(): ExternalSurfaceService 
       if (!entry) {
         return fail("not-found", `Surface ${surfaceId} is not attached.`);
       }
-      scheduleSync(entry, force);
+      entry.surface.syncDimensions?.(force);
       return ok(undefined);
     },
     syncAll: (force = false) => {
       for (const entry of entries.values()) {
-        scheduleSync(entry, force);
+        entry.surface.syncDimensions?.(force);
       }
     },
   };
