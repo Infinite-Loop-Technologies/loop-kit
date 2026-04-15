@@ -28,7 +28,15 @@ AI-NOTE:
 ## Volt
 
 - [ ] Fix the current bugs and missing features causing Volt to not be fully usable
-  - [ ]
+  - [ ] When you run a task with Volt, you should still be able to swap to another task, and come back to your original one. Maybe we need tabs, or some other UI to help here? Not sure.
+  - [ ] It's absolutely critical that adapters can log or set metadata for the current hosted stuff on what port, so users can just easily open the browser to see it - get my point?
+  - [ ] The buttons aren't good, improve them! Some type of indication that they were pressed would be useful. The layout on them is also not good, the text is never centered. Note that even if the feedback on the button press is a toast, that's still better than nothing.
+  - [ ] I wanted Volt to have a pass-through shell kind of system where you can go "cd" for example and it actually reloads, changing the root of your Volt session. So if you accidentally start Volt outside of your workspace folder, you can CD in.
+  - [ ] I want Volt to have a terminal multiplexer type feature. That means set up Dock! Including mouse dragging but also keyboard shortcut stuff too.
+  - [ ] Keyboard shortcuts shouldn't be along the button, only one: the shortcut to open the help modal display.
+  - [ ] Tabs per-panel is smart actually. And panel groups, likehow Dock works, is smart too, because then we can have certain special panels in their own group like sidebar or inspector that are always far-left or far-right, and tabs don't affect them. Just an idea.
+  - [ ] Okay more important than anything, is an improved task logging setup. The little terminal that shows the running task logs should be tabbed or something so we can filter different types of logs - including logs from the browser that are sent through the daemon! Seriously - that should be a thing, wire it up in some demos and show it off, maybe use a special logging service given via adapters, or something like that - or perhaps it doesn't need to be that over the top, maybe an error boundary could work? Not sure, just proxy browser console in an elegant way.
+  - [ ] Since we're adding panels, and panel groups, we'll need a whole "selected" and scope system - so let's fully integrate the pattern we have elsewhere of the interaction engine, scopes, actions, commands, and packages/state, and that sort of thing. Although this time we have evolu/common to help us.
 - [ ] Refactor Volt to have a more codegen-centric system, and even build utilities/frameworks for working with codegen, as it is extremely useful.
   - [ ] Set up template-based code generation using template literals.
     - [ ] Start by creating an ElectroBun target builder that generates the ElectroBun entry file, the ElectroBun config file, and whatever else we need. End goal: you can get a whole ElectroBun app despite only having a volt.config.ts and an App.tsx React component. Pretty sweet! This codegen should be generated super quickly on the fly in a `.volt` directory, or something.
