@@ -1,4 +1,5 @@
 import { dirname, relative, resolve } from "node:path";
+import { readonly } from "@loop-kit/common";
 import type {
   ManagedVoltProcess,
   VoltReadinessProbe,
@@ -10,14 +11,14 @@ import { isVoltEntrypoint } from "../../contracts";
 import { loadVoltEnv } from "../../env";
 import { resolveScopedTargetValue } from "../../platform/scoped";
 import type { VoltRuntimeInputProvider, VoltServiceProvider } from "../../services";
-import { defineTargetTask } from "../../task";
+import { defineAdapter, defineTargetTask, type VoltAdapterDefinition } from "../../task";
+import { createOxlintFormatter, runCodegen } from "../../codegen";
 import {
   createVoltPaths,
   failOnBuildErrors,
   runSpawnedCommand,
   sanitizeForPath,
   writeJsonFile,
-  writeTextFile,
 } from "../../utils";
 
 const createModeFeatures = (mode: string) =>
@@ -84,10 +85,66 @@ const createTargetEnv = (
   VOLT_WORKSPACE_ROOT: context.workspaceRoot,
 });
 
-type BunEntrypoint<TServices = unknown> = string | VoltEntrypoint<TServices>;
+type VoltModuleThunk<TModule> = () => Promise<TModule>;
 
-const resolveEntrypointSource = <TServices>(entrypoint: BunEntrypoint<TServices>) =>
+type BunEntrypoint<TServices = unknown> =
+  | string
+  | VoltEntrypoint<TServices>
+  | VoltModuleThunk<{ default: VoltEntrypoint<TServices> }>;
+
+interface BunBindingExports {
+  readonly url?: string;
+}
+
+interface BunBindingDefinition<
+  TServices = unknown,
+  TPlatform extends object = {},
+  TRuntimeInputs extends Record<string, VoltJsonValue> = {},
+> extends BunRuntimeOptions<TPlatform, TRuntimeInputs> {
+  readonly entry: BunEntrypoint<TServices>;
+  readonly host?: string;
+  readonly port?: number;
+}
+
+const extractImportSpecifierFromThunk = <TModule>(
+  thunk: VoltModuleThunk<TModule>,
+) => {
+  const source = thunk.toString();
+  const match = source.match(/import\((["'`])([^"'`]+)\1\)/u);
+  if (!match) {
+    throw new Error(
+      "Volt entry thunks must look like () => import('./path/to/module').",
+    );
+  }
+
+  return match[2];
+};
+
+const resolveEntrypointSource = <TServices>(
+  entrypoint: string | VoltEntrypoint<TServices>,
+) =>
   typeof entrypoint === "string" ? entrypoint : entrypoint.source;
+
+const resolveBunEntrypointSource = <TServices>(
+  rootDir: string,
+  entrypoint:
+    | BunEntrypoint<TServices>
+    | VoltModuleThunk<{ default: VoltEntrypoint<TServices> }>,
+) =>
+  typeof entrypoint === "function"
+    ? resolve(rootDir, extractImportSpecifierFromThunk(entrypoint))
+    : resolve(rootDir, resolveEntrypointSource(entrypoint));
+
+const createBunBindingExports = (
+  options: Pick<BunBindingDefinition<any, any, any>, "host" | "port">,
+): BunBindingExports =>
+  readonly(
+    options.port
+      ? {
+          url: `http://${options.host ?? "127.0.0.1"}:${options.port}`,
+        }
+      : {},
+  );
 
 const toImportPath = (path: string) => {
   const normalized = path
@@ -98,7 +155,9 @@ const toImportPath = (path: string) => {
 
 const createGeneratedBunEntrypoint = async <TServices>(
   context: VoltTargetContext,
-  entrypoint: VoltEntrypoint<TServices>,
+  entrypoint:
+    | VoltEntrypoint<TServices>
+    | VoltModuleThunk<{ default: VoltEntrypoint<TServices> }>,
   runtime: "bun-fullstack" | "bun-server",
   providedServicesPath?: string,
 ) => {
@@ -112,40 +171,62 @@ const createGeneratedBunEntrypoint = async <TServices>(
       ? "createBunFullstackServices"
       : "createBunServerServices";
   const sourceImportPath = toImportPath(
-    relative(dirname(generatedPath), resolveEntrypointSource(entrypoint)),
+    relative(dirname(generatedPath), resolveBunEntrypointSource(context.rootDir, entrypoint)),
   );
 
-  return writeTextFile(
-    generatedPath,
-    [
-      `import entrypoint from ${JSON.stringify(sourceImportPath)};`,
-      `import { ${runtimeFactory}, combineVoltRuntimeInputs, loadVoltRuntimeInputs, runVoltEntrypoint } from "volt";`,
-      ``,
-      `const rootDir = ${JSON.stringify(context.rootDir)};`,
-      `const providedServicesPath = ${providedServicesPath ? JSON.stringify(providedServicesPath) : "undefined"};`,
-      ``,
-      `if (import.meta.main) {`,
-      `  void runVoltEntrypoint(entrypoint, async () => combineVoltRuntimeInputs(`,
-      `    entrypoint,`,
-      `    ${runtimeFactory}(rootDir),`,
-      `    await loadVoltRuntimeInputs<Record<string, unknown>>(providedServicesPath),`,
-      `  ));`,
-      `}`,
-      ``,
-      `export default entrypoint;`,
-      ``,
-    ].join("\n"),
+  await runCodegen(
+    ({ emit }) => {
+      emit({
+        content: [
+          `import entrypoint from ${JSON.stringify(sourceImportPath)};`,
+          `import { ${runtimeFactory}, combineVoltRuntimeInputs, loadVoltRuntimeInputs, runVoltEntrypoint } from "volt";`,
+          ``,
+          `const rootDir = ${JSON.stringify(context.rootDir)};`,
+          `const providedServicesPath = ${providedServicesPath ? JSON.stringify(providedServicesPath) : "undefined"};`,
+          ``,
+          `if (import.meta.main) {`,
+          `  void runVoltEntrypoint(entrypoint, async () => combineVoltRuntimeInputs(`,
+          `    entrypoint,`,
+          `    ${runtimeFactory}(rootDir),`,
+          `    await loadVoltRuntimeInputs<Record<string, unknown>>(providedServicesPath),`,
+          `  ));`,
+          `}`,
+          ``,
+          `export default entrypoint;`,
+          ``,
+        ].join("\n"),
+        path: relative(context.rootDir, generatedPath),
+      });
+    },
+    {
+      formatters: [createOxlintFormatter(undefined, { optional: true })],
+      logger: context.logger,
+      rootDir: context.rootDir,
+    },
   );
+
+  return generatedPath;
 };
 
 const prepareBunEntrypointSource = async <TServices>(
   context: VoltTargetContext,
-  entrypoint: BunEntrypoint<TServices>,
+  entrypoint:
+    | BunEntrypoint<TServices>
+    | VoltModuleThunk<{ default: VoltEntrypoint<TServices> }>,
   runtime: "bun-fullstack" | "bun-server",
   providedServicesPath?: string,
 ) => {
   if (typeof entrypoint === "string") {
     return resolve(context.rootDir, entrypoint);
+  }
+
+  if (typeof entrypoint === "function") {
+    return createGeneratedBunEntrypoint(
+      context,
+      entrypoint,
+      runtime,
+      providedServicesPath,
+    );
   }
 
   if (!isVoltEntrypoint(entrypoint)) {
@@ -517,107 +598,128 @@ const createBunBinding = <
   ) => ReturnType<typeof defineTargetTask>,
   entrypoint: BunEntrypoint<TServices>,
   options: BunRuntimeOptions<TPlatform, TRuntimeInputs> = {},
-) => ({
-  build: (overrides: BunTaskOverrides<TPlatform, TRuntimeInputs> = {}) =>
-    createTask(entrypoint, {
-      ...mergeBunRuntimeOptions(options, overrides),
-      command: "build",
+  bindingExports: BunBindingExports = {},
+) =>
+  defineAdapter({
+    exports: readonly(bindingExports),
+    tasks: (
+      name: string,
+      overrides: {
+        build?: BunTaskOverrides<TPlatform, TRuntimeInputs>;
+        dev?: BunTaskOverrides<TPlatform, TRuntimeInputs>;
+      } = {},
+    ) => ({
+      [`build:${name}`]: createTask(entrypoint, {
+        ...mergeBunRuntimeOptions(options, overrides.build),
+        command: "build",
+      }),
+      [`dev:${name}`]: createTask(entrypoint, {
+        ...mergeBunRuntimeOptions(options, overrides.dev),
+        command: "dev",
+      }),
     }),
-  dev: (overrides: BunTaskOverrides<TPlatform, TRuntimeInputs> = {}) =>
-    createTask(entrypoint, {
-      ...mergeBunRuntimeOptions(options, overrides),
-      command: "dev",
-    }),
-  tasks: (
-    name: string,
-    overrides: {
-      build?: BunTaskOverrides<TPlatform, TRuntimeInputs>;
-      dev?: BunTaskOverrides<TPlatform, TRuntimeInputs>;
-    } = {},
-  ) => ({
-    [`build:${name}`]: createTask(entrypoint, {
-      ...mergeBunRuntimeOptions(options, overrides.build),
-      command: "build",
-    }),
-    [`dev:${name}`]: createTask(entrypoint, {
-      ...mergeBunRuntimeOptions(options, overrides.dev),
-      command: "dev",
-    }),
-  }),
-});
+  }) satisfies VoltAdapterDefinition<BunBindingExports>;
+
+const normalizeBunBindingInput = <
+  TServices,
+  TPlatform extends object,
+  TRuntimeInputs extends Record<string, VoltJsonValue>,
+>(
+  entrypointOrDefinition:
+    | BunEntrypoint<TServices>
+    | BunBindingDefinition<TServices, TPlatform, TRuntimeInputs>,
+  options?: BunRuntimeOptions<TPlatform, TRuntimeInputs>,
+) => {
+  if (
+    typeof entrypointOrDefinition === "object" &&
+    entrypointOrDefinition !== null &&
+    "entry" in entrypointOrDefinition
+  ) {
+    const { entry, host: _host, port: _port, ...runtimeOptions } = entrypointOrDefinition;
+    return {
+      entrypoint: entry,
+      exports: createBunBindingExports(entrypointOrDefinition),
+      options: runtimeOptions,
+    };
+  }
+
+  return {
+    entrypoint: entrypointOrDefinition,
+    exports: {},
+    options: options ?? {},
+  };
+};
 
 export const bunFullstack = <
   TServices = unknown,
   TPlatform extends object = {},
   TRuntimeInputs extends Record<string, VoltJsonValue> = {},
 >(
-  entrypoint: BunEntrypoint<TServices>,
+  entrypointOrDefinition:
+    | BunEntrypoint<TServices>
+    | BunBindingDefinition<TServices, TPlatform, TRuntimeInputs>,
   options: BunRuntimeOptions<TPlatform, TRuntimeInputs> = {},
-) => createBunBinding(bunFullstackTask, entrypoint, options);
+) => {
+  const normalized = normalizeBunBindingInput(entrypointOrDefinition, options);
+  return createBunBinding(
+    bunFullstackTask,
+    normalized.entrypoint,
+    normalized.options,
+    normalized.exports,
+  );
+};
 
 export const bunServer = <
   TServices = unknown,
   TPlatform extends object = {},
   TRuntimeInputs extends Record<string, VoltJsonValue> = {},
 >(
-  entrypoint: BunEntrypoint<TServices>,
+  entrypointOrDefinition:
+    | BunEntrypoint<TServices>
+    | BunBindingDefinition<TServices, TPlatform, TRuntimeInputs>,
   options: BunRuntimeOptions<TPlatform, TRuntimeInputs> = {},
-) => createBunBinding(bunServerTask, entrypoint, options);
+) => {
+  const normalized = normalizeBunBindingInput(entrypointOrDefinition, options);
+  return createBunBinding(
+    bunServerTask,
+    normalized.entrypoint,
+    normalized.options,
+    normalized.exports,
+  );
+};
 
 export const bunCommand = (
   options: BunCommandRuntimeOptions,
-) => ({
-  build: (
-    overrides: Partial<BunCommandRuntimeOptions> = {},
-  ) =>
-    bunCommandTask({
-      ...options,
-      ...overrides,
-      commands: {
-        ...options.commands,
-        ...overrides.commands,
-      },
-      command: "build",
+) =>
+  defineAdapter({
+    exports: {},
+    tasks: (
+      name: string,
+      overrides: {
+        build?: Partial<BunCommandRuntimeOptions>;
+        dev?: Partial<BunCommandRuntimeOptions>;
+      } = {},
+    ) => ({
+      [`build:${name}`]: bunCommandTask({
+        ...options,
+        ...overrides.build,
+        commands: {
+          ...options.commands,
+          ...overrides.build?.commands,
+        },
+        command: "build",
+      }),
+      [`dev:${name}`]: bunCommandTask({
+        ...options,
+        ...overrides.dev,
+        commands: {
+          ...options.commands,
+          ...overrides.dev?.commands,
+        },
+        command: "dev",
+      }),
     }),
-  dev: (
-    overrides: Partial<BunCommandRuntimeOptions> = {},
-  ) =>
-    bunCommandTask({
-      ...options,
-      ...overrides,
-      commands: {
-        ...options.commands,
-        ...overrides.commands,
-      },
-      command: "dev",
-    }),
-  tasks: (
-    name: string,
-    overrides: {
-      build?: Partial<BunCommandRuntimeOptions>;
-      dev?: Partial<BunCommandRuntimeOptions>;
-    } = {},
-  ) => ({
-    [`build:${name}`]: bunCommandTask({
-      ...options,
-      ...overrides.build,
-      commands: {
-        ...options.commands,
-        ...overrides.build?.commands,
-      },
-      command: "build",
-    }),
-    [`dev:${name}`]: bunCommandTask({
-      ...options,
-      ...overrides.dev,
-      commands: {
-        ...options.commands,
-        ...overrides.dev?.commands,
-      },
-      command: "dev",
-    }),
-  }),
-});
+  });
 
 export const createBunPlugin = () => ({
   command: (options: LegacyBunCommandTargetOptions) => BunCommandRuntime(options),

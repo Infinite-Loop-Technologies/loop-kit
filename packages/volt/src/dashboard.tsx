@@ -1,182 +1,29 @@
-import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import {
-  createCliRenderer,
-  type KeyEvent as OpenTuiKeyEvent,
-} from "@opentui/core";
+import { createCliRenderer } from "@opentui/core";
 import {
   createRoot,
   useKeyboard,
   useRenderer,
   useTerminalDimensions,
 } from "@opentui/react";
-import {
-  createInteractionRuntime,
-  type InteractionRuntime,
-  type KeyGesture,
-} from "@loop-kit/interaction";
 import * as React from "react";
-
-interface DashboardState {
-  affectedTasks?: string[];
-  byConfig?: Record<
-    string,
-    {
-      affectedTasks?: string[];
-      appRoot?: string;
-      configPath: string;
-      lastChangedFiles?: string[];
-      resources?: Array<{
-        kind: "process" | "resource";
-        label: string;
-        status: string;
-      }>;
-      status: string;
-    }
-  >;
-  configs: string[];
-  events?: Array<{
-    at: string;
-    label: string;
-    message?: string;
-    scope?: string;
-    status?: string;
-    type: string;
-  }>;
-  lastChangedFiles?: string[];
-  mode: string;
-  pid?: number;
-  reason?: string;
-  resources?: Array<{
-    kind: "process" | "resource";
-    label: string;
-    status: string;
-  }>;
-  status: string;
-}
-
-interface DashboardSnapshot {
-  logLines: string[];
-  state?: DashboardState;
-}
-
-type FocusArea = "command" | "inspector" | "sidebar" | "terminal";
-type SessionKind = "command" | "daemon";
-type SessionStatus = "exited" | "failed" | "running";
-type SessionLogStream = "stderr" | "stdout" | "system";
-
-interface SessionLogEntry {
-  at: string;
-  id: string;
-  line: string;
-  stream: SessionLogStream;
-}
-
-interface DashboardSession {
-  command: string;
-  cwd: string;
-  exitCode?: number | null;
-  id: string;
-  kind: SessionKind;
-  logs: SessionLogEntry[];
-  startedAt: string;
-  status: SessionStatus;
-  title: string;
-}
-
-interface ParsedLogBlock {
-  collapsible: boolean;
-  detailLines: string[];
-  summary: string;
-}
-
-type ProcessRegistry = {
-  add: (processRef: Bun.Subprocess) => void;
-  delete: (processRef: Bun.Subprocess) => void;
-  destroyAll: () => Promise<void>;
-};
-
-const scopeIds = {
-  command: "volt-ui-command",
-  inspector: "volt-ui-inspector",
-  root: "volt-ui-root",
-  sidebar: "volt-ui-sidebar",
-  terminal: "volt-ui-terminal",
-} as const;
-
-const actionIds = {
-  collapseLog: "volt.ui.collapse-log",
-  expandLog: "volt.ui.expand-log",
-  focusCommand: "volt.ui.focus-command",
-  focusNextPane: "volt.ui.focus-next-pane",
-  focusPreviousPane: "volt.ui.focus-previous-pane",
-  focusTerminal: "volt.ui.focus-terminal",
-  moveDown: "volt.ui.move-down",
-  moveUp: "volt.ui.move-up",
-  quit: "volt.ui.quit",
-  refresh: "volt.ui.refresh",
-  runCommand: "volt.ui.run-command",
-  toggleLog: "volt.ui.toggle-log",
-} as const;
-
-const paneOrder: FocusArea[] = ["sidebar", "terminal", "inspector", "command"];
-const daemonSessionId = "workspace-daemon";
-const maxSessionLogs = 600;
-const knownVoltCommands = new Set([
-  "build",
-  "daemon",
-  "dashboard",
-  "dev",
-  "task",
-  "ui",
-  "volt",
-]);
-
-const now = () => new Date().toISOString();
-
-const clampIndex = (value: number, size: number) =>
-  size <= 0 ? 0 : Math.min(Math.max(value, 0), size - 1);
-
-const cyclePane = (activePane: FocusArea, delta: number) => {
-  const currentIndex = paneOrder.indexOf(activePane);
-  const nextIndex = (currentIndex + delta + paneOrder.length) % paneOrder.length;
-  return paneOrder[nextIndex] ?? "terminal";
-};
-
-const formatStatus = (value?: string) => value ?? "unknown";
-
-const truncate = (value: string, limit: number) =>
-  value.length > limit ? `${value.slice(0, limit - 1)}…` : value;
-
-const createProcessRegistry = (): ProcessRegistry => {
-  const active = new Set<Bun.Subprocess>();
-
-  return {
-    add: (processRef) => {
-      active.add(processRef);
-    },
-    delete: (processRef) => {
-      active.delete(processRef);
-    },
-    destroyAll: async () => {
-      for (const processRef of [...active]) {
-        try {
-          processRef.kill();
-        } catch {}
-      }
-      await Promise.all(
-        [...active].map((processRef) =>
-          Promise.race([
-            processRef.exited.catch(() => undefined),
-            Bun.sleep(250),
-          ]),
-        ),
-      );
-      active.clear();
-    },
-  };
-};
+import { resolveVoltWorkspaceContext } from "./workspace-runtime";
+import {
+  clampIndex,
+  maxRunLogs,
+  truncate,
+  type DashboardEnvironment,
+} from "./tui/dashboard-model";
+import { DashboardProvider, useDashboardService, useDashboardState } from "./tui/dashboard-provider";
+import { createDashboardService } from "./tui/dashboard-service";
+import {
+  DialogProvider,
+  Toaster,
+  toast,
+  useDialog,
+  useDialogKeyboard,
+} from "./tui/opentui-ui";
+import type { AlertContext, DialogId } from "@opentui-ui/dialog/react";
 
 const ensureRendererCompatibility = () => {
   if (process.env.TERM_PROGRAM?.toLowerCase() === "vscode") {
@@ -185,723 +32,416 @@ const ensureRendererCompatibility = () => {
   }
 };
 
-const readJson = async <TValue,>(path: string) => {
-  if (!existsSync(path)) {
-    return undefined;
+const readProcessStream = async (stream: ReadableStream<Uint8Array> | undefined) => {
+  if (!stream) {
+    return "";
   }
 
-  return JSON.parse(await readFile(path, "utf8")) as TValue;
+  return new Response(stream).text();
 };
 
-const readLogLines = async (path: string) => {
-  if (!existsSync(path)) {
-    return [];
-  }
-
-  return (await readFile(path, "utf8"))
-    .split(/\r?\n/u)
-    .filter(Boolean);
-};
-
-const createDaemonSession = (
-  snapshot: DashboardSnapshot,
-  workspaceRoot: string,
-): DashboardSession => ({
-  command: "workspace daemon log",
-  cwd: workspaceRoot,
-  id: daemonSessionId,
-  kind: "daemon",
-  logs: snapshot.logLines.slice(-maxSessionLogs).map((line, index) => ({
-    at: now(),
-    id: `${daemonSessionId}:${index}`,
-    line,
-    stream: "system",
-  })),
-  startedAt: snapshot.state?.events?.[0]?.at ?? now(),
-  status: snapshot.state?.status === "running" ? "running" : "exited",
-  title: "workspace-daemon",
-});
-
-const getShellCommand = (command: string) =>
-  process.platform === "win32"
-    ? ["powershell", "-NoLogo", "-NoProfile", "-Command", command]
-    : [process.env.SHELL || "bash", "-lc", command];
-
-const normalizeLauncherCommand = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  if (trimmed.startsWith("volt ")) {
-    return trimmed;
-  }
-
-  const [firstToken] = trimmed.split(/\s+/u);
-  if (!firstToken) {
-    return undefined;
-  }
-
-  if (firstToken.startsWith("--") || knownVoltCommands.has(firstToken)) {
-    return `volt ${trimmed}`;
-  }
-
-  if (!trimmed.includes(" ") && firstToken.includes(":")) {
-    return `volt task run ${firstToken}`;
-  }
-
-  return trimmed;
-};
-
-const normalizeLogPrefix = (value: string) => value.replace(/\s+/g, " ").trim();
-
-const tryParseJsonSuffix = (line: string) => {
-  const candidates = [
-    ...line.matchAll(/\s(\{.*|\[.*)$/gu),
-    ...line.matchAll(/^(\{.*|\[.*)$/gu),
-  ];
-
-  for (const candidate of candidates) {
-    const raw = candidate[1]?.trim();
-    if (!raw) {
-      continue;
+const copyTextToClipboard = async (text: string) => {
+  if (process.platform === "win32") {
+    const child = Bun.spawn({
+      cmd: ["cmd", "/c", "clip"],
+      stderr: "pipe",
+      stdin: "pipe",
+      stdout: "ignore",
+    });
+    child.stdin.write(text);
+    child.stdin.end();
+    const [stderr, exitCode] = await Promise.all([
+      readProcessStream(child.stderr),
+      child.exited,
+    ]);
+    if (exitCode !== 0) {
+      throw new Error(stderr.trim() || `clip exited with code ${exitCode}`);
     }
-
-    try {
-      return {
-        prefix: normalizeLogPrefix(line.slice(0, line.length - raw.length)),
-        value: JSON.parse(raw) as unknown,
-      };
-    } catch {}
+    return;
   }
 
-  return undefined;
-};
-
-const parseLogEntry = (entry: SessionLogEntry): ParsedLogBlock => {
-  const parsed = tryParseJsonSuffix(entry.line);
-  if (!parsed) {
-    return {
-      collapsible: entry.line.length > 160,
-      detailLines: [],
-      summary: entry.line,
-    };
+  const command =
+    process.platform === "darwin"
+      ? ["pbcopy"]
+      : ["sh", "-lc", "wl-copy || xclip -selection clipboard"];
+  const child = Bun.spawn({
+    cmd: command,
+    stderr: "pipe",
+    stdin: "pipe",
+    stdout: "ignore",
+  });
+  child.stdin.write(text);
+  child.stdin.end();
+  const [stderr, exitCode] = await Promise.all([
+    readProcessStream(child.stderr),
+    child.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(stderr.trim() || `clipboard command exited with code ${exitCode}`);
   }
-
-  const pretty = JSON.stringify(parsed.value, null, 2);
-  const detailLines = pretty.split("\n");
-  const summaryLabel = Array.isArray(parsed.value)
-    ? `array(${parsed.value.length})`
-    : parsed.value && typeof parsed.value === "object"
-      ? `object(${Object.keys(parsed.value as Record<string, unknown>).length})`
-      : String(parsed.value);
-
-  return {
-    collapsible: detailLines.length > 1 || pretty.length > 120,
-    detailLines,
-    summary: parsed.prefix ? `${parsed.prefix} ${summaryLabel}` : summaryLabel,
-  };
-};
-
-const mapOpenTuiKeyToGesture = (event: OpenTuiKeyEvent): KeyGesture => {
-  const mappedName =
-    event.name === "up"
-      ? "ArrowUp"
-      : event.name === "down"
-        ? "ArrowDown"
-        : event.name === "left"
-          ? "ArrowLeft"
-          : event.name === "right"
-            ? "ArrowRight"
-            : event.name === "enter" || event.name === "return"
-              ? "Enter"
-              : event.name === "escape"
-                ? "Escape"
-                : event.name === "space"
-                  ? "Space"
-                  : event.name;
-
-  return {
-    ctrlKey: event.ctrl,
-    key: mappedName,
-    metaKey: event.meta || event.option,
-    shiftKey: event.shift,
-  };
 };
 
 const Pane = ({
-  active,
+  actions,
   children,
   title,
-  width,
 }: {
-  active: boolean;
+  actions?: React.ReactNode;
   children: React.ReactNode;
   title: string;
-  width?: number;
 }) => (
   <box
     border
-    borderColor={active ? "#7dd3fc" : "#314255"}
+    borderColor="#29455f"
     borderStyle="single"
     flexDirection="column"
-    flexGrow={width ? 0 : 1}
+    flexGrow={1}
     minHeight={4}
     overflow="hidden"
-    padding={1}
-    title={title}
-    width={width}
   >
-    {children}
+    <box flexDirection="row" justifyContent="space-between" paddingX={1}>
+      <text fg="#d7e7f5">
+        <strong>{title}</strong>
+      </text>
+      {actions ? <box flexDirection="row" gap={1}>{actions}</box> : <box />}
+    </box>
+    <box marginX={1}>
+      <text fg="#29455f">{"─".repeat(12)}</text>
+    </box>
+    <box flexDirection="column" flexGrow={1} minHeight={0} overflow="hidden" padding={1}>
+      {children}
+    </box>
   </box>
 );
 
-const Row = ({
-  active,
-  children,
-  tone,
+const Chip = ({
+  active = false,
+  content,
+  onPress,
+  tone = "normal",
 }: {
-  active: boolean;
-  children: React.ReactNode;
-  tone?: "error" | "muted" | "normal" | "success";
+  active?: boolean;
+  content: string;
+  onPress?: () => void;
+  tone?: "muted" | "normal" | "success" | "warn";
 }) => (
   <box
-    backgroundColor={active ? "#12304a" : "transparent"}
+    backgroundColor={active ? "#14304b" : "#0d1d2d"}
+    border
+    borderColor={active ? "#5382a8" : "#243c52"}
+    borderStyle="single"
+    onMouseUp={onPress}
+    paddingX={1}
+  >
+    <text
+      fg={
+        tone === "success"
+          ? "#86efac"
+          : tone === "warn"
+            ? "#fdba74"
+            : tone === "muted"
+              ? "#8fa4ba"
+              : "#d7e7f5"
+      }
+    >
+      {content}
+    </text>
+  </box>
+);
+
+const ListRow = ({
+  active,
+  description,
+  label,
+  onPress,
+  tone = "normal",
+}: {
+  active: boolean;
+  description?: string;
+  label: string;
+  onPress?: () => void;
+  tone?: "muted" | "normal" | "success" | "warn";
+}) => (
+  <box
+    backgroundColor={active ? "#14304b" : "transparent"}
     flexDirection="column"
+    onMouseUp={onPress}
     paddingX={1}
     width="100%"
   >
     <text
       fg={
-        tone === "error"
-          ? "#fca5a5"
-          : tone === "muted"
-            ? "#8fa4ba"
-            : tone === "success"
-              ? "#86efac"
+        tone === "success"
+          ? "#9df5bb"
+          : tone === "warn"
+            ? "#fdba74"
+            : tone === "muted"
+              ? "#98adc4"
               : active
-                ? "#e0f2ff"
-                : "#d5e3f0"
+                ? "#e5f3ff"
+                : "#d7e7f5"
       }
     >
-      {children}
+      {label}
     </text>
+    {description ? <text fg="#7f96ad">{description}</text> : null}
   </box>
 );
 
 const EmptyState = ({ content }: { content: string }) => (
   <box paddingX={1}>
-    <text fg="#7f8ea3">{content}</text>
+    <text fg="#7f96ad">{content}</text>
   </box>
 );
 
-const SectionTitle = ({ content }: { content: string }) => (
-  <box marginBottom={1}>
-    <text fg="#8eb5d8">
-      <strong>{content}</strong>
-    </text>
-  </box>
-);
-
-const ShortcutChip = ({ content }: { content: string }) => (
-  <box
-    backgroundColor="#102234"
-    border
-    borderColor="#27445f"
-    borderStyle="single"
-    paddingX={1}
-  >
-    <text fg="#9fc3e6">{content}</text>
-  </box>
-);
-
-const readDashboardSnapshot = async (
-  statePath: string,
-  logPath: string,
-): Promise<DashboardSnapshot> => ({
-  logLines: await readLogLines(logPath),
-  state: await readJson<DashboardState>(statePath),
-});
-
-const DashboardApp = ({
-  onRefresh,
-  processRegistry,
-  refreshMs,
-  snapshot,
-  workspaceRoot,
+const HelpDialog = ({
+  dialogId,
+  dismiss,
 }: {
-  onRefresh: () => void;
-  processRegistry: ProcessRegistry;
-  refreshMs: number;
-  snapshot: DashboardSnapshot;
-  workspaceRoot: string;
+  dialogId: DialogId;
+  dismiss: () => void;
 }) => {
-  const renderer = useRenderer();
-  const { width } = useTerminalDimensions();
-  const runtime = React.useMemo<InteractionRuntime>(() => createInteractionRuntime(), []);
-  const [focusArea, setFocusArea] = React.useState<FocusArea>("terminal");
-  const [selectedSessionId, setSelectedSessionId] = React.useState(daemonSessionId);
-  const [terminalSelection, setTerminalSelection] = React.useState(0);
-  const [commandInput, setCommandInput] = React.useState("");
-  const [commandSessions, setCommandSessions] = React.useState<DashboardSession[]>([]);
-  const [expandedLogs, setExpandedLogs] = React.useState<Record<string, boolean>>({});
-
-  const sessions = React.useMemo(
-    () => [createDaemonSession(snapshot, workspaceRoot), ...commandSessions],
-    [commandSessions, snapshot, workspaceRoot],
-  );
-  const activeSession =
-    sessions.find((session) => session.id === selectedSessionId) ?? sessions[0];
-  const resources = snapshot.state?.resources ?? [];
-  const configEntries = Object.entries(snapshot.state?.byConfig ?? {}).sort(([left], [right]) =>
-    left.localeCompare(right),
-  );
-  const selectedSidebarIndex = clampIndex(
-    sessions.findIndex((session) => session.id === activeSession?.id),
-    sessions.length,
-  );
-  const parsedActiveLogs = React.useMemo(
-    () => (activeSession?.logs ?? []).map((entry) => ({ entry, parsed: parseLogEntry(entry) })),
-    [activeSession],
-  );
-  const activeLogIndex = clampIndex(terminalSelection, parsedActiveLogs.length);
-  const activeLog = parsedActiveLogs[activeLogIndex];
-  const isWide = width >= 140;
-
-  React.useEffect(() => {
-    const unregisterRoot = runtime.registerScope({
-      id: scopeIds.root,
-      kind: "volt-ui-root",
-    });
-    const unregisterSidebar = runtime.registerScope({
-      id: scopeIds.sidebar,
-      kind: "volt-ui-sidebar",
-      parentId: scopeIds.root,
-    });
-    const unregisterTerminal = runtime.registerScope({
-      id: scopeIds.terminal,
-      kind: "volt-ui-terminal",
-      parentId: scopeIds.root,
-    });
-    const unregisterInspector = runtime.registerScope({
-      id: scopeIds.inspector,
-      kind: "volt-ui-inspector",
-      parentId: scopeIds.root,
-    });
-    const unregisterCommand = runtime.registerScope({
-      capabilities: {
-        textInput: true,
-      },
-      id: scopeIds.command,
-      kind: "volt-ui-command",
-      parentId: scopeIds.root,
-    });
-
-    const unregisterRootShortcuts = runtime.registerShortcutMap(scopeIds.root, [
-      { actionId: actionIds.focusNextPane, gesture: "Tab" },
-      { actionId: actionIds.focusPreviousPane, gesture: "Shift+Tab" },
-      { actionId: actionIds.focusCommand, gesture: ":" },
-      { actionId: actionIds.focusTerminal, gesture: "Escape", allowInTextInput: true },
-      { actionId: actionIds.refresh, gesture: "r" },
-      { actionId: actionIds.quit, gesture: "q" },
-      { actionId: actionIds.quit, gesture: "Ctrl+C" },
-    ]);
-    const unregisterSidebarShortcuts = runtime.registerShortcutMap(scopeIds.sidebar, [
-      { actionId: actionIds.moveUp, gesture: "k" },
-      { actionId: actionIds.moveDown, gesture: "j" },
-      { actionId: actionIds.moveUp, gesture: "ArrowUp" },
-      { actionId: actionIds.moveDown, gesture: "ArrowDown" },
-    ]);
-    const unregisterTerminalShortcuts = runtime.registerShortcutMap(scopeIds.terminal, [
-      { actionId: actionIds.moveUp, gesture: "k" },
-      { actionId: actionIds.moveDown, gesture: "j" },
-      { actionId: actionIds.moveUp, gesture: "ArrowUp" },
-      { actionId: actionIds.moveDown, gesture: "ArrowDown" },
-      { actionId: actionIds.toggleLog, gesture: "Enter" },
-      { actionId: actionIds.toggleLog, gesture: "Space" },
-      { actionId: actionIds.expandLog, gesture: "l" },
-      { actionId: actionIds.expandLog, gesture: "ArrowRight" },
-      { actionId: actionIds.collapseLog, gesture: "h" },
-      { actionId: actionIds.collapseLog, gesture: "ArrowLeft" },
-    ]);
-    const unregisterCommandShortcuts = runtime.registerShortcutMap(scopeIds.command, [
-      {
-        actionId: actionIds.runCommand,
-        allowInTextInput: true,
-        gesture: "Enter",
-      },
-    ]);
-
-    return () => {
-      unregisterCommandShortcuts();
-      unregisterTerminalShortcuts();
-      unregisterSidebarShortcuts();
-      unregisterRootShortcuts();
-      unregisterCommand();
-      unregisterInspector();
-      unregisterTerminal();
-      unregisterSidebar();
-      unregisterRoot();
-    };
-  }, [runtime]);
-
-  React.useEffect(() => {
-    runtime.setActiveScope(scopeIds[focusArea]);
-    runtime.setFocusedScope(scopeIds[focusArea]);
-  }, [focusArea, runtime]);
-
-  React.useEffect(() => {
-    setTerminalSelection((current) => clampIndex(current, parsedActiveLogs.length));
-  }, [parsedActiveLogs.length]);
-
-  React.useEffect(() => {
-    if (!activeSession) {
-      setSelectedSessionId(daemonSessionId);
+  useDialogKeyboard((event) => {
+    if (
+      event.eventType === "press" &&
+      (event.name === "escape" ||
+        event.name === "return" ||
+        event.name === "enter" ||
+        event.name === "q" ||
+        event.name === "h")
+    ) {
+      dismiss();
     }
-  }, [activeSession]);
+  }, dialogId);
 
-  const activeSessionRef = React.useRef(activeSession);
-  activeSessionRef.current = activeSession;
-
-  const sessionsRef = React.useRef(sessions);
-  sessionsRef.current = sessions;
-
-  const commandInputRef = React.useRef(commandInput);
-  commandInputRef.current = commandInput;
-
-  const activeLogRef = React.useRef(activeLog);
-  activeLogRef.current = activeLog;
-
-  const focusAreaRef = React.useRef(focusArea);
-  focusAreaRef.current = focusArea;
-
-  const appendSessionLog = React.useCallback(
-    (sessionId: string, stream: SessionLogStream, line: string) => {
-      setCommandSessions((current) =>
-        current.map((session) =>
-          session.id !== sessionId
-            ? session
-            : {
-                ...session,
-                logs: [
-                  ...session.logs,
-                  {
-                    at: now(),
-                    id: `${sessionId}:${session.logs.length}:${Date.now()}`,
-                    line,
-                    stream,
-                  },
-                ].slice(-maxSessionLogs),
-              },
-        ),
-      );
-    },
-    [],
+  return (
+    <box flexDirection="column" gap={1} padding={1}>
+      <text fg="#e5f3ff">
+        <strong>Volt UI Help</strong>
+      </text>
+      <text fg="#9db4ca">Up/Down move through projects or tasks.</text>
+      <text fg="#9db4ca">Right or Enter enters a project. Enter runs a selected task.</text>
+      <text fg="#9db4ca">Left, Escape, or Backspace goes back to the project list.</text>
+      <text fg="#9db4ca">Ctrl+C copies the current output pane instead of quitting.</text>
+      <text fg="#9db4ca">Press c twice quickly to copy output without leaving home row.</text>
+      <text fg="#9db4ca">Press d for daemon details, r to refresh, q or Ctrl+Q to quit.</text>
+      <box marginTop={1}>
+        <Chip active content="Close" onPress={dismiss} />
+      </box>
+    </box>
   );
+};
 
-  const launchCommand = React.useCallback(async () => {
-    const normalized = normalizeLauncherCommand(commandInputRef.current);
-    if (!normalized) {
+const DaemonStatusDialog = ({
+  dialogId,
+  dismiss,
+}: {
+  dialogId: DialogId;
+  dismiss: () => void;
+}) => {
+  const service = useDashboardService();
+  const state = useDashboardState().snapshot.state;
+  const [selectedAction, setSelectedAction] = React.useState<"restart" | "stop" | "close">("restart");
+
+  useDialogKeyboard((event) => {
+    if (event.eventType !== "press") {
       return;
     }
 
-    const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const title = truncate(normalized.replace(/^volt\s+/u, ""), 30);
-    const child = Bun.spawn({
-      cmd: getShellCommand(normalized),
-      cwd: workspaceRoot,
-      env: process.env,
-      stderr: "pipe",
-      stdin: "ignore",
-      stdout: "pipe",
-    });
-
-    processRegistry.add(child);
-    setCommandInput("");
-    setFocusArea("terminal");
-    setSelectedSessionId(sessionId);
-    setTerminalSelection(0);
-    setCommandSessions((current) => [
-      ...current,
-      {
-        command: normalized,
-        cwd: workspaceRoot,
-        id: sessionId,
-        kind: "command",
-        logs: [
-          {
-            at: now(),
-            id: `${sessionId}:boot`,
-            line: `$ ${normalized}`,
-            stream: "system",
-          },
-        ],
-        startedAt: now(),
-        status: "running",
-        title,
-      },
-    ]);
-
-    const pipeLogs = async (
-      input: ReadableStream<Uint8Array> | undefined,
-      stream: SessionLogStream,
-    ) => {
-      if (!input) {
-        return;
-      }
-
-      const reader = input.getReader();
-      const decoder = new TextDecoder();
-      let pending = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-
-        pending += decoder.decode(value, { stream: true });
-        const lines = pending.split(/\r?\n/u);
-        pending = lines.pop() ?? "";
-
-        for (const line of lines) {
-          if (!line) {
-            continue;
-          }
-          appendSessionLog(sessionId, stream, line);
-        }
-      }
-
-      if (pending.trim()) {
-        appendSessionLog(sessionId, stream, pending);
-      }
-    };
-
-    void pipeLogs(child.stdout, "stdout");
-    void pipeLogs(child.stderr, "stderr");
-
-    void child.exited.then((code) => {
-      processRegistry.delete(child);
-      setCommandSessions((current) =>
-        current.map((session) =>
-          session.id !== sessionId
-            ? session
-            : (() => {
-                const stream: SessionLogStream = code === 0 ? "system" : "stderr";
-                return {
-                  ...session,
-                  exitCode: code,
-                  logs: [
-                    ...session.logs,
-                    {
-                      at: now(),
-                      id: `${sessionId}:exit`,
-                      line: `[session exited with code ${code}]`,
-                      stream,
-                    },
-                  ].slice(-maxSessionLogs),
-                  status: code === 0 ? "exited" : "failed",
-                };
-              })(),
-        ),
+    if (event.name === "left" || event.name === "h") {
+      setSelectedAction((current) =>
+        current === "close" ? "stop" : current === "stop" ? "restart" : "restart",
       );
-    });
-  }, [appendSessionLog, processRegistry, workspaceRoot]);
+      return;
+    }
 
-  React.useEffect(() => {
-    const unregisterQuit = runtime.registerActionHandler({
-      actionId: actionIds.quit,
-      handler: () => {
-        renderer.destroy();
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterRefresh = runtime.registerActionHandler({
-      actionId: actionIds.refresh,
-      handler: () => {
-        onRefresh();
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterFocusCommand = runtime.registerActionHandler({
-      actionId: actionIds.focusCommand,
-      handler: () => {
-        setFocusArea("command");
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterFocusTerminal = runtime.registerActionHandler({
-      actionId: actionIds.focusTerminal,
-      handler: () => {
-        setFocusArea("terminal");
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterFocusNextPane = runtime.registerActionHandler({
-      actionId: actionIds.focusNextPane,
-      handler: () => {
-        setFocusArea((current) => cyclePane(current, 1));
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterFocusPreviousPane = runtime.registerActionHandler({
-      actionId: actionIds.focusPreviousPane,
-      handler: () => {
-        setFocusArea((current) => cyclePane(current, -1));
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterRunCommand = runtime.registerActionHandler({
-      actionId: actionIds.runCommand,
-      handler: () => {
-        void launchCommand();
-        return { handled: true };
-      },
-      scopeId: scopeIds.command,
-    });
-    const unregisterMoveUp = runtime.registerActionHandler({
-      actionId: actionIds.moveUp,
-      handler: () => {
-        if (focusAreaRef.current === "sidebar") {
-          const nextIndex = clampIndex(selectedSidebarIndex - 1, sessionsRef.current.length);
-          const nextSession = sessionsRef.current[nextIndex];
-          if (nextSession) {
-            setSelectedSessionId(nextSession.id);
-          }
-          return { handled: true };
-        }
+    if (event.name === "right" || event.name === "l" || event.name === "tab") {
+      setSelectedAction((current) =>
+        current === "restart" ? "stop" : current === "stop" ? "close" : "close",
+      );
+      return;
+    }
 
-        if (focusAreaRef.current === "terminal") {
-          setTerminalSelection((current) => clampIndex(current - 1, parsedActiveLogs.length));
-          return { handled: true };
-        }
+    if (event.name === "escape" || event.name === "q") {
+      dismiss();
+      return;
+    }
 
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterMoveDown = runtime.registerActionHandler({
-      actionId: actionIds.moveDown,
-      handler: () => {
-        if (focusAreaRef.current === "sidebar") {
-          const nextIndex = clampIndex(selectedSidebarIndex + 1, sessionsRef.current.length);
-          const nextSession = sessionsRef.current[nextIndex];
-          if (nextSession) {
-            setSelectedSessionId(nextSession.id);
-          }
-          return { handled: true };
-        }
+    if (event.name === "s") {
+      void service.stopDaemon().finally(dismiss);
+      return;
+    }
 
-        if (focusAreaRef.current === "terminal") {
-          setTerminalSelection((current) => clampIndex(current + 1, parsedActiveLogs.length));
-          return { handled: true };
-        }
+    if (event.name === "r") {
+      void service.restartDaemon().finally(dismiss);
+      return;
+    }
 
-        return { handled: true };
-      },
-      scopeId: scopeIds.root,
-    });
-    const unregisterToggleLog = runtime.registerActionHandler({
-      actionId: actionIds.toggleLog,
-      handler: () => {
-        const currentLog = activeLogRef.current;
-        if (!currentLog?.parsed.collapsible) {
-          return { handled: true };
-        }
-        setExpandedLogs((current) => ({
-          ...current,
-          [currentLog.entry.id]: !current[currentLog.entry.id],
-        }));
-        return { handled: true };
-      },
-      scopeId: scopeIds.terminal,
-    });
-    const unregisterExpandLog = runtime.registerActionHandler({
-      actionId: actionIds.expandLog,
-      handler: () => {
-        const currentLog = activeLogRef.current;
-        if (!currentLog?.parsed.collapsible) {
-          return { handled: true };
-        }
-        setExpandedLogs((current) => ({
-          ...current,
-          [currentLog.entry.id]: true,
-        }));
-        return { handled: true };
-      },
-      scopeId: scopeIds.terminal,
-    });
-    const unregisterCollapseLog = runtime.registerActionHandler({
-      actionId: actionIds.collapseLog,
-      handler: () => {
-        const currentLog = activeLogRef.current;
-        if (!currentLog?.parsed.collapsible) {
-          return { handled: true };
-        }
-        setExpandedLogs((current) => ({
-          ...current,
-          [currentLog.entry.id]: false,
-        }));
-        return { handled: true };
-      },
-      scopeId: scopeIds.terminal,
-    });
+    if (event.name === "return" || event.name === "enter") {
+      if (selectedAction === "restart") {
+        void service.restartDaemon().finally(dismiss);
+      } else if (selectedAction === "stop") {
+        void service.stopDaemon().finally(dismiss);
+      } else {
+        dismiss();
+      }
+    }
+  }, dialogId);
 
-    return () => {
-      unregisterCollapseLog();
-      unregisterExpandLog();
-      unregisterToggleLog();
-      unregisterMoveDown();
-      unregisterMoveUp();
-      unregisterRunCommand();
-      unregisterFocusPreviousPane();
-      unregisterFocusNextPane();
-      unregisterFocusTerminal();
-      unregisterFocusCommand();
-      unregisterRefresh();
-      unregisterQuit();
-    };
-  }, [
-    launchCommand,
-    onRefresh,
-    parsedActiveLogs.length,
-    renderer,
-    runtime,
-    selectedSidebarIndex,
-  ]);
+  return (
+    <box flexDirection="column" gap={1} padding={1}>
+      <text fg="#e5f3ff">
+        <strong>Daemon Status</strong>
+      </text>
+      <text fg="#9db4ca">{`id: ${state?.id ?? "unknown"}`}</text>
+      <text fg="#9db4ca">{`pid: ${state?.pid ?? "unknown"}`}</text>
+      <text fg="#9db4ca">{`status: ${state?.status ?? "unknown"}`}</text>
+      <text fg="#9db4ca">{`mode: ${state?.mode ?? "unknown"}`}</text>
+      <text fg="#9db4ca">{`configs: ${state?.configs.length ?? 0}`}</text>
+      <text fg="#9db4ca">{`workspace: ${state?.workspace?.name ?? "unknown"} (${state?.workspace?.id ?? "unknown"})`}</text>
+      <text fg="#9db4ca">{`root: ${state?.workspace?.rootDir ?? "unknown"}`}</text>
+      <text fg="#9db4ca">{`resources: ${state?.resources?.length ?? 0}`}</text>
+      <text fg="#9db4ca">{`updated: ${state?.updatedAt ?? "unknown"}`}</text>
+      {state?.reason ? <text fg="#fdba74">{`reason: ${state.reason}`}</text> : null}
+      <box flexDirection="row" gap={1} marginTop={1}>
+        <Chip
+          active={selectedAction === "restart"}
+          content="[r] restart"
+          onPress={() => void service.restartDaemon().finally(dismiss)}
+          tone="success"
+        />
+        <Chip
+          active={selectedAction === "stop"}
+          content="[s] stop"
+          onPress={() => void service.stopDaemon().finally(dismiss)}
+          tone="warn"
+        />
+        <Chip
+          active={selectedAction === "close"}
+          content="[esc] close"
+          onPress={dismiss}
+          tone="muted"
+        />
+      </box>
+    </box>
+  );
+};
+
+const DashboardBody = () => {
+  const dialog = useDialog();
+  const service = useDashboardService();
+  const state = useDashboardState();
+  const { height, width } = useTerminalDimensions();
+  const {
+    context,
+    refreshMs,
+    runs,
+    selectedProjectIndex,
+    selectedTaskIndex,
+    snapshot,
+    viewMode,
+  } = state;
+
+  const selectedProject = service.getSelectedProject();
+  const selectedTaskNames = React.useMemo(
+    () => (selectedProject ? Object.keys(selectedProject.project.tasks).sort((left, right) => left.localeCompare(right)) : []),
+    [selectedProject],
+  );
+  const selectedTaskName =
+    selectedTaskNames[clampIndex(selectedTaskIndex, selectedTaskNames.length)];
+  const activeRun = runs[0];
+  const daemonStatus = snapshot.state?.status ?? "unknown";
+  const daemonResources = snapshot.state?.resources ?? [];
+  const isNarrow = width < 96;
+  const logPaneHeight = Math.max(8, Math.min(14, Math.floor(height * 0.34)));
+
+  const openHelpDialog = React.useCallback(async () => {
+    await dialog.alert({
+      content: ({ dialogId, dismiss }: AlertContext) => (
+        <HelpDialog dialogId={dialogId} dismiss={dismiss} />
+      ),
+      unstyled: true,
+    });
+  }, [dialog]);
+
+  const openDaemonDialog = React.useCallback(async () => {
+    await dialog.alert({
+      content: ({ dialogId, dismiss }: AlertContext) => (
+        <DaemonStatusDialog dialogId={dialogId} dismiss={dismiss} />
+      ),
+      unstyled: true,
+    });
+  }, [dialog]);
 
   useKeyboard((event) => {
     if (event.eventType !== "press") {
       return;
     }
 
-    void runtime.dispatchShortcut(mapOpenTuiKeyToGesture(event), {
-      activeScopeId: scopeIds[focusArea],
-      isTextInputActive: focusArea === "command",
-    });
-  });
+    if (event.ctrl && event.name === "q") {
+      service.quit();
+      return;
+    }
 
-  const statusItems = [
-    `status ${formatStatus(snapshot.state?.status)}`,
-    `mode ${snapshot.state?.mode ?? "unknown"}`,
-    `pid ${snapshot.state?.pid ?? "n/a"}`,
-    `sessions ${sessions.length}`,
-    `resources ${resources.length}`,
-    `refresh ${refreshMs}ms`,
-  ];
-  const shortcuts = [
-    "Tab panes",
-    ": command",
-    "j/k move",
-    "Enter open/run",
-    "Ctrl+C quit",
-  ];
+    if (event.ctrl && event.name === "c") {
+      void service.copyCurrentOutput();
+      return;
+    }
+
+    if (event.name === "q") {
+      service.quit();
+      return;
+    }
+
+    if (event.name === "r") {
+      void service.refresh({ notify: true, silentInitial: false });
+      toast.info("Refreshed Volt daemon state.");
+      return;
+    }
+
+    if (event.name === "d") {
+      void openDaemonDialog();
+      return;
+    }
+
+    if (event.name === "?" || event.name === "h") {
+      void openHelpDialog();
+      return;
+    }
+
+    if (event.name === "c") {
+      service.armCopyChordOrCopy();
+      return;
+    }
+
+    if (event.name === "left" || event.name === "escape" || event.name === "backspace") {
+      service.navigateBack();
+      return;
+    }
+
+    if (event.name === "right") {
+      if (viewMode === "projects") {
+        service.showTasks();
+      } else {
+        void service.runSelectedTask();
+      }
+      return;
+    }
+
+    if (event.name === "enter" || event.name === "return") {
+      void service.enter();
+      return;
+    }
+
+    if (event.name === "up" || event.name === "k") {
+      service.moveSelection(-1);
+      return;
+    }
+
+    if (event.name === "down" || event.name === "j") {
+      service.moveSelection(1);
+    }
+  });
 
   return (
     <box
@@ -909,254 +449,310 @@ const DashboardApp = ({
       flexDirection="column"
       height="100%"
       overflow="hidden"
+      padding={1}
       width="100%"
     >
-      <box
-        backgroundColor="#0b1b2c"
-        border
-        borderColor="#34597a"
-        flexDirection="column"
-        margin={1}
-        padding={1}
+      <Pane
+        actions={
+          <>
+            <Chip
+              content={`daemon ${daemonStatus}`}
+              onPress={() => void openDaemonDialog()}
+              tone={daemonStatus === "running" ? "success" : "warn"}
+            />
+            <Chip content={`projects ${context.projects.length}`} />
+            <Chip content={`refresh ${refreshMs}ms`} tone="muted" />
+            <Chip content={`view ${viewMode}`} tone="muted" />
+          </>
+        }
+        title={context.workspace?.name ?? "Volt Project"}
       >
-        <box flexDirection="row" justifyContent="space-between" width="100%">
-          <text fg="#dff1ff">
-            <strong>Volt UI</strong>
-          </text>
-        </box>
-        <box flexDirection="row" flexWrap="wrap" gap={1} marginTop={1}>
-          {statusItems.map((item) => (
-            <ShortcutChip content={item} key={item} />
-          ))}
-        </box>
-        <box flexDirection="row" flexWrap="wrap" gap={1} marginTop={1}>
-          {shortcuts.map((shortcut) => (
-            <ShortcutChip content={shortcut} key={shortcut} />
-          ))}
-        </box>
-      </box>
+        <text fg="#8fa4ba">{truncate(context.workspaceRoot, Math.max(width - 12, 24))}</text>
+      </Pane>
 
       <box
-        flexDirection={isWide ? "row" : "column"}
+        flexDirection="column"
         flexGrow={1}
         gap={1}
-        marginX={1}
-        width="100%"
+        marginTop={1}
+        minHeight={0}
+        overflow="hidden"
       >
-        <Pane active={focusArea === "sidebar"} title="Sessions" width={34}>
-          <text fg="#91a7c0">Daemon log plus commands launched from the Volt UI.</text>
-          <scrollbox focused={focusArea === "sidebar"} flexGrow={1} marginTop={1}>
-            {sessions.length ? (
-              sessions.map((session, index) => (
-                <box key={session.id}>
-                  <Row
-                    active={selectedSidebarIndex === index}
-                    tone={
-                      session.status === "failed"
-                        ? "error"
-                        : session.status === "running"
-                          ? "success"
-                          : "normal"
-                    }
-                  >
-                    {`${session.status.padEnd(7)} ${truncate(session.title, 22)}`}
-                  </Row>
-                </box>
-              ))
-            ) : (
-              <EmptyState content="No sessions have been launched yet." />
-            )}
-          </scrollbox>
-        </Pane>
-
-        <Pane
-          active={focusArea === "terminal"}
-          title={`Terminal :: ${activeSession?.title ?? "none"}`}
+        <box
+          flexDirection={isNarrow ? "column" : "row"}
+          flexGrow={1}
+          gap={1}
+          minHeight={0}
+          overflow="hidden"
         >
-          <text fg="#91a7c0">
-            {activeSession
-              ? `${activeSession.command}  (${activeSession.cwd})`
-              : "No active session selected."}
-          </text>
-          <scrollbox focused={focusArea === "terminal"} flexGrow={1} marginTop={1}>
-            {parsedActiveLogs.length ? (
-              parsedActiveLogs.map(({ entry, parsed }, index) => {
-                const expanded = expandedLogs[entry.id] ?? false;
-                const lines =
-                  parsed.collapsible && expanded
-                    ? [parsed.summary, ...parsed.detailLines.map((line) => `  ${line}`)]
-                    : [parsed.collapsible ? `${parsed.summary}  [collapsed]` : parsed.summary];
+          <box
+            flexDirection="column"
+            flexGrow={isNarrow ? 1 : 0}
+            minWidth={isNarrow ? undefined : 34}
+            width={isNarrow ? "100%" : 40}
+          >
+            <Pane title={viewMode === "projects" ? "Projects" : "Tasks"}>
+              {viewMode === "projects" ? (
+                <scrollbox flexGrow={1}>
+                  {context.projects.length ? (
+                    context.projects.map((project, index) => (
+                      <box key={project.configPath}>
+                        <ListRow
+                          active={index === clampIndex(selectedProjectIndex, context.projects.length)}
+                          description={project.relativeRootDir}
+                          label={project.alias}
+                          onPress={() => {
+                            service.selectProjectIndex(index);
+                            service.showTasks();
+                          }}
+                        />
+                      </box>
+                    ))
+                  ) : (
+                    <EmptyState content="No Volt projects were found in this workspace." />
+                  )}
+                </scrollbox>
+              ) : (
+                <scrollbox flexGrow={1}>
+                  {selectedTaskNames.length ? (
+                    selectedTaskNames.map((taskName, index) => (
+                      <box key={taskName}>
+                        <ListRow
+                          active={index === clampIndex(selectedTaskIndex, selectedTaskNames.length)}
+                          label={taskName}
+                          onPress={() => {
+                            service.selectTaskIndex(index);
+                            void service.runSelectedTask();
+                          }}
+                          tone={taskName.startsWith("dev:") ? "success" : "normal"}
+                        />
+                      </box>
+                    ))
+                  ) : (
+                    <EmptyState content="The selected project does not define any Volt tasks." />
+                  )}
+                </scrollbox>
+              )}
+            </Pane>
+          </box>
 
-                return (
-                  <box key={entry.id} flexDirection="column">
-                    {lines.map((line, lineIndex) => (
-                      <Row
-                        active={activeLogIndex === index}
-                        key={`${entry.id}:${lineIndex}`}
+          <Pane
+            actions={
+              <>
+                <Chip content="daemon" onPress={() => void openDaemonDialog()} tone="muted" />
+                <Chip content="⧉ copy" onPress={() => void service.copyCurrentOutput()} tone="success" />
+                <Chip content="? help" onPress={() => void openHelpDialog()} tone="muted" />
+              </>
+            }
+            title="Details"
+          >
+            {selectedProject ? (
+              <box flexDirection="column" gap={1}>
+                <text fg="#e5f3ff">
+                  <strong>{selectedProject.project.name}</strong>
+                </text>
+                <text fg="#8fa4ba">{`alias: ${selectedProject.alias}`}</text>
+                <text fg="#8fa4ba">{`app: ${selectedProject.relativeRootDir}`}</text>
+                <text fg="#8fa4ba">{`config: ${selectedProject.relativeConfigPath}`}</text>
+                <text fg="#8fa4ba">
+                  {`defaults: dev ${selectedProject.project.defaults.dev.join(", ") || "none"} | build ${selectedProject.project.defaults.build.join(", ") || "none"}`}
+                </text>
+                <text fg="#8fa4ba">{`workspace tasks: ${Object.keys(context.workspace?.tasks ?? {}).length}`}</text>
+                <text fg="#8fa4ba">{`daemon id: ${snapshot.state?.id ?? "unknown"}`}</text>
+                <text fg="#8fa4ba">{`daemon resources: ${daemonResources.length}`}</text>
+                {viewMode === "tasks" && selectedTaskName ? (
+                  <box marginTop={1}>
+                    <Chip
+                      content={`run ${selectedProject.alias} ${selectedTaskName}`}
+                      onPress={() => void service.runSelectedTask()}
+                      tone="success"
+                    />
+                  </box>
+                ) : null}
+                <text fg="#9db4ca">
+                  {viewMode === "projects"
+                    ? "Use Up/Down to choose a project, then Right or Enter to inspect its tasks."
+                    : "Use Up/Down to choose a task, Enter to run it, and Left or Escape to return to projects."}
+                </text>
+                <box marginTop={1}>
+                  <Chip
+                    content={activeRun ? `latest ${activeRun.projectAlias} ${activeRun.status}` : "no task run yet"}
+                    tone={
+                      activeRun?.status === "failed"
+                        ? "warn"
+                        : activeRun?.status === "succeeded"
+                          ? "success"
+                          : "muted"
+                    }
+                  />
+                </box>
+                {daemonResources.length ? (
+                  <scrollbox flexGrow={1} marginTop={1}>
+                    {daemonResources.map((resource) => (
+                      <box key={`${resource.kind}:${resource.label}`}>
+                        <ListRow
+                          active={false}
+                          description={resource.status}
+                          label={`${resource.kind} ${resource.label}`}
+                          tone={resource.status === "running" ? "success" : "muted"}
+                        />
+                      </box>
+                    ))}
+                  </scrollbox>
+                ) : null}
+              </box>
+            ) : (
+              <EmptyState content="Open this UI in a Volt workspace or project directory." />
+            )}
+          </Pane>
+        </box>
+
+        <box height={logPaneHeight} minHeight={8}>
+          <Pane
+            actions={
+              <Chip
+                content={activeRun ? "copy [cc]" : "copy daemon"}
+                onPress={() => void service.copyCurrentOutput()}
+                tone="success"
+              />
+            }
+            title={
+              activeRun
+                ? `Run Output :: ${activeRun.projectAlias} ${activeRun.taskName}`
+                : "Daemon Output"
+            }
+          >
+            {activeRun ? (
+              <box flexDirection="column" height="100%">
+                <text fg="#8fa4ba">{truncate(activeRun.command, Math.max(width - 16, 24))}</text>
+                <scrollbox flexGrow={1} marginTop={1}>
+                  {activeRun.logs.map((line, index) => (
+                    <box key={`${activeRun.id}:${index}`}>
+                      <ListRow
+                        active={false}
+                        label={truncate(line, Math.max(width - 18, 20))}
                         tone={
-                          entry.stream === "stderr"
-                            ? "error"
-                            : entry.stream === "system"
+                          activeRun.status === "failed"
+                            ? "warn"
+                            : line.startsWith("$") || line.startsWith("[exit")
                               ? "muted"
                               : "normal"
                         }
-                      >
-                        {line}
-                      </Row>
-                    ))}
+                      />
+                    </box>
+                  ))}
+                </scrollbox>
+              </box>
+            ) : snapshot.logLines.length ? (
+              <scrollbox flexGrow={1}>
+                {snapshot.logLines.slice(-maxRunLogs).map((line, index) => (
+                  <box key={`daemon:${index}`}>
+                    <ListRow
+                      active={false}
+                      label={truncate(line, Math.max(width - 18, 20))}
+                      tone="muted"
+                    />
                   </box>
-                );
-              })
+                ))}
+              </scrollbox>
             ) : (
-              <EmptyState content="No logs for the selected session yet." />
+              <EmptyState content="Run a task from the task list to stream its output here." />
             )}
-          </scrollbox>
-        </Pane>
-
-        <Pane active={focusArea === "inspector"} title="Inspector" width={isWide ? 44 : undefined}>
-          <SectionTitle content="Selected Session" />
-          {activeSession ? (
-            <box flexDirection="column" marginBottom={1}>
-              <text fg="#d6e4f0">{`title: ${activeSession.title}`}</text>
-              <text fg="#d6e4f0">{`status: ${activeSession.status}`}</text>
-              <text fg="#8ea6be">{`cwd: ${activeSession.cwd}`}</text>
-              <text fg="#8ea6be">{`command: ${truncate(activeSession.command, 80)}`}</text>
-            </box>
-          ) : (
-            <EmptyState content="No session selected." />
-          )}
-
-          <SectionTitle content="Daemon Resources" />
-          <scrollbox flexGrow={1}>
-            {resources.length ? (
-              resources.map((resource) => (
-                <Row
-                  active={false}
-                  key={`${resource.kind}:${resource.label}`}
-                  tone={resource.status === "failed" ? "error" : resource.status === "running" ? "success" : "muted"}
-                >
-                  {`${resource.status.padEnd(8)} ${resource.kind.padEnd(7)} ${resource.label}`}
-                </Row>
-              ))
-            ) : (
-              <EmptyState content="No daemon-owned resources are running yet." />
-            )}
-          </scrollbox>
-
-          <SectionTitle content="Configs" />
-          <scrollbox flexGrow={1}>
-            {configEntries.length ? (
-              configEntries.map(([configId, config]) => (
-                <box key={configId} flexDirection="column" marginBottom={1}>
-                  <text fg="#d6e4f0">{`${config.status.padEnd(8)} ${configId}`}</text>
-                  <text fg="#8ea6be">
-                    {`affected: ${(config.affectedTasks ?? []).join(", ") || "none"}`}
-                  </text>
-                </box>
-              ))
-            ) : (
-              <EmptyState content="No config snapshots have been written yet." />
-            )}
-          </scrollbox>
-        </Pane>
+          </Pane>
+        </box>
       </box>
 
-      <box margin={1} marginTop={1}>
-        <Pane active={focusArea === "command"} title="Command">
-          <text fg="#91a7c0">
-            Run shell commands here. Bare Volt commands are prefixed automatically, and bare task names like `dev:forge` run through `volt task run`.
-          </text>
-          <box alignItems="center" flexDirection="row" gap={1} marginTop={1}>
-            <text fg="#7dd3fc">$</text>
-            <input
-              backgroundColor="#0c1824"
-              cursorColor="#7dd3fc"
-              focused={focusArea === "command"}
-              focusedBackgroundColor="#112233"
-              onChange={setCommandInput}
-              placeholder="dev:forge"
-              placeholderColor="#5f7288"
-              textColor="#dcecff"
-              value={commandInput}
-              width="100%"
-            />
-          </box>
-        </Pane>
+      <box marginTop={1}>
+        <text fg="#8fa4ba">
+          {context.projects.length > 1
+            ? "Keys: Up/Down move, Right/Enter open or run, Left/Escape back, d daemon, Ctrl+C or cc copy, h help, q quit"
+            : "Keys: Up/Down move, Enter run, d daemon, Ctrl+C or cc copy, h help, q quit"}
+        </text>
       </box>
     </box>
   );
 };
 
-const DashboardScreen = ({
-  processRegistry,
-  refreshMs,
-  statePath,
-  logPath,
-  workspaceRoot,
-}: {
-  processRegistry: ProcessRegistry;
-  refreshMs: number;
-  statePath: string;
-  logPath: string;
-  workspaceRoot: string;
-}) => {
-  const [snapshot, setSnapshot] = React.useState<DashboardSnapshot>({
-    logLines: [],
-    state: undefined,
-  });
-
-  const refresh = React.useCallback(async () => {
-    setSnapshot(await readDashboardSnapshot(statePath, logPath));
-  }, [logPath, statePath]);
+const DashboardScreen = ({ environment }: { environment: DashboardEnvironment }) => {
+  const renderer = useRenderer();
+  const service = React.useMemo(
+    () =>
+      createDashboardService(environment, {
+        copyToClipboard: copyTextToClipboard,
+        notify: (tone, message) => {
+          if (tone === "error") {
+            toast.error(message);
+          } else if (tone === "success") {
+            toast.success(message);
+          } else if (tone === "warning") {
+            toast.warning(message);
+          } else {
+            toast.info(message);
+          }
+        },
+        quit: () => renderer.destroy(),
+      }),
+    [environment, renderer],
+  );
 
   React.useEffect(() => {
-    void refresh();
+    void service.refresh({ notify: true });
     const timer = setInterval(() => {
-      void refresh();
-    }, refreshMs);
+      void service.refresh({ notify: true });
+    }, environment.refreshMs);
 
     return () => {
       clearInterval(timer);
     };
-  }, [refresh, refreshMs]);
+  }, [environment.refreshMs, service]);
 
   return (
-    <DashboardApp
-      onRefresh={() => {
-        void refresh();
-      }}
-      processRegistry={processRegistry}
-      refreshMs={refreshMs}
-      snapshot={snapshot}
-      workspaceRoot={workspaceRoot}
-    />
+    <DashboardProvider service={service}>
+      <DialogProvider
+        backdropOpacity={0.35}
+        closeOnEscape
+        dialogOptions={{
+          style: {
+            backgroundColor: "#0d1d2d",
+            border: true,
+            borderColor: "#29455f",
+          },
+        }}
+        size="medium"
+      >
+        <Toaster position="bottom-right" stackingMode="stack" visibleToasts={3} />
+        <DashboardBody />
+      </DialogProvider>
+    </DashboardProvider>
   );
 };
 
-export const runVoltDashboard = async (workspaceRoot = process.cwd()) => {
+export const runVoltDashboard = async (
+  startDir = process.cwd(),
+  cliScriptPath = resolve(import.meta.dir, "cli.ts"),
+) => {
   ensureRendererCompatibility();
 
-  const daemonDir = resolve(workspaceRoot, ".volt", "daemon");
-  const statePath = resolve(daemonDir, "workspace.json");
-  const logPath = resolve(daemonDir, "workspace.log");
-  const refreshMs = 750;
-  const processRegistry = createProcessRegistry();
+  const context = await resolveVoltWorkspaceContext({
+    command: "dev",
+    cwd: startDir,
+    mode: "development",
+  });
+  const daemonDir = resolve(context.workspaceRoot, ".volt", "daemon");
+  const environment: DashboardEnvironment = {
+    cliScriptPath,
+    context,
+    logPath: resolve(daemonDir, "workspace.log"),
+    mode: "development",
+    refreshMs: 750,
+    statePath: resolve(daemonDir, "workspace.json"),
+  };
+
   const renderer = await createCliRenderer({
-    exitOnCtrlC: true,
-    onDestroy: () => {
-      void processRegistry.destroyAll();
-    },
+    exitOnCtrlC: false,
   });
   const root = createRoot(renderer);
-  root.render(
-    <DashboardScreen
-      logPath={logPath}
-      processRegistry={processRegistry}
-      refreshMs={refreshMs}
-      statePath={statePath}
-      workspaceRoot={workspaceRoot}
-    />,
-  );
+  root.render(<DashboardScreen environment={environment} />);
 };
 
 if (import.meta.main) {

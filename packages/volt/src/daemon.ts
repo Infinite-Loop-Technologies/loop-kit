@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { basename, dirname, relative, resolve } from "node:path";
 import parcelWatcher from "@parcel/watcher";
 import type {
@@ -51,7 +52,7 @@ interface WorkspaceDaemonPaths {
   statePath: string;
 }
 
-interface WorkspaceDaemonState {
+export interface WorkspaceDaemonState {
   affectedTasks?: string[];
   configs: string[];
   events?: Array<{
@@ -62,6 +63,12 @@ interface WorkspaceDaemonState {
     status?: string;
     type: string;
   }>;
+  id?: string;
+  workspace?: {
+    id: string;
+    name: string;
+    rootDir: string;
+  };
   lastChangedFiles?: string[];
   mode: "development" | "production";
   pid?: number;
@@ -146,6 +153,12 @@ const createWorkspaceDaemonPaths = (workspaceRoot: string): WorkspaceDaemonPaths
     statePath: resolve(daemonRoot, "workspace.json"),
   };
 };
+
+const createWorkspaceIdentity = (workspaceRoot: string) => ({
+  id: createHash("sha256").update(workspaceRoot).digest("hex").slice(0, 12),
+  name: basename(workspaceRoot),
+  rootDir: workspaceRoot,
+});
 
 export const discoverVoltConfigPaths = async (
   workspaceRoot: string,
@@ -867,6 +880,8 @@ export const runDaemonRuntime = async (
   );
   const logger = createRootLogger();
   const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
+  const workspace = createWorkspaceIdentity(workspaceRoot);
+  const daemonId = `workspace-${workspace.id}`;
   const configState: NonNullable<WorkspaceDaemonState["byConfig"]> = {};
   const persistState = async (
     status: WorkspaceDaemonState["status"],
@@ -893,12 +908,14 @@ export const runDaemonRuntime = async (
       lastChangedFiles: Object.values(configState).flatMap(
         (state) => state.lastChangedFiles ?? [],
       ),
+      id: daemonId,
       mode,
       pid: process.pid,
       reason,
       resources,
       serviceCount: serviceHandles.length,
       status,
+      workspace,
       watcherCount: integrationHandles.length,
       byConfig: configState,
     });
@@ -1103,6 +1120,7 @@ export const handleDaemonCommand = async (
   const daemonPaths = createWorkspaceDaemonPaths(workspaceRoot);
   await ensureDirectory(dirname(daemonPaths.logPath));
   const state = await readDaemonState(daemonPaths.statePath);
+  const workspace = createWorkspaceIdentity(workspaceRoot);
   const requestedRelative = requestedConfigs.map((configPath) =>
     relative(workspaceRoot, resolve(workspaceRoot, configPath)),
   );
@@ -1168,7 +1186,9 @@ export const handleDaemonCommand = async (
       requestedRelative.length > 0 && state
         ? ` requested=${requestedRelative.join(", ")} managed=${state.configs.join(", ")}`
         : "";
-    console.log(`[volt] workspace daemon ${alive ? "running" : "stale"} pid=${pid}${managedMessage}`);
+    console.log(
+      `[volt] workspace daemon ${alive ? "running" : "stale"} pid=${pid} workspace=${workspace.id}${managedMessage}`,
+    );
     if (serializedState) {
       console.log(serializedState.trim());
     }

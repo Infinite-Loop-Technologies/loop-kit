@@ -8,6 +8,7 @@ import type {
 } from "./contracts";
 import type {
   LoadedVoltProjectLike,
+  VoltAdapterDefinition,
   VoltAnyTaskDefinition,
   VoltTaskSelectionDefaults,
 } from "./task";
@@ -49,6 +50,7 @@ export interface VoltProjectConfigInput<
     VoltTargetDefinition
   >,
 > {
+  adapters?: Record<string, VoltAdapterDefinition<any>>;
   artifacts?: VoltConfigInput<TTargets>["artifacts"];
   defaults?: VoltTaskSelectionDefaults;
   integrations?: VoltConfigInput<TTargets>["integrations"];
@@ -117,6 +119,57 @@ const isTaskProjectInput = (value: unknown): value is AnyProjectInput =>
   "tasks" in value &&
   typeof (value as { name?: unknown }).name === "string";
 
+const expandAdapterTasks = (
+  adapters: Record<string, VoltAdapterDefinition<any>> | undefined,
+) => {
+  const tasks: Record<string, VoltAnyTaskDefinition> = {};
+  const defaults = {
+    build: [] as string[],
+    dev: [] as string[],
+  };
+
+  if (!adapters) {
+    return { defaults, tasks };
+  }
+
+  const adapterNames = new Map<VoltAdapterDefinition<any>, string>(
+    Object.entries(adapters).map(([name, adapter]) => [adapter, name]),
+  );
+
+  for (const [name, adapter] of Object.entries(adapters)) {
+    const adapterTasks = adapter.tasks(name);
+    const dependencyNames = (adapter.needs ?? [])
+      .map((dependency) => adapterNames.get(dependency))
+      .filter((dependencyName): dependencyName is string => Boolean(dependencyName));
+
+    for (const [taskName, taskDefinition] of Object.entries(adapterTasks)) {
+      if (taskDefinition.kind !== "target-task") {
+        continue;
+      }
+
+      const command = taskDefinition.command;
+      const adapterDependencies = dependencyNames.map(
+        (dependencyName) => `${command}:${dependencyName}`,
+      );
+      adapterTasks[taskName] = {
+        ...taskDefinition,
+        dependsOn: [...(taskDefinition.dependsOn ?? []), ...adapterDependencies],
+      };
+    }
+
+    Object.assign(tasks, adapterTasks);
+
+    if (adapterTasks[`build:${name}`]) {
+      defaults.build.push(`build:${name}`);
+    }
+    if (adapterTasks[`dev:${name}`]) {
+      defaults.dev.push(`dev:${name}`);
+    }
+  }
+
+  return { defaults, tasks };
+};
+
 export const isProjectConfigDefinition = (
   value: unknown,
 ): value is VoltProjectConfigDefinition =>
@@ -126,6 +179,7 @@ export const isProjectConfigDefinition = (
 export const projectInputToLegacyConfig = (
   input: AnyProjectInput,
 ): AnyConfigInput => {
+  const expandedAdapters = expandAdapterTasks(input.adapters);
   const taskNamesByCommand: Record<"build" | "dev", string[]> = {
     build: [],
     dev: [],
@@ -134,14 +188,21 @@ export const projectInputToLegacyConfig = (
   const targets: Record<string, VoltTargetDefinition> = {
     ...(input.targets ?? {}),
   };
+  const mergedTasks = {
+    ...expandedAdapters.tasks,
+    ...input.tasks,
+  };
 
-  for (const [taskName, taskDefinition] of Object.entries(input.tasks)) {
+  for (const [taskName, taskDefinition] of Object.entries(mergedTasks)) {
     if (taskDefinition.kind !== "target-task") {
       continue;
     }
 
     targets[taskName] = taskDefinition.target;
-    if (defaults[taskDefinition.command].includes(taskName)) {
+    if (
+      defaults[taskDefinition.command].includes(taskName) ||
+      expandedAdapters.defaults[taskDefinition.command].includes(taskName)
+    ) {
       taskNamesByCommand[taskDefinition.command].push(taskName);
     }
   }
@@ -214,18 +275,40 @@ export const normalizeProjectInput = (
   input: AnyProjectInput,
   configPath: string,
   workspaceRoot: string,
-): LoadedVoltProjectLike => ({
-  artifacts: input.artifacts,
-  configPath,
-  defaults: normalizeTaskDefaults(input.defaults),
-  integrations: input.integrations,
-  name: input.name,
-  plugins: input.plugins,
-  rootDir: dirname(configPath),
-  tasks: input.tasks,
-  targets: input.targets ?? {},
-  workspaceRoot,
-});
+): LoadedVoltProjectLike => {
+  const expandedAdapters = expandAdapterTasks(input.adapters);
+  const tasks = {
+    ...expandedAdapters.tasks,
+    ...input.tasks,
+  };
+  const targets: Record<string, VoltTargetDefinition> = {
+    ...(input.targets ?? {}),
+  };
+
+  for (const [taskName, taskDefinition] of Object.entries(tasks)) {
+    if (taskDefinition.kind === "target-task") {
+      targets[taskName] = taskDefinition.target;
+    }
+  }
+
+  const defaults = normalizeTaskDefaults(input.defaults);
+
+  return {
+    artifacts: input.artifacts,
+    configPath,
+    defaults: {
+      build: defaults.build.length > 0 ? defaults.build : expandedAdapters.defaults.build,
+      dev: defaults.dev.length > 0 ? defaults.dev : expandedAdapters.defaults.dev,
+    },
+    integrations: input.integrations,
+    name: input.name,
+    plugins: input.plugins,
+    rootDir: dirname(configPath),
+    tasks,
+    targets,
+    workspaceRoot,
+  };
+};
 
 export const normalizeLoadedProjectDefinition = async (
   definition:

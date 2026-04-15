@@ -1,6 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { Socket } from "node:net";
-import { Effect } from "effect";
 import type {
   ManagedVoltProcess,
   ProcessHandle,
@@ -166,10 +165,9 @@ export const createRuntimeOwner = (
     events: () => [...events],
     release,
     releaseAll: async () => {
-      const releaseEffects = [...handles]
-        .reverse()
-        .map((handle) => Effect.promise(() => release(handle)));
-      await Effect.runPromise(Effect.all(releaseEffects, { concurrency: 1, discard: true }));
+      for (const handle of [...handles].reverse()) {
+        await release(handle);
+      }
       handles.splice(0, handles.length);
     },
     snapshot: () => ({

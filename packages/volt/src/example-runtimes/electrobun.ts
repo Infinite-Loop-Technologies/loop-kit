@@ -1,25 +1,46 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-import { loadVoltEnv } from "../env";
+import { dirname, relative, resolve } from "node:path";
+import { readonly } from "@loop-kit/common";
 import type { VoltReadinessProbe, VoltTargetContext } from "../contracts";
-import { defineTargetTask } from "../task";
+import { createOxlintFormatter, runCodegen } from "../codegen";
+import { loadVoltEnv } from "../env";
+import { defineAdapter, defineTargetTask, type VoltAdapterDefinition } from "../task";
+import { sanitizeForPath } from "../utils";
+
+type VoltModuleThunk<TModule> = () => Promise<TModule>;
+
+interface ElectrobunWindowOptions {
+  readonly height: number;
+  readonly title: string;
+  readonly url: string;
+  readonly width: number;
+}
 
 export interface ElectrobunTargetOptions {
-  artifacts?: string[];
-  build?: (context: VoltTargetContext) => Promise<void>;
-  buildArgs?: string[];
-  configPath?: string;
-  cwd?: string;
-  dependsOn?: string[];
-  dev?: (context: VoltTargetContext) => Promise<import("../contracts").ManagedVoltProcess | void>;
-  devArgs?: string[];
-  env?: Record<string, string>;
-  inputs?: string[];
-  outputs?: string[];
-  readiness?: VoltReadinessProbe | VoltReadinessProbe[];
-  uses?: string[];
-  watch?: string[];
-  watchElectrobun?: boolean;
+  readonly app?: VoltModuleThunk<{ default?: (runtime: ElectrobunRuntimeContext) => unknown }>;
+  readonly artifacts?: string[];
+  readonly build?: (context: VoltTargetContext) => Promise<void>;
+  readonly buildArgs?: string[];
+  readonly configPath?: string;
+  readonly cwd?: string;
+  readonly dependsOn?: string[];
+  readonly dev?: (context: VoltTargetContext) => Promise<import("../contracts").ManagedVoltProcess | void>;
+  readonly devArgs?: string[];
+  readonly env?: Record<string, string>;
+  readonly identifier?: string;
+  readonly inputs?: string[];
+  readonly needs?: ReadonlyArray<VoltAdapterDefinition<any>>;
+  readonly outputs?: string[];
+  readonly readiness?: VoltReadinessProbe | VoltReadinessProbe[];
+  readonly uses?: string[];
+  readonly watch?: string[];
+  readonly watchElectrobun?: boolean;
+  readonly window?: ElectrobunWindowOptions;
+}
+
+interface ElectrobunRuntimeContext {
+  readonly mode: "development" | "production";
+  readonly window: ElectrobunWindowOptions;
 }
 
 const createElectrobunEnv = (
@@ -37,6 +58,128 @@ const createElectrobunEnv = (
   VOLT_WORKSPACE_ROOT: context.workspaceRoot,
 });
 
+const extractImportSpecifierFromThunk = <TModule>(
+  thunk: VoltModuleThunk<TModule>,
+) => {
+  const source = thunk.toString();
+  const match = source.match(/import\((["'`])([^"'`]+)\1\)/u);
+  if (!match) {
+    throw new Error(
+      "Electrobun app thunks must look like () => import('./path/to/module').",
+    );
+  }
+
+  return match[2];
+};
+
+const createGeneratedElectrobunFiles = async (
+  context: VoltTargetContext,
+  options: ElectrobunTargetOptions,
+) => {
+  const rootDir = context.rootDir;
+  const targetSlug = sanitizeForPath(context.currentTarget.name);
+  const generatedDir = resolve(
+    rootDir,
+    ".volt",
+    "generated",
+    "electrobun",
+    targetSlug,
+  );
+  const mainPath = resolve(generatedDir, "src", "bun", "index.ts");
+  const configPath = resolve(generatedDir, "electrobun.config.ts");
+  const appImportPath = options.app
+    ? relative(generatedDir, resolve(rootDir, extractImportSpecifierFromThunk(options.app)))
+        .replace(/\\/g, "/")
+        .replace(/\.(?:[cm]?[jt]sx?)$/u, "")
+    : undefined;
+  const windowOptions =
+    options.window ??
+    ({
+      height: 800,
+      title: context.currentTarget.name,
+      url: "about:blank",
+      width: 1280,
+    } satisfies ElectrobunWindowOptions);
+
+  await runCodegen(
+    ({ emit }) => {
+      emit({
+        content: [
+          `import { BrowserWindow } from 'electrobun/bun';`,
+          ...(appImportPath
+            ? [`import appModule from ${JSON.stringify(appImportPath.startsWith(".") ? appImportPath : `./${appImportPath}`)};`]
+            : []),
+          ``,
+          `const runtime = ${JSON.stringify({
+            mode: context.mode,
+            window: windowOptions,
+          }, null, 2)} as const;`,
+          ``,
+          `const mainWindow = new BrowserWindow({`,
+          `  frame: {`,
+          `    height: runtime.window.height,`,
+          `    width: runtime.window.width,`,
+          `    x: 120,`,
+          `    y: 80,`,
+          `  },`,
+          `  renderer: 'native',`,
+          `  title: runtime.window.title,`,
+          `  titleBarStyle: 'default',`,
+          `  url: runtime.window.url,`,
+          `});`,
+          ``,
+          ...(appImportPath
+            ? [
+                `const start = typeof appModule === 'function' ? appModule : appModule?.default;`,
+                `if (typeof start === 'function') {`,
+                `  await start({ ...runtime, window: runtime.window });`,
+                `}`,
+                ``,
+              ]
+            : []),
+          `mainWindow.webview.on('dom-ready', () => {`,
+          `  console.log('${context.currentTarget.name} desktop ready');`,
+          `  if (runtime.mode !== 'production') {`,
+          `    mainWindow.webview.openDevTools();`,
+          `  }`,
+          `});`,
+          ``,
+        ].join("\n"),
+        path: relative(rootDir, mainPath),
+      });
+      emit({
+        content: [
+          `import type { ElectrobunConfig } from 'electrobun';`,
+          ``,
+          `export default {`,
+          `  app: {`,
+          `    identifier: ${JSON.stringify(options.identifier ?? `dev.loopkit.${targetSlug}`)},`,
+          `    name: ${JSON.stringify(targetSlug)},`,
+          `    version: '0.0.0',`,
+          `  },`,
+          `  runtime: {`,
+          `    exitOnLastWindowClosed: false,`,
+          `  },`,
+          `} satisfies ElectrobunConfig;`,
+          ``,
+        ].join("\n"),
+        path: relative(rootDir, configPath),
+      });
+    },
+    {
+      formatters: [createOxlintFormatter(undefined, { optional: true })],
+      logger: context.logger,
+      rootDir,
+    },
+  );
+
+  return {
+    configPath,
+    cwd: generatedDir,
+    mainPath,
+  };
+};
+
 export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
   artifacts: options.artifacts,
   async build(context: VoltTargetContext) {
@@ -45,11 +188,12 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       return;
     }
 
-    const cwd = resolve(context.rootDir, options.cwd ?? ".");
-    const configPath = resolve(cwd, options.configPath ?? "electrobun.config.ts");
+    const generated = await createGeneratedElectrobunFiles(context, options);
+    const cwd = resolve(context.rootDir, options.cwd ?? generated.cwd);
+    const configPath = resolve(cwd, options.configPath ?? generated.configPath);
     if (!existsSync(configPath)) {
       throw new Error(
-        `Electrobun target requires ${configPath}. Add electrobun.config.ts before building desktop.`,
+        `Electrobun target requires ${configPath}.`,
       );
     }
 
@@ -62,7 +206,10 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       ...(options.buildArgs ?? []),
     ], {
       cwd,
-      env: createElectrobunEnv(context, options.env),
+      env: {
+        ...createElectrobunEnv(context, options.env),
+        VOLT_ELECTROBUN_MAIN_PATH: generated.mainPath,
+      },
     });
 
     const exitCode = await child.process.exited;
@@ -76,28 +223,30 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
       return options.dev(context);
     }
 
-    const cwd = resolve(context.rootDir, options.cwd ?? ".");
-    const configPath = resolve(cwd, options.configPath ?? "electrobun.config.ts");
+    const generated = await createGeneratedElectrobunFiles(context, options);
+    const cwd = resolve(context.rootDir, options.cwd ?? generated.cwd);
+    const configPath = resolve(cwd, options.configPath ?? generated.configPath);
     if (!existsSync(configPath)) {
       throw new Error(
-        `Electrobun target requires ${configPath}. Add electrobun.config.ts before starting desktop dev.`,
+        `Electrobun target requires ${configPath}.`,
       );
     }
 
-    const electrobunDevArgs = [
-      "bunx",
-      "electrobun",
-      "dev",
-      ...(options.watchElectrobun ? ["--watch"] : []),
-      ...(options.devArgs ?? []),
-    ];
-
     return context.spawn(
       context.currentTarget.name,
-      electrobunDevArgs,
+      [
+        "bunx",
+        "electrobun",
+        "dev",
+        ...(options.watchElectrobun ? ["--watch"] : []),
+        ...(options.devArgs ?? []),
+      ],
       {
         cwd,
-        env: createElectrobunEnv(context, options.env),
+        env: {
+          ...createElectrobunEnv(context, options.env),
+          VOLT_ELECTROBUN_MAIN_PATH: generated.mainPath,
+        },
         readiness: options.readiness,
       },
     );
@@ -107,7 +256,35 @@ export const ElectrobunRuntime = (options: ElectrobunTargetOptions = {}) => ({
   uses: options.uses,
 });
 
-export const electrobun = ElectrobunRuntime;
+export const electrobun = (
+  options: ElectrobunTargetOptions = {},
+) =>
+  defineAdapter({
+    exports: readonly({}),
+    needs: options.needs,
+    tasks: (name: string) => ({
+      [`build:${name}`]: defineTargetTask({
+        artifacts: options.artifacts,
+        command: "build",
+        dependsOn: options.dependsOn,
+        inputs: options.inputs,
+        outputs: options.outputs,
+        target: ElectrobunRuntime(options),
+        uses: options.uses,
+        watch: options.watch,
+      }),
+      [`dev:${name}`]: defineTargetTask({
+        artifacts: options.artifacts,
+        command: "dev",
+        dependsOn: options.dependsOn,
+        inputs: options.inputs,
+        outputs: options.outputs,
+        target: ElectrobunRuntime(options),
+        uses: options.uses,
+        watch: options.watch,
+      }),
+    }),
+  }) satisfies VoltAdapterDefinition<Record<string, never>>;
 
 export const electrobunTask = (
   options: ElectrobunTargetOptions & { command: "build" | "dev" },

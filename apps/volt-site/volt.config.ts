@@ -19,12 +19,13 @@ const site = bunFullstack(siteEntrypoint, {
 });
 
 export default defineProjectConfig({
+  adapters: {
+    site,
+  },
   defaults: {
     build: "build:site",
     dev: "dev:site",
   },
   name: "Volt Site",
-  tasks: {
-    ...site.tasks("site"),
-  },
+  tasks: {},
 });

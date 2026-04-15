@@ -1,51 +1,19 @@
-import {
-  defineProjectConfig,
-  electrobunTask,
-  flow,
-  type ProcessHandle,
-} from "volt";
+import { defineProjectConfig } from "volt";
 import { bunFullstack } from "volt/bun";
-import mainviewServerEntrypoint from "./src/mainview/server.runtime";
+import { electrobun } from "volt/electrobun";
 
+const canvasWebUiPort = Number(process.env.VOLT_CANVAS_WEB_UI_PORT ?? 3310);
 
-const canvasWebUiPort = process.env.VOLT_CANVAS_WEB_UI_PORT ?? "3310";
-const canvasWebUiUrl =
-  process.env.VOLT_CANVAS_WEB_UI_URL ?? `http://127.0.0.1:${canvasWebUiPort}`;
-
-const desktopInputs = [
-  "electrobun.config.ts",
-  "package.json",
-  "src/bun/**/*.ts",
-  "src/**/*.css",
-  "src/**/*.d.ts",
-  "src/**/*.html",
-  "src/**/*.ts",
-  "src/**/*.tsx",
-];
-
-const desktopOutputs = ["build/**", "dist/**", "release/**"];
-
-const desktopTaskOptions = {
-  configPath: "electrobun.config.ts",
-  cwd: ".",
-  inputs: desktopInputs,
-  outputs: desktopOutputs,
-  readiness: {
-    kind: "stdout" as const,
-    pattern: "volt-canvas-demo desktop ready",
-  },
-  watch: desktopInputs,
-  watchElectrobun: false,
-};
-
-const webUi = bunFullstack(mainviewServerEntrypoint, {
+const webUi = bunFullstack({
+  entry: () => import("./src/mainview/server.runtime"),
   env: {
-    PORT: canvasWebUiPort,
+    PORT: String(canvasWebUiPort),
     VOLT_MODE: "development",
   },
   inputs: ["src/**/*.css", "src/**/*.d.ts", "src/**/*.html", "src/**/*.ts", "src/**/*.tsx"],
   outdir: "dist/mainview-dev",
   outputs: ["dist/mainview-dev/**"],
+  port: canvasWebUiPort,
   readiness: {
     kind: "stdout",
     pattern: "volt-canvas-demo web ui ready",
@@ -53,50 +21,51 @@ const webUi = bunFullstack(mainviewServerEntrypoint, {
   watch: ["src/**/*.css", "src/**/*.d.ts", "src/**/*.html", "src/**/*.ts", "src/**/*.tsx"],
 });
 
+const desktop = electrobun({
+  env: {
+    VOLT_CANVAS_WEB_UI_URL: webUi.exports.url ?? `http://127.0.0.1:${canvasWebUiPort}`,
+    VOLT_MODE: "development",
+  },
+  identifier: "dev.loopkit.volt-canvas-demo",
+  inputs: [
+    "package.json",
+    "src/**/*.css",
+    "src/**/*.d.ts",
+    "src/**/*.html",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+  ],
+  needs: [webUi],
+  outputs: ["build/**", "dist/**", "release/**"],
+  readiness: {
+    kind: "stdout",
+    pattern: "desktop desktop ready",
+  },
+  watch: [
+    "package.json",
+    "src/**/*.css",
+    "src/**/*.d.ts",
+    "src/**/*.html",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+  ],
+  window: {
+    height: 980,
+    title: "Volt Canvas",
+    url: webUi.exports.url ?? `http://127.0.0.1:${canvasWebUiPort}`,
+    width: 1560,
+  },
+});
+
 export default defineProjectConfig({
+  adapters: {
+    desktop,
+    "web-ui": webUi,
+  },
   defaults: {
     build: ["build:desktop"],
     dev: ["dev:desktop"],
   },
   name: "Volt Canvas Demo",
-  tasks: {
-    ...webUi.tasks("web-ui"),
-    "build:desktop": electrobunTask({
-      ...desktopTaskOptions,
-      command: "build",
-      env: {
-        VOLT_MODE: "production",
-      },
-    }),
-    "dev:desktop:host": electrobunTask({
-      ...desktopTaskOptions,
-      command: "dev",
-      env: {
-        VOLT_CANVAS_WEB_UI_URL: canvasWebUiUrl,
-        VOLT_MODE: "development",
-      },
-    }),
-    "dev:desktop": flow("dev:desktop", function* (ctx) {
-      yield* ctx.log("desktop-topology-start", "starting Volt Canvas Demo desktop topology");
-
-      const webUiTask = yield* ctx.forkTask<ProcessHandle>("dev:web-ui");
-      const webUiHandle = yield* ctx.join(webUiTask);
-      yield* ctx.waitFor("wait-for-web-ui", webUiHandle, { timeoutMs: 15_000 });
-
-      const desktopTask = yield* ctx.forkTask<ProcessHandle>("dev:desktop:host");
-      const desktopHandle = yield* ctx.join(desktopTask);
-      yield* ctx.waitFor("wait-for-desktop-host", desktopHandle, { timeoutMs: 15_000 });
-
-      yield* ctx.log("desktop-topology-ready", "Volt Canvas Demo desktop topology is ready", {
-        desktopUrl: canvasWebUiUrl,
-      });
-
-      return {
-        desktop: desktopHandle,
-        webUi: webUiHandle,
-      };
-    }, {
-      persist: false,
-    }),
-  },
+  tasks: {},
 });

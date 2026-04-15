@@ -1,24 +1,23 @@
-import { existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { ProcessHandle, ResourceHandle, VoltCommand } from "./contracts";
 import {
-  createVoltConfigContext,
   loadVoltProject,
-  loadVoltWorkspace,
-  resolveConfigPath,
   resolveMode,
 } from "./config";
 import { handleDaemonCommand, runDaemonRuntime } from "./daemon";
-import { loadVoltEnv } from "./env";
-import { normalizeLoadedProjectDefinition } from "./project";
 import { waitForManagedProcesses } from "./process";
 import { runFlow } from "./flow";
-import type { LoadedVoltProjectLike, VoltAnyTaskDefinition } from "./task";
+import type { LoadedVoltProjectLike } from "./task";
 import { executeProjectCommand, executeProjectTask, listProjectTasks } from "./task";
 import { createRootLogger } from "./utils";
+import {
+  resolveVoltWorkspaceContext,
+  resolveWorkspaceProject,
+  type LoadedWorkspaceProject,
+} from "./workspace-runtime";
 
-const workspaceRoot = process.cwd();
+const cwd = process.cwd();
 const knownTopLevelCommands = new Set([
   "build",
   "daemon",
@@ -41,68 +40,14 @@ const isProcessHandle = (handle: ResourceHandle): handle is ProcessHandle =>
 const waitForActiveProcesses = async (handles: ResourceHandle[]) =>
   waitForManagedProcesses(handles.filter(isProcessHandle));
 
-const getDefaultWorkspaceConfigPath = () => resolve(workspaceRoot, "volt.workspace.ts");
+const resolveExplicitWorkspaceConfigPath = (value?: string) =>
+  value ? resolve(cwd, value) : undefined;
 
-const resolveWorkspaceConfigPath = (value?: string) => {
-  if (value) {
-    return resolve(workspaceRoot, value);
-  }
-
-  const defaultPath = getDefaultWorkspaceConfigPath();
-  return existsSync(defaultPath) ? defaultPath : undefined;
-};
-
-const resolveProjectConfigPath = (value?: string) =>
-  resolveConfigPath(workspaceRoot, value ?? "volt.config.ts");
-
-const resolveProjectFromWorkspaceValue = async (
-  name: string,
-  value: unknown,
-  mode: "development" | "production",
-): Promise<LoadedVoltProjectLike> => {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    "configPath" in value &&
-    "tasks" in value &&
-    "defaults" in value
-  ) {
-    return value as LoadedVoltProjectLike;
-  }
-
-  const source =
-    typeof value === "function" && "source" in value
-      ? (value as { source?: string }).source
-      : typeof value === "object" && value !== null && "source" in value
-        ? (value as { source?: string }).source
-        : undefined;
-
-  if (!source) {
-    throw new Error(
-      `Workspace project ${name} must come from defineProjectConfig(...) or provide a source path.`,
-    );
-  }
-
-  return normalizeLoadedProjectDefinition(
-    value as Parameters<typeof normalizeLoadedProjectDefinition>[0],
-    createVoltConfigContext(
-      "dev",
-      source,
-      mode,
-      workspaceRoot,
-      loadVoltEnv({
-        mode,
-        rootDir: dirname(source),
-        workspaceRoot,
-      }),
-    ),
-    source,
-    workspaceRoot,
-  );
-};
+const resolveExplicitProjectConfigPath = (value?: string) =>
+  value ? resolve(cwd, value) : undefined;
 
 const executeWorkspaceTask = async (
-  workspacePath: string,
+  context: Awaited<ReturnType<typeof resolveVoltWorkspaceContext>>,
   taskName: string,
   options: {
     inputs?: unknown;
@@ -110,7 +55,11 @@ const executeWorkspaceTask = async (
     mode: "development" | "production";
   },
 ) => {
-  const workspace = await loadVoltWorkspace(workspacePath);
+  if (!context.workspace) {
+    throw new Error("No Volt workspace is available in the current directory.");
+  }
+
+  const workspace = context.workspace;
   const logger = options.logger ?? createRootLogger();
   const completed = new Map<string, unknown>();
   const inFlight = new Set<string>();
@@ -146,24 +95,19 @@ const executeWorkspaceTask = async (
           logger,
           projectName: workspace.name,
           rootDir: workspace.rootDir,
-          workspaceRoot,
+          workspaceRoot: context.workspaceRoot,
         });
       } else if (definition.kind === "flow-task") {
         result = await runFlow(definition.value, inputs, {
           logger,
           runner: {
             runProjectTask: async (projectName, nestedTaskName, nestedOptions) => {
-              const projectValue = workspace.projects[projectName];
-              if (!projectValue) {
+              const project = resolveWorkspaceProject(context.projects, projectName);
+              if (!project) {
                 throw new Error(`Unknown Volt workspace project: ${projectName}`);
               }
 
-              const project = await resolveProjectFromWorkspaceValue(
-                projectName,
-                projectValue,
-                options.mode,
-              );
-              const executed = await executeProjectTask(project, nestedTaskName, {
+              const executed = await executeProjectTask(project.project, nestedTaskName, {
                 inputs: nestedOptions?.inputs,
                 logger,
               });
@@ -191,6 +135,36 @@ const executeWorkspaceTask = async (
   return { handles, result, workspace };
 };
 
+const resolveSelectedProjects = (
+  projects: LoadedWorkspaceProject[],
+  selectors: string[],
+) => {
+  const selected = selectors.map((selector) => {
+    const project = resolveWorkspaceProject(projects, selector);
+    if (!project) {
+      throw new Error(`Unknown Volt workspace project: ${selector}`);
+    }
+    return project;
+  });
+
+  return [...new Map(selected.map((project) => [project.configPath, project])).values()];
+};
+
+const executeWorkspaceProjectTask = async (
+  projects: LoadedWorkspaceProject[],
+  taskName: string,
+  logger: ReturnType<typeof createRootLogger>,
+) => {
+  const handles: ResourceHandle[] = [];
+
+  for (const project of projects) {
+    const executed = await executeProjectTask(project.project, taskName, { logger });
+    handles.push(...executed.activeHandles);
+  }
+
+  return handles;
+};
+
 const parseBaseArgs = (rest: string[]) =>
   parseArgs({
     allowPositionals: true,
@@ -199,6 +173,7 @@ const parseBaseArgs = (rest: string[]) =>
       all: { type: "boolean" },
       config: { type: "string" },
       mode: { type: "string" },
+      projects: { multiple: true, type: "string" },
       tasks: { multiple: true, type: "string" },
       "workspace-config": { type: "string" },
     },
@@ -208,21 +183,29 @@ const parseBaseArgs = (rest: string[]) =>
 const runProjectCommand = async (command: VoltCommand, rest: string[]) => {
   const parsed = parseBaseArgs(rest);
   const mode = resolveMode(parsed.values.mode, command);
-  const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
+  const context = await resolveVoltWorkspaceContext({
+    command,
+    cwd,
+    mode,
+    projectConfigPath: resolveExplicitProjectConfigPath(parsed.values.config),
+    workspaceConfigPath: resolveExplicitWorkspaceConfigPath(parsed.values["workspace-config"]),
+  });
 
-  if (workspaceConfigPath && !parsed.values.config) {
-    const workspace = await loadVoltWorkspace(workspaceConfigPath);
+  if (context.workspace && !parsed.values.config && !context.currentProject) {
+    const workspace = context.workspace;
     const selected = normalizeValues(parsed.values.tasks ?? []).length
       ? normalizeValues(parsed.values.tasks ?? [])
       : workspace.defaults[command];
 
     if (!selected.length) {
-      throw new Error(`No default ${command} tasks configured in ${workspaceConfigPath}.`);
+      throw new Error(
+        `No default ${command} tasks configured in ${context.workspaceConfigPath ?? context.workspaceRoot}.`,
+      );
     }
 
     const handles: ResourceHandle[] = [];
     for (const taskName of selected) {
-      const executed = await executeWorkspaceTask(workspaceConfigPath, taskName, {
+      const executed = await executeWorkspaceTask(context, taskName, {
         logger: createRootLogger(),
         mode,
       });
@@ -235,8 +218,11 @@ const runProjectCommand = async (command: VoltCommand, rest: string[]) => {
     return;
   }
 
-  const configPath = resolveProjectConfigPath(parsed.values.config);
-  const project = await loadVoltProject(command, configPath, mode, workspaceRoot);
+  const configPath =
+    resolveExplicitProjectConfigPath(parsed.values.config) ??
+    context.currentProject?.configPath ??
+    resolve(cwd, "volt.config.ts");
+  const project = await loadVoltProject(command, configPath, mode, context.workspaceRoot);
   await executeProjectCommand(
     project,
     command,
@@ -250,60 +236,128 @@ const runTaskCommand = async (rest: string[]) => {
 
   if (taskCommand === "list") {
     const parsed = parseBaseArgs(taskArgs);
-    const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
     const mode = resolveMode(parsed.values.mode, "dev");
-    if (workspaceConfigPath && !parsed.values.config) {
-      const workspace = await loadVoltWorkspace(workspaceConfigPath);
-      const taskNames = Object.keys(workspace.tasks).sort((left, right) =>
-        left.localeCompare(right),
-      );
-      process.stdout.write(`${taskNames.join("\n")}\n`);
+    const context = await resolveVoltWorkspaceContext({
+      command: "dev",
+      cwd,
+      mode,
+      projectConfigPath: resolveExplicitProjectConfigPath(parsed.values.config),
+      workspaceConfigPath: resolveExplicitWorkspaceConfigPath(parsed.values["workspace-config"]),
+    });
+    const [selector] = parsed.positionals;
+
+    if (context.workspace && !parsed.values.config && !context.currentProject) {
+      if (selector) {
+        const project = resolveWorkspaceProject(context.projects, selector);
+        if (!project) {
+          throw new Error(`Unknown Volt workspace project: ${selector}`);
+        }
+        process.stdout.write(`${listProjectTasks(project.project).join("\n")}\n`);
+        return;
+      }
+
+      const lines = [
+        ...Object.keys(context.workspace.tasks)
+          .sort((left, right) => left.localeCompare(right))
+          .map((taskName) => `workspace ${taskName}`),
+        ...context.projects.flatMap((project) =>
+          listProjectTasks(project.project).map(
+            (taskName) => `${project.alias} ${taskName}`,
+          ),
+        ),
+      ];
+      process.stdout.write(`${lines.join("\n")}\n`);
       return;
     }
 
     const project = await loadVoltProject(
       "dev",
-      resolveProjectConfigPath(parsed.values.config),
+      resolveExplicitProjectConfigPath(parsed.values.config) ??
+        context.currentProject?.configPath ??
+        resolve(cwd, "volt.config.ts"),
       mode,
-      workspaceRoot,
+      context.workspaceRoot,
     );
     process.stdout.write(`${listProjectTasks(project).join("\n")}\n`);
     return;
   }
 
   if (taskCommand === "run") {
-    const [taskName, ...runArgs] = taskArgs;
-    if (!taskName) {
-      throw new Error("Usage: volt task run <name> [--config ...]");
+    const parsed = parseBaseArgs(taskArgs);
+    const mode = resolveMode(parsed.values.mode, "dev");
+    const context = await resolveVoltWorkspaceContext({
+      command: "dev",
+      cwd,
+      mode,
+      projectConfigPath: resolveExplicitProjectConfigPath(parsed.values.config),
+      workspaceConfigPath: resolveExplicitWorkspaceConfigPath(parsed.values["workspace-config"]),
+    });
+    const logger = createRootLogger();
+    const requestedProjects = normalizeValues(parsed.values.projects ?? []);
+    const [first, second] = parsed.positionals;
+
+    if (!first) {
+      throw new Error(
+        "Usage: volt task run <name> [--projects <project>] | volt task run <project> <name>",
+      );
     }
 
-    const parsed = parseBaseArgs(runArgs);
-    const workspaceConfigPath = resolveWorkspaceConfigPath(parsed.values["workspace-config"]);
-    const mode = resolveMode(parsed.values.mode, "dev");
-    if (workspaceConfigPath && !parsed.values.config) {
-      const executed = await executeWorkspaceTask(workspaceConfigPath, taskName, {
-        logger: createRootLogger(),
-        mode,
-      });
-      await waitForActiveProcesses(executed.handles);
-      return;
+    if (context.workspace && !parsed.values.config) {
+      if (requestedProjects.length > 0) {
+        const handles = await executeWorkspaceProjectTask(
+          resolveSelectedProjects(context.projects, requestedProjects),
+          first,
+          logger,
+        );
+        await waitForActiveProcesses(handles);
+        return;
+      }
+
+      if (second) {
+        const project = resolveWorkspaceProject(context.projects, first);
+        if (!project) {
+          throw new Error(`Unknown Volt workspace project: ${first}`);
+        }
+        const handles = await executeWorkspaceProjectTask([project], second, logger);
+        await waitForActiveProcesses(handles);
+        return;
+      }
+
+      if (!context.currentProject && context.workspace.tasks[first]) {
+        const executed = await executeWorkspaceTask(context, first, {
+          logger,
+          mode,
+        });
+        await waitForActiveProcesses(executed.handles);
+        return;
+      }
+    }
+
+    if (requestedProjects.length > 0) {
+      throw new Error("--projects requires a Volt workspace.");
     }
 
     const project = await loadVoltProject(
       "dev",
-      resolveProjectConfigPath(parsed.values.config),
+      resolveExplicitProjectConfigPath(parsed.values.config) ??
+        context.currentProject?.configPath ??
+        resolve(cwd, "volt.config.ts"),
       mode,
-      workspaceRoot,
+      context.workspaceRoot,
     );
+    const taskName =
+      context.workspace && !parsed.values.config && second
+        ? second
+        : first;
     const executed = await executeProjectTask(project, taskName, {
-      logger: createRootLogger(),
+      logger,
     });
     await waitForActiveProcesses(executed.activeHandles);
     return;
   }
 
   throw new Error(
-    "Usage: volt task <list|run <name>> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
+    "Usage: volt task <list|run> [--config apps/volt-demo/volt.config.ts] [--workspace-config volt.workspace.ts]",
   );
 };
 
@@ -333,10 +387,16 @@ const runDaemonCommand = async (rest: string[]) => {
   const configPaths = normalizeValues(parsed.values.config ?? []);
   const mode =
     parsed.values.mode === "production" ? "production" : "development";
+  const context = await resolveVoltWorkspaceContext({
+    command: "dev",
+    cwd,
+    mode,
+    workspaceConfigPath: undefined,
+  });
 
   await handleDaemonCommand(
     daemonCommand,
-    workspaceRoot,
+    context.workspaceRoot,
     configPaths,
     mode,
     Bun.argv[1],
@@ -354,16 +414,21 @@ const runInternalDaemon = async (rest: string[]) => {
     strict: true,
   });
   const configPaths = normalizeValues(parsed.values.config ?? []).map((configPath) =>
-    resolve(workspaceRoot, configPath),
+    resolve(cwd, configPath),
   );
   const mode =
     parsed.values.mode === "production" ? "production" : "development";
-  await runDaemonRuntime(workspaceRoot, configPaths, mode);
+  const context = await resolveVoltWorkspaceContext({
+    command: "dev",
+    cwd,
+    mode,
+  });
+  await runDaemonRuntime(context.workspaceRoot, configPaths, mode);
 };
 
 const runDashboardCommand = async (_rest: string[]) => {
   const { runVoltDashboard } = await import("./dashboard");
-  await runVoltDashboard(workspaceRoot);
+  await runVoltDashboard(cwd, resolve(import.meta.dir, "cli.ts"));
 };
 
 export const resolveVoltCliInvocation = (args: string[]) => {

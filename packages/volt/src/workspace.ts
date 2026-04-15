@@ -34,7 +34,7 @@ export interface VoltWorkspaceProjectReference {
 export interface VoltWorkspaceConfigInput {
   defaults?: VoltTaskSelectionDefaults;
   name?: string;
-  projects: Record<string, unknown>;
+  projects?: Record<string, unknown>;
   tasks?: Record<string, VoltAnyTaskDefinition>;
 }
 
@@ -79,7 +79,7 @@ export const normalizeWorkspaceConfig = (
     configPath,
     defaults: normalizeTaskDefaults(definition.value.defaults),
     name: definition.value.name ?? "Volt Workspace",
-    projects: definition.value.projects,
+    projects: definition.value.projects ?? {},
     rootDir: dirname(configPath),
     tasks: definition.value.tasks ?? {},
   };

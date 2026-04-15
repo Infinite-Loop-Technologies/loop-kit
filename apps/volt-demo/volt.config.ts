@@ -77,6 +77,10 @@ const web = bunFullstack(WebApp, {
 });
 
 export default defineProjectConfig({
+  adapters: {
+    game,
+    web,
+  },
   artifacts: {
     runtimeSession: sessionArtifact,
   },
@@ -86,29 +90,27 @@ export default defineProjectConfig({
   },
   name: "Volt Demo",
   tasks: {
-    ...game.tasks("game"),
-    ...web.tasks("web"),
     "codegen:demo": contractBindingsTask({
       contracts: [GameApi, BrowserRuntime],
       jsonPath: ".volt/state/contracts/demo-contracts.json",
       tsPath: ".volt/generated/contracts/demo-contracts.ts",
     }),
-    "dev:full": flow("dev:full", function* (ctx) {
-      yield* ctx.log("topology-start", "starting Volt demo topology");
-      const gameTask = yield* ctx.forkTask("dev:game");
-      const game = (yield* ctx.join(gameTask)) as ProcessHandle;
-      yield* ctx.waitFor("wait-for-game-readiness", game, {
+    "dev:full": flow("dev:full", async (ctx) => {
+      await ctx.log("topology-start", "starting Volt demo topology");
+      const gameTask = await ctx.forkTask("dev:game");
+      const game = (await ctx.join(gameTask)) as ProcessHandle;
+      await ctx.waitFor("wait-for-game-readiness", game, {
         timeoutMs: 15_000,
       });
-      yield* ctx.log("game-ready", "game server is ready");
-      const webTask = yield* ctx.forkTask("dev:web", {
+      await ctx.log("game-ready", "game server is ready");
+      const webTask = await ctx.forkTask("dev:web", {
         inputs: { game },
       });
-      const web = (yield* ctx.join(webTask)) as ProcessHandle;
-      yield* ctx.waitFor("wait-for-web-readiness", web, {
+      const web = (await ctx.join(webTask)) as ProcessHandle;
+      await ctx.waitFor("wait-for-web-readiness", web, {
         timeoutMs: 15_000,
       });
-      yield* ctx.log("topology-ready", "demo topology is ready");
+      await ctx.log("topology-ready", "demo topology is ready");
       return { game, web };
     }),
   },

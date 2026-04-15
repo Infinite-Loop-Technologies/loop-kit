@@ -19,6 +19,7 @@
         { "path": "./packages/loom-theme-aquatic-react/tsconfig.json" },
         { "path": "./packages/loom-theme-base-react/tsconfig.json" },
         { "path": "./packages/loom-theme-neumorph-react/tsconfig.json" },
+        { "path": "./packages/common/tsconfig.json" },
         { "path": "./packages/state/tsconfig.json" },
         { "path": "./packages/volt/tsconfig.json" },
         { "path": "./packages/create-volt/tsconfig.json" },

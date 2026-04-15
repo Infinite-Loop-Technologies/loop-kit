@@ -1,7 +1,3 @@
-import demoProject from "./apps/volt-demo/volt.config";
-import forgeProject from "./apps/forge/volt.config";
-import siteProject from "./apps/volt-site/volt.config";
-import canvasProject from "./apps/volt-canvas-demo/volt.config";
 import { flow } from "volt/flow";
 import { defineWorkspaceConfig } from "volt/workspace";
 
@@ -11,32 +7,33 @@ export default defineWorkspaceConfig({
   },
   name: "Loop Kit Volt Workspace",
   projects: {
-    canvas: canvasProject,
-    demo: demoProject,
-    forge: forgeProject,
-    site: siteProject,
+    "dock-demo": { configPath: "apps/dock-demo/volt.config.ts" },
+    forge: { configPath: "apps/forge/volt.config.ts" },
+    "loom-demo": { configPath: "apps/loom-demo/volt.config.ts" },
+    "volt-canvas-demo": { configPath: "apps/volt-canvas-demo/volt.config.ts" },
+    "volt-demo": { configPath: "apps/volt-demo/volt.config.ts" },
+    "volt-jco-demo": { configPath: "apps/volt-jco-demo/volt.config.ts" },
+    "volt-site": { configPath: "apps/volt-site/volt.config.ts" },
   },
   tasks: {
-    "canvas-demo": flow("dev:canvas", function* (ctx) {
-      ctx.log("canvas-demo", "Starting Canvas Demo...");
-      return yield* ctx.runProjectTask("canvas", "dev:desktop");
-    }),
-    "dev:forge": flow("dev:forge", function* (ctx) {
-      ctx.log("dev:forge", "Starting Forge development server...");
-      return yield* ctx.runProjectTask("forge", "dev:web");
-    }),
-    "dev:demo+forge": flow("dev:demo+forge", function* (ctx) {
-      yield* ctx.log("workspace-topology-start", "starting workspace topology");
-      const forgeTask = yield* ctx.forkProjectTask("forge", "dev:web");
-      const demoTask = yield* ctx.forkProjectTask("demo", "dev:full");
-      const forge = yield* ctx.join(forgeTask);
-      const demo = yield* ctx.join(demoTask);
+    "dev:canvas": flow("dev:canvas", async (ctx) =>
+      ctx.runProjectTask("volt-canvas-demo", "dev:desktop"),
+    ),
+    "dev:demo+forge": flow("dev:demo+forge", async (ctx) => {
+      await ctx.log("workspace-topology-start", "starting workspace demo + forge");
+      const forgeTask = await ctx.forkProjectTask("forge", "dev:web");
+      const demoTask = await ctx.forkProjectTask("volt-demo", "dev:full");
+      const forge = await ctx.join(forgeTask);
+      const demo = await ctx.join(demoTask);
       return { demo, forge };
     }, {
       watch: ["apps/forge/src/**/*", "apps/volt-demo/src/**/*", "packages/volt/src/**/*"],
     }),
-    "dev:site": flow("dev:site", function* (ctx) {
-      return yield* ctx.runProjectTask("site", "dev:site");
-    }),
+    "dev:forge": flow("dev:forge", async (ctx) =>
+      ctx.runProjectTask("forge", "dev:web"),
+    ),
+    "dev:site": flow("dev:site", async (ctx) =>
+      ctx.runProjectTask("volt-site", "dev:site"),
+    ),
   },
 });

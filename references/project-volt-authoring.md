@@ -44,22 +44,22 @@ That keeps the public story concrete:
 
 ## Flow Guidance
 
-Use `flow(...)` when orchestration is real.
+Use `flow(...)` when orchestration is real. Flows are plain async functions with a Volt context; Volt no longer expects generator-based authoring.
 
 Preferred primitives:
 
-- `yield* ctx.runTask(...)`
-- `yield* ctx.runProjectTask(...)`
-- `yield* ctx.step(...)`
-- `yield* ctx.memo(...)`
-- `yield* ctx.fork(...)`
-- `yield* ctx.forkTask(...)`
-- `yield* ctx.join(...)`
-- `yield* ctx.all(...)`
-- `yield* ctx.race(...)`
-- `yield* ctx.waitFor(...)`
-- `yield* ctx.release(...)`
-- `yield* ctx.log(...)`
+- `await ctx.runTask(...)`
+- `await ctx.runProjectTask(...)`
+- `await ctx.step(...)`
+- `await ctx.memo(...)`
+- `await ctx.fork(...)`
+- `await ctx.forkTask(...)`
+- `await ctx.join(...)`
+- `await ctx.all(...)`
+- `await ctx.race(...)`
+- `await ctx.waitFor(...)`
+- `await ctx.release(...)`
+- `await ctx.log(...)`
 
 Use them for:
 

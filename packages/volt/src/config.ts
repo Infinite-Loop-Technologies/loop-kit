@@ -176,7 +176,10 @@ export const loadVoltWorkspace = async (
     throw new Error(`${workspaceConfigPath} does not export defineWorkspaceConfig(...).`);
   }
 
-  return normalizeWorkspaceConfig(loaded.default);
+  return normalizeWorkspaceConfig({
+    ...loaded.default,
+    source: loaded.default.source ?? workspaceConfigPath,
+  });
 };
 
 export const resolveConfigPath = (workspaceRoot: string, configPath: string) =>

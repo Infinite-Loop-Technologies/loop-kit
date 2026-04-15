@@ -21,12 +21,13 @@ const web = bunFullstack(webEntrypoint, {
 });
 
 export default defineProjectConfig({
+  adapters: {
+    web,
+  },
   defaults: {
     build: "build:web",
     dev: "dev:web",
   },
   name: "Forge Workspace",
-  tasks: {
-    ...web.tasks("web"),
-  },
+  tasks: {},
 });

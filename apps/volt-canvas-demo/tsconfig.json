@@ -15,5 +15,5 @@
     "verbatimModuleSyntax": true,
     "types": ["bun"]
   },
-  "include": ["electrobun.config.ts", "src", "volt.config.ts"]
+  "include": ["src", "volt.config.ts"]
 }

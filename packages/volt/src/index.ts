@@ -25,6 +25,7 @@ export {
 
 export { defineProjectConfig } from "./project";
 export { defineWorkspaceConfig } from "./workspace";
+export { runCodegen, createOxlintFormatter, type VoltCodegenFormatter } from "./codegen";
 export {
   flow,
   defineFlowDefinition,
@@ -33,6 +34,7 @@ export {
   type VoltFlowForkHandle,
 } from "./flow";
 export { task } from "./task";
+export { defineAdapter, type VoltAdapterDefinition } from "./task";
 export {
   defineRuntimeInputs,
   mergeRuntimeInputs,
@@ -88,8 +90,6 @@ export {
   waitForManagedProcess,
   waitForManagedProcesses,
 } from "./process";
-
-export { defineFiber, runFiber } from "./fiber";
 export { createJcoIntegration } from "./integrations";
 export { ClockService, HttpService } from "./builtins";
 export {

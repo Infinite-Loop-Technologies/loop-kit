@@ -20,7 +20,8 @@ The daemon remains part of Volt because shared local state, watchers, and owned 
 
 ## Current Guarantees
 
-- one workspace daemon per repo
+- one managed workspace daemon per workspace root
+- multiple workspace daemons can exist at once when the user is working in multiple cloned or nested workspaces
 - explicit pid, state, and log files under `.volt/daemon/`
 - clean shutdown on `SIGINT` and `SIGTERM`
 - daemon-managed resources are stopped during shutdown
@@ -31,6 +32,7 @@ The daemon remains part of Volt because shared local state, watchers, and owned 
 
 Current daemon state is centered on:
 
+- workspace identity metadata
 - managed configs
 - workspace mode
 - resource snapshots
@@ -44,6 +46,13 @@ Important paths:
 - `.volt/daemon/workspace.log`
 - `.volt/daemon/workspace.json`
 - `.volt/daemon/workspace.snapshot`
+
+Workspace identity should be explicit in daemon state so future multi-workspace UX can distinguish:
+
+- workspace name
+- workspace ID
+- workspace root path
+- managed config set
 
 ## Watch And Invalidations
 

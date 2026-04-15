@@ -1,20 +1,24 @@
-import { bunFullstackTarget, defineVoltConfig } from "volt";
+import { defineProjectConfig } from "volt";
+import { bunFullstack } from "volt/bun";
 import webEntrypoint from "./src/web/server.runtime";
 
-export default defineVoltConfig({
+const web = bunFullstack(webEntrypoint, {
+  env: {
+    PORT: process.env.PORT ?? "3500",
+    VOLT_MODE:
+      process.env.VOLT_MODE === "production" ? "production" : "development",
+  },
+  outdir: "dist/web",
+});
+
+export default defineProjectConfig({
+  adapters: {
+    web,
+  },
   defaults: {
-    build: ["web"],
-    dev: ["web"],
+    build: ["build:web"],
+    dev: ["dev:web"],
   },
   name: "Loom Demo",
-  targets: {
-    web: bunFullstackTarget(webEntrypoint, {
-      env: {
-        PORT: process.env.PORT ?? "3500",
-        VOLT_MODE:
-          process.env.VOLT_MODE === "production" ? "production" : "development",
-      },
-      outdir: "dist/web",
-    }),
-  },
+  tasks: {},
 });

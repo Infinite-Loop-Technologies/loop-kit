@@ -1,12 +1,22 @@
-import { createJcoIntegration, createBunPlugin, defineVoltConfig } from "volt";
+import { createJcoIntegration, defineProjectConfig } from "volt";
+import { bunCommand } from "volt/bun";
 
-const bun = createBunPlugin();
 const jco = createJcoIntegration();
+const componentDemo = bunCommand({
+  commands: {
+    build: ["node", "src/run-component.mjs"],
+    dev: ["node", "src/run-component.mjs"],
+  },
+  uses: ["fetchComponent"],
+});
 
-export default defineVoltConfig({
+export default defineProjectConfig({
+  adapters: {
+    "component-demo": componentDemo,
+  },
   defaults: {
-    build: ["component-demo"],
-    dev: ["component-demo"],
+    build: ["build:component-demo"],
+    dev: ["dev:component-demo"],
   },
   integrations: {
     fetchComponent: jco.component({
@@ -16,14 +26,5 @@ export default defineVoltConfig({
     }),
   },
   name: "Volt JCO Demo",
-  targets: {
-    "component-demo": bun.command({
-      commands: {
-        build: ["node", "src/run-component.mjs"],
-        dev: ["node", "src/run-component.mjs"],
-      },
-      name: "component-demo",
-      uses: ["fetchComponent"],
-    }),
-  },
+  tasks: {},
 });

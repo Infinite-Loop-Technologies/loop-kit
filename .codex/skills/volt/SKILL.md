@@ -45,6 +45,7 @@ Use CKB early for non-trivial Volt work.
 - Bun runtime services currently provide built-in capabilities such as `env.read`, `env.require`, filesystem helpers, logging, and root-relative paths.
 - Runtime topology is one of Volt’s main reasons to exist. Prefer managed processes/resources with explicit readiness over shell-ordering tricks.
 - The workspace daemon now owns Parcel-watcher snapshots, lightweight affected-task invalidation, and shared resource/status state.
+- The workspace daemon is scoped to a single workspace root; multiple daemon processes can exist at once across different workspaces, so daemon state must include explicit workspace identity metadata.
 - Dev Bun targets now execute from the workspace root so Bun watch mode can see sibling workspace packages; Volt passes `VOLT_ROOT_DIR` for per-project runtime services.
 - running `volt` with no subcommand now opens the keyboard-first OpenTUI by default
 - `volt dashboard` / `volt ui` remain aliases for the same UI surface

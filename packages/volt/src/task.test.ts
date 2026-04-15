@@ -24,11 +24,11 @@ describe("Volt tasks", () => {
         }),
         "dev:full": flow(
           "dev:full",
-          function* (ctx) {
-            const value = yield* ctx.runTask("dev:compute", {
+          async (ctx) => {
+            const value = await ctx.runTask("dev:compute", {
               inputs: 1,
             });
-            const stable = yield* ctx.memo("stable-step", () => {
+            const stable = await ctx.memo("stable-step", () => {
               calls += 1;
               return Number(value) + 1;
             });
@@ -68,19 +68,19 @@ describe("Volt tasks", () => {
       name: "Task Parallel Test",
       rootDir,
       tasks: {
-        "dev:parallel": flow("dev:parallel", function* (ctx) {
-          const slow = yield* ctx.fork("slow", async () => {
+        "dev:parallel": flow("dev:parallel", async (ctx) => {
+          const slow = await ctx.fork("slow", async () => {
             await Bun.sleep(30);
             return "slow";
           });
-          const fast = yield* ctx.fork("fast", async () => {
+          const fast = await ctx.fork("fast", async () => {
             await Bun.sleep(5);
             return "fast";
           });
 
-          const first = yield* ctx.race("first-finished", [slow, fast]);
-          const all = yield* ctx.all("collect-all", [slow, fast]);
-          const joined = yield* ctx.join(fast);
+          const first = await ctx.race("first-finished", [slow, fast]);
+          const all = await ctx.all("collect-all", [slow, fast]);
+          const joined = await ctx.join(fast);
 
           return { all, first, joined };
         }),

@@ -41,12 +41,11 @@ export function App() {
         <div className="hero-panel">
           <p className="panel-label">Example</p>
           <pre>
-{`export default defineVoltConfig({
-  targets: {
-    web: bun.fullstack({ ... }),
-    game: bun.server({ dependsOn: ["web"] }),
-    docs: bun.command({ commands: { dev: ["bun", "run", "docs:dev"] } }),
-  },
+{`const web = bunFullstack({ entry: () => import("./src/web/server.runtime"), port: 3000 });
+const desktop = electrobun({ window: { title: "Volt", width: 1280, height: 800, url: web.exports.url! }, needs: [web] });
+
+export default defineProjectConfig({
+  adapters: { web, desktop },
 });`}
           </pre>
         </div>

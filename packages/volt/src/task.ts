@@ -60,6 +60,13 @@ export type VoltAnyTaskDefinition =
   | VoltTargetTaskDefinition<any>
   | VoltTaskDefinition<any, any>;
 
+export interface VoltAdapterDefinition<TExports = Record<string, unknown>> {
+  readonly exports: Readonly<TExports>;
+  readonly kind: "adapter";
+  readonly needs?: ReadonlyArray<VoltAdapterDefinition<any>>;
+  readonly tasks: (name: string) => Record<string, VoltAnyTaskDefinition>;
+}
+
 export interface VoltTaskSelectionDefaults {
   build?: string | string[];
   dev?: string | string[];
@@ -127,6 +134,13 @@ export const defineFlowTask = <TInputs = unknown, TOutput = unknown>(
 ): VoltFlowTaskDefinition<TInputs, TOutput> => ({
   ...definition,
   kind: "flow-task",
+});
+
+export const defineAdapter = <TExports = Record<string, unknown>>(
+  definition: Omit<VoltAdapterDefinition<TExports>, "kind">,
+): VoltAdapterDefinition<TExports> => ({
+  ...definition,
+  kind: "adapter",
 });
 
 const createLegacyConfig = (

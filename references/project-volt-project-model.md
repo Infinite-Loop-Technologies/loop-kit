@@ -26,10 +26,12 @@ Volt is a typed runtime-topology and orchestration layer for entrypoints, tasks,
 
 - `entrypoint`
   - a typed runnable program module
+- `adapter`
+  - a first-class runtime value that expands into normal `build:*` and `dev:*` tasks and can expose typed outputs to other adapters
 - `task`
   - a named unit for dev, build, codegen, automation, or resource startup
 - `flow`
-  - a generator-based orchestration task with memoized steps, concurrency, joins, races, waits, and cleanup
+  - an async orchestration task with memoized steps, concurrency, joins, races, waits, and cleanup
 - `agent workflow`
   - a workflow that delegates reasoning-heavy work to an AI backend while still living inside Volt's normal task/flow/daemon/runtime model
 - `artifact`
@@ -84,7 +86,7 @@ Preferred public surfaces:
 
 - `defineProjectConfig(...)`
 - `defineWorkspaceConfig(...)`
-- `bunServer(...)`, `bunFullstack(...)`, `bunCommand(...)`
+- `bunServer(...)`, `bunFullstack(...)`, `bunCommand(...)`, `electrobun(...)`
 - `task(...)`
 - `flow(...)`
 - future `agent(...)` or similarly explicit agent-workflow declaration if the distinction proves real
@@ -99,7 +101,6 @@ Compatibility surfaces, not the preferred story:
 - `bun*Target(...)`
 - `bun*Task(...)`
 - `defineServices(...)`
-- `defineFiber(...)`, `runFiber(...)`
 - `createBunPlugin()`
 
 The point of the compatibility layer is migration, not permanent concept sprawl.
@@ -129,22 +130,24 @@ const web = bunFullstack(WebApp, {
 });
 
 export default defineProjectConfig({
+  adapters: {
+    game,
+    web,
+  },
   defaults: {
     build: ["build:game", "build:web"],
     dev: "dev:full",
   },
   name: "Volt Demo",
   tasks: {
-    ...game.tasks("game"),
-    ...web.tasks("web"),
-    "dev:full": flow("dev:full", function* (ctx) {
-      const gameTask = yield* ctx.forkTask("dev:game");
-      const gameHandle = yield* ctx.join(gameTask);
-      yield* ctx.waitFor("game-ready", gameHandle, { timeoutMs: 15_000 });
+    "dev:full": flow("dev:full", async (ctx) => {
+      const gameTask = await ctx.forkTask("dev:game");
+      const gameHandle = await ctx.join(gameTask);
+      await ctx.waitFor("game-ready", gameHandle, { timeoutMs: 15_000 });
 
-      const webTask = yield* ctx.forkTask("dev:web");
-      const webHandle = yield* ctx.join(webTask);
-      yield* ctx.waitFor("web-ready", webHandle, { timeoutMs: 15_000 });
+      const webTask = await ctx.forkTask("dev:web");
+      const webHandle = await ctx.join(webTask);
+      await ctx.waitFor("web-ready", webHandle, { timeoutMs: 15_000 });
 
       return { gameHandle, webHandle };
     }),

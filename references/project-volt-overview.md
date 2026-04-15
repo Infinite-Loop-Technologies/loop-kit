@@ -34,23 +34,24 @@ It is not yet a finished deploy platform, durable workflow engine, or agent runt
 ## The Smallest Mental Model
 
 ```ts
-import { bunFullstackTarget, defineVoltConfig } from "volt";
-import webEntrypoint from "./src/web/server.runtime";
+import { defineProjectConfig } from "volt";
+import { bunFullstack } from "volt/bun";
 
-export default defineVoltConfig({
+const web = bunFullstack({
+  entry: () => import("./src/web/server.runtime"),
+  port: Number(process.env.PORT ?? 3000),
+});
+
+export default defineProjectConfig({
+  adapters: {
+    web,
+  },
   defaults: {
-    build: ["web"],
-    dev: ["web"],
+    build: ["build:web"],
+    dev: ["dev:web"],
   },
   name: "Forge Workspace",
-  targets: {
-    web: bunFullstackTarget(webEntrypoint, {
-      env: {
-        PORT: process.env.PORT ?? "3000",
-      },
-      outdir: "dist/web",
-    }),
-  },
+  tasks: {},
 });
 ```
 
@@ -175,13 +176,10 @@ The config:
 
 ```ts
 import {
-  bunFullstackTarget,
-  bunServerTarget,
-  defineServices,
-  defineVoltConfig,
+  defineProjectConfig,
+  defineRuntimeInputs,
 } from "volt";
-import gameEntrypoint from "./src/game-server/server.runtime";
-import webEntrypoint from "./src/web/server.runtime";
+import { bunFullstack, bunServer } from "volt/bun";
 import {
   createDemoSessionArtifact,
   type DemoRuntimeSession,
@@ -195,47 +193,55 @@ const sessionArtifact = createDemoSessionArtifact({
   shareProvider,
 });
 
-export default defineVoltConfig({
+const gameRuntimeInputs = defineRuntimeInputs(({ artifacts }) => {
+  const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
+  return {
+    demoGame: {
+      healthUrl: `${session.game.localHttpUrl}/health`,
+      mode: session.mode,
+      port: session.game.port,
+      websocketUrl: session.game.localWsUrl,
+    },
+  };
+});
+
+const webRuntimeInputs = defineRuntimeInputs(({ artifacts }) => {
+  const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
+  return {
+    demoWeb: {
+      browserConfig: session.browserConfig,
+      mode: session.mode,
+      port: session.web.port,
+    },
+  };
+});
+
+const game = bunServer(GameServer, {
+  artifacts: ["runtimeSession"],
+  outdir: "dist/game-server",
+  runtimeInputs: gameRuntimeInputs,
+});
+
+const web = bunFullstack(WebApp, {
+  artifacts: ["runtimeSession"],
+  outdir: "dist/web",
+  runtimeInputs: webRuntimeInputs,
+});
+
+export default defineProjectConfig({
+  adapters: {
+    game,
+    web,
+  },
   artifacts: {
     runtimeSession: sessionArtifact,
   },
   defaults: {
-    build: ["web", "game"],
-    dev: ["web"],
+    build: ["build:web", "build:game"],
+    dev: ["dev:web"],
   },
   name: "Volt Demo",
-  targets: {
-    game: bunServerTarget(gameEntrypoint, {
-      artifacts: ["runtimeSession"],
-      outdir: "dist/game-server",
-      services: defineServices(({ artifacts }) => {
-        const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
-        return {
-          demoGame: {
-            healthUrl: `${session.game.localHttpUrl}/health`,
-            mode: session.mode,
-            port: session.game.port,
-            websocketUrl: session.game.localWsUrl,
-          },
-        };
-      }),
-    }),
-    web: bunFullstackTarget(webEntrypoint, {
-      artifacts: ["runtimeSession"],
-      dependsOn: ["game"],
-      outdir: "dist/web",
-      services: defineServices(({ artifacts }) => {
-        const session = artifacts.requireValue<DemoRuntimeSession>("runtimeSession");
-        return {
-          demoWeb: {
-            browserConfig: session.browserConfig,
-            mode: session.mode,
-            port: session.web.port,
-          },
-        };
-      }),
-    }),
-  },
+  tasks: {},
 });
 ```
 
@@ -340,46 +346,16 @@ export default defineEntrypoint<BunFullstackServices & DemoWebRuntimeServices>(
 
 Current limitation: this is a serializable-value service model. It is for config values, URLs, ports, flags, paths, metadata, and similar runtime inputs. It is not yet arbitrary non-serializable dependency injection from config into runtime.
 
-## Fibers
+## Flows
 
-Volt also has an experimental local workflow utility via `defineFiber(...)` and `runFiber(...)`.
-
-The `apps/volt-demo` session artifact uses it to memoize named setup steps like port selection and optional sharing.
-
-```ts
-import { defineFiber, runFiber } from "volt";
-
-const demoSessionFiber = defineFiber({
-  name: "volt-demo.runtime-session",
-  *run(context, input) {
-    const webPort = yield context.step("web-port", () => getOpenPort());
-    const gamePort = yield context.step("game-port", () => getOpenPort());
-    const webPublicUrl = yield context.step("share-web", async () => {
-      return input.enableShare ? input.shareProvider?.publish("volt-web", webPort) : null;
-    });
-
-    return {
-      webPort,
-      gamePort,
-      webPublicUrl,
-    };
-  },
-});
-
-const session = await runFiber(demoSessionFiber, input, {
-  statePath: ".volt/state/fibers/runtime-session.build.json",
-});
-```
+Volt now treats orchestration as plain async `flow(...)` functions plus adapter/codegen helpers rather than maintaining a separate generator-based fiber model.
 
 Current behavior:
 
-- the workflow is generator-based
-- steps have stable names
-- successful step results are memoized
-- if `statePath` is set, state is persisted to JSON
-- later runs can reuse completed step outputs
-
-This is a prototype programming model, not yet the full durable workflow story.
+- flows are authored with normal `async` / `await`
+- `ctx.step(...)` and `ctx.memo(...)` still provide stable named steps
+- persisted memo state still lives in JSON when `persist` is enabled
+- adapters and artifacts can stay plain async code when orchestration is trivial
 
 ## The Compatibility Surface
 
@@ -509,7 +485,6 @@ If someone wants to understand Volt from the code, these are the best starting p
 - `packages/volt/src/plugins/bun/app.ts`
 - `packages/volt/src/plugins/bun/services.ts`
 - `packages/volt/src/daemon.ts`
-- `packages/volt/src/fiber.ts`
 - `apps/volt-demo/volt.config.ts`
 - `apps/forge/volt.config.ts`
 - `apps/volt-site/volt.config.ts`

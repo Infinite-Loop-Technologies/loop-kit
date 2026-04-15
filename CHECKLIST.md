@@ -8,72 +8,82 @@ AI-NOTE:
 
 ## Repository Cleanup, Improvements, and Refactoring
 
-- [x] Refresh the root docs/control-plane surface so `README.md` matches the current Bun/Volt workspace shape, `platform-api`, and repo knowledge-management workflow.
 - [ ] Remove remaining Graphite-era residue from tests/generated references (`packages/dock/test/graphite.fixture.ts` and stale generated index references).
 - [ ] Clean up the temp log files that we don't need.
-- [ ] Decide whether `apps/platform-api` is a real part of the product topology that should be surfaced in more repo docs/scripts, or whether it should remain an isolated experiment.
-- [ ] Decide whether `apps/dock-demo`, `apps/loom-demo`, and `apps/platform-api` should join `volt.workspace.ts` or stay as intentionally separate app-local entrypoints.
+- [ ] Remove any references to the remnant experiment `apps/platform-api`
 - [ ] Add a lightweight repo garbage-collection workflow for temp artifacts, stale branches, stale inbox items, and stale checklist residue.
+
+## Common Package
+
+- [ ] Clone more files from the original `@evolu/common` package ([Github](https://github.com/evoluhq/evolu/tree/main/packages/common)) and use them to clean up tricky things in `packages/volt` and elsewhere.
+  - [ ] [Type](https://github.com/evoluhq/evolu/blob/main/packages/common/src/Type.ts) and [Brand](https://github.com/evoluhq/evolu/blob/main/packages/common/src/Brand.ts) are fantastic and would be great to use as a starting point to our own schema or even contract definition/validation systems.
+- [ ] Consider merging `packages/state` and `packages/common`, and by doing that, turn `packages/state` into something more sharp and clearly defined, like the other single-file libraries in `packages/common`. Perhaps even merge it with the original `@evolu/common` systems including Store, Ref, Eq, and others, creating a new system that is more robuts and powerful, bringing useful ideas from `packages/state`, most importantly the system of patch ops.
 - [ ] Add some handy reusable systems to this repo for the various problems that constantly keep appearing.
   - [ ] Services/dependency injection. This is an elegant way to create reusable systems that are basically imperative libraries. Platform APIs are a good option here (could be inspired by WASI).
     - [ ] A filesystem one for sure!
     - [ ] Perhaps a keyvalue store.
+- [ ] Define the boundaries of the `packages/common` package a bit more. I am okay with keeping a lot in there though, if it cuts down on the overall amount of packages in this workspace - as long as we mostly keep these single-file "libraries" that are allowed to depend on each other.
+- [ ] Consider building a more robust platform/environment abstraction system as a library in the common package - where we have shapes and virtual implementations for things like filesystem, clock, and more. Maybe even some WASM/WASI stuff. But should this be in packages/common? Maybe the shapes could be there, and some handy mocks/virtual implementations of some stuff - maybe. Or, we could put actual platform implementations in there? That seems like something Volt adapter creators would handle though - or maybe we should have our own "platform" APIs like Effect. Or we just have folders in common for environments. But then it would seem like we should put Volt adapters in common too. So yeah - that's odd.
 
 ## Volt
 
-- [ ] Split Volt into multiple packages, specifically separate the Volt core + CLI from the various target implementations.
+- [ ] Fix the current bugs and missing features causing Volt to not be fully usable
+  - [ ]
 - [ ] Refactor Volt to have a more codegen-centric system, and even build utilities/frameworks for working with codegen, as it is extremely useful.
   - [ ] Set up template-based code generation using template literals.
     - [ ] Start by creating an ElectroBun target builder that generates the ElectroBun entry file, the ElectroBun config file, and whatever else we need. End goal: you can get a whole ElectroBun app despite only having a volt.config.ts and an App.tsx React component. Pretty sweet! This codegen should be generated super quickly on the fly in a `.volt` directory, or something.
+  - [ ] Finish the generated ElectroBun story so the new adapter handles production packaging, richer BrowserView policy, and clearer app-hook semantics instead of only the current dev-first bootstrap.
 - [ ] Experiment with elegant and useful APIs in Volt:
   - [ ] Tagged template literals for codegen, and/or `ts-morph` for generating TS-aware output.
-  - [ ] Improve Volt's system of tasks, flows, etc. Keep the generator pattern, but improve the ergonomics.
+  - [ ] Keep hardening Volt's async task/flow orchestration now that the generator pattern is gone: improve persistence semantics, cancellation, and workspace/project cross-calls.
 - [ ] Add more ways to elegantly modify and customize Volt with plugins:
   - [ ] Add persistence to the Volt CLI so that we can begin having user settings.  This requires deciding on a model: what do we store per-workspace? Should Volt be able to work without a workspace? What do we do then? What should we store per-project? And obviously - what should we store per-machine? Should we just store everything per-machine? I'm a fan of workspace/project config because you can back it up in Git. Nobody wants to manually fetch their dotfiles in their home directory and back those up manually. However, copying over user settings from one workspace to another could get annoying, but we could have a simple "copy settings from" feature or something like that.
 - [ ] Make `packages/create-volt` and `packages/volt` both be able to create templates, perhaps have them both just pull from templates in a top level `templates` or `examples` folder. Keep things simple. Templates will be lightweight due to codegen and reusing things from Volt and Loom packages. Use Bun's archive compression and just have the template files stored in the package itself for now. No massive assets or anything to weigh things down.
   - [ ] Add lightweight features into this template/project creation experience.
     - [ ] Dependency installation via "bun install". Or post-install scripts and that sort of thing via defined manifests, perhaps?
 - [ ] Improve the Volt CLI
-  - [ ] Fix the Volt TUI's responsive layout - it is glitching and not working correctly.
-  - [ ] Set up a simple Volt help command - perhaps this shouldn't open the TUI because that might be jarring. By having this - users who don't wanna use the TUI can quickly learn the flag for non-TUI usage, and quickly see the CLI surface.
+  - [ ] A simple non-TUI "volt help" command that explains it.
   - [ ] Set up the TUI embedded shell to act as a real terminal, not just calling Volt commands.
   - [ ] Spice up Volt TUI with easter eggs and more
-    - [ ] Set up  ASCII art and animations. Something with a lightning bolt, perhaps.
-- [ ] Build Volt plugin model and programmability of the CLI
-  - [ ] Set up a simple, lightweight embedded Snake game, showing off a "plugin" or function that can be set up perhaps in volt.workspace.ts or elsewhere, and hook into the TUI, in a panel, perhaps.
-- [ ] Clarify Volt's core product shape in the CLI, docs, and demos: a Bun-native runtime-topology and workflow layer for tasks, managed resources, artifacts, integrations, and future agent workflows.
-- [ ] Add a clear agent-workflow story to Volt.
-  - [ ] Decide whether agent workflows should be first-class alongside tasks/flows or a specialized flow/task convention.
-  - [ ] Keep agent workflows wired from `volt.config.ts` or workspace config instead of inventing a second hidden control plane.
-  - [ ] Make agent workflows able to call normal Volt tasks like `dev`, `build`, `lint`, and `test`.
-  - [ ] Design how agent workflows can pause for human input, approvals, or follow-up commands without collapsing back into shell scripts.
-- [ ] Add a daemon-backed task and workflow session model.
-  - [ ] Add `volt task start` so dev-style tasks can keep running after the launch command returns.
-  - [ ] Add `volt task ps`, `attach`, and `stop` around daemon-owned task handles.
-  - [ ] Add the equivalent session story for flows and future agent workflows.
-  - [ ] Make task and workflow sessions render cleanly in the OpenTUI instead of living only in shell output.
-- [ ] Prove that ElectroBun works with `apps/volt-demo`.
-- [ ] Add a deploy feature to Volt so `volt.config.ts` can model deploys alongside `dev` and `build`.
+    - [ ] Figure out a solution for playing ASCII art and animations.
+    - [ ] Look into setting up themes and making the UI look better, perhaps using Loom somehow.
+    - [ ] Look into chenglou's pretext library for improving text layout and perhaps having cool interactive text animations that are highly performant.
+- [ ] Improve Volt's programmability not just for the CLI, but for everything in the ideal scope of Volt:
+  - [ ] Investigate being able to set up workspace-level tasks, or tools, and that sort of thing - that the Volt CLI can directly call (like tasks now) - but then also, the Volt Daemon, or some kind of Volt MCP wrapper, could expose as MCP tools directly to agents! Not just user-written MCP tools - some built-in Volt MCP stuff is needed too (that exists now to some extent).
+  - [ ] Come up with a solution for installing Volt adapters/integrations/etc. directly from the TUI.
+    - [ ] Show off a plugin that adds a snake game feature into the Volt TUI as an example of a plugin that adds a new feature to the Volt CLI.
+- [ ] Improve the system of adapters by adding many more useful features.
+  - [ ] Add the ability for the Volt daemon and/or CLI to get messages sent from adapters that are logged into the terminal, and queryable from agents via the MCP server system.
+    - [ ] Set this up with ElectroBun and Bun fullstack/browser adapters so that the browser console output is relayed into the Volt CLI.
+    - [ ] Set up an improved TUI for being able to filter logs per-task in various ways.
+- [ ] Greatly improve ElectroBun support.
 - [ ] Add richer dev orchestration around readiness, restart policies, owned resource lifecycle, and grouped logs for Bun runtimes.
+- [ ] Keep the daemon model workspace-scoped, with explicit workspace identity metadata in daemon state so multiple workspace daemons can coexist safely.
+- [ ] Expand `packages/common` carefully from the Evolu-inspired primitives we already have (`Task`, `Resource`, `Result`, `Ref`, `Store`, `Type`, `Schedule`) instead of inventing parallel utilities in Volt.
 - [ ] Finish the public model transition from target-first compatibility APIs to the preferred project/task/flow/runtime-input story.
   - [ ] Keep targets as a compatibility surface, not the main mental model.
   - [ ] Decide where `tasks`, `flows`, `artifacts`, `integrations`, `resources`, and future `agents` are meaningfully different versus redundant.
   - [ ] Tighten naming so Volt feels coherent instead of like several partially overlapping abstractions.
 - [ ] Add a lightweight dependency graph for build products, not just process order.
 - [ ] Prove the model with WASM components before generalizing further.
-- [ ] Add a better remote template story for GitHub-backed registries instead of only embedded-file manifests.
 - [ ] Add an inspect/debug surface in the CLI and TUI so runtime graphs, resolved env, dependency order, and generated inputs are visible.
 - [ ] Greatly improve the Volt demos and templates.
 - [ ] Add a real docs/content app for Volt, not just the current site shell.
 - [ ] Keep the Volt reference docs aligned with the actual preferred public model and trim stale compatibility-heavy explanations.
+- [ ] Decide how far the new `@loop-kit/common` fork from Evolu should go: keep it as a trimmed shared primitive set, or grow it into a fuller reusable foundation package.
 - [x] Create a repo-local Volt Codex skill and use it as the lightweight Volt docs front door. Keep it updated when Volt changes.
 - [ ] Prototype AI tooling around Volt and Codex.
   - [ ] Prove a minimal Codex CLI integration that can run agent workflows against a Volt workspace or project.
   - [ ] Decide later whether the Codex SDK is the default Volt integration path or just another backend.
   - [ ] Capture structured run logs and workflow events instead of treating AI runs as plain terminal text.
-- [ ] Set up npm token and publish packages to prove the Volt release flow works.
-- [ ] Set up GitHub Actions workflows for publishing Volt packages.
-- [ ] Set up deployed Volt examples and choose a hosting story for the longer-running demos.
+- [ ] Set up everything needed to release Volt as a real thing:
+  - [ ] A real website with docs.
+    - [ ] Deployed Volt examples and choose a hosting story for the longer-running demos.
+  - [ ] Published packages
+    - [ ] For Volt itself, the CLI
+    - [ ] For create-volt so "bun create volt" works.
+    - [ ] For the skills and MCP server - this is tricky, because do we somehow embed it into the "volt" package that contains the CLI and daemon, or do we do some other architecture? So the first step is figuring that out!
+  - [ ] Consider building a new separate repository for Volt, because this is the loop-kit repo. Or rename this repo.
 
 ## Dock
 
