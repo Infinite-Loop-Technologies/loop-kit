@@ -1,7 +1,18 @@
 # @loop-kit/common
 
-Shared primitives for loop-kit packages.
+`common` is for broadly reusable primitives.
 
-This package is seeded from `@evolu/common` and intentionally trimmed to the
-subset that is currently useful across this monorepo: readonly/value helpers,
-typed results, cancellable tasks, and resource/disposal helpers.
+What belongs here:
+
+- reusable result and error helpers
+- small ownership and lifecycle utilities
+- small type-safe helpers that are not domain-specific
+
+What does not belong here:
+
+- React-specific code
+- DOM-specific code
+- app or provider glue
+- random convenience helpers with only one caller
+
+This package is intentionally small. It should not become a dumping ground.

@@ -1,30 +1,80 @@
 {
   "name": "@loop-kit/common",
-  "version": "0.1.0",
-  "description": "Shared functional and resource primitives seeded from Evolu common.",
+  "version": "0.1.1",
+  "description": "A fork of @evolu/common",
+  "keywords": [],
+  "author": "Daniel Steigerwald <daniel@steigerwald.cz>",
+  "license": "MIT",
   "type": "module",
-  "sideEffects": false,
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "browser": "./dist/src/index.js",
+      "react-native": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     },
-    "./package.json": "./package.json"
+    "./local-first": {
+      "types": "./dist/src/local-first/index.d.ts",
+      "import": "./dist/src/local-first/index.js",
+      "default": "./dist/src/local-first/index.js"
+    },
+    "./polyfills": {
+      "types": "./dist/src/Polyfills.d.ts",
+      "import": "./dist/src/Polyfills.js",
+      "browser": "./dist/src/Polyfills.js",
+      "react-native": "./dist/src/Polyfills.js",
+      "default": "./dist/src/Polyfills.js"
+    }
   },
-  "files": ["src", "README.md", "UPSTREAM.md"],
+  "typesVersions": {
+    "*": {
+      "polyfills": [
+        "./dist/src/Polyfills.d.ts"
+      ],
+      "local-first": [
+        "./dist/src/local-first/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/src/**",
+    "src/**",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "bun -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
-    "test": "bun test",
-    "prepack": "bun run clean && bun run build"
+    "build": "tsc --build tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build",
+    "format": "prettier --write \"src/*.{ts,tsx,md}\""
+  },
+  "dependencies": {
+    "@noble/ciphers": "^2.1.1",
+    "@noble/hashes": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "kysely": "^0.28.15",
+    "msgpackr": "^1.11.8",
+    "random": "^5.4.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@bokuweb/zstd-wasm": "0.0.27",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.10.9",
+    "@types/ws": "^8.18.1",
+    "better-sqlite3": "^12.6.2",
+    "fast-check": "^4.5.3",
+    "playwright": "^1.58.1",
+    "typescript": "^6",
+    "webpack": "^5.98.0",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
-  "license": "MIT"
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "sideEffects": false
 }

@@ -1,50 +1,30 @@
 {
+  "name": "dockyard",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "type": "module",
+  "packageManager": "bun@1.3.11",
+  "workspaces": ["apps/*", "packages/*", "examples/*", "registry"],
   "scripts": {
-    "setup": "proto install --yes && bun install",
-    "setup:tools": "proto install --yes",
-    "build": "bun run --workspaces --if-present build",
-    "typecheck:bun": "bun x tsc -p tsconfig.bun.json",
-    "typecheck": "bun run typecheck:bun && bun run --workspaces --if-present typecheck",
-    "test": "bun test",
-    "check": "bun run typecheck && bun run test",
-    "ci": "bun run build && bun run typecheck && bun run test",
-    "forge:dev": "bun run --cwd apps/forge dev",
-    "platform:dev": "bun run --cwd apps/platform-api dev",
-    "dock:dev": "bun run --cwd apps/dock-demo dev",
-    "loom:dev": "bun run --cwd apps/loom-demo dev",
-    "volt:canvas:build": "bun run --cwd apps/volt-canvas-demo build",
-    "volt:canvas:dev": "bun run --cwd apps/volt-canvas-demo dev",
-    "volt:demo:dev": "bun run --cwd apps/volt-demo dev",
-    "volt:site:dev": "bun run --cwd apps/volt-site dev",
-    "volt:jco-demo:dev": "bun run --cwd apps/volt-jco-demo dev",
-    "volt:demo:build": "bun run --cwd apps/volt-demo build",
-    "volt:site:build": "bun run --cwd apps/volt-site build",
-    "volt:jco-demo:build": "bun run --cwd apps/volt-jco-demo build",
-    "workspaces:list": "bun pm ls",
-    "volt:mcp:probe": "bun run tools/volt-mcp.ts --probe"
+    "dev": "bun --filter @loop-kit/registry dev",
+    "build": "bun run build:packages && bun --filter @loop-kit/registry build",
+    "build:packages": "bun --filter @loop-kit/common build && bun --filter @loop-kit/common-react build && bun --filter @loop-kit/interaction-core build && bun --filter @loop-kit/interaction-react build && bun --filter @loop-kit/dock build && bun --filter @loop-kit/dock-react build",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "bun run typecheck:packages && bun --filter @loop-kit/registry typecheck",
+    "typecheck:packages": "bun --filter @loop-kit/common typecheck && bun --filter @loop-kit/common-react typecheck && bun --filter @loop-kit/interaction-core typecheck && bun --filter @loop-kit/interaction-react typecheck && bun --filter @loop-kit/dock typecheck && bun --filter @loop-kit/dock-react typecheck",
+    "check": "bun run format:check && bun run lint && bun run typecheck"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@types/bun": "^1.3.11",
-    "typescript": "^5.9.3",
-    "volt": "workspace:*"
-    ,
-    "zod": "^4.3.6"
-  },
-  "overrides": {
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
-    "react": "19.2.5",
-    "react-dom": "19.2.5"
-  },
-  "packageManager": "bun@1.3.11",
-  "engines": {
-    "bun": "1.3.11",
-    "node": "~22"
+    "@loop-kit/common": "workspace:*",
+    "@loop-kit/common-react": "workspace:*",
+    "@loop-kit/dock": "workspace:*",
+    "@loop-kit/dock-react": "workspace:*",
+    "@loop-kit/interaction-core": "workspace:*",
+    "@loop-kit/interaction-react": "workspace:*",
+    "@loop-kit/registry-source": "workspace:*",
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.3"
   }
 }

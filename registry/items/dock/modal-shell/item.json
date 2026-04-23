@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "modal-shell",
+  "type": "registry:block",
+  "title": "Dock Modal Shell",
+  "description": "A modal shell starter rendered through dock modal nodes and policies.",
+  "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+  "files": [
+    {
+      "path": "registry/items/dock/modal-shell/files/ModalShellDock.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["dock"],
+  "meta": {
+    "id": "dock/modal-shell",
+    "tags": ["dock", "modal", "shell"]
+  }
+}

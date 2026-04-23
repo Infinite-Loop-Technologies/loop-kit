@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "panel-group",
+  "type": "registry:block",
+  "title": "Dock Panel Group",
+  "description": "A reusable panel-group starter with multiple tabs.",
+  "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+  "files": [
+    {
+      "path": "registry/items/dock/panel-group/files/PanelGroupDock.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["dock"],
+  "meta": {
+    "id": "dock/panel-group",
+    "tags": ["dock", "tabs", "starter"]
+  }
+}
