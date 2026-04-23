@@ -1,0 +1,204 @@
+/**
+ * Function utilities including exhaustive checks and composition.
+ *
+ * @module
+ */
+
+/**
+ * Helper function to ensure exhaustive matching in a switch statement. Throws
+ * an error if an unhandled case is encountered.
+ *
+ * ### Example
+ *
+ * ```ts
+ * type Color = "red" | "green" | "blue";
+ *
+ * const handleColor = (color: Color): void => {
+ *   switch (color) {
+ *     case "red":
+ *       console.log("Handling red");
+ *       break;
+ *     case "green":
+ *       console.log("Handling green");
+ *       break;
+ *     case "blue":
+ *       console.log("Handling blue");
+ *       break;
+ *     default:
+ *       exhaustiveCheck(color); // Ensures all cases are handled
+ *   }
+ * };
+ * ```
+ *
+ * Use this primarily in side-effect switches (`void` branches). For
+ * value-producing switches, TypeScript can enforce exhaustiveness without a
+ * `default` branch.
+ *
+ * ### Example
+ *
+ * Return from each case for value-producing switches.
+ *
+ * ```ts
+ * type Color = "red" | "green" | "blue";
+ *
+ * const colorToHex = (color: Color): string => {
+ *   switch (color) {
+ *     case "red":
+ *       return "#ff0000";
+ *     case "green":
+ *       return "#00ff00";
+ *     case "blue":
+ *       return "#0000ff";
+ *   }
+ * };
+ * ```
+ *
+ * ### Example
+ *
+ * Use assignment + no `default` to get exhaustiveness by definite assignment.
+ *
+ * ```ts
+ * type Input =
+ *   | { readonly type: "Mutate" }
+ *   | { readonly type: "Query" }
+ *   | { readonly type: "Export" };
+ *
+ * const onInput = (input: Input): void => {
+ *   let result: "A" | "B" | "C";
+ *
+ *   switch (input.type) {
+ *     case "Mutate":
+ *       result = "A";
+ *       break;
+ *     case "Query":
+ *       result = "B";
+ *       break;
+ *     case "Export":
+ *       result = "C";
+ *       break;
+ *   }
+ *
+ *   handleKind(result);
+ * };
+ *
+ * const handleKind = (kind: "A" | "B" | "C"): void => {
+ *   console.log(kind);
+ * };
+ * ```
+ */
+export const exhaustiveCheck = (value: never): never => {
+  throw new Error(`exhaustiveCheck unhandled case: ${JSON.stringify(value)}`);
+};
+
+/**
+ * Returns the value unchanged.
+ *
+ * Useful as a default transformation, placeholder callback, or when a function
+ * is required but no transformation is needed.
+ *
+ * ### Example
+ *
+ * ```ts
+ * const values = [1, 2, 3];
+ * const same = values.map(identity); // [1, 2, 3]
+ *
+ * const getTransform = (shouldDouble: boolean) =>
+ *   shouldDouble ? (x: number) => x * 2 : identity;
+ * ```
+ */
+export const identity = <A>(a: A): A => a;
+
+/**
+ * A function that takes no arguments and returns a value of type T. Also known
+ * as a thunk.
+ *
+ * Useful for:
+ *
+ * - Providing default callbacks (see {@link lazyVoid}, {@link lazyTrue}, etc.)
+ * - Delaying expensive operations until actually needed
+ * - Deferring side effects so the callee controls when they run
+ *
+ * ### Example
+ *
+ * ```ts
+ * // Default callback
+ * const notify = (onDone: Lazy<void> = lazyVoid) => {
+ *   onDone();
+ * };
+ *
+ * // Delay computation
+ * const getData: Lazy<Data> = () => compute();
+ * const data = getData();
+ *
+ * // Defer side effects
+ * const schedule = (job: Lazy<void>) => {
+ *   queueMicrotask(job);
+ * };
+ * schedule(() => logMetric("loaded"));
+ * ```
+ */
+export type Lazy<T> = () => T;
+
+/**
+ * Creates a {@link Lazy} from a precomputed value.
+ *
+ * Use when the value is expensive to compute and want to compute it once at
+ * definition time rather than on every call.
+ *
+ * ### Example
+ *
+ * ```ts
+ * // Computed once at definition, returned on every call
+ * const getConfig = lazy(parseConfig(rawConfig));
+ *
+ * // vs. computed on every call
+ * const getConfig = () => parseConfig(rawConfig);
+ * ```
+ */
+export const lazy =
+  <T>(value: T): Lazy<T> =>
+  () =>
+    value;
+
+/** A {@link Lazy} that returns `true`. */
+export const lazyTrue: Lazy<true> = /*#__PURE__*/ lazy(true);
+
+/** A {@link Lazy} that returns `false`. */
+export const lazyFalse: Lazy<false> = /*#__PURE__*/ lazy(false);
+
+/** A {@link Lazy} that returns `null`. */
+export const lazyNull: Lazy<null> = /*#__PURE__*/ lazy(null);
+
+/** A {@link Lazy} that returns `undefined`. */
+export const lazyUndefined: Lazy<undefined> = /*#__PURE__*/ lazy(undefined);
+
+/** A {@link Lazy} that returns `undefined` for void callbacks. */
+export const lazyVoid: Lazy<void> = lazyUndefined;
+
+/**
+ * Development placeholder that always throws.
+ *
+ * Use to sketch function bodies before implementing them. TypeScript infers the
+ * return type from context, so surrounding code still type-checks. Use an
+ * explicit generic when there is no return type annotation.
+ *
+ * ### Example
+ *
+ * ```ts
+ * // Type inferred from return type annotation
+ * const fetchUser = (id: UserId): Result<User, FetchError> => todo();
+ *
+ * expectTypeOf(fetchUser).returns.toEqualTypeOf<
+ *   Result<User, FetchError>
+ * >();
+ *
+ * // Explicit generic when no return type
+ * const getConfig = () => todo<Config>();
+ *
+ * expectTypeOf(getConfig).returns.toEqualTypeOf<Config>();
+ * ```
+ */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+export const todo = <T>(): T => {
+  throw new Error("not yet implemented");
+};

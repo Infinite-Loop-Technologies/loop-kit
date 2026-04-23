@@ -1,18 +1,13 @@
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "lib": ["ES2022", "DOM", "DOM.Iterable"],
-        "jsx": "react-jsx",
-        "types": ["react", "bun"],
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "strict": true,
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
-        "outDir": "dist",
-        "rootDir": ".",
-        "skipLibCheck": true
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@loop-kit/common-react": ["../common-react/src/index.ts"],
+      "@loop-kit/interaction-core": ["../interaction-core/src/index.ts"]
     },
-    "include": ["src", "test"]
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

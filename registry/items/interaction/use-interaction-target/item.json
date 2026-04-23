@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-interaction-target",
+  "type": "registry:block",
+  "title": "Use Interaction Target",
+  "description": "A thin React starter for registering semantic interaction targets.",
+  "dependencies": ["@loop-kit/interaction-core", "@loop-kit/interaction-react"],
+  "files": [
+    {
+      "path": "registry/items/interaction/use-interaction-target/files/UseInteractionTarget.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["interaction"],
+  "meta": {
+    "id": "interaction/use-interaction-target",
+    "tags": ["interaction", "target", "react"]
+  }
+}

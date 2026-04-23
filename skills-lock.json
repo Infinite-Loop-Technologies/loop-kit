@@ -1,15 +1,10 @@
 {
   "version": 1,
   "skills": {
-    "instantdb": {
-      "source": "instantdb/skills",
+    "shadcn": {
+      "source": "shadcn/ui",
       "sourceType": "github",
-      "computedHash": "951caca240f154021ea4ebce0492a68d5cebff0e96af9132c7f22fd4d569478a"
-    },
-    "opentui": {
-      "source": "msmps/opentui-skill",
-      "sourceType": "github",
-      "computedHash": "ebfea5f246935e49225f7dd9b03a15721fd4d00c83f2c862219de60941480ff8"
+      "computedHash": "642a177bee320618caa49f5106cadb4e7594c606e867f61ba7b56d19cf745cd5"
     }
   }
 }

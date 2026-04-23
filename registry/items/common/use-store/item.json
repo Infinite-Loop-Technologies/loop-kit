@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-store",
+  "type": "registry:block",
+  "title": "Use Store",
+  "description": "A small starter showing how to bridge a Store into React.",
+  "dependencies": ["@loop-kit/common", "@loop-kit/common-react"],
+  "files": [
+    {
+      "path": "registry/items/common/use-store/files/UseStore.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["common"],
+  "meta": {
+    "id": "common/use-store",
+    "tags": ["common", "store", "react"]
+  }
+}

@@ -1,0 +1,479 @@
+/**
+ * Owner identity and cryptographic key derivation.
+ *
+ * @module
+ */
+
+import * as bip39 from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
+import type { NonEmptyReadonlyArray } from "../Array.js";
+import type { RandomBytesDep } from "../Crypto.js";
+import {
+  createSlip21,
+  EncryptionKey,
+  Entropy16,
+  Entropy32,
+  testCreateRandomBytes,
+} from "../Crypto.js";
+import { testCreateRandomLib } from "../Random.js";
+import { getOrNull } from "../Result.js";
+import {
+  brand,
+  Id,
+  IdBytes,
+  idBytesToId,
+  idToIdBytes,
+  Mnemonic,
+  NonNegativeInt,
+  type Typed,
+} from "../Type.js";
+import type { EncryptedDbChange, Storage } from "./Storage.js";
+import { TimestampBytes } from "./Timestamp.js";
+
+/**
+ * {@link Owner} without a {@link OwnerWriteKey}.
+ *
+ * @see {@link createSharedReadonlyOwner}
+ */
+export interface ReadonlyOwner {
+  readonly id: OwnerId;
+  /** TODO: Wrap with `Redacted` in the next major version. */
+  readonly encryptionKey: OwnerEncryptionKey;
+}
+
+/**
+ * The Owner represents ownership of data in Evolu. Every database change is
+ * assigned to an owner and encrypted with its {@link OwnerEncryptionKey}. Owners
+ * allow partial sync, only the {@link AppOwner} is synced by default.
+ *
+ * Owners can also provide real data deletion, while individual changes in
+ * local-first/distributed systems can only be soft deleted, entire owners can
+ * be completely deleted from both relays and devices (except for
+ * {@link AppOwner}, which must be preserved for sync coordination).
+ *
+ * Evolu provides different owner types depending on their use case:
+ *
+ * - **Coordination**: {@link AppOwner} for sync coordination and long-term
+ *   persistence
+ * - **Data partitioning**: {@link ShardOwner} for partitioning application data
+ * - **Collaboration**: {@link SharedOwner} for collaborative write access
+ * - **Data sharing**: {@link SharedReadonlyOwner} for read-only access to shared
+ *   data
+ *
+ * Owners are cryptographically derived from an {@link OwnerSecret} using
+ * SLIP-21, ensuring secure and deterministic key generation:
+ *
+ * - {@link OwnerId}: Globally unique public identifier
+ * - {@link OwnerEncryptionKey}: Symmetric encryption key for data protection
+ * - {@link OwnerWriteKey}: Authentication token for write operations (rotatable)
+ *
+ * @see {@link createAppOwner}
+ * @see {@link createShardOwner}
+ * @see {@link createSharedOwner}
+ * @see {@link createSharedReadonlyOwner}
+ */
+export interface Owner extends ReadonlyOwner {
+  /** TODO: Wrap with `Redacted` in the next major version. */
+  readonly writeKey: OwnerWriteKey;
+}
+
+/**
+ * An {@link ReadonlyOwner} or {@link Owner} with non-empty {@link OwnerTransport}s
+ * so it can be synced.
+ */
+export interface SyncOwner {
+  readonly owner: ReadonlyOwner | Owner;
+  readonly transports: NonEmptyReadonlyArray<OwnerTransport>;
+}
+
+/** OwnerId is a branded {@link Id} that uniquely identifies an {@link Owner}. */
+export const OwnerId = /*#__PURE__*/ brand("OwnerId", Id);
+export type OwnerId = typeof OwnerId.Type;
+
+/** Bytes representation of {@link OwnerId}. */
+export const OwnerIdBytes = /*#__PURE__*/ brand("OwnerIdBytes", IdBytes);
+export type OwnerIdBytes = typeof OwnerIdBytes.Type;
+
+/** Converts {@link OwnerId} to {@link OwnerIdBytes}. */
+export const ownerIdToOwnerIdBytes = (ownerId: OwnerId): OwnerIdBytes =>
+  idToIdBytes(ownerId) as OwnerIdBytes;
+
+/** Converts {@link OwnerIdBytes} to {@link OwnerId}. */
+export const ownerIdBytesToOwnerId = (ownerIdBytes: OwnerIdBytes): OwnerId =>
+  idBytesToId(ownerIdBytes as IdBytes) as OwnerId;
+
+export const ownerWriteKeyLength = /*#__PURE__*/ NonNegativeInt.orThrow(16);
+
+/** Symmetric encryption key for {@link Owner} data protection. */
+export const OwnerEncryptionKey = /*#__PURE__*/ brand(
+  "OwnerEncryptionKey",
+  EncryptionKey,
+);
+export type OwnerEncryptionKey = typeof OwnerEncryptionKey.Type;
+
+/**
+ * A secure token for write operations. It's derived from {@link OwnerSecret} by
+ * default and can be rotated via {@link createOwnerWriteKey}.
+ */
+export const OwnerWriteKey = /*#__PURE__*/ brand("OwnerWriteKey", Entropy16);
+export type OwnerWriteKey = typeof OwnerWriteKey.Type;
+
+/**
+ * Creates a new random {@link OwnerWriteKey} for rotation.
+ *
+ * The initial OwnerWriteKey is deterministically derived from
+ * {@link OwnerSecret}. Use `createOwnerWriteKey` to rotate (replace) the write
+ * key without changing the owner identity.
+ */
+export const createOwnerWriteKey = (deps: RandomBytesDep): OwnerWriteKey =>
+  deps.randomBytes.create(16) as OwnerWriteKey;
+
+/**
+ * 32 bytes of cryptographic entropy used to derive {@link Owner} keys.
+ *
+ * Can be created using {@link createOwnerSecret} or converted from a
+ * {@link Mnemonic} using {@link mnemonicToOwnerSecret}.
+ */
+export const OwnerSecret = /*#__PURE__*/ brand("OwnerSecret", Entropy32);
+export type OwnerSecret = typeof OwnerSecret.Type;
+
+/** Creates a {@link OwnerSecret}. */
+export const createOwnerSecret = (deps: RandomBytesDep): OwnerSecret =>
+  deps.randomBytes.create(32) as OwnerSecret;
+
+/** Deterministic {@link OwnerSecret} for tests. */
+export const testOwnerSecret = /*#__PURE__*/ createOwnerSecret({
+  randomBytes: /*#__PURE__*/ testCreateRandomBytes({
+    randomLib: /*#__PURE__*/ testCreateRandomLib(),
+  }),
+});
+
+/** Converts an {@link OwnerSecret} to a {@link Mnemonic}. */
+export const ownerSecretToMnemonic = (secret: OwnerSecret): Mnemonic =>
+  bip39.entropyToMnemonic(secret, wordlist) as Mnemonic;
+
+/** Converts a {@link Mnemonic} to an {@link OwnerSecret}. */
+export const mnemonicToOwnerSecret = (mnemonic: Mnemonic): OwnerSecret =>
+  bip39.mnemonicToEntropy(mnemonic, wordlist) as OwnerSecret;
+
+/**
+ * Creates an {@link Owner} from a {@link OwnerSecret} using SLIP-21 key
+ * derivation.
+ */
+const createOwner = (secret: OwnerSecret): Owner => ({
+  id: ownerIdBytesToOwnerId(
+    OwnerIdBytes.orThrow(
+      createSlip21(secret, ["Evolu", "OwnerIdBytes"]).slice(0, 16),
+    ),
+  ),
+
+  encryptionKey: OwnerEncryptionKey.orThrow(
+    createSlip21(secret, ["Evolu", "OwnerEncryptionKey"]),
+  ),
+
+  writeKey: OwnerWriteKey.orThrow(
+    createSlip21(secret, ["Evolu", "OwnerWriteKey"]).slice(0, 16),
+  ),
+});
+
+/**
+ * The AppOwner represents the application owner. It's created using a
+ * cryptographically secure random generator or derived from an external source,
+ * e.g., mnemonic stored securely in a hardware device.
+ *
+ * While it's possible to store all application data in AppOwner, the better
+ * approach is to use it only for sync coordination. Storing all app data in
+ * AppOwner means that data will be stored/synced forever. And that's a problem
+ * if we want to provide real data deletion or in-app data migration without
+ * data duplication. In local-first apps/distributed systems, we can't delete
+ * individual changes, we only mark them as deleted, otherwise sync could not
+ * work.
+ *
+ * If we really want to delete data or at least avoid syncing it, we must store
+ * it using a different owner than AppOwner, e.g. {@link ShardOwner} or
+ * {@link SharedOwner}, and delete that owner. The AppOwner itself must be
+ * preserved because it coordinates deletion information across devices. Other
+ * devices need to sync the information that an owner was deleted so they can
+ * delete their local data as well.
+ *
+ * ## Privacy Considerations
+ *
+ * AppOwner must never be shared with anyone.
+ *
+ * AppOwner's {@link OwnerId} is used for authorization with
+ * {@link createOwnerWebSocketTransport}. Share it only with trusted relay
+ * parties that must verify access, and do not share it with anyone else.
+ *
+ * For data sharing scenarios, use {@link SharedOwner} and
+ * {@link SharedReadonlyOwner} to make intent explicit and distinguish
+ * collaborative usage from {@link AppOwner} coordination.
+ */
+export interface AppOwner extends Owner, Typed<"AppOwner"> {
+  /**
+   * The mnemonic that was used to derive the AppOwner keys. Optional when the
+   * AppOwner is created from external keys to avoid sharing the mnemonic with
+   * the Evolu app.
+   *
+   * TODO: Wrap with `Redacted` in the next major version.
+   */
+  readonly mnemonic: Mnemonic;
+}
+
+/** Creates an {@link AppOwner} from an {@link OwnerSecret}. */
+export const createAppOwner = (secret: OwnerSecret): AppOwner => ({
+  ...createOwner(secret),
+  type: "AppOwner",
+  mnemonic: ownerSecretToMnemonic(secret),
+});
+
+/** Deterministic {@link AppOwner} for tests. */
+export const testAppOwner = /*#__PURE__*/ createAppOwner(testOwnerSecret);
+
+/**
+ * An {@link Owner} for sharding data.
+ *
+ * ShardOwners are the recommended storage location for most application data
+ * because they can be completely deleted (both on relays and devices) and
+ * conditionally synced.
+ *
+ * Can be created from {@link OwnerSecret} via {@link createShardOwner} or
+ * deterministically derived from {@link AppOwner} using
+ * {@link deriveShardOwner}.
+ */
+export interface ShardOwner extends Owner, Typed<"ShardOwner"> {}
+
+/** Creates a {@link ShardOwner} from an {@link OwnerSecret}. */
+export const createShardOwner = (secret: OwnerSecret): ShardOwner => ({
+  ...createOwner(secret),
+  type: "ShardOwner",
+});
+
+/**
+ * Derives a {@link ShardOwner} from an {@link AppOwner} using the specified path.
+ *
+ * **Advantages of derived owners:**
+ *
+ * - **Deterministic**: Same path always produces the same ShardOwner across all
+ *   devices
+ * - **Immediate availability**: Can be hardcoded and used before sync occurs
+ * - **Consistent setup**: All devices start with identical data structure
+ * - **Lifecycle management**: Can implement epoch patterns for clean data
+ *   deletion and recreation
+ *
+ * **Common patterns:**
+ *
+ * - Use paths like `["shard", 1]` for versioned data lifecycle
+ * - Use paths like `["project", "MyApp", 1]` for named partitions with versions
+ * - Each device can derive the same owners and set up initial structure
+ */
+export const deriveShardOwner = (
+  owner: AppOwner,
+  path: NonEmptyReadonlyArray<string | number>,
+): ShardOwner => {
+  const secret = createSlip21(owner.encryptionKey, path) as OwnerSecret;
+
+  return {
+    ...createOwner(secret),
+    type: "ShardOwner",
+  };
+};
+
+/** An {@link Owner} for collaborative data with write access. */
+export interface SharedOwner extends Owner, Typed<"SharedOwner"> {}
+
+/**
+ * Creates a {@link SharedOwner} from an {@link OwnerSecret} for collaborative
+ * write access.
+ *
+ * Use {@link createSharedReadonlyOwner} to create a read-only version for
+ * sharing.
+ */
+export const createSharedOwner = (secret: OwnerSecret): SharedOwner => ({
+  ...createOwner(secret),
+  type: "SharedOwner",
+});
+
+/**
+ * Read-only version of a {@link SharedOwner} for data sharing. Contains only the
+ * {@link OwnerId} and {@link EncryptionKey} needed for others to read the shared
+ * data without write access.
+ */
+export interface SharedReadonlyOwner
+  extends ReadonlyOwner, Typed<"SharedReadonlyOwner"> {}
+
+/** Creates a {@link SharedReadonlyOwner} from a {@link SharedOwner}. */
+export const createSharedReadonlyOwner = (
+  sharedOwner: SharedOwner,
+): SharedReadonlyOwner => ({
+  type: "SharedReadonlyOwner",
+  id: sharedOwner.id,
+  encryptionKey: sharedOwner.encryptionKey,
+});
+
+/**
+ * Transport configuration for connecting to relays.
+ *
+ * Currently only WebSocket, in the future Bluetooth, LocalNetwork, etc.
+ */
+export type OwnerTransport = OwnerWebSocketTransport;
+
+/**
+ * WebSocket transport configuration.
+ *
+ * ## Authentication via URL
+ *
+ * The {@link OwnerId} is passed as a URL query parameter. While this approach is
+ * generally discouraged for authentication tokens (they get logged), it's safe
+ * here because OwnerId is pseudonymous and used only for access verification -
+ * it provides no ability to read encrypted data or write changes.
+ *
+ * See: [HTTP headers in Websockets client
+ * API](https://stackoverflow.com/questions/4361173/http-headers-in-websockets-client-api/74564827#74564827)
+ *
+ * ## Error Handling
+ *
+ * When a relay rejects a connection (invalid OwnerId, unauthorized owner, or
+ * server error), the browser WebSocket API does not expose the specific HTTP
+ * status code or reason - it only reports a generic connection failure. The
+ * client automatically retries with exponential backoff and jitter, eventually
+ * succeeding once the configuration or server issue is resolved.
+ *
+ * Legitimate clients will be properly configured with valid credentials, so
+ * automatic retry is OK.
+ *
+ * @see {@link createOwnerWebSocketTransport}
+ * @see {@link parseOwnerIdFromOwnerWebSocketTransportUrl}
+ */
+export interface OwnerWebSocketTransport extends Typed<"WebSocket"> {
+  readonly url: string;
+}
+
+/**
+ * Creates an {@link OwnerWebSocketTransport} for the given relay URL and
+ * {@link OwnerId}.
+ *
+ * The URL must be a WebSocket base URL without query parameters or fragments
+ * (e.g., `wss://relay.evolu.dev`, not `wss://relay.evolu.dev?foo=bar`). The
+ * function appends the `ownerId` as a query parameter.
+ *
+ * ### Example
+ *
+ * ```ts
+ * // Create transport "wss://relay.evolu.dev?ownerId=..."
+ * const transport = createOwnerWebSocketTransport({
+ *   url: "wss://relay.evolu.dev",
+ *   ownerId: owner.id,
+ * });
+ *
+ * // Use with createEvolu
+ * const evolu = createEvolu(deps)(Schema, {
+ *   transports: [transport],
+ * });
+ * ```
+ */
+export const createOwnerWebSocketTransport = (config: {
+  readonly url: string;
+  readonly ownerId: OwnerId;
+}): OwnerWebSocketTransport => ({
+  type: "WebSocket",
+  url: `${config.url}?ownerId=${config.ownerId}`,
+});
+
+/**
+ * Extracts {@link OwnerId} from an {@link OwnerWebSocketTransport} URL query
+ * string.
+ *
+ * Parses the query string `?ownerId=...` and validates that the extracted value
+ * is a valid {@link OwnerId}.
+ *
+ * ### Example
+ *
+ * ```ts
+ * parseOwnerIdFromOwnerWebSocketTransportUrl(
+ *   "/sync?ownerId=_12345678abcdefgh",
+ * );
+ * // Returns: OwnerId or null
+ * ```
+ */
+export const parseOwnerIdFromOwnerWebSocketTransportUrl = (
+  url: string,
+): OwnerId | null => getOrNull(OwnerId.fromUnknown(url.split("=")[1]));
+
+/** Common interface implemented by all owner domain errors. */
+export interface OwnerError {
+  readonly ownerId: OwnerId;
+}
+
+/**
+ * Usage data for an {@link OwnerId}.
+ *
+ * Tracks storage usage to enforce quotas if needed, and some other stuff.
+ *
+ * TODO:
+ *
+ * - Add transferredBytes for billing and monitoring network usage.
+ */
+export interface OwnerUsage {
+  /** The {@link Owner} this usage data belongs to. */
+  readonly ownerId: OwnerIdBytes;
+
+  /**
+   * Total logical data bytes stored.
+   *
+   * Measures the size of {@link EncryptedDbChange}s only, excluding
+   * {@link Storage} implementation overhead (with SqliteStorage: indexes,
+   * skiplist columns, etc.). This provides:
+   *
+   * - **Predictable measurement** - same data = same byte count across all
+   *   instances
+   * - **Quota enforcement** - consistent billing/limits independent of storage
+   *   implementation
+   * - **Overhead tracking** - actual Storage size can be compared against this to
+   *   monitor efficiency
+   */
+  readonly storedBytes: NonNegativeInt;
+
+  /** Tracks the earliest timestamp for timestamp insertion strategies. */
+  readonly firstTimestamp: TimestampBytes | null;
+
+  /**
+   * Tracks the latest timestamp for timestamp insertion strategies.
+   *
+   * Free relays can use it to identify inactive accounts for cleanup.
+   */
+  readonly lastTimestamp: TimestampBytes | null;
+}
+
+/**
+ * An {@link AppOwner} for encrypting device-only data.
+ *
+ * Device-only data belongs to the current device rather than to the synced app
+ * identity. A common example is the last used {@link AppOwner}, which can be
+ * stored so users do not need to enter the mnemonic every time they reopen the
+ * app.
+ *
+ * This data must be encrypted because other OS processes may be able to read
+ * unencrypted app-controlled storage such as `localStorage`, `IndexedDB`, or
+ * similar stores.
+ *
+ * DeviceAppOwner is backed by a platform-specific secure primitive such as Expo
+ * SecureStore, Electron safeStorage, or WebAuthn PRF.
+ *
+ * Use DeviceAppOwner with a local-only Evolu instance. Local-only means an
+ * Evolu instance with empty transports (`transports: []`) so it does not sync
+ * its AppOwner, and local-only (prefixed with "_") tables.
+ *
+ * A local-only Evolu instance is better than plain platform storage because
+ * device-only data gets schema, reactivity, and the same cross-platform
+ * behavior as the rest of Evolu.
+ *
+ * The local-only Evolu instance can still use other owners for sync via
+ * `useOwner`. Use it for data that belongs to the current device rather than
+ * the user app Evolu instance (news delivery etc.).
+ *
+ * DeviceAppOwner Evolu instance is secure only when its data stays on the
+ * device.
+ */
+export interface DeviceAppOwner extends AppOwner {
+  readonly source: "ExpoSecureStore" | "WebAuthnPrf" | "ElectronSafeStorage";
+}

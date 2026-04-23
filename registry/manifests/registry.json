@@ -1,0 +1,187 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "dockyard",
+  "homepage": "https://dockyard.vercel.app",
+  "items": [
+    {
+      "name": "basic",
+      "type": "registry:block",
+      "title": "Basic Dock",
+      "description": "A compact installable Dock shell built on the IRA dock service and runtime.",
+      "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+      "files": [
+        {
+          "path": "registry/items/dock/basic/files/BasicDock.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["dock"],
+      "meta": {
+        "id": "dock/basic",
+        "tags": ["dock", "source", "starter"]
+      }
+    },
+    {
+      "name": "panel-group",
+      "type": "registry:block",
+      "title": "Dock Panel Group",
+      "description": "A reusable panel-group starter with multiple tabs.",
+      "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+      "files": [
+        {
+          "path": "registry/items/dock/panel-group/files/PanelGroupDock.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["dock"],
+      "meta": {
+        "id": "dock/panel-group",
+        "tags": ["dock", "tabs", "starter"]
+      }
+    },
+    {
+      "name": "floating-window",
+      "type": "registry:block",
+      "title": "Dock Floating Window",
+      "description": "A floating window starter that mirrors the runtime-backed settings window pattern.",
+      "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+      "files": [
+        {
+          "path": "registry/items/dock/floating-window/files/FloatingWindowDock.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["dock"],
+      "meta": {
+        "id": "dock/floating-window",
+        "tags": ["dock", "window", "floating"]
+      }
+    },
+    {
+      "name": "modal-shell",
+      "type": "registry:block",
+      "title": "Dock Modal Shell",
+      "description": "A modal shell starter rendered through dock modal nodes and policies.",
+      "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+      "files": [
+        {
+          "path": "registry/items/dock/modal-shell/files/ModalShellDock.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["dock"],
+      "meta": {
+        "id": "dock/modal-shell",
+        "tags": ["dock", "modal", "shell"]
+      }
+    },
+    {
+      "name": "command-boundary-demo",
+      "type": "registry:block",
+      "title": "Dock Command Boundary Demo",
+      "description": "Scaffold for a future command-boundary focused dock policy demo.",
+      "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react", "@loop-kit/interaction-core"],
+      "files": [
+        {
+          "path": "registry/items/dock/command-boundary-demo/files/CommandBoundaryDemo.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["dock"],
+      "meta": {
+        "id": "dock/command-boundary-demo",
+        "tags": ["dock", "command-boundary", "todo"]
+      }
+    },
+    {
+      "name": "use-interaction-target",
+      "type": "registry:block",
+      "title": "Use Interaction Target",
+      "description": "A thin React starter for registering semantic interaction targets.",
+      "dependencies": ["@loop-kit/interaction-core", "@loop-kit/interaction-react"],
+      "files": [
+        {
+          "path": "registry/items/interaction/use-interaction-target/files/UseInteractionTarget.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["interaction"],
+      "meta": {
+        "id": "interaction/use-interaction-target",
+        "tags": ["interaction", "target", "react"]
+      }
+    },
+    {
+      "name": "keyboard-manager",
+      "type": "registry:block",
+      "title": "Interaction Keyboard Manager",
+      "description": "Scaffold for future runtime-owned keyboard shortcut management.",
+      "dependencies": ["@loop-kit/interaction-core", "@loop-kit/interaction-react"],
+      "files": [
+        {
+          "path": "registry/items/interaction/keyboard-manager/files/KeyboardManager.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["interaction"],
+      "meta": {
+        "id": "interaction/keyboard-manager",
+        "tags": ["interaction", "keyboard", "todo"]
+      }
+    },
+    {
+      "name": "filter-builder-shortcuts",
+      "type": "registry:block",
+      "title": "Filter Builder Shortcuts",
+      "description": "Scaffold for a future filter-builder keyboard and command-boundary shortcut demo.",
+      "dependencies": ["@loop-kit/interaction-core", "@loop-kit/interaction-react"],
+      "files": [
+        {
+          "path": "registry/items/interaction/filter-builder-shortcuts/files/FilterBuilderShortcuts.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["interaction"],
+      "meta": {
+        "id": "interaction/filter-builder-shortcuts",
+        "tags": ["interaction", "shortcuts", "todo"]
+      }
+    },
+    {
+      "name": "use-store",
+      "type": "registry:block",
+      "title": "Use Store",
+      "description": "A small starter showing how to bridge a Store into React.",
+      "dependencies": ["@loop-kit/common", "@loop-kit/common-react"],
+      "files": [
+        {
+          "path": "registry/items/common/use-store/files/UseStore.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["common"],
+      "meta": {
+        "id": "common/use-store",
+        "tags": ["common", "store", "react"]
+      }
+    },
+    {
+      "name": "runtime-provider",
+      "type": "registry:block",
+      "title": "Runtime Provider",
+      "description": "A small starter for building app-level runtime providers around `createRuntime`.",
+      "dependencies": ["@loop-kit/common", "@loop-kit/common-react"],
+      "files": [
+        {
+          "path": "registry/items/common/runtime-provider/files/RuntimeProvider.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "categories": ["common"],
+      "meta": {
+        "id": "common/runtime-provider",
+        "tags": ["common", "runtime", "provider"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "floating-window",
+  "type": "registry:block",
+  "title": "Dock Floating Window",
+  "description": "A floating window starter that mirrors the runtime-backed settings window pattern.",
+  "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+  "files": [
+    {
+      "path": "registry/items/dock/floating-window/files/FloatingWindowDock.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["dock"],
+  "meta": {
+    "id": "dock/floating-window",
+    "tags": ["dock", "window", "floating"]
+  }
+}

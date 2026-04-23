@@ -1,17 +1,25 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "ESM for browsers and Node16+",
+  "extends": "./base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "jsx": "react-jsx",
+    "lib": ["dom", "esnext"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "es2022",
+
     "outDir": "dist",
     "rootDir": ".",
-    "skipLibCheck": true,
-    "types": ["bun"]
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "tsBuildInfoFile": "dist/.tsBuildInfo"
   },
-  "include": ["src", "test"]
+  "include": [
+    "src",
+    "test",
+    "test/_webSocketTestServerControl.ts",
+    "vitest.*.config.ts"
+  ],
+  "exclude": ["dist", "node_modules"]
 }

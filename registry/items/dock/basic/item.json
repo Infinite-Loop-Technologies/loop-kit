@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "basic",
+  "type": "registry:block",
+  "title": "Basic Dock",
+  "description": "A compact installable Dock shell built on the IRA dock service and runtime.",
+  "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react"],
+  "files": [
+    {
+      "path": "registry/items/dock/basic/files/BasicDock.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["dock"],
+  "meta": {
+    "id": "dock/basic",
+    "tags": ["dock", "source", "starter"]
+  }
+}
