@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "command-boundary-demo",
+  "type": "registry:block",
+  "title": "Dock Command Boundary Demo",
+  "description": "Scaffold for a future command-boundary focused dock policy demo.",
+  "dependencies": ["@loop-kit/dock", "@loop-kit/dock-react", "@loop-kit/interaction-core"],
+  "files": [
+    {
+      "path": "registry/items/dock/command-boundary-demo/files/CommandBoundaryDemo.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["dock"],
+  "meta": {
+    "id": "dock/command-boundary-demo",
+    "tags": ["dock", "command-boundary", "todo"]
+  }
+}

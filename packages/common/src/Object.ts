@@ -1,0 +1,250 @@
+/**
+ * Object utilities.
+ *
+ * @module
+ */
+
+/**
+ * A read-only `Record<K, V>` with `K extends keyof any` to preserve branded key
+ * types (e.g., in {@link mapObject}).
+ */
+export type ReadonlyRecord<K extends keyof any, V> = Readonly<Record<K, V>>;
+
+/**
+ * Checks if a value is a plain object (e.g., created with `{}` or `Object`).
+ *
+ * Accepts objects with `Object.prototype` and objects with a `null` prototype
+ * created via `Object.create(null)`. Rejects class instances and other built-in
+ * objects because their prototype chain includes an application-specific or
+ * built-in prototype before `Object.prototype`.
+ *
+ * The prototype-chain check uses structure instead of `prototype ===
+ * Object.prototype` so it also works for plain objects coming from another
+ * JavaScript realm.
+ *
+ * ### Example
+ *
+ * ```ts
+ * isPlainObject({}); // true
+ * isPlainObject(Object.create(null)); // true
+ * isPlainObject(new Date()); // false
+ * isPlainObject(new (class Example {})()); // false
+ * isPlainObject([]); // false
+ * isPlainObject(null); // false
+ * ```
+ */
+export const isPlainObject = (
+  value: unknown,
+): value is Record<string, unknown> => {
+  if (Object.prototype.toString.call(value) !== "[object Object]") {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value) as object | null;
+  return prototype === null || Object.getPrototypeOf(prototype) === null;
+};
+
+/**
+ * Checks if a value is a function.
+ *
+ * ### Example
+ *
+ * ```ts
+ * isFunction(() => {}); // true
+ * isFunction(function () {}); // true
+ * isFunction({}); // false
+ * ```
+ */
+export const isFunction = (value: unknown): value is globalThis.Function =>
+  typeof value === "function";
+
+/**
+ * Checks if a value is {@link Iterable}.
+ *
+ * ### Example
+ *
+ * ```ts
+ * isIterable([1, 2, 3]); // true
+ * isIterable("abc"); // true
+ * isIterable({}); // false
+ * ```
+ */
+export const isIterable = (value: unknown): value is Iterable<unknown> =>
+  value != null &&
+  typeof (value as Iterable<unknown>)[Symbol.iterator] === "function";
+
+/**
+ * Like `Object.entries` but preserves branded keys.
+ *
+ * ### Example
+ *
+ * ```ts
+ * type UserId = string & { readonly __brand: "UserId" };
+ * const users = createRecord<UserId, string>();
+ * const entries = objectToEntries(users); // [UserId, string][]
+ * ```
+ */
+export const objectToEntries = <T extends Record<string, any>>(
+  record: T,
+): ReadonlyArray<[StringKeyOf<T>, T[StringKeyOf<T>]]> =>
+  Object.entries(record) as Array<
+    [StringKeyOf<T>, T[StringKeyOf<T>]]
+  > as ReadonlyArray<[StringKeyOf<T>, T[StringKeyOf<T>]]>;
+
+// A helper type to remove symbol keys (e.g for branded objects).
+type StringKeyOf<T> = Extract<keyof T, string>;
+
+/**
+ * Creates an object from key-value pairs, preserving branded key types.
+ *
+ * The inverse of {@link objectToEntries}. Use when you need type-safe
+ * reconstruction of objects with branded keys.
+ *
+ * ### Example
+ *
+ * ```ts
+ * type UserId = string & { readonly __brand: "UserId" };
+ * const entries: ReadonlyArray<[UserId, string]> = [
+ *   ["u1" as UserId, "Alice"],
+ * ];
+ * const users = objectFromEntries(entries); // ReadonlyRecord<UserId, string>
+ * ```
+ */
+export const objectFromEntries = <K extends string, V>(
+  entries: Iterable<readonly [K, V]>,
+): ReadonlyRecord<K, V> => Object.fromEntries(entries) as ReadonlyRecord<K, V>;
+
+/**
+ * Creates an object by mapping keys to values.
+ *
+ * The inverse of `Object.keys` — instead of extracting keys from an object,
+ * builds an object from keys with a mapper function.
+ *
+ * ### Example
+ *
+ * ```ts
+ * objectFrom(["en", "fr", "de"], loadTranslations);
+ * // { en: Translations, fr: Translations, de: Translations }
+ *
+ * objectFrom(["trace", "debug", "log"], (level) => createHandler(level));
+ * // { trace: Handler, debug: Handler, log: Handler }
+ * ```
+ */
+export const objectFrom = <K extends string, V>(
+  keys: ReadonlyArray<K>,
+  getValue: (key: K) => V,
+): ReadonlyRecord<K, V> =>
+  Object.fromEntries(keys.map((k) => [k, getValue(k)])) as ReadonlyRecord<K, V>;
+
+/**
+ * Maps a `ReadonlyRecord<K, V>` to a new `ReadonlyRecord<K, U>`, preserving
+ * branded key types (e.g., `type Id = 'id' & string`) lost by `Object.entries`.
+ * Uses `K extends string` for precision.
+ */
+export const mapObject = <K extends string, V, U>(
+  record: ReadonlyRecord<K, V>,
+  fn: (value: V, key: K) => U,
+): ReadonlyRecord<K, U> => {
+  const out = Object.create(null) as Record<K, U>;
+
+  for (const key in record) {
+    out[key as K] = fn(record[key as K], key as K);
+  }
+
+  return out as ReadonlyRecord<K, U>;
+};
+
+/** Conditionally excludes a property from an object. */
+export const excludeProp = <T extends object, K extends keyof T>(
+  obj: T,
+  prop: K,
+  condition?: boolean,
+): typeof condition extends true ? T : Omit<T, K> => {
+  if (condition) {
+    return { ...obj };
+  }
+  const { [prop]: _, ...rest } = obj;
+  return rest;
+};
+
+/**
+ * Creates a prototype-less object typed as `Record<K, V>`.
+ *
+ * Use this function when you need a plain record without a prototype chain
+ * (e.g. when keys are controlled by external sources) to avoid prototype
+ * pollution and accidental collisions with properties like `__proto__`.
+ *
+ * Example:
+ *
+ * ```ts
+ * const values = createRecord<string, SqliteValue>();
+ * values["__proto__"] = someValue; // safe, no prototype pollution
+ * ```
+ */
+export const createRecord = <K extends string = string, V = unknown>(): Record<
+  K,
+  V
+> => Object.create(null) as Record<K, V>;
+
+/**
+ * An empty readonly record.
+ *
+ * Use as a default or initial value to avoid allocating new empty records.
+ *
+ * @group Constants
+ */
+export const emptyRecord: Readonly<Record<string, never>> =
+  /*#__PURE__*/ createRecord();
+
+/**
+ * Safely gets a property from a record, returning `undefined` if the key
+ * doesn't exist.
+ *
+ * TypeScript's `Record<K, V>` type assumes all keys exist, but at runtime
+ * accessing a non-existent key returns `undefined`. This helper provides proper
+ * typing for that case without needing a type assertion.
+ *
+ * ### Example
+ *
+ * ```ts
+ * const users: Record<string, User> = { alice: { name: "Alice" } };
+ * const user = getProperty(users, "bob"); // User | undefined
+ * ```
+ */
+export const getProperty = <K extends string, V>(
+  record: ReadonlyRecord<K, V>,
+  key: K,
+): V | undefined => (key in record ? record[key] : undefined);
+
+/**
+ * A disposable wrapper around `URL.createObjectURL` that automatically revokes
+ * the URL when disposed. Use with the `using` declaration for automatic
+ * cleanup.
+ *
+ * ### Example
+ *
+ * ```ts
+ * const blob = new Blob(["hello"], { type: "text/plain" });
+ * using objectUrl = createObjectURL(blob);
+ * console.log(objectUrl.url); // blob:...
+ * // URL.revokeObjectURL is automatically called when the scope ends
+ * ```
+ *
+ * This ensures the URL is always revoked when the scope ends, even if an error
+ * occurs, preventing memory leaks from unreleased blob URLs.
+ */
+export interface ObjectURL extends Disposable {
+  /** The object URL string created by `URL.createObjectURL`. */
+  readonly url: string;
+}
+
+/** Creates a disposable {@link ObjectURL} for the given blob. */
+export const createObjectURL = (blob: Blob): ObjectURL => {
+  const url = URL.createObjectURL(blob);
+  return {
+    url,
+    [Symbol.dispose]: () => {
+      URL.revokeObjectURL(url);
+    },
+  };
+};

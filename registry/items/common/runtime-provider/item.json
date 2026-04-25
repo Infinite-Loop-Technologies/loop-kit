@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "runtime-provider",
+  "type": "registry:block",
+  "title": "Runtime Provider",
+  "description": "A small starter for building app-level runtime providers around `createRuntime`.",
+  "dependencies": ["@loop-kit/common", "@loop-kit/common-react"],
+  "files": [
+    {
+      "path": "registry/items/common/runtime-provider/files/RuntimeProvider.tsx",
+      "type": "registry:component"
+    }
+  ],
+  "categories": ["common"],
+  "meta": {
+    "id": "common/runtime-provider",
+    "tags": ["common", "runtime", "provider"]
+  }
+}
