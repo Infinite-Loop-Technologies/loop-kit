@@ -1,1 +1,0 @@
-Command boundary demo scaffold.

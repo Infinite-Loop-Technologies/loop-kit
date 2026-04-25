@@ -1,1 +1,0 @@
-Filter builder shortcuts scaffold.
