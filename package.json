@@ -3,20 +3,16 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.3.11",
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "examples/*"
-  ],
+  "workspaces": ["apps/*", "packages/*", "examples/*"],
   "scripts": {
     "dev": "bun --filter @loop-kit/registry dev",
-    "build": "bun run build:packages && bun --filter @loop-kit/registry build",
-    "build:packages": "bun --filter @loop-kit/common build && bun --filter @loop-kit/common-react build && bun --filter @loop-kit/interaction-core build && bun --filter @loop-kit/interaction-react build && bun --filter @loop-kit/dock build && bun --filter @loop-kit/dock-react build",
+    "build": "bun run build:packages",
+    "build:packages": "bun --filter @loop-kit/common build && bun --filter @loop-kit/interaction build",
     "lint": "biome check .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "typecheck": "bun run typecheck:packages && bun --filter @loop-kit/registry typecheck",
-    "typecheck:packages": "bun --filter @loop-kit/common typecheck && bun --filter @loop-kit/common-react typecheck && bun --filter @loop-kit/interaction-core typecheck && bun --filter @loop-kit/interaction-react typecheck && bun --filter @loop-kit/dock typecheck && bun --filter @loop-kit/dock-react typecheck",
+    "typecheck": "bun run typecheck:packages",
+    "typecheck:packages": "bun --filter @loop-kit/common typecheck && bun --filter @loop-kit/interaction typecheck",
     "check": "bun run format:check && bun run lint && bun run typecheck"
   },
   "devDependencies": {
