@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@loop-kit/common": "workspace:*",
-    "@loop-kit/interaction-core": "workspace:*"
+    "@loop-kit/interaction": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

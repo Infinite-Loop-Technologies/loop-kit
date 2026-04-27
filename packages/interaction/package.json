@@ -1,5 +1,5 @@
 {
-  "name": "@loop-kit/interaction-core",
+  "name": "@loop-kit/interaction",
   "version": "0.1.0",
   "type": "module",
   "types": "./dist/index.d.ts",

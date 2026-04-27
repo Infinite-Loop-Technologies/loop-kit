@@ -3,7 +3,11 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.3.11",
-  "workspaces": ["apps/*", "packages/*", "examples/*", "registry"],
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "examples/*"
+  ],
   "scripts": {
     "dev": "bun --filter @loop-kit/registry dev",
     "build": "bun run build:packages && bun --filter @loop-kit/registry build",
@@ -17,12 +21,8 @@
   },
   "devDependencies": {
     "@loop-kit/common": "workspace:*",
-    "@loop-kit/common-react": "workspace:*",
     "@loop-kit/dock": "workspace:*",
-    "@loop-kit/dock-react": "workspace:*",
-    "@loop-kit/interaction-core": "workspace:*",
-    "@loop-kit/interaction-react": "workspace:*",
-    "@loop-kit/registry-source": "workspace:*",
+    "@loop-kit/interaction": "workspace:*",
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.15.3",
     "typescript": "^5.9.3"
