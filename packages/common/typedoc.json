@@ -1,0 +1,46 @@
+{
+  "groupOrder": [
+    "Core Types",
+    "Creating Run",
+    "Abort masking",
+    "Resource management",
+    "Composition",
+    "Concurrency primitives",
+    "Monitoring",
+    "Types",
+    "Constants",
+    "Type guards",
+    "Transformations",
+    "Accessors",
+    "Mutations",
+    "Constructors",
+    "Limiting",
+    "Delay",
+    "Filtering",
+    "State",
+    "Transform",
+    "Collection",
+    "Side effects",
+    "Base Types",
+    "Base factories",
+    "Composite factories",
+    "String",
+    "Number",
+    "Array",
+    "Object",
+    "Utilities",
+    "Type utilities",
+    "*"
+  ],
+  "intentionallyNotExported": [
+    /**
+     * Suppresses warnings for 'Type.Type' when referenced in patterns like:
+     *
+     * ```ts
+     * export type Foo = typeof Foo.Type;
+     * ```
+     */
+    "Type.Type",
+    "SelectQueryBuilderExpression"
+  ]
+}

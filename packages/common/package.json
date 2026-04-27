@@ -27,10 +27,297 @@
       "react-native": "./dist/src/Polyfills.js",
       "default": "./dist/src/Polyfills.js"
     },
-    "./*": {
-      "types": "./dist/src/*.d.ts",
-      "import": "./dist/src/*.js",
-      "default": "./dist/src/*.js"
+    "./Array": {
+      "types": "./dist/src/Array.d.ts",
+      "import": "./dist/src/Array.js",
+      "default": "./dist/src/Array.js"
+    },
+    "./Assert": {
+      "types": "./dist/src/Assert.d.ts",
+      "import": "./dist/src/Assert.js",
+      "default": "./dist/src/Assert.js"
+    },
+    "./BigInt": {
+      "types": "./dist/src/BigInt.d.ts",
+      "import": "./dist/src/BigInt.js",
+      "default": "./dist/src/BigInt.js"
+    },
+    "./Brand": {
+      "types": "./dist/src/Brand.d.ts",
+      "import": "./dist/src/Brand.js",
+      "default": "./dist/src/Brand.js"
+    },
+    "./Buffer": {
+      "types": "./dist/src/Buffer.d.ts",
+      "import": "./dist/src/Buffer.js",
+      "default": "./dist/src/Buffer.js"
+    },
+    "./Cache": {
+      "types": "./dist/src/Cache.d.ts",
+      "import": "./dist/src/Cache.js",
+      "default": "./dist/src/Cache.js"
+    },
+    "./Callbacks": {
+      "types": "./dist/src/Callbacks.d.ts",
+      "import": "./dist/src/Callbacks.js",
+      "default": "./dist/src/Callbacks.js"
+    },
+    "./Console": {
+      "types": "./dist/src/Console.d.ts",
+      "import": "./dist/src/Console.js",
+      "default": "./dist/src/Console.js"
+    },
+    "./Crypto": {
+      "types": "./dist/src/Crypto.d.ts",
+      "import": "./dist/src/Crypto.js",
+      "default": "./dist/src/Crypto.js"
+    },
+    "./Eq": {
+      "types": "./dist/src/Eq.d.ts",
+      "import": "./dist/src/Eq.js",
+      "default": "./dist/src/Eq.js"
+    },
+    "./Error": {
+      "types": "./dist/src/Error.d.ts",
+      "import": "./dist/src/Error.js",
+      "default": "./dist/src/Error.js"
+    },
+    "./Function": {
+      "types": "./dist/src/Function.d.ts",
+      "import": "./dist/src/Function.js",
+      "default": "./dist/src/Function.js"
+    },
+    "./Identicon": {
+      "types": "./dist/src/Identicon.d.ts",
+      "import": "./dist/src/Identicon.js",
+      "default": "./dist/src/Identicon.js"
+    },
+    "./Lookup": {
+      "types": "./dist/src/Lookup.d.ts",
+      "import": "./dist/src/Lookup.js",
+      "default": "./dist/src/Lookup.js"
+    },
+    "./Microtask": {
+      "types": "./dist/src/Microtask.d.ts",
+      "import": "./dist/src/Microtask.js",
+      "default": "./dist/src/Microtask.js"
+    },
+    "./Number": {
+      "types": "./dist/src/Number.d.ts",
+      "import": "./dist/src/Number.js",
+      "default": "./dist/src/Number.js"
+    },
+    "./Object": {
+      "types": "./dist/src/Object.d.ts",
+      "import": "./dist/src/Object.js",
+      "default": "./dist/src/Object.js"
+    },
+    "./Option": {
+      "types": "./dist/src/Option.d.ts",
+      "import": "./dist/src/Option.js",
+      "default": "./dist/src/Option.js"
+    },
+    "./Order": {
+      "types": "./dist/src/Order.d.ts",
+      "import": "./dist/src/Order.js",
+      "default": "./dist/src/Order.js"
+    },
+    "./Platform": {
+      "types": "./dist/src/Platform.d.ts",
+      "import": "./dist/src/Platform.js",
+      "default": "./dist/src/Platform.js"
+    },
+    "./Polyfills": {
+      "types": "./dist/src/Polyfills.d.ts",
+      "import": "./dist/src/Polyfills.js",
+      "browser": "./dist/src/Polyfills.js",
+      "react-native": "./dist/src/Polyfills.js",
+      "default": "./dist/src/Polyfills.js"
+    },
+    "./Random": {
+      "types": "./dist/src/Random.d.ts",
+      "import": "./dist/src/Random.js",
+      "default": "./dist/src/Random.js"
+    },
+    "./readonly": {
+      "types": "./dist/src/readonly.d.ts",
+      "import": "./dist/src/readonly.js",
+      "default": "./dist/src/readonly.js"
+    },
+    "./Redacted": {
+      "types": "./dist/src/Redacted.d.ts",
+      "import": "./dist/src/Redacted.js",
+      "default": "./dist/src/Redacted.js"
+    },
+    "./Ref": {
+      "types": "./dist/src/Ref.d.ts",
+      "import": "./dist/src/Ref.js",
+      "default": "./dist/src/Ref.js"
+    },
+    "./RefCount": {
+      "types": "./dist/src/RefCount.d.ts",
+      "import": "./dist/src/RefCount.js",
+      "default": "./dist/src/RefCount.js"
+    },
+    "./Relation": {
+      "types": "./dist/src/Relation.d.ts",
+      "import": "./dist/src/Relation.js",
+      "default": "./dist/src/Relation.js"
+    },
+    "./Resource": {
+      "types": "./dist/src/Resource.d.ts",
+      "import": "./dist/src/Resource.js",
+      "default": "./dist/src/Resource.js"
+    },
+    "./Result": {
+      "types": "./dist/src/Result.d.ts",
+      "import": "./dist/src/Result.js",
+      "default": "./dist/src/Result.js"
+    },
+    "./Runtime": {
+      "types": "./dist/src/Runtime.d.ts",
+      "import": "./dist/src/Runtime.js",
+      "default": "./dist/src/Runtime.js"
+    },
+    "./Schedule": {
+      "types": "./dist/src/Schedule.d.ts",
+      "import": "./dist/src/Schedule.js",
+      "default": "./dist/src/Schedule.js"
+    },
+    "./Service": {
+      "types": "./dist/src/Service.d.ts",
+      "import": "./dist/src/Service.js",
+      "default": "./dist/src/Service.js"
+    },
+    "./Set": {
+      "types": "./dist/src/Set.d.ts",
+      "import": "./dist/src/Set.js",
+      "default": "./dist/src/Set.js"
+    },
+    "./Signal": {
+      "types": "./dist/src/Signal.d.ts",
+      "import": "./dist/src/Signal.js",
+      "default": "./dist/src/Signal.js"
+    },
+    "./Skiplist": {
+      "types": "./dist/src/Skiplist.d.ts",
+      "import": "./dist/src/Skiplist.js",
+      "default": "./dist/src/Skiplist.js"
+    },
+    "./Sqlite": {
+      "types": "./dist/src/Sqlite.d.ts",
+      "import": "./dist/src/Sqlite.js",
+      "default": "./dist/src/Sqlite.js"
+    },
+    "./Store": {
+      "types": "./dist/src/Store.d.ts",
+      "import": "./dist/src/Store.js",
+      "default": "./dist/src/Store.js"
+    },
+    "./String": {
+      "types": "./dist/src/String.d.ts",
+      "import": "./dist/src/String.js",
+      "default": "./dist/src/String.js"
+    },
+    "./Task": {
+      "types": "./dist/src/Task.d.ts",
+      "import": "./dist/src/Task.js",
+      "default": "./dist/src/Task.js"
+    },
+    "./Test": {
+      "types": "./dist/src/Test.d.ts",
+      "import": "./dist/src/Test.js",
+      "default": "./dist/src/Test.js"
+    },
+    "./Time": {
+      "types": "./dist/src/Time.d.ts",
+      "import": "./dist/src/Time.js",
+      "default": "./dist/src/Time.js"
+    },
+    "./Tracer": {
+      "types": "./dist/src/Tracer.d.ts",
+      "import": "./dist/src/Tracer.js",
+      "default": "./dist/src/Tracer.js"
+    },
+    "./Type": {
+      "types": "./dist/src/Type.d.ts",
+      "import": "./dist/src/Type.js",
+      "default": "./dist/src/Type.js"
+    },
+    "./Types": {
+      "types": "./dist/src/Types.d.ts",
+      "import": "./dist/src/Types.js",
+      "default": "./dist/src/Types.js"
+    },
+    "./WebSocket": {
+      "types": "./dist/src/WebSocket.d.ts",
+      "import": "./dist/src/WebSocket.js",
+      "default": "./dist/src/WebSocket.js"
+    },
+    "./Worker": {
+      "types": "./dist/src/Worker.d.ts",
+      "import": "./dist/src/Worker.js",
+      "default": "./dist/src/Worker.js"
+    },
+    "./local-first/Db": {
+      "types": "./dist/src/local-first/Db.d.ts",
+      "import": "./dist/src/local-first/Db.js",
+      "default": "./dist/src/local-first/Db.js"
+    },
+    "./local-first/Error": {
+      "types": "./dist/src/local-first/Error.d.ts",
+      "import": "./dist/src/local-first/Error.js",
+      "default": "./dist/src/local-first/Error.js"
+    },
+    "./local-first/Evolu": {
+      "types": "./dist/src/local-first/Evolu.d.ts",
+      "import": "./dist/src/local-first/Evolu.js",
+      "default": "./dist/src/local-first/Evolu.js"
+    },
+    "./local-first/LocalAuth": {
+      "types": "./dist/src/local-first/LocalAuth.d.ts",
+      "import": "./dist/src/local-first/LocalAuth.js",
+      "default": "./dist/src/local-first/LocalAuth.js"
+    },
+    "./local-first/Owner": {
+      "types": "./dist/src/local-first/Owner.d.ts",
+      "import": "./dist/src/local-first/Owner.js",
+      "default": "./dist/src/local-first/Owner.js"
+    },
+    "./local-first/Protocol": {
+      "types": "./dist/src/local-first/Protocol.d.ts",
+      "import": "./dist/src/local-first/Protocol.js",
+      "default": "./dist/src/local-first/Protocol.js"
+    },
+    "./local-first/Query": {
+      "types": "./dist/src/local-first/Query.d.ts",
+      "import": "./dist/src/local-first/Query.js",
+      "default": "./dist/src/local-first/Query.js"
+    },
+    "./local-first/Relay": {
+      "types": "./dist/src/local-first/Relay.d.ts",
+      "import": "./dist/src/local-first/Relay.js",
+      "default": "./dist/src/local-first/Relay.js"
+    },
+    "./local-first/Schema": {
+      "types": "./dist/src/local-first/Schema.d.ts",
+      "import": "./dist/src/local-first/Schema.js",
+      "default": "./dist/src/local-first/Schema.js"
+    },
+    "./local-first/Shared": {
+      "types": "./dist/src/local-first/Shared.d.ts",
+      "import": "./dist/src/local-first/Shared.js",
+      "default": "./dist/src/local-first/Shared.js"
+    },
+    "./local-first/Storage": {
+      "types": "./dist/src/local-first/Storage.d.ts",
+      "import": "./dist/src/local-first/Storage.js",
+      "default": "./dist/src/local-first/Storage.js"
+    },
+    "./local-first/Timestamp": {
+      "types": "./dist/src/local-first/Timestamp.d.ts",
+      "import": "./dist/src/local-first/Timestamp.js",
+      "default": "./dist/src/local-first/Timestamp.js"
     }
   },
   "typesVersions": {
@@ -51,6 +338,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "test:runtime": "vitest --config vitest.unit.config.ts test/Runtime.test.ts",
     "prepack": "npm run build",
     "format": "prettier --write \"src/*.{ts,tsx,md}\""
   },
@@ -67,10 +355,13 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.10.9",
     "@types/ws": "^8.18.1",
+    "@vitest/browser": "^4.1.5",
+    "@vitest/browser-playwright": "^4.1.5",
     "better-sqlite3": "^12.6.2",
     "fast-check": "^4.5.3",
     "playwright": "^1.58.1",
     "typescript": "^6",
+    "vitest": "^4.1.5",
     "webpack": "^5.98.0",
     "ws": "^8.19.0",
     "zod": "^4.3.6"
