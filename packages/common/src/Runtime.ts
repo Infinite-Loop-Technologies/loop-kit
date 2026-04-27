@@ -12,6 +12,38 @@
  * Installers return a normalized Installed<T> shape. Runtime wraps that in a
  * RuntimeLease<T>, which is the public uninstall handle returned from install().
  *
+ * ### Installing a policy
+ *
+ * ```ts
+ * interface AppEnv {
+ *   readonly document: Document;
+ * }
+ *
+ * const installTitlePolicy: Installer<AppEnv> = (runtime) => {
+ *   const previousTitle = runtime.env.document.title;
+ *   runtime.env.document.title = "Dockyard";
+ *
+ *   return installedVoid(() => {
+ *     runtime.env.document.title = previousTitle;
+ *   });
+ * };
+ *
+ * const runtime = createRuntime({ document });
+ * const titlePolicy = await runtime.install(installTitlePolicy);
+ * ```
+ *
+ * ### Disposing a lease
+ *
+ * ```ts
+ * await titlePolicy.dispose();
+ * ```
+ *
+ * ### Disposing the runtime
+ *
+ * ```ts
+ * await runtime.dispose();
+ * ```
+ *
  * This version intentionally keeps Runtime small:
  * - no lifecycle signals
  * - no service registry
@@ -122,7 +154,6 @@ export interface Runtime<TEnv> extends AsyncDisposable {
 }
 
 interface InstalledModule {
-  disposed: boolean;
   readonly dispose: () => Promise<void>;
 }
 
@@ -236,12 +267,7 @@ export const createRuntime = <TEnv>(env: TEnv): Runtime<TEnv> => {
         if (cleanup) await cleanup.dispose();
       };
 
-      const module: InstalledModule = {
-        get disposed() {
-          return disposed;
-        },
-        dispose,
-      };
+      const module: InstalledModule = { dispose };
 
       modules.add(module);
 
@@ -295,11 +321,7 @@ export const createRuntime = <TEnv>(env: TEnv): Runtime<TEnv> => {
 
         state = "Disposed";
 
-        if (errors.length === 1) {
-          throw errors[0];
-        }
-
-        if (errors.length > 1) {
+        if (errors.length > 0) {
           throw new AggregateError(errors, "Runtime disposal failed.");
         }
       })();
