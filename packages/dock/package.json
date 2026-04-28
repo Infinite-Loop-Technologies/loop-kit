@@ -21,5 +21,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest --run src/test/**/*.test.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

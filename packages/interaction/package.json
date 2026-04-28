@@ -30,5 +30,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest --run test/**/*.test.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
