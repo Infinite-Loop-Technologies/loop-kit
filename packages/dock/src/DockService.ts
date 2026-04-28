@@ -1,0 +1,446 @@
+/**
+ * Headless dock service.
+ *
+ * DockService owns committed dock truth: panels, surfaces, layout, layers,
+ * focus, modal queue state, and domain events. It does not own transient drag
+ * hover or resize previews.
+ *
+ * @module
+ */
+
+import type { Result } from "@loop-kit/common/Result"
+import { err, ok } from "@loop-kit/common/Result"
+import type { Signal } from "@loop-kit/common/Signal"
+import { createSignal } from "@loop-kit/common/Signal"
+import type { Store } from "@loop-kit/common/Store"
+import { createStore } from "@loop-kit/common/Store"
+import type { Typed } from "@loop-kit/common/Type"
+
+import { appendDockHistory } from "./DockHistory.js"
+import type {
+  DockGroupId,
+  DockModalId,
+  DockPanelId,
+  DockSplitId,
+  DockSurfaceId,
+} from "./DockIds.js"
+import {
+  findGroupById,
+  findGroupForPanel,
+  findSplitById,
+  getPanelById,
+  insertPanelIntoLayout,
+  removePanelFromLayout,
+  updateSplitRatio,
+} from "./DockLayout.js"
+import type {
+  DockModalNode,
+  DockPanel,
+  DockPlacement,
+  DockPlacementDecision,
+  DockSurface,
+} from "./DockNode.js"
+import type { DockPolicy } from "./DockPolicy.js"
+import { composeDockPolicies, createDefaultDockPolicy } from "./DockPolicy.js"
+import type { DockState } from "./DockState.js"
+import { createDockState } from "./DockState.js"
+
+export type DockError =
+  | DockPanelNotFound
+  | DockPanelAlreadyRegistered
+  | DockGroupNotFound
+  | DockSplitNotFound
+  | DockModalNotFound
+  | DockSurfaceNotFound
+  | DockInvalidPlacement
+  | DockPolicyRejected
+
+export interface DockPanelNotFound extends Typed<"DockPanelNotFound"> {
+  readonly panelId: DockPanelId
+}
+
+export interface DockPanelAlreadyRegistered extends Typed<"DockPanelAlreadyRegistered"> {
+  readonly panelId: DockPanelId
+}
+
+export interface DockGroupNotFound extends Typed<"DockGroupNotFound"> {
+  readonly groupId: DockGroupId
+}
+
+export interface DockSplitNotFound extends Typed<"DockSplitNotFound"> {
+  readonly splitId: DockSplitId
+}
+
+export interface DockModalNotFound extends Typed<"DockModalNotFound"> {
+  readonly modalId: DockModalId
+}
+
+export interface DockSurfaceNotFound extends Typed<"DockSurfaceNotFound"> {
+  readonly surfaceId: DockSurfaceId
+}
+
+export interface DockInvalidPlacement extends Typed<"DockInvalidPlacement"> {
+  readonly reason: string
+}
+
+export interface DockPolicyRejected extends Typed<"DockPolicyRejected"> {
+  readonly reason: string
+}
+
+export type DockDomainEvent =
+  | {
+      readonly type: "DockPanelRegistered"
+      readonly panel: DockPanel
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockPanelUnregistered"
+      readonly panelId: DockPanelId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockPanelFocused"
+      readonly panelId: DockPanelId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockPanelSelected"
+      readonly panelId: DockPanelId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockSurfaceOpened" | "DockSurfaceClosed"
+      readonly surfaceId: DockSurfaceId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockModalOpened" | "DockModalClosed"
+      readonly modalId: DockModalId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockDropCommitted"
+      readonly panelId: DockPanelId
+      readonly placement: DockPlacement
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockSplitResized"
+      readonly splitId: DockSplitId
+      readonly ratio: number
+      readonly state: DockState
+    }
+
+export interface CreateDockServiceOptions {
+  readonly initialState?: DockState | undefined
+  readonly policy?: DockPolicy | undefined
+}
+
+export interface DockService {
+  readonly state: Store<DockState>
+  readonly events: Signal<DockDomainEvent>
+  readonly policy: DockPolicy
+  readonly getPanel: (panelId: DockPanelId) => DockPanel | undefined
+  readonly getFocusedPanel: () => DockPanel | undefined
+  readonly registerPanel: (panel: DockPanel) => Result<void, DockError>
+  readonly unregisterPanel: (panelId: DockPanelId) => Result<void, DockError>
+  readonly focusPanel: (panelId: DockPanelId) => Result<void, DockError>
+  readonly selectPanel: (panelId: DockPanelId) => Result<void, DockError>
+  readonly openSurface: (surface: DockSurface) => Result<void, DockError>
+  readonly closeSurface: (surfaceId: DockSurfaceId) => Result<void, DockError>
+  readonly openModal: (modal: DockModalNode | DockModalId) => Result<void, DockError>
+  readonly closeModal: (modalId: DockModalId) => Result<void, DockError>
+  readonly canApplyPlacement: (
+    panelId: DockPanelId,
+    placement: DockPlacement
+  ) => Result<DockPlacementDecision, DockError>
+  readonly commitDrop: (panelId: DockPanelId, placement: DockPlacement) => Result<void, DockError>
+  readonly resizeSplit: (splitId: DockSplitId, ratio: number) => Result<void, DockError>
+}
+
+export const createDockService = ({
+  initialState = createDockState(),
+  policy,
+}: CreateDockServiceOptions = {}): DockService => {
+  const state = createStore(initialState)
+  const events = createSignal<DockDomainEvent>()
+  const servicePolicy = composeDockPolicies(createDefaultDockPolicy(), policy)
+
+  const setState = (next: DockState): void => {
+    state.set(next)
+  }
+
+  const emit = (event: DockDomainEvent): void => {
+    events.emit(event)
+  }
+
+  const service: DockService = {
+    state,
+    events,
+    policy: servicePolicy,
+
+    getPanel: (panelId) => getPanelById(state.get().panels, panelId),
+
+    getFocusedPanel: () => {
+      const focusedPanelId = state.get().focusedPanelId
+      return focusedPanelId ? service.getPanel(focusedPanelId) : undefined
+    },
+
+    registerPanel: (panel) => {
+      const current = state.get()
+      if (getPanelById(current.panels, panel.id)) {
+        return err({ type: "DockPanelAlreadyRegistered", panelId: panel.id })
+      }
+      const next = {
+        ...current,
+        panels: [...current.panels, panel],
+        history: appendDockHistory(current.history, `Register panel ${panel.id}`),
+      }
+      setState(next)
+      emit({ type: "DockPanelRegistered", panel, state: next })
+      return ok()
+    },
+
+    unregisterPanel: (panelId) => {
+      const current = state.get()
+      if (!getPanelById(current.panels, panelId)) return err({ type: "DockPanelNotFound", panelId })
+      const next = {
+        ...current,
+        panels: current.panels.filter((panel) => panel.id !== panelId),
+        layout: removePanelFromLayout(current.layout, panelId),
+        focusedPanelId: current.focusedPanelId === panelId ? undefined : current.focusedPanelId,
+        selectedPanelId: current.selectedPanelId === panelId ? undefined : current.selectedPanelId,
+        history: appendDockHistory(current.history, `Unregister panel ${panelId}`),
+      }
+      setState(next)
+      emit({ type: "DockPanelUnregistered", panelId, state: next })
+      return ok()
+    },
+
+    focusPanel: (panelId) => {
+      const current = state.get()
+      if (!getPanelById(current.panels, panelId)) return err({ type: "DockPanelNotFound", panelId })
+      const decision = servicePolicy.canFocus?.({ state: current, panelId }) ?? { ok: true }
+      if (!decision.ok)
+        return err({ type: "DockPolicyRejected", reason: decision.reason ?? "Focus rejected." })
+      const group = findGroupForPanel(current.layout, panelId)
+      const next = {
+        ...current,
+        focusedPanelId: panelId,
+        focusedSurfaceId: getPanelById(current.panels, panelId)?.surfaceId,
+        layout: group ? setGroupActivePanel(current.layout, group.id, panelId) : current.layout,
+        history: appendDockHistory(current.history, `Focus panel ${panelId}`),
+      }
+      setState(next)
+      emit({ type: "DockPanelFocused", panelId, state: next })
+      return ok()
+    },
+
+    selectPanel: (panelId) => {
+      const result = service.focusPanel(panelId)
+      if (!result.ok) return result
+      const current = state.get()
+      const next = {
+        ...current,
+        selectedPanelId: panelId,
+        selectedSurfaceId: getPanelById(current.panels, panelId)?.surfaceId,
+        history: appendDockHistory(current.history, `Select panel ${panelId}`),
+      }
+      setState(next)
+      emit({ type: "DockPanelSelected", panelId, state: next })
+      return ok()
+    },
+
+    openSurface: (surface) => {
+      const current = state.get()
+      const existing = current.surfaces.find((item) => item.id === surface.id)
+      const next = {
+        ...current,
+        surfaces: existing
+          ? current.surfaces.map((item) => (item.id === surface.id ? surface : item))
+          : [...current.surfaces, surface],
+        selectedSurfaceId: surface.id,
+        history: appendDockHistory(current.history, `Open surface ${surface.id}`),
+      }
+      setState(next)
+      emit({ type: "DockSurfaceOpened", surfaceId: surface.id, state: next })
+      return ok()
+    },
+
+    closeSurface: (surfaceId) => {
+      const current = state.get()
+      if (!current.surfaces.some((surface) => surface.id === surfaceId)) {
+        return err({ type: "DockSurfaceNotFound", surfaceId })
+      }
+      const decision = servicePolicy.canClose?.({ state: current, surfaceId }) ?? { ok: true }
+      if (!decision.ok)
+        return err({ type: "DockPolicyRejected", reason: decision.reason ?? "Close rejected." })
+      const next = {
+        ...current,
+        surfaces: current.surfaces.filter((surface) => surface.id !== surfaceId),
+        selectedSurfaceId:
+          current.selectedSurfaceId === surfaceId ? undefined : current.selectedSurfaceId,
+        focusedSurfaceId:
+          current.focusedSurfaceId === surfaceId ? undefined : current.focusedSurfaceId,
+        history: appendDockHistory(current.history, `Close surface ${surfaceId}`),
+      }
+      setState(next)
+      emit({ type: "DockSurfaceClosed", surfaceId, state: next })
+      return ok()
+    },
+
+    openModal: (modalOrId) => {
+      const current = state.get()
+      const modal =
+        typeof modalOrId === "string"
+          ? current.layout.modals.find((item) => item.id === modalOrId)
+          : modalOrId
+      if (!modal) return err({ type: "DockModalNotFound", modalId: modalOrId as DockModalId })
+      const exists = current.layout.modals.some((item) => item.id === modal.id)
+      const modals = exists
+        ? current.layout.modals.map((item) =>
+            item.id === modal.id ? { ...item, open: true } : item
+          )
+        : [...current.layout.modals, { ...modal, open: true }]
+      const next = {
+        ...current,
+        layout: { ...current.layout, modals },
+        modalQueue: current.modalQueue.includes(modal.id)
+          ? current.modalQueue
+          : [...current.modalQueue, modal.id],
+        history: appendDockHistory(current.history, `Open modal ${modal.id}`),
+      }
+      setState(next)
+      emit({ type: "DockModalOpened", modalId: modal.id, state: next })
+      return ok()
+    },
+
+    closeModal: (modalId) => {
+      const current = state.get()
+      const modal = current.layout.modals.find((item) => item.id === modalId)
+      if (!modal) return err({ type: "DockModalNotFound", modalId })
+      const decision = servicePolicy.canClose?.({ state: current, modalId }) ?? { ok: true }
+      if (!decision.ok)
+        return err({
+          type: "DockPolicyRejected",
+          reason: decision.reason ?? "Modal close rejected.",
+        })
+      const next = {
+        ...current,
+        layout: {
+          ...current.layout,
+          modals: current.layout.modals.map((item) =>
+            item.id === modalId ? { ...item, open: false } : item
+          ),
+        },
+        modalQueue: current.modalQueue.filter((id) => id !== modalId),
+        history: appendDockHistory(current.history, `Close modal ${modalId}`),
+      }
+      setState(next)
+      emit({ type: "DockModalClosed", modalId, state: next })
+      return ok()
+    },
+
+    canApplyPlacement: (panelId, placement) => {
+      const current = state.get()
+      if (!getPanelById(current.panels, panelId)) return err({ type: "DockPanelNotFound", panelId })
+      const targetGroup = findGroupById(current.layout, placement.targetGroupId)
+      if (!targetGroup) return err({ type: "DockGroupNotFound", groupId: placement.targetGroupId })
+      if (placement.side !== "center") {
+        const splitDecision = servicePolicy.canSplit?.({
+          state: current,
+          groupId: targetGroup.id,
+          placement,
+        }) ?? { ok: true }
+        if (!splitDecision.ok) {
+          return ok({
+            placement,
+            allowed: false,
+            reason: splitDecision.reason ?? "Split rejected.",
+          })
+        }
+      }
+      const dropDecision = servicePolicy.canDrop?.({ state: current, panelId, placement }) ?? {
+        ok: true,
+      }
+      return ok({
+        placement,
+        allowed: dropDecision.ok,
+        reason: dropDecision.reason,
+      })
+    },
+
+    commitDrop: (panelId, placement) => {
+      const placementDecision = service.canApplyPlacement(panelId, placement)
+      if (!placementDecision.ok) return placementDecision
+      if (!placementDecision.value.allowed) {
+        return err({
+          type: "DockPolicyRejected",
+          reason: placementDecision.value.reason ?? "Drop rejected.",
+        })
+      }
+      const current = state.get()
+      const withoutPanel = removePanelFromLayout(current.layout, panelId)
+      const next = {
+        ...current,
+        layout: insertPanelIntoLayout(withoutPanel, placement, panelId),
+        focusedPanelId: panelId,
+        selectedPanelId: panelId,
+        history: appendDockHistory(current.history, `Commit drop ${panelId}`),
+      }
+      setState(next)
+      emit({ type: "DockDropCommitted", panelId, placement, state: next })
+      return ok()
+    },
+
+    resizeSplit: (splitId, ratio) => {
+      const current = state.get()
+      const split = findSplitById(current.layout, splitId)
+      if (!split) return err({ type: "DockSplitNotFound", splitId })
+      const decision = servicePolicy.canResize?.({ state: current, splitId, ratio }) ?? { ok: true }
+      if (!decision.ok)
+        return err({ type: "DockPolicyRejected", reason: decision.reason ?? "Resize rejected." })
+      const next = {
+        ...current,
+        layout: updateSplitRatio(current.layout, splitId, ratio),
+        history: appendDockHistory(current.history, `Resize split ${splitId}`),
+      }
+      setState(next)
+      emit({ type: "DockSplitResized", splitId, ratio, state: next })
+      return ok()
+    },
+  }
+
+  return service
+}
+
+const setGroupActivePanel = (
+  layout: DockState["layout"],
+  groupId: DockGroupId,
+  panelId: DockPanelId
+): DockState["layout"] => ({
+  ...layout,
+  roots: {
+    main: setGroupActivePanelInNode(layout.roots.main, groupId, panelId),
+    left: setGroupActivePanelInNode(layout.roots.left ?? null, groupId, panelId) ?? undefined,
+    right: setGroupActivePanelInNode(layout.roots.right ?? null, groupId, panelId) ?? undefined,
+    top: setGroupActivePanelInNode(layout.roots.top ?? null, groupId, panelId) ?? undefined,
+    bottom: setGroupActivePanelInNode(layout.roots.bottom ?? null, groupId, panelId) ?? undefined,
+  },
+})
+
+const setGroupActivePanelInNode = (
+  node: DockState["layout"]["roots"]["main"],
+  groupId: DockGroupId,
+  panelId: DockPanelId
+): DockState["layout"]["roots"]["main"] => {
+  if (!node) return null
+  if (node.type === "group") {
+    return node.id === groupId ? { ...node, activePanelId: panelId } : node
+  }
+  return {
+    ...node,
+    leading: setGroupActivePanelInNode(node.leading, groupId, panelId) ?? node.leading,
+    trailing: setGroupActivePanelInNode(node.trailing, groupId, panelId) ?? node.trailing,
+  }
+}

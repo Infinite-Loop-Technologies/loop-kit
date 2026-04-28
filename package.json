@@ -7,18 +7,19 @@
   "scripts": {
     "dev": "bun --filter @loop-kit/registry dev",
     "build": "bun run build:packages",
-    "build:packages": "bun --filter @loop-kit/common build && bun --filter @loop-kit/interaction build",
+    "build:packages": "bun --filter @loop-kit/common build && bun --filter @loop-kit/interaction build && bun --filter @loop-kit/dock build && bun --filter @loop-kit/dock-react build",
     "lint": "biome check .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "typecheck": "bun run typecheck:packages",
-    "typecheck:packages": "bun --filter @loop-kit/common typecheck && bun --filter @loop-kit/interaction typecheck",
+    "typecheck:packages": "bun --filter @loop-kit/common typecheck && bun --filter @loop-kit/interaction typecheck && bun --filter @loop-kit/dock typecheck && bun --filter @loop-kit/dock-react typecheck",
     "check": "bun run format:check && bun run lint && bun run typecheck"
   },
   "devDependencies": {
     "@loop-kit/common": "workspace:*",
     "@loop-kit/dock": "workspace:*",
     "@loop-kit/interaction": "workspace:*",
+    "@loop-kit/dock-react": "workspace:*",
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.15.3",
     "typescript": "^5.9.3"
