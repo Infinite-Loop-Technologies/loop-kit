@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/bridges/*": ["src/client/bridges/*"],
+      "@/components/*": ["src/client/components/*"],
+      "@/domain/*": ["src/client/domain/*"],
+      "@/labs/*": ["src/client/labs/*"],
+      "@/lib/*": ["src/client/lib/*"],
+      "@/runtime/*": ["src/client/runtime/*"],
+      "@/shared/*": ["src/shared/*"]
+    }
+  },
+  "include": ["scripts", "src"],
+  "exclude": ["src/**/*.test.ts"]
+}

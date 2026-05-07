@@ -1,6 +1,6 @@
 {
   "name": "@loop-kit/interaction",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,8 +15,12 @@
       "default": "./dist/react.js"
     }
   },
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
   "dependencies": {
-    "@loop-kit/common": "workspace:*"
+    "@loop-kit/common": "^0.1.2"
   },
   "peerDependencies": {
     "react": "^19.0.0"
@@ -28,8 +32,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "typecheck": "tsc --noEmit",
-    "test:unit": "vitest --run test/**/*.test.ts"
+    "test:unit": "vitest --run test/**/*.test.ts",
+    "prepack": "npm run clean && npm run build"
   },
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "@loop-kit/dock-react",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -10,9 +10,12 @@
       "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist/**"
+  ],
   "dependencies": {
-    "@loop-kit/dock": "workspace:*",
-    "@loop-kit/interaction": "workspace:*"
+    "@loop-kit/dock": "^0.1.2",
+    "@loop-kit/interaction": "^0.1.1"
   },
   "peerDependencies": {
     "react": "^19.0.0"
@@ -24,7 +27,9 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run clean && npm run build"
   },
   "publishConfig": {
     "access": "public"

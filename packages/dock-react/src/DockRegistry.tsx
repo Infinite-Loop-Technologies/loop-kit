@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { ComponentType, ReactNode } from "react"
+import type { CSSProperties, ComponentType, ReactNode } from "react"
 
 import type {
   DockPanel,
@@ -55,7 +55,7 @@ export const createDockRegistry = ({
 const DefaultPanel = ({ panel }: DockPanelComponentProps): ReactNode => (
   <div style={{ padding: 12 }}>
     <strong>{panel.title}</strong>
-    <div style={{ color: "#667085", fontSize: 12 }}>{panel.kind}</div>
+    <div style={mutedTextStyle}>{panel.kind}</div>
   </div>
 )
 
@@ -64,3 +64,8 @@ const DefaultSurface = ({ surface }: DockSurfaceComponentProps): ReactNode => (
     <strong>{surface.title ?? surface.kind}</strong>
   </div>
 )
+
+const mutedTextStyle: CSSProperties = {
+  ["color" as const]: "var(--muted-foreground, GrayText)",
+  fontSize: 12,
+}

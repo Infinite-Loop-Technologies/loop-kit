@@ -12,6 +12,7 @@
 import { type Installer, installedVoid } from "@loop-kit/common/Runtime"
 
 import { getDistancePx } from "./InteractionGeometry.js"
+import { targetHasRole } from "./InteractionRoles.js"
 import type { InteractionEnv } from "./InteractionRuntime.js"
 import type { InteractionRawPointerSignal } from "./InteractionSignals.js"
 import type { InteractionDragSession } from "./InteractionState.js"
@@ -142,15 +143,22 @@ export const installPointerSignalSynthesis =
         const source = session.sourceTargetId
           ? runtime.env.targets.get(session.sourceTargetId)
           : undefined
+        const canDrag = Boolean(
+          source &&
+            targetHasRole(source.roles, "draggable") &&
+            !targetHasRole(source.roles, "text-input")
+        )
         const wasDragging = session.isDragging
         const nextSession: PointerSession = {
           ...session,
           currentPosition: signal.position,
-          isDragging: session.isDragging || Boolean(source && distance >= config.dragThresholdPx),
+          isDragging: session.isDragging || (canDrag && distance >= config.dragThresholdPx),
         }
         session = nextSession
 
         if (!source || !nextSession.isDragging) return
+
+        signal.nativeEvent?.preventDefault()
 
         const drag: InteractionDragSession = {
           pointerId: signal.pointerId,

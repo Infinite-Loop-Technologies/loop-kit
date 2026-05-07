@@ -22,6 +22,8 @@ import {
   DockPanelTarget,
   DockResizeHandleTarget,
   DockTabTarget,
+  DockWindowResizeHandleTarget,
+  DockWindowTitlebarTarget,
 } from "./DockTargets.js"
 import { getResizeRatioFromPoint } from "./__internal/DockGeometryMath.js"
 
@@ -69,6 +71,23 @@ export const installDockDragPolicy =
   (interaction) => {
     const cleanups = [
       interaction.env.signals.dragStart.subscribe((signal) => {
+        const windowTitlebar = DockWindowTitlebarTarget.match(signal.source)
+        if (windowTitlebar) {
+          const window = dock.state
+            .get()
+            .layout.floatingWindows.find((item) => item.id === windowTitlebar.windowId)
+          if (!window?.draggable) return
+          dock.focusWindow(window.id)
+          runtime.beginWindowMove({
+            windowId: window.id,
+            startPosition: signal.position,
+            currentPosition: signal.position,
+            originFrame: window.frame,
+            frame: window.frame,
+          })
+          return
+        }
+
         const tab = DockTabTarget.match(signal.source)
         const panel = tab ?? DockPanelTarget.match(signal.source)
         if (!panel) return
@@ -84,6 +103,21 @@ export const installDockDragPolicy =
         })
       }),
       interaction.env.signals.dragMove.subscribe((signal) => {
+        const windowMove = runtime.env.state.get().windowMovePreview
+        if (windowMove) {
+          const dx = signal.position.x - windowMove.startPosition.x
+          const dy = signal.position.y - windowMove.startPosition.y
+          runtime.updateWindowMovePreview({
+            currentPosition: signal.position,
+            frame: {
+              ...windowMove.originFrame,
+              x: windowMove.originFrame.x + dx,
+              y: windowMove.originFrame.y + dy,
+            },
+          })
+          return
+        }
+
         const preview = runtime.env.state.get().dragPreview
         if (!preview?.panelId) return
         const dropzone = DockDropzoneTarget.match(signal.target)
@@ -95,6 +129,16 @@ export const installDockDragPolicy =
         })
       }),
       interaction.env.signals.dragEnd.subscribe((signal) => {
+        const windowMove = runtime.env.state.get().windowMovePreview
+        if (windowMove) {
+          dock.moveWindow(windowMove.windowId, {
+            x: windowMove.frame.x,
+            y: windowMove.frame.y,
+          })
+          runtime.clearWindowMovePreview()
+          return
+        }
+
         const preview = runtime.env.state.get().dragPreview
         const dropzone = DockDropzoneTarget.match(signal.target)
         if (preview?.panelId && dropzone) {
@@ -114,6 +158,23 @@ export const installDockResizePolicy =
   (interaction) => {
     const cleanups = [
       interaction.env.signals.dragStart.subscribe((signal) => {
+        const windowHandle = DockWindowResizeHandleTarget.match(signal.source)
+        if (windowHandle) {
+          const window = dock.state
+            .get()
+            .layout.floatingWindows.find((item) => item.id === windowHandle.windowId)
+          if (!window?.resizable) return
+          dock.focusWindow(window.id)
+          runtime.beginWindowResize({
+            windowId: window.id,
+            startPosition: signal.position,
+            currentPosition: signal.position,
+            originFrame: window.frame,
+            frame: window.frame,
+          })
+          return
+        }
+
         const handle = DockResizeHandleTarget.match(signal.source)
         if (!handle) return
         const state = dock.state.get()
@@ -130,6 +191,21 @@ export const installDockResizePolicy =
         })
       }),
       interaction.env.signals.dragMove.subscribe((signal) => {
+        const windowResize = runtime.env.state.get().windowResizePreview
+        if (windowResize) {
+          const dx = signal.position.x - windowResize.startPosition.x
+          const dy = signal.position.y - windowResize.startPosition.y
+          runtime.updateWindowResizePreview({
+            currentPosition: signal.position,
+            frame: {
+              ...windowResize.originFrame,
+              width: windowResize.originFrame.width + dx,
+              height: windowResize.originFrame.height + dy,
+            },
+          })
+          return
+        }
+
         const preview = runtime.env.state.get().resizePreview
         if (!preview) return
         const handle = DockResizeHandleTarget.match(signal.source)
@@ -141,6 +217,13 @@ export const installDockResizePolicy =
         })
       }),
       interaction.env.signals.dragEnd.subscribe(() => {
+        const windowResize = runtime.env.state.get().windowResizePreview
+        if (windowResize) {
+          dock.resizeWindow(windowResize.windowId, windowResize.frame)
+          runtime.clearWindowResizePreview()
+          return
+        }
+
         const preview = runtime.env.state.get().resizePreview
         if (preview) dock.resizeSplit(preview.splitId, preview.ratio)
         runtime.clearResizePreview()

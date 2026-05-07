@@ -21,6 +21,9 @@ import {
   DockResizeHandleTarget,
   type DockSplitId,
   DockTabTarget,
+  type DockWindowId,
+  DockWindowResizeHandleTarget,
+  DockWindowTitlebarTarget,
   createDockInteractionTargetId,
 } from "@loop-kit/dock"
 import type { InteractionTargetId } from "@loop-kit/interaction"
@@ -84,6 +87,36 @@ export const useDockResizeHandleTarget = <TElement extends Element = HTMLElement
       data: DockResizeHandleTarget.make({ splitId, axis }),
     }),
     [axis, splitId]
+  )
+  return useInteractionTarget<TElement>(options)
+}
+
+export const useDockWindowTitlebarTarget = <TElement extends Element = HTMLElement>(
+  windowId: DockWindowId
+): ((element: TElement | null) => void) => {
+  const options = useMemo(
+    () => ({
+      id: createDockInteractionTargetId("dock-window-titlebar", windowId),
+      roles: ["focusable", "pressable", "draggable"] as const,
+      capabilities: { pointer: true, drag: true },
+      data: DockWindowTitlebarTarget.make({ windowId }),
+    }),
+    [windowId]
+  )
+  return useInteractionTarget<TElement>(options)
+}
+
+export const useDockWindowResizeHandleTarget = <TElement extends Element = HTMLElement>(
+  windowId: DockWindowId
+): ((element: TElement | null) => void) => {
+  const options = useMemo(
+    () => ({
+      id: createDockInteractionTargetId("dock-window-resize-handle", windowId),
+      roles: ["resize-handle", "draggable"] as const,
+      capabilities: { pointer: true, drag: true },
+      data: DockWindowResizeHandleTarget.make({ windowId }),
+    }),
+    [windowId]
   )
   return useInteractionTarget<TElement>(options)
 }

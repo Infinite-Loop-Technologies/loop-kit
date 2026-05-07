@@ -124,6 +124,63 @@ describe("pointer synthesis", () => {
     await lease.dispose()
     await runtime.dispose()
   })
+
+  test("prevents native selection only after a draggable target crosses threshold", async () => {
+    const runtime = createInteractionRuntime()
+    const element = createElement()
+    const targetId = "drag-source" as InteractionTargetId
+    const preventDefaultCalls: Array<string> = []
+
+    runtime.registerTarget({
+      id: targetId,
+      roles: ["draggable"],
+      element,
+    })
+    const lease = await runtime.install(installPointerSignalSynthesis({ dragThresholdPx: 4 }))
+
+    runtime.env.signals.rawPointerDown.emit(createRawPointerSignal(element, 0, 0))
+    runtime.env.signals.rawPointerMove.emit(
+      createRawPointerSignal(element, 2, 0, () => preventDefaultCalls.push("below"))
+    )
+    runtime.env.signals.rawPointerMove.emit(
+      createRawPointerSignal(element, 5, 0, () => preventDefaultCalls.push("dragging"))
+    )
+
+    expect(preventDefaultCalls).toEqual(["dragging"])
+
+    await lease.dispose()
+    await runtime.dispose()
+  })
+
+  test("does not start drag or suppress native selection for text input targets", async () => {
+    const runtime = createInteractionRuntime()
+    const element = createElement()
+    const targetId = "text-input" as InteractionTargetId
+    const dragStarts: Array<InteractionTargetId> = []
+    const preventDefaultCalls: Array<string> = []
+
+    runtime.registerTarget({
+      id: targetId,
+      roles: ["text-input", "focusable"],
+      element,
+    })
+    const lease = await runtime.install(installPointerSignalSynthesis({ dragThresholdPx: 4 }))
+    const unsubscribe = runtime.env.signals.dragStart.subscribe((signal) => {
+      dragStarts.push(signal.source.id)
+    })
+
+    runtime.env.signals.rawPointerDown.emit(createRawPointerSignal(element, 0, 0))
+    runtime.env.signals.rawPointerMove.emit(
+      createRawPointerSignal(element, 8, 0, () => preventDefaultCalls.push("text"))
+    )
+
+    expect(dragStarts).toEqual([])
+    expect(preventDefaultCalls).toEqual([])
+
+    unsubscribe()
+    await lease.dispose()
+    await runtime.dispose()
+  })
 })
 
 describe("DOM bridge", () => {
@@ -204,7 +261,8 @@ const createElement = (parentElement: Element | null = null): Element =>
 const createRawPointerSignal = (
   eventTarget: EventTarget,
   x: number,
-  y: number
+  y: number,
+  preventDefault?: (() => void) | undefined
 ): InteractionRawPointerSignal => ({
   pointerId: 1,
   position: { x, y },
@@ -212,6 +270,7 @@ const createRawPointerSignal = (
   buttons: 1,
   modifiers: { alt: false, ctrl: false, meta: false, shift: false },
   eventTarget,
+  nativeEvent: preventDefault ? ({ preventDefault } as unknown as Event) : undefined,
 })
 
 const createPointerEvent = (type: string): Event => {

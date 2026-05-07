@@ -16,9 +16,13 @@ import { renderDockNode } from "./__internal/renderDockNode.js"
 
 export interface DockRenderProps {
   readonly node?: DockLayoutNode | null | undefined
+  readonly renderModals?: boolean | undefined
 }
 
-export const DockRender = ({ node }: DockRenderProps): ReactNode => {
+export const DockRender = ({
+  node,
+  renderModals = node === undefined,
+}: DockRenderProps): ReactNode => {
   const state = useDockState()
   const runtimeState = useDockRuntimeState()
   const registry = useDockRegistry()
@@ -27,35 +31,59 @@ export const DockRender = ({ node }: DockRenderProps): ReactNode => {
   return (
     <>
       {renderDockNode({ node: root, state, runtimeState, registry })}
-      {state.layout.modals
-        .filter((modal) => modal.open)
-        .map((modal) => (
-          <div
-            key={modal.id}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 1000,
-              display: "grid",
-              placeItems: "center",
-              background: "rgba(15, 23, 42, 0.35)",
-            }}
-          >
-            <div
-              style={{
-                width: 420,
-                maxWidth: "calc(100vw - 32px)",
-                background: "white",
-                border: "1px solid #d0d5dd",
-              }}
-            >
-              <div style={{ padding: 10, borderBottom: "1px solid #e4e7ec", fontWeight: 600 }}>
-                {modal.title}
+      {renderModals
+        ? state.layout.modals
+            .filter((modal) => modal.open)
+            .map((modal) => (
+              <div
+                key={modal.id}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 1000,
+                  display: "grid",
+                  placeItems: "center",
+                  [backgroundKey]: token("background", "Canvas"),
+                  opacity: 0.96,
+                }}
+              >
+                <div
+                  style={{
+                    width: 420,
+                    maxWidth: "calc(100vw - 32px)",
+                    [backgroundKey]: token("card", "Canvas"),
+                    [colorKey]: token("card-foreground", "CanvasText"),
+                    [borderKey]: `1px solid ${token("border", "ButtonBorder")}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: 10,
+                      [borderBottomKey]: `1px solid ${token("border", "ButtonBorder")}`,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {modal.title}
+                  </div>
+                  {renderDockNode({
+                    node: modal.root,
+                    state,
+                    runtimeState,
+                    registry,
+                  })}
+                </div>
               </div>
-              {renderDockNode({ node: modal.root, state, runtimeState, registry })}
-            </div>
-          </div>
-        ))}
+            ))
+        : null}
     </>
   )
 }
+
+const [backgroundKey, borderKey, borderBottomKey, colorKey] = [
+  "background",
+  "border",
+  "borderBottom",
+  "color",
+] as const
+
+const token = (name: string, fallback: string): string => `var(--${name}, ${fallback})`

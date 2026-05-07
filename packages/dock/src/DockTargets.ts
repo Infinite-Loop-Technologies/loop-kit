@@ -26,6 +26,7 @@ export type DockTargetKind =
   | "dock-dropzone"
   | "dock-resize-handle"
   | "dock-window-titlebar"
+  | "dock-window-resize-handle"
   | "dock-modal-surface"
   | "dock-overlay-backdrop"
   | "dock-sidebar"
@@ -68,6 +69,11 @@ export interface DockWindowTitlebarTargetData extends DockTargetDataBase {
   readonly windowId: DockWindowId
 }
 
+export interface DockWindowResizeHandleTargetData extends DockTargetDataBase {
+  readonly kind: "dock-window-resize-handle"
+  readonly windowId: DockWindowId
+}
+
 export interface DockModalSurfaceTargetData extends DockTargetDataBase {
   readonly kind: "dock-modal-surface"
   readonly modalId: DockModalId
@@ -95,6 +101,7 @@ export type DockTargetData =
   | DockDropzoneTargetData
   | DockResizeHandleTargetData
   | DockWindowTitlebarTargetData
+  | DockWindowResizeHandleTargetData
   | DockModalSurfaceTargetData
   | DockOverlayBackdropTargetData
   | DockSidebarTargetData
@@ -113,6 +120,9 @@ export const DockResizeHandleTarget =
   createTargetMatcher<DockResizeHandleTargetData>("dock-resize-handle")
 export const DockWindowTitlebarTarget =
   createTargetMatcher<DockWindowTitlebarTargetData>("dock-window-titlebar")
+export const DockWindowResizeHandleTarget = createTargetMatcher<DockWindowResizeHandleTargetData>(
+  "dock-window-resize-handle"
+)
 export const DockModalSurfaceTarget =
   createTargetMatcher<DockModalSurfaceTargetData>("dock-modal-surface")
 export const DockOverlayBackdropTarget =

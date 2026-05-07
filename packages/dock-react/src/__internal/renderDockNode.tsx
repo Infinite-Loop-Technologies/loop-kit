@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 import type {
   DockGroupId,
@@ -32,7 +32,7 @@ export interface RenderDockNodeOptions {
 }
 
 export const renderDockNode = (options: RenderDockNodeOptions): ReactNode => {
-  if (!options.node) return <div style={{ padding: 16, color: "#667085" }}>Empty dock</div>
+  if (!options.node) return <div style={emptyDockStyle}>Empty dock</div>
   return <DockNodeView {...options} node={options.node} />
 }
 
@@ -68,7 +68,7 @@ const DockNodeView = ({
         <div
           ref={handleRef}
           style={{
-            background: "#e4e7ec",
+            [backgroundKey]: token("border", "ButtonBorder"),
             cursor: node.axis === "horizontal" ? "col-resize" : "row-resize",
           }}
         />
@@ -95,11 +95,12 @@ const DockNodeView = ({
         height: "100%",
         display: "grid",
         gridTemplateRows: "36px 1fr",
-        background: "white",
-        border: "1px solid #e4e7ec",
+        [backgroundKey]: token("card", "Canvas"),
+        [colorKey]: token("card-foreground", "CanvasText"),
+        [borderKey]: `1px solid ${token("border", "ButtonBorder")}`,
       }}
     >
-      <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #e4e7ec" }}>
+      <div style={tabListStyle}>
         {node.panelIds.map((panelId) => {
           const panel = state.panels.find((item) => item.id === panelId)
           if (!panel) return null
@@ -118,7 +119,7 @@ const DockNodeView = ({
         {activePanel ? (
           registry.renderPanel({ panel: activePanel, state, runtimeState })
         ) : (
-          <div style={{ padding: 12, color: "#667085" }}>No active panel</div>
+          <div style={emptyDockStyle}>No active panel</div>
         )}
       </div>
     </section>
@@ -142,9 +143,12 @@ const DockTab = ({
       ref={ref}
       type="button"
       style={{
-        border: 0,
-        borderRight: "1px solid #e4e7ec",
-        background: active ? "#f2f4f7" : "white",
+        [borderKey]: 0,
+        [borderRightKey]: `1px solid ${token("border", "ButtonBorder")}`,
+        [backgroundKey]: active ? token("muted", "ButtonFace") : token("card", "Canvas"),
+        [colorKey]: active
+          ? token("foreground", "CanvasText")
+          : token("muted-foreground", "GrayText"),
         padding: "0 10px",
         font: "inherit",
         fontSize: 13,
@@ -154,4 +158,25 @@ const DockTab = ({
       {title}
     </button>
   )
+}
+
+const [backgroundKey, borderKey, borderBottomKey, borderRightKey, colorKey] = [
+  "background",
+  "border",
+  "borderBottom",
+  "borderRight",
+  "color",
+] as const
+
+const token = (name: string, fallback: string): string => `var(--${name}, ${fallback})`
+
+const emptyDockStyle: CSSProperties = {
+  padding: 16,
+  [colorKey]: token("muted-foreground", "GrayText"),
+}
+
+const tabListStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "stretch",
+  [borderBottomKey]: `1px solid ${token("border", "ButtonBorder")}`,
 }

@@ -16,6 +16,7 @@ import type { Store } from "@loop-kit/common/Store"
 import { createStore } from "@loop-kit/common/Store"
 import type { Typed } from "@loop-kit/common/Type"
 
+import type { DockPoint, DockRect } from "./DockGeometry.js"
 import { appendDockHistory } from "./DockHistory.js"
 import type {
   DockGroupId,
@@ -23,6 +24,7 @@ import type {
   DockPanelId,
   DockSplitId,
   DockSurfaceId,
+  DockWindowId,
 } from "./DockIds.js"
 import {
   findGroupById,
@@ -52,6 +54,7 @@ export type DockError =
   | DockSplitNotFound
   | DockModalNotFound
   | DockSurfaceNotFound
+  | DockWindowNotFound
   | DockInvalidPlacement
   | DockPolicyRejected
 
@@ -77,6 +80,10 @@ export interface DockModalNotFound extends Typed<"DockModalNotFound"> {
 
 export interface DockSurfaceNotFound extends Typed<"DockSurfaceNotFound"> {
   readonly surfaceId: DockSurfaceId
+}
+
+export interface DockWindowNotFound extends Typed<"DockWindowNotFound"> {
+  readonly windowId: DockWindowId
 }
 
 export interface DockInvalidPlacement extends Typed<"DockInvalidPlacement"> {
@@ -130,6 +137,28 @@ export type DockDomainEvent =
       readonly ratio: number
       readonly state: DockState
     }
+  | {
+      readonly type: "DockWindowFocused"
+      readonly windowId: DockWindowId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockWindowClosed"
+      readonly windowId: DockWindowId
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockWindowMoved"
+      readonly windowId: DockWindowId
+      readonly position: DockPoint
+      readonly state: DockState
+    }
+  | {
+      readonly type: "DockWindowResized"
+      readonly windowId: DockWindowId
+      readonly frame: DockRect
+      readonly state: DockState
+    }
 
 export interface CreateDockServiceOptions {
   readonly initialState?: DockState | undefined
@@ -150,6 +179,11 @@ export interface DockService {
   readonly closeSurface: (surfaceId: DockSurfaceId) => Result<void, DockError>
   readonly openModal: (modal: DockModalNode | DockModalId) => Result<void, DockError>
   readonly closeModal: (modalId: DockModalId) => Result<void, DockError>
+  readonly focusWindow: (windowId: DockWindowId) => Result<void, DockError>
+  readonly closeWindow: (windowId: DockWindowId) => Result<void, DockError>
+  readonly moveWindow: (windowId: DockWindowId, position: DockPoint) => Result<void, DockError>
+  readonly resizeWindow: (windowId: DockWindowId, frame: DockRect) => Result<void, DockError>
+  readonly setWindowFrame: (windowId: DockWindowId, frame: DockRect) => Result<void, DockError>
   readonly canApplyPlacement: (
     panelId: DockPanelId,
     placement: DockPlacement
@@ -341,6 +375,84 @@ export const createDockService = ({
       return ok()
     },
 
+    focusWindow: (windowId) => {
+      const current = state.get()
+      const window = current.layout.floatingWindows.find((item) => item.id === windowId)
+      if (!window) return err({ type: "DockWindowNotFound", windowId })
+      const inactiveWindows = current.layout.floatingWindows
+        .filter((item) => item.id !== windowId)
+        .map((item) => ({ ...item, active: false }))
+      const activeWindow = { ...window, active: true }
+      const next = {
+        ...current,
+        layout: {
+          ...current.layout,
+          floatingWindows: [...inactiveWindows, activeWindow],
+        },
+        focusedSurfaceId: window.surfaceId,
+        selectedSurfaceId: window.surfaceId,
+        history: appendDockHistory(current.history, `Focus window ${windowId}`),
+      }
+      setState(next)
+      emit({ type: "DockWindowFocused", windowId, state: next })
+      return ok()
+    },
+
+    closeWindow: (windowId) => {
+      const current = state.get()
+      const window = current.layout.floatingWindows.find((item) => item.id === windowId)
+      if (!window) return err({ type: "DockWindowNotFound", windowId })
+      const decision = servicePolicy.canClose?.({
+        state: current,
+        surfaceId: window.surfaceId,
+      }) ?? { ok: true }
+      if (!decision.ok)
+        return err({
+          type: "DockPolicyRejected",
+          reason: decision.reason ?? "Window close rejected.",
+        })
+      const next = {
+        ...current,
+        layout: {
+          ...current.layout,
+          floatingWindows: current.layout.floatingWindows.filter((item) => item.id !== windowId),
+        },
+        focusedSurfaceId:
+          current.focusedSurfaceId === window.surfaceId ? undefined : current.focusedSurfaceId,
+        selectedSurfaceId:
+          current.selectedSurfaceId === window.surfaceId ? undefined : current.selectedSurfaceId,
+        history: appendDockHistory(current.history, `Close window ${windowId}`),
+      }
+      setState(next)
+      emit({ type: "DockWindowClosed", windowId, state: next })
+      return ok()
+    },
+
+    moveWindow: (windowId, position) => {
+      const current = state.get()
+      const window = current.layout.floatingWindows.find((item) => item.id === windowId)
+      if (!window) return err({ type: "DockWindowNotFound", windowId })
+      const frame = normalizeDockWindowFrame({ ...window.frame, ...position })
+      const next = setFloatingWindowFrame(current, windowId, frame, `Move window ${windowId}`)
+      setState(next)
+      emit({ type: "DockWindowMoved", windowId, position: { x: frame.x, y: frame.y }, state: next })
+      return ok()
+    },
+
+    resizeWindow: (windowId, frame) => service.setWindowFrame(windowId, frame),
+
+    setWindowFrame: (windowId, frame) => {
+      const current = state.get()
+      if (!current.layout.floatingWindows.some((item) => item.id === windowId)) {
+        return err({ type: "DockWindowNotFound", windowId })
+      }
+      const nextFrame = normalizeDockWindowFrame(frame)
+      const next = setFloatingWindowFrame(current, windowId, nextFrame, `Resize window ${windowId}`)
+      setState(next)
+      emit({ type: "DockWindowResized", windowId, frame: nextFrame, state: next })
+      return ok()
+    },
+
     canApplyPlacement: (panelId, placement) => {
       const current = state.get()
       if (!getPanelById(current.panels, panelId)) return err({ type: "DockPanelNotFound", panelId })
@@ -413,6 +525,29 @@ export const createDockService = ({
 
   return service
 }
+
+const normalizeDockWindowFrame = (frame: DockRect): DockRect => ({
+  x: Number.isFinite(frame.x) ? frame.x : 80,
+  y: Number.isFinite(frame.y) ? frame.y : 80,
+  width: Math.max(160, Number.isFinite(frame.width) ? frame.width : 480),
+  height: Math.max(120, Number.isFinite(frame.height) ? frame.height : 320),
+})
+
+const setFloatingWindowFrame = (
+  state: DockState,
+  windowId: DockWindowId,
+  frame: DockRect,
+  historyMessage: string
+): DockState => ({
+  ...state,
+  layout: {
+    ...state.layout,
+    floatingWindows: state.layout.floatingWindows.map((window) =>
+      window.id === windowId ? { ...window, frame } : window
+    ),
+  },
+  history: appendDockHistory(state.history, historyMessage),
+})
 
 const setGroupActivePanel = (
   layout: DockState["layout"],

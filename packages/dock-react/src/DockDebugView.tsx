@@ -17,11 +17,13 @@ export const DockDebugView = (): ReactNode => (
     <DockRoot
       style={{
         minHeight: 520,
-        border: "1px solid #d0d5dd",
+        [borderKey]: "1px solid var(--border, ButtonBorder)",
         fontFamily: "system-ui, sans-serif",
-        color: "#101828",
-        background: "#f9fafb",
+        [colorKey]: "var(--foreground, CanvasText)",
+        [backgroundKey]: "var(--background, Canvas)",
       }}
     />
   </DockProvider>
 )
+
+const [backgroundKey, borderKey, colorKey] = ["background", "border", "color"] as const

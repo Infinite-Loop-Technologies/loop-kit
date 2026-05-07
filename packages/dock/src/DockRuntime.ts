@@ -16,7 +16,7 @@ import type { Store } from "@loop-kit/common/Store"
 import { createStore } from "@loop-kit/common/Store"
 
 import type { DockPoint, DockRect } from "./DockGeometry.js"
-import type { DockPanelId, DockSplitId, DockSurfaceId } from "./DockIds.js"
+import type { DockPanelId, DockSplitId, DockSurfaceId, DockWindowId } from "./DockIds.js"
 import type { DockPlacement } from "./DockNode.js"
 import type { DockPolicy } from "./DockPolicy.js"
 import { composeDockPolicies, createDefaultDockPolicy } from "./DockPolicy.js"
@@ -36,9 +36,27 @@ export interface DockResizePreview {
   readonly rect?: DockRect | undefined
 }
 
+export interface DockWindowMovePreview {
+  readonly windowId: DockWindowId
+  readonly startPosition: DockPoint
+  readonly currentPosition: DockPoint
+  readonly originFrame: DockRect
+  readonly frame: DockRect
+}
+
+export interface DockWindowResizePreview {
+  readonly windowId: DockWindowId
+  readonly startPosition: DockPoint
+  readonly currentPosition: DockPoint
+  readonly originFrame: DockRect
+  readonly frame: DockRect
+}
+
 export interface DockRuntimeState {
   readonly dragPreview?: DockDragPreview | undefined
   readonly resizePreview?: DockResizePreview | undefined
+  readonly windowMovePreview?: DockWindowMovePreview | undefined
+  readonly windowResizePreview?: DockWindowResizePreview | undefined
   readonly hoveredDropTarget?: DockPlacement | undefined
   readonly activeModalId?: string | undefined
   readonly debug?: Readonly<Record<string, unknown>> | undefined
@@ -51,6 +69,12 @@ export type DockRuntimeEvent =
   | { readonly type: "DockResizeStarted"; readonly preview: DockResizePreview }
   | { readonly type: "DockResizePreviewUpdated"; readonly preview: DockResizePreview }
   | { readonly type: "DockResizeCleared" }
+  | { readonly type: "DockWindowMoveStarted"; readonly preview: DockWindowMovePreview }
+  | { readonly type: "DockWindowMovePreviewUpdated"; readonly preview: DockWindowMovePreview }
+  | { readonly type: "DockWindowMoveCleared" }
+  | { readonly type: "DockWindowResizeStarted"; readonly preview: DockWindowResizePreview }
+  | { readonly type: "DockWindowResizePreviewUpdated"; readonly preview: DockWindowResizePreview }
+  | { readonly type: "DockWindowResizeCleared" }
 
 export interface DockRuntimeEnv {
   readonly dock: DockService
@@ -71,6 +95,12 @@ export interface DockRuntime extends Runtime<DockRuntimeEnv> {
   readonly beginResize: (preview: DockResizePreview) => void
   readonly updateResizePreview: (preview: Partial<DockResizePreview>) => void
   readonly clearResizePreview: () => void
+  readonly beginWindowMove: (preview: DockWindowMovePreview) => void
+  readonly updateWindowMovePreview: (preview: Partial<DockWindowMovePreview>) => void
+  readonly clearWindowMovePreview: () => void
+  readonly beginWindowResize: (preview: DockWindowResizePreview) => void
+  readonly updateWindowResizePreview: (preview: Partial<DockWindowResizePreview>) => void
+  readonly clearWindowResizePreview: () => void
 }
 
 export const createDockRuntime = ({ dock, policy }: CreateDockRuntimeOptions): DockRuntime => {
@@ -122,6 +152,36 @@ export const createDockRuntime = ({ dock, policy }: CreateDockRuntimeOptions): D
     clearResizePreview: () => {
       state.update((current) => ({ ...current, resizePreview: undefined }))
       events.emit({ type: "DockResizeCleared" })
+    },
+    beginWindowMove: (preview) => {
+      state.update((current) => ({ ...current, windowMovePreview: preview }))
+      events.emit({ type: "DockWindowMoveStarted", preview })
+    },
+    updateWindowMovePreview: (preview) => {
+      const currentPreview = state.get().windowMovePreview
+      if (!currentPreview) return
+      const next = { ...currentPreview, ...preview }
+      state.update((current) => ({ ...current, windowMovePreview: next }))
+      events.emit({ type: "DockWindowMovePreviewUpdated", preview: next })
+    },
+    clearWindowMovePreview: () => {
+      state.update((current) => ({ ...current, windowMovePreview: undefined }))
+      events.emit({ type: "DockWindowMoveCleared" })
+    },
+    beginWindowResize: (preview) => {
+      state.update((current) => ({ ...current, windowResizePreview: preview }))
+      events.emit({ type: "DockWindowResizeStarted", preview })
+    },
+    updateWindowResizePreview: (preview) => {
+      const currentPreview = state.get().windowResizePreview
+      if (!currentPreview) return
+      const next = { ...currentPreview, ...preview }
+      state.update((current) => ({ ...current, windowResizePreview: next }))
+      events.emit({ type: "DockWindowResizePreviewUpdated", preview: next })
+    },
+    clearWindowResizePreview: () => {
+      state.update((current) => ({ ...current, windowResizePreview: undefined }))
+      events.emit({ type: "DockWindowResizeCleared" })
     },
   }
 }

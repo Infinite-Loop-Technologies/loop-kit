@@ -9,6 +9,8 @@ import {
   createDockService,
   createDockSplit,
   createDockState,
+  createDockWindow,
+  createDockWindowId,
 } from "../index.js"
 
 describe("DockService", () => {
@@ -114,6 +116,140 @@ describe("DockService", () => {
       expect(root.panelIds).toContain(source.id)
       expect(root.activePanelId).toBe(source.id)
     }
+  })
+
+  test("focuses floating windows by z-order and active state", () => {
+    const one = createPanel("One")
+    const two = createPanel("Two")
+    const first = createDockWindow({
+      title: "First",
+      root: createDockGroup({ panelIds: [one.id], activePanelId: one.id }),
+    })
+    const second = createDockWindow({
+      title: "Second",
+      root: createDockGroup({ panelIds: [two.id], activePanelId: two.id }),
+      active: true,
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [one, two],
+        layout: {
+          roots: { main: null },
+          floatingWindows: [first, second],
+          modals: [],
+          overlays: [],
+          layers: [],
+        },
+      }),
+    })
+
+    expect(dock.focusWindow(first.id).ok).toBe(true)
+
+    const windows = dock.state.get().layout.floatingWindows
+    expect(windows.at(-1)?.id).toBe(first.id)
+    expect(windows.at(-1)?.active).toBe(true)
+    expect(windows.find((window) => window.id === second.id)?.active).toBe(false)
+  })
+
+  test("moves and resizes floating windows", () => {
+    const panel = createPanel("Window")
+    const window = createDockWindow({
+      title: "Window",
+      root: createDockGroup({ panelIds: [panel.id], activePanelId: panel.id }),
+      frame: { x: 10, y: 20, width: 300, height: 200 },
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [panel],
+        layout: {
+          roots: { main: null },
+          floatingWindows: [window],
+          modals: [],
+          overlays: [],
+          layers: [],
+        },
+      }),
+    })
+
+    expect(dock.moveWindow(window.id, { x: 40, y: 50 }).ok).toBe(true)
+    expect(dock.state.get().layout.floatingWindows[0]?.frame).toMatchObject({
+      x: 40,
+      y: 50,
+      width: 300,
+      height: 200,
+    })
+
+    expect(dock.resizeWindow(window.id, { x: 40, y: 50, width: 480, height: 320 }).ok).toBe(true)
+    expect(dock.state.get().layout.floatingWindows[0]?.frame).toEqual({
+      x: 40,
+      y: 50,
+      width: 480,
+      height: 320,
+    })
+  })
+
+  test("closes floating windows and clears focused surface", () => {
+    const panel = createPanel("Window")
+    const window = createDockWindow({
+      title: "Window",
+      root: createDockGroup({ panelIds: [panel.id], activePanelId: panel.id }),
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [panel],
+        layout: {
+          roots: { main: null },
+          floatingWindows: [window],
+          modals: [],
+          overlays: [],
+          layers: [],
+        },
+        focusedSurfaceId: window.surfaceId,
+        selectedSurfaceId: window.surfaceId,
+      }),
+    })
+
+    expect(dock.closeWindow(window.id).ok).toBe(true)
+    expect(dock.state.get().layout.floatingWindows).toEqual([])
+    expect(dock.state.get().focusedSurfaceId).toBeUndefined()
+    expect(dock.state.get().selectedSurfaceId).toBeUndefined()
+  })
+
+  test("returns an error for missing floating windows", () => {
+    const dock = createDockService()
+    const result = dock.closeWindow(createDockWindowId())
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.type).toBe("DockWindowNotFound")
+  })
+
+  test("respects close policy for floating windows", () => {
+    const panel = createPanel("Window")
+    const window = createDockWindow({
+      title: "Window",
+      root: createDockGroup({ panelIds: [panel.id], activePanelId: panel.id }),
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [panel],
+        layout: {
+          roots: { main: null },
+          floatingWindows: [window],
+          modals: [],
+          overlays: [],
+          layers: [],
+        },
+      }),
+      policy: {
+        canClose: () => ({ ok: false, reason: "Pinned window." }),
+      },
+    })
+
+    const result = dock.closeWindow(window.id)
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.type).toBe("DockPolicyRejected")
+    expect(dock.state.get().layout.floatingWindows).toHaveLength(1)
   })
 })
 

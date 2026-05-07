@@ -9,13 +9,17 @@ import {
   type DockPanel,
   DockResizeHandleTarget,
   DockTabTarget,
+  DockWindowResizeHandleTarget,
+  DockWindowTitlebarTarget,
   createDockGroup,
+  createDockLayout,
   createDockModal,
   createDockPanelId,
   createDockRuntime,
   createDockService,
   createDockSplit,
   createDockState,
+  createDockWindow,
   installDefaultDockInteraction,
 } from "../index.js"
 
@@ -227,6 +231,113 @@ describe("Dock interaction policies", () => {
     const root = dock.state.get().layout.roots.main
     expect(root?.type).toBe("split")
     if (root?.type === "split") expect(root.ratio).toBe(0.75)
+
+    await interaction.dispose()
+    await dockRuntime.dispose()
+  })
+
+  test("dragging a window titlebar commits a window move", async () => {
+    const panel = createPanel("Window")
+    const window = createDockWindow({
+      title: "Window",
+      root: createDockGroup({ panelIds: [panel.id], activePanelId: panel.id }),
+      frame: { x: 20, y: 30, width: 320, height: 240 },
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [panel],
+        layout: createDockLayout({ floatingWindows: [window] }),
+      }),
+    })
+    const dockRuntime = createDockRuntime({ dock })
+    const interaction = createInteractionRuntime()
+    await interaction.install(installDefaultDockInteraction({ dock, runtime: dockRuntime }))
+
+    const titlebar = interaction.registerTarget({
+      id: "window-titlebar" as InteractionTargetId,
+      roles: ["draggable"],
+      data: DockWindowTitlebarTarget.make({ windowId: window.id }),
+    }).value
+
+    interaction.env.signals.dragStart.emit({
+      source: titlebar,
+      target: titlebar,
+      pointerId: 1,
+      position: { x: 100, y: 100 },
+      modifiers: noModifiers,
+    })
+    interaction.env.signals.dragMove.emit({
+      source: titlebar,
+      target: titlebar,
+      pointerId: 1,
+      position: { x: 130, y: 150 },
+      modifiers: noModifiers,
+    })
+    interaction.env.signals.dragEnd.emit({
+      source: titlebar,
+      target: titlebar,
+      pointerId: 1,
+      position: { x: 130, y: 150 },
+      modifiers: noModifiers,
+    })
+
+    expect(dock.state.get().layout.floatingWindows[0]?.frame).toMatchObject({ x: 50, y: 80 })
+    expect(dockRuntime.env.state.get().windowMovePreview).toBeUndefined()
+
+    await interaction.dispose()
+    await dockRuntime.dispose()
+  })
+
+  test("dragging a window resize handle commits a window resize", async () => {
+    const panel = createPanel("Window")
+    const window = createDockWindow({
+      title: "Window",
+      root: createDockGroup({ panelIds: [panel.id], activePanelId: panel.id }),
+      frame: { x: 20, y: 30, width: 320, height: 240 },
+    })
+    const dock = createDockService({
+      initialState: createDockState({
+        panels: [panel],
+        layout: createDockLayout({ floatingWindows: [window] }),
+      }),
+    })
+    const dockRuntime = createDockRuntime({ dock })
+    const interaction = createInteractionRuntime()
+    await interaction.install(installDefaultDockInteraction({ dock, runtime: dockRuntime }))
+
+    const handle = interaction.registerTarget({
+      id: "window-resize" as InteractionTargetId,
+      roles: ["resize-handle", "draggable"],
+      data: DockWindowResizeHandleTarget.make({ windowId: window.id }),
+    }).value
+
+    interaction.env.signals.dragStart.emit({
+      source: handle,
+      target: handle,
+      pointerId: 1,
+      position: { x: 100, y: 100 },
+      modifiers: noModifiers,
+    })
+    interaction.env.signals.dragMove.emit({
+      source: handle,
+      target: handle,
+      pointerId: 1,
+      position: { x: 150, y: 140 },
+      modifiers: noModifiers,
+    })
+    interaction.env.signals.dragEnd.emit({
+      source: handle,
+      target: handle,
+      pointerId: 1,
+      position: { x: 150, y: 140 },
+      modifiers: noModifiers,
+    })
+
+    expect(dock.state.get().layout.floatingWindows[0]?.frame).toMatchObject({
+      width: 370,
+      height: 280,
+    })
+    expect(dockRuntime.env.state.get().windowResizePreview).toBeUndefined()
 
     await interaction.dispose()
     await dockRuntime.dispose()
