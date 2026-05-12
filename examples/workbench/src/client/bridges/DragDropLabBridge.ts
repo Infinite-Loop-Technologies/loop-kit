@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react"
 
+import { createDragDropDemoDockState } from "@/domain/workbenchDockPresets"
+
 import { useAppRuntime } from "./AppRuntimeBridge"
 
 export const useDragDropLabState = () => {
@@ -21,11 +23,12 @@ export const useDragDropLabRuntimeState = () => {
 }
 
 export const useDragDropLabCommands = () => {
-  const { dragDropLab, dragDropLabRuntime } = useAppRuntime().env
+  const { dragDropDock, dragDropLab, dragDropLabRuntime } = useAppRuntime().env
 
   return {
     reset: () => {
       dragDropLab.reset()
+      dragDropDock.state.set(createDragDropDemoDockState())
       dragDropLabRuntime.clearDragPreview()
       dragDropLabRuntime.pushEvent("reset list")
     },

@@ -61,7 +61,9 @@ here; transcripts and stale speculation do not.
 - `examples/workbench` Drag/Drop now demonstrates the IRA interaction shape:
   app runtime creates the drag/drop lab service/runtime, UI registers semantic
   interaction targets, and `installDragDropLabInteractionPolicy` owns reorder,
-  select, focus, and key-event policy wiring.
+  select, focus, and key-event policy wiring. The lab is now hosted inside its
+  own Dock tab stack with physical, guide-line, constrained-zone, and nested
+  Dock demos.
 - Dock/workbench polish has started: interaction pointer synthesis suppresses
   native text selection only after draggable targets cross the drag threshold;
   DockService has a policy-gated `closeWindow`; workbench Dock/Drag labs render
@@ -79,10 +81,15 @@ here; transcripts and stale speculation do not.
   fixing, move it to `prompts/archive/` or delete it.
 - If a user asks for demo/example work, start from `examples/simple`,
   `examples/workbench`, and the ready prompts before creating a new app.
-- Followup prompts are intentionally few and non-overlapping. Current followups
-  are `prompts/interaction-shortcut-routing-followup.md`,
-  `prompts/dock-panel-surface-modes-followup.md`, and
+- Followup prompts are intentionally few and non-overlapping. Current ready
+  followups are `prompts/design-system-package-planning.md`,
+  `prompts/interaction-shortcut-routing-followup.md`, and
   `prompts/ira-knowledge-base-hardening.md`.
+- `prompts/dock-panel-surface-modes-followup.md` is now unready/superseded by
+  the Dock correctness and workbench DnD/nested-Dock prompts.
+- UI work should read `docs/references/ui-principles.md` before editing. The
+  guide captures repo-level UI architecture, semantic-token styling, bounded
+  debug surfaces, and future design-system direction.
 - `prompts/interaction-shortcut-routing-followup.md` is ready again; the
   workbench drag/drop lab now proves the current focus/ancestry/editable-target
   baseline before shortcut routing is added.

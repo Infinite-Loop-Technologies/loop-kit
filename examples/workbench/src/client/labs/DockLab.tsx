@@ -1,6 +1,6 @@
 import type { DockGroupNode, DockLayoutNode } from "@loop-kit/dock"
 import { useDockRuntimeState, useDockService, useDockState } from "@loop-kit/dock-react"
-import { CircleDot, Plus } from "lucide-react"
+import { CircleDot, Plus, RotateCcw } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import {
@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { InspectorRow } from "@/components/workbench/InspectorRow"
+import { createWorkbenchDockState } from "@/domain/workbenchDockFixture"
+import { cn } from "@/lib/utils"
 
 export const DockLab = () => {
   return (
@@ -35,10 +37,17 @@ export const DockLab = () => {
 const DockWorkbenchSurface = () => {
   const service = useDockService()
   const state = useDockState()
+  const runtimeState = useDockRuntimeState()
   const modal = state.layout.modals[0]
   const groups = useMemo(
     () => collectDockGroups(state.layout.roots.main),
     [state.layout.roots.main]
+  )
+  const hasActivePointerPreview = Boolean(
+    runtimeState.dragPreview ||
+      runtimeState.resizePreview ||
+      runtimeState.windowMovePreview ||
+      runtimeState.windowResizePreview
   )
 
   return (
@@ -63,10 +72,23 @@ const DockWorkbenchSurface = () => {
             <CircleDot className="h-4 w-4" />
             Refocus
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => service.state.set(createWorkbenchDockState())}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="workbench-muted-surface min-h-0 p-3">
-        <div className="workbench-dock-surface relative h-full min-h-[560px] rounded-md border p-2">
+        <div
+          className={cn(
+            "workbench-dock-surface relative h-full min-h-[560px] rounded-md border p-2",
+            hasActivePointerPreview && "select-none"
+          )}
+        >
           <WorkbenchDockLayout />
           <WorkbenchDockDropzoneOverlay groups={groups} />
           <WorkbenchDockPreviewOverlay />

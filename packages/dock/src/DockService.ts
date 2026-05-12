@@ -492,7 +492,26 @@ export const createDockService = ({
         })
       }
       const current = state.get()
+      const sourceGroup = findGroupForPanel(current.layout, panelId)
+      if (placement.side === "center" && sourceGroup?.id === placement.targetGroupId) {
+        const next = {
+          ...current,
+          layout: setGroupActivePanel(current.layout, sourceGroup.id, panelId),
+          focusedPanelId: panelId,
+          selectedPanelId: panelId,
+          history: appendDockHistory(current.history, `Commit drop ${panelId}`),
+        }
+        setState(next)
+        emit({ type: "DockDropCommitted", panelId, placement, state: next })
+        return ok()
+      }
       const withoutPanel = removePanelFromLayout(current.layout, panelId)
+      if (!findGroupById(withoutPanel, placement.targetGroupId)) {
+        return err({
+          type: "DockInvalidPlacement",
+          reason: "Drop target was removed before the panel could be inserted.",
+        })
+      }
       const next = {
         ...current,
         layout: insertPanelIntoLayout(withoutPanel, placement, panelId),

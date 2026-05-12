@@ -118,6 +118,42 @@ describe("DockService", () => {
     }
   })
 
+  test("committing a center drop inside the same tab group keeps all panels reachable", () => {
+    const explorer = createPanel("Explorer")
+    const editor = createPanel("Editor")
+    const group = createDockGroup({
+      panelIds: [explorer.id, editor.id],
+      activePanelId: editor.id,
+    })
+    const dock = createDockService({
+      initialState: createDockState({ panels: [explorer, editor], root: group }),
+    })
+
+    expect(dock.commitDrop(explorer.id, { targetGroupId: group.id, side: "center" }).ok).toBe(true)
+
+    const root = dock.state.get().layout.roots.main
+    expect(root?.type).toBe("group")
+    if (root?.type === "group") {
+      expect(root.panelIds).toEqual([explorer.id, editor.id])
+      expect(root.activePanelId).toBe(explorer.id)
+    }
+    expect(collectLayoutPanelIds(root)).toEqual(new Set([explorer.id, editor.id]))
+  })
+
+  test("rejects a drop when removing the source also removes the target group", () => {
+    const explorer = createPanel("Explorer")
+    const group = createDockGroup({ panelIds: [explorer.id], activePanelId: explorer.id })
+    const dock = createDockService({
+      initialState: createDockState({ panels: [explorer], root: group }),
+    })
+
+    const result = dock.commitDrop(explorer.id, { targetGroupId: group.id, side: "left" })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.type).toBe("DockInvalidPlacement")
+    expect(dock.state.get().layout.roots.main).toEqual(group)
+  })
+
   test("focuses floating windows by z-order and active state", () => {
     const one = createPanel("One")
     const two = createPanel("Two")
@@ -258,3 +294,11 @@ const createPanel = (title: string): DockPanel => ({
   title,
   kind: `test.${title.toLowerCase()}`,
 })
+
+const collectLayoutPanelIds = (
+  node: ReturnType<typeof createDockState>["layout"]["roots"]["main"]
+): Set<DockPanel["id"]> => {
+  if (!node) return new Set()
+  if (node.type === "group") return new Set(node.panelIds)
+  return new Set([...collectLayoutPanelIds(node.leading), ...collectLayoutPanelIds(node.trailing)])
+}

@@ -1,7 +1,6 @@
 import { Activity } from "lucide-react"
 import type { ReactNode } from "react"
 
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { type LabId, labs } from "@/shared/labs"
@@ -61,14 +60,10 @@ export const AppShell = ({ activeLab, onActiveLabChange, children }: AppShellPro
       </aside>
 
       <main className="min-w-0">
-        <header className="workbench-header flex h-16 items-center justify-between border-b px-5">
+        <header className="workbench-header flex h-16 items-center border-b px-5">
           <div>
             <div className="text-sm font-semibold">{active.label}</div>
             <div className="text-xs">{active.description}</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="muted">Bun</Badge>
-            <Badge>Dock + Interaction</Badge>
           </div>
         </header>
 

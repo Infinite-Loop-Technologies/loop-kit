@@ -25,6 +25,7 @@ import {
   useDockWindowTitlebarTarget,
 } from "@loop-kit/dock-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useRef } from "react"
 import type { ReactNode } from "react"
 
 import {
@@ -124,6 +125,7 @@ export const WorkbenchDockPreviewOverlay = () => {
           style={{
             left: drag.position.x + 12,
             top: drag.position.y + 12,
+            position: "fixed",
           }}
         >
           {`Dragging ${drag.panelId}`}
@@ -195,12 +197,22 @@ const WorkbenchDockNode = ({ node }: { readonly node: DockLayoutNode | null }) =
 const WorkbenchDockSplit = ({
   node,
 }: { readonly node: Extract<DockLayoutNode, { type: "split" }> }) => {
-  const handleRef = useDockResizeHandleTarget<HTMLDivElement>(node.id, node.axis)
+  const runtimeState = useDockRuntimeState()
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const handleRef = useDockResizeHandleTarget<HTMLDivElement>(node.id, node.axis, {
+    getRect: () => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      return rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null
+    },
+  })
+  const previewRatio =
+    runtimeState.resizePreview?.splitId === node.id ? runtimeState.resizePreview.ratio : node.ratio
 
   return (
     <DockSplitUi
+      containerRef={containerRef}
       axis={node.axis}
-      ratio={node.ratio}
+      ratio={previewRatio}
       handleRef={handleRef}
       leading={<WorkbenchDockNode node={node.leading} />}
       trailing={<WorkbenchDockNode node={node.trailing} />}

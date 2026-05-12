@@ -86,6 +86,9 @@ last_reviewed: YYYY-MM-DD
   genuinely too large.
 - IRA applies on client and server. Do not treat React as the architecture
   boundary; React is one bridge over services and runtimes.
+- When work touches UI, read `docs/references/ui-principles.md` before editing.
+  Follow its guidance on bridge boundaries, semantic tokens, bounded debug UI,
+  and avoiding duplicated Tailwind utility strings.
 
 ## Interaction Runtime Rules
 

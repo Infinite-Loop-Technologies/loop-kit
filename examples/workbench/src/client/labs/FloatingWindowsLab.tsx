@@ -1,4 +1,5 @@
 import { useDockRuntimeState, useDockService, useDockState } from "@loop-kit/dock-react"
+import { RotateCcw } from "lucide-react"
 
 import {
   WorkbenchDockLayout,
@@ -9,16 +10,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChecklistItem } from "@/components/workbench/ChecklistItem"
 import { InspectorRow } from "@/components/workbench/InspectorRow"
+import { createWorkbenchDockState } from "@/domain/workbenchDockFixture"
 
 export const FloatingWindowsLab = () => (
   <WorkbenchDockProvider className="grid gap-4 lg:grid-cols-[1fr_320px]">
     <Card className="min-h-[620px] overflow-hidden">
-      <CardHeader>
-        <CardTitle>Floating windows</CardTitle>
-        <CardDescription>
-          Floating windows are committed Dock layout state. Move, resize, active state, and z-order
-          are driven by headless service/runtime policy and React target bridges.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div>
+          <CardTitle>Floating windows</CardTitle>
+          <CardDescription>
+            Floating windows are committed Dock layout state. Move, resize, active state, and
+            z-order are driven by headless service/runtime policy and React target bridges.
+          </CardDescription>
+        </div>
+        <ResetFloatingWindowsButton />
       </CardHeader>
       <CardContent>
         <div className="workbench-dock-surface relative h-[480px] overflow-hidden rounded-md border p-2">
@@ -43,6 +48,21 @@ export const FloatingWindowsLab = () => (
     </Card>
   </WorkbenchDockProvider>
 )
+
+const ResetFloatingWindowsButton = () => {
+  const service = useDockService()
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => service.state.set(createWorkbenchDockState())}
+    >
+      <RotateCcw className="h-4 w-4" />
+      Reset
+    </Button>
+  )
+}
 
 const FloatingWindowInspector = () => {
   const state = useDockState()

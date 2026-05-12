@@ -5,6 +5,7 @@ import type { InteractionTarget, InteractionTargetId } from "@loop-kit/interacti
 
 import { createDragDropLabService } from "../domain/dragDropLab"
 import type { DragDropLabItemId } from "../domain/dragDropLab"
+import { createDragDropDemoDockState } from "../domain/workbenchDockPresets"
 import {
   createDragDropLabRuntime,
   createDragDropLabTargetId,
@@ -56,17 +57,50 @@ describe("DragDropLab interaction policy", () => {
     const source = setup.registerItem("inbox")
     const target = setup.registerItem("verify")
 
-    setup.interaction.env.signals.dragStart.emit(createDragSignal(source))
+    setup.interaction.env.signals.dragStart.emit(
+      createDragSignal(source, undefined, { x: 4, y: 8 })
+    )
     expect(setup.runtime.env.state.get().activeItemId).toBe("inbox")
+    expect(setup.runtime.env.state.get().activeScopeId).toBe("test")
     expect(setup.runtime.env.state.get().overItemId).toBe("inbox")
+    expect(setup.runtime.env.state.get().overScopeId).toBe("test")
+    expect(setup.runtime.env.state.get().pointerPosition).toEqual({ x: 4, y: 8 })
 
-    setup.interaction.env.signals.dragMove.emit(createDragSignal(source, target))
+    setup.interaction.env.signals.dragMove.emit(createDragSignal(source, target, { x: 24, y: 32 }))
     expect(setup.runtime.env.state.get().activeItemId).toBe("inbox")
     expect(setup.runtime.env.state.get().overItemId).toBe("verify")
+    expect(setup.runtime.env.state.get().overScopeId).toBe("test")
+    expect(setup.runtime.env.state.get().pointerPosition).toEqual({ x: 24, y: 32 })
 
     setup.interaction.env.signals.dragEnd.emit(createDragSignal(source, target))
     expect(setup.runtime.env.state.get().activeItemId).toBeUndefined()
+    expect(setup.runtime.env.state.get().activeScopeId).toBeUndefined()
     expect(setup.runtime.env.state.get().overItemId).toBeUndefined()
+    expect(setup.runtime.env.state.get().overScopeId).toBeUndefined()
+    expect(setup.runtime.env.state.get().pointerPosition).toBeUndefined()
+
+    await setup.dispose()
+  })
+
+  test("tracks constrained zone preview without reordering on drop", async () => {
+    const setup = await createPolicySetup()
+    const source = setup.registerItem("inbox")
+    const zone = setup.registerZone("blocked")
+
+    setup.interaction.env.signals.dragStart.emit(createDragSignal(source))
+    setup.interaction.env.signals.dragMove.emit(createDragSignal(source, zone))
+    expect(setup.runtime.env.state.get().overZoneId).toBe("blocked")
+
+    setup.interaction.env.signals.dragEnd.emit(createDragSignal(source, zone))
+
+    expect(setup.service.state.get().items.map((item) => item.id)).toEqual([
+      "inbox",
+      "plan",
+      "build",
+      "verify",
+      "handoff",
+    ])
+    expect(setup.runtime.env.state.get().overZoneId).toBeUndefined()
 
     await setup.dispose()
   })
@@ -93,6 +127,27 @@ describe("DragDropLab interaction policy", () => {
   })
 })
 
+describe("Workbench DnD Dock preset", () => {
+  test("creates non-closeable tabs that can be split by Dock policy", () => {
+    const state = createDragDropDemoDockState()
+    const root = state.layout.roots.main
+
+    expect(root?.type).toBe("group")
+    if (root?.type === "group") {
+      expect(root.stackMode).toBe("tabs")
+      expect(root.panelIds).toHaveLength(4)
+      expect(root.activePanelId).toBe(root.panelIds[0])
+    }
+    expect(state.panels.every((panel) => panel.closable === false)).toBe(true)
+    expect(state.panels.map((panel) => panel.kind)).toEqual([
+      "dnd.physical",
+      "dnd.guideline",
+      "dnd.constrained",
+      "dnd.nested-dock",
+    ])
+  })
+})
+
 const createPolicySetup = async () => {
   const service = createDragDropLabService()
   const runtime = createDragDropLabRuntime(service)
@@ -116,6 +171,17 @@ const createPolicySetup = async () => {
         data: makeDragDropLabTargetData({
           kind: "drag-lab-item",
           itemId: itemId as DragDropLabItemId,
+          scopeId: "test",
+        }),
+      }).value,
+    registerZone: (zoneId: string): InteractionTarget =>
+      interaction.registerTarget({
+        id: createDragDropLabTargetId("drag-lab-zone", zoneId),
+        roles: ["dropzone"],
+        data: makeDragDropLabTargetData({
+          kind: "drag-lab-zone",
+          scopeId: "test",
+          zoneId,
         }),
       }).value,
     dispose: async () => {
@@ -126,10 +192,14 @@ const createPolicySetup = async () => {
   }
 }
 
-const createDragSignal = (source: InteractionTarget, target?: InteractionTarget) => ({
+const createDragSignal = (
+  source: InteractionTarget,
+  target?: InteractionTarget,
+  position = { x: 0, y: 0 }
+) => ({
   source,
   target,
   pointerId: 1,
-  position: { x: 0, y: 0 },
+  position,
   modifiers: { alt: false, ctrl: false, meta: false, shift: false },
 })

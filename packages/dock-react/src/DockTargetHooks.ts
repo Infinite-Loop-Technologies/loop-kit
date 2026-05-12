@@ -27,7 +27,7 @@ import {
   createDockInteractionTargetId,
 } from "@loop-kit/dock"
 import type { InteractionTargetId } from "@loop-kit/interaction"
-import { useInteractionTarget } from "@loop-kit/interaction/react"
+import { type UseInteractionTargetOptions, useInteractionTarget } from "@loop-kit/interaction/react"
 
 export const useDockPanelTarget = <TElement extends Element = HTMLElement>(
   panelId: DockPanelId
@@ -77,7 +77,8 @@ export const useDockDropzoneTarget = <TElement extends Element = HTMLElement>(
 
 export const useDockResizeHandleTarget = <TElement extends Element = HTMLElement>(
   splitId: DockSplitId,
-  axis: "horizontal" | "vertical"
+  axis: "horizontal" | "vertical",
+  registrationOptions?: Pick<UseInteractionTargetOptions, "getRect"> | undefined
 ): ((element: TElement | null) => void) => {
   const options = useMemo(
     () => ({
@@ -85,8 +86,9 @@ export const useDockResizeHandleTarget = <TElement extends Element = HTMLElement
       roles: ["resize-handle", "draggable"] as const,
       capabilities: { pointer: true, drag: true },
       data: DockResizeHandleTarget.make({ splitId, axis }),
+      getRect: registrationOptions?.getRect,
     }),
-    [axis, splitId]
+    [axis, registrationOptions?.getRect, splitId]
   )
   return useInteractionTarget<TElement>(options)
 }
