@@ -144,10 +144,27 @@ const DragDropDockCanvas = () => {
 
 const DragDropDemoPanel = ({ variant }: { readonly variant: DragDropDemoVariant }) => {
   const { items, selectedItemId } = useDragDropLabState()
-  const { activeItemId, activeScopeId, overItemId, overScopeId, overZoneId, pointerPosition } =
-    useDragDropLabRuntimeState()
+  const {
+    activeItemId,
+    activeScopeId,
+    overItemId,
+    overListEndScopeId,
+    overScopeId,
+    overZoneId,
+    pointerPosition,
+  } = useDragDropLabRuntimeState()
   const activeInPanel = activeScopeId === variant
   const activeItem = activeInPanel ? items.find((item) => item.id === activeItemId) : undefined
+  const appendActive = activeInPanel && overListEndScopeId === variant
+  const previewItems =
+    variant === "physical" && activeInPanel
+      ? getPreviewItems(
+          items,
+          activeItemId,
+          overScopeId === variant ? overItemId : undefined,
+          appendActive
+        )
+      : items
   const listId = createDragDropLabTargetId("drag-lab-list", variant)
   const listRef = useInteractionTarget<HTMLDivElement>(
     useMemo(
@@ -176,28 +193,33 @@ const DragDropDemoPanel = ({ variant }: { readonly variant: DragDropDemoVariant 
         ref={listRef}
         className="workbench-muted-surface relative grid gap-2 rounded-md border p-3"
       >
-        {items.map((item) => (
-          <DragDropRow
-            key={`${variant}:${item.id}`}
-            item={item}
-            variant={variant}
-            parentId={listId}
-            active={activeInPanel && activeItemId === item.id}
-            over={
-              activeInPanel &&
-              overScopeId === variant &&
-              overItemId === item.id &&
-              activeItemId !== item.id
-            }
-            selected={selectedItemId === item.id}
-          />
-        ))}
+        {previewItems.map((item) => {
+          const over =
+            activeInPanel &&
+            overScopeId === variant &&
+            overItemId === item.id &&
+            activeItemId !== item.id
+          return (
+            <DragDropRow
+              key={`${variant}:${item.id}`}
+              item={item}
+              variant={variant}
+              parentId={listId}
+              active={activeInPanel && activeItemId === item.id}
+              over={over}
+              selected={selectedItemId === item.id}
+            />
+          )
+        })}
         {variant === "constrained" ? (
           <ConstrainedDropZones
             parentId={listId}
             scopeId={variant}
             activeZoneId={activeInPanel ? overZoneId : undefined}
           />
+        ) : null}
+        {variant !== "constrained" ? (
+          <DragDropListEndTarget active={appendActive} parentId={listId} scopeId={variant} />
         ) : null}
         {activeItem && pointerPosition ? (
           <DragGhost item={activeItem} x={pointerPosition.x} y={pointerPosition.y} />
@@ -262,7 +284,7 @@ const DragDropRow = ({
 
   return (
     <div className="relative">
-      {guideline ? <div className="-top-1 absolute inset-x-2 h-0.5 rounded-full bg-ring" /> : null}
+      {guideline ? <div className="mb-2 h-1 rounded-full bg-ring" /> : null}
       <div
         ref={itemRef}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: This row is a registered interaction target with custom focus routing.
@@ -288,9 +310,36 @@ const DragDropRow = ({
         </div>
         <MoveRight className="h-4 w-4 text-muted-foreground" />
       </div>
-      {active && variant === "physical" ? (
-        <div className="mt-2 min-h-12 rounded-md border border-dashed border-ring bg-accent/20" />
-      ) : null}
+    </div>
+  )
+}
+
+const DragDropListEndTarget = ({
+  active,
+  parentId,
+  scopeId,
+}: {
+  readonly active: boolean
+  readonly parentId: InteractionTargetId
+  readonly scopeId: DragDropDemoVariant
+}) => {
+  const targetId = createDragDropLabTargetId("drag-lab-list-end", scopeId)
+  const ref = useInteractionTarget<HTMLDivElement>(
+    useMemo(
+      () => ({
+        id: targetId,
+        parentId,
+        roles: ["dropzone"] as const,
+        capabilities: { drop: true },
+        data: makeDragDropLabTargetData({ kind: "drag-lab-list-end", scopeId }),
+      }),
+      [parentId, scopeId, targetId]
+    )
+  )
+
+  return (
+    <div ref={ref} className="min-h-8 pt-1">
+      {active ? <div className="h-1 rounded-full bg-ring" /> : null}
     </div>
   )
 }
@@ -527,8 +576,15 @@ const NestedDockDetails = () => (
 
 const DragDropInspector = () => {
   const { items, selectedItemId } = useDragDropLabState()
-  const { activeItemId, events, focusAncestry, focusTargetId, overItemId, overZoneId } =
-    useDragDropLabRuntimeState()
+  const {
+    activeItemId,
+    events,
+    focusAncestry,
+    focusTargetId,
+    overItemId,
+    overListEndScopeId,
+    overZoneId,
+  } = useDragDropLabRuntimeState()
   const interactionFocusTargetId = useInteractionState((state) => state.focusTargetId)
   const order = items.map((item) => item.title).join(" -> ")
 
@@ -544,7 +600,10 @@ const DragDropInspector = () => {
         <InspectorRow label="Committed order" value={order} />
         <InspectorRow label="Selected item" value={selectedItemId ?? "none"} />
         <InspectorRow label="Active drag source" value={activeItemId ?? "none"} />
-        <InspectorRow label="Current drop target" value={overItemId ?? overZoneId ?? "none"} />
+        <InspectorRow
+          label="Current drop target"
+          value={overItemId ?? overListEndScopeId ?? overZoneId ?? "none"}
+        />
         <InspectorRow
           label="Focus target"
           value={focusTargetId ?? interactionFocusTargetId ?? "none"}
@@ -595,4 +654,26 @@ const getVariantDescription = (variant: DragDropDemoVariant): string => {
   if (variant === "guideline") return "The pending insertion point is shown as a line."
   if (variant === "constrained") return "Drop zones record accepted and rejected outcomes."
   return "The source leaves a placeholder, siblings move, and the ghost follows the cursor."
+}
+
+const getPreviewItems = (
+  items: ReadonlyArray<DragDropLabItem>,
+  activeItemId: DragDropLabItem["id"] | undefined,
+  overItemId: DragDropLabItem["id"] | undefined,
+  append: boolean
+): ReadonlyArray<DragDropLabItem> => {
+  if (!activeItemId || (!overItemId && !append) || activeItemId === overItemId) return items
+
+  const activeItem = items.find((item) => item.id === activeItemId)
+  if (!activeItem) return items
+
+  const withoutActive = items.filter((item) => item.id !== activeItemId)
+  const targetIndex = append
+    ? withoutActive.length
+    : withoutActive.findIndex((item) => item.id === overItemId)
+  if (targetIndex < 0) return items
+
+  const next = [...withoutActive]
+  next.splice(targetIndex, 0, activeItem)
+  return next
 }

@@ -47,7 +47,7 @@ export const insertPanelByPlacement = (
 
   if (node.type === "group" && node.id === placement.targetGroupId) {
     if (placement.side === "center") {
-      const panelIds = node.panelIds.includes(panelId) ? node.panelIds : [...node.panelIds, panelId]
+      const panelIds = insertPanelIntoGroup(node.panelIds, panelId, placement.beforePanelId)
       return { ...node, panelIds, activePanelId: panelId }
     }
 
@@ -102,4 +102,20 @@ const containsGroup = (
   if (!node) return false
   if (node.type === "group") return node.id === groupId
   return containsGroup(node.leading, groupId) || containsGroup(node.trailing, groupId)
+}
+
+const insertPanelIntoGroup = (
+  currentPanelIds: ReadonlyArray<DockPanelId>,
+  panelId: DockPanelId,
+  beforePanelId: DockPanelId | undefined
+): ReadonlyArray<DockPanelId> => {
+  const withoutPanel = currentPanelIds.filter((id) => id !== panelId)
+  if (!beforePanelId || beforePanelId === panelId) return [...withoutPanel, panelId]
+
+  const beforeIndex = withoutPanel.findIndex((id) => id === beforePanelId)
+  if (beforeIndex < 0) return [...withoutPanel, panelId]
+
+  const next = [...withoutPanel]
+  next.splice(beforeIndex, 0, panelId)
+  return next
 }

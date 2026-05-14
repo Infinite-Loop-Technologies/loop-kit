@@ -25,11 +25,30 @@ describe("DragDropLab interaction policy", () => {
     expect(setup.service.state.get().items.map((item) => item.id)).toEqual([
       "plan",
       "build",
-      "verify",
       "inbox",
+      "verify",
       "handoff",
     ])
     expect(setup.runtime.env.state.get().activeItemId).toBeUndefined()
+
+    await setup.dispose()
+  })
+
+  test("commits append reorder through the list-end target", async () => {
+    const setup = await createPolicySetup()
+    const source = setup.registerItem("inbox")
+    const listEnd = setup.registerListEnd()
+
+    setup.interaction.env.signals.dragStart.emit(createDragSignal(source))
+    setup.interaction.env.signals.dragEnd.emit(createDragSignal(source, listEnd))
+
+    expect(setup.service.state.get().items.map((item) => item.id)).toEqual([
+      "plan",
+      "build",
+      "verify",
+      "handoff",
+      "inbox",
+    ])
 
     await setup.dispose()
   })
@@ -72,11 +91,19 @@ describe("DragDropLab interaction policy", () => {
     expect(setup.runtime.env.state.get().overScopeId).toBe("test")
     expect(setup.runtime.env.state.get().pointerPosition).toEqual({ x: 24, y: 32 })
 
+    const listEnd = setup.registerListEnd()
+    setup.interaction.env.signals.dragMove.emit(createDragSignal(source, listEnd, { x: 24, y: 96 }))
+    expect(setup.runtime.env.state.get().overItemId).toBeUndefined()
+    expect(setup.runtime.env.state.get().overScopeId).toBe("test")
+    expect(setup.runtime.env.state.get().overListEndScopeId).toBe("test")
+    expect(setup.runtime.env.state.get().pointerPosition).toEqual({ x: 24, y: 96 })
+
     setup.interaction.env.signals.dragEnd.emit(createDragSignal(source, target))
     expect(setup.runtime.env.state.get().activeItemId).toBeUndefined()
     expect(setup.runtime.env.state.get().activeScopeId).toBeUndefined()
     expect(setup.runtime.env.state.get().overItemId).toBeUndefined()
     expect(setup.runtime.env.state.get().overScopeId).toBeUndefined()
+    expect(setup.runtime.env.state.get().overListEndScopeId).toBeUndefined()
     expect(setup.runtime.env.state.get().pointerPosition).toBeUndefined()
 
     await setup.dispose()
@@ -182,6 +209,15 @@ const createPolicySetup = async () => {
           kind: "drag-lab-zone",
           scopeId: "test",
           zoneId,
+        }),
+      }).value,
+    registerListEnd: (): InteractionTarget =>
+      interaction.registerTarget({
+        id: createDragDropLabTargetId("drag-lab-list-end", "test"),
+        roles: ["dropzone"],
+        data: makeDragDropLabTargetData({
+          kind: "drag-lab-list-end",
+          scopeId: "test",
         }),
       }).value,
     dispose: async () => {

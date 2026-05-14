@@ -121,11 +121,14 @@ export const installDockDragPolicy =
         const preview = runtime.env.state.get().dragPreview
         if (!preview?.panelId) return
         const dropzone = DockDropzoneTarget.match(signal.target)
+        const tab = DockTabTarget.match(signal.target)
         runtime.updateDragPreview({
           position: signal.position,
-          placement: dropzone
-            ? { targetGroupId: dropzone.groupId, side: dropzone.side }
-            : undefined,
+          placement: tab
+            ? { targetGroupId: tab.groupId, side: "center", beforePanelId: tab.panelId }
+            : dropzone
+              ? { targetGroupId: dropzone.groupId, side: dropzone.side }
+              : undefined,
         })
       }),
       interaction.env.signals.dragEnd.subscribe((signal) => {
@@ -141,8 +144,18 @@ export const installDockDragPolicy =
 
         const preview = runtime.env.state.get().dragPreview
         const dropzone = DockDropzoneTarget.match(signal.target)
-        if (preview?.panelId && dropzone) {
-          dock.commitDrop(preview.panelId, { targetGroupId: dropzone.groupId, side: dropzone.side })
+        const tab = DockTabTarget.match(signal.target)
+        if (preview?.panelId && tab) {
+          dock.commitDrop(preview.panelId, {
+            targetGroupId: tab.groupId,
+            side: "center",
+            beforePanelId: tab.panelId,
+          })
+        } else if (preview?.panelId && dropzone) {
+          dock.commitDrop(preview.panelId, {
+            targetGroupId: dropzone.groupId,
+            side: dropzone.side,
+          })
         }
         runtime.clearDragPreview()
       }),

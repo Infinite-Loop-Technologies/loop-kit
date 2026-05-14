@@ -140,6 +140,68 @@ describe("DockService", () => {
     expect(collectLayoutPanelIds(root)).toEqual(new Set([explorer.id, editor.id]))
   })
 
+  test("reorders tabs inside the same group with an ordered center placement", () => {
+    const explorer = createPanel("Explorer")
+    const editor = createPanel("Editor")
+    const preview = createPanel("Preview")
+    const group = createDockGroup({
+      panelIds: [explorer.id, editor.id, preview.id],
+      activePanelId: editor.id,
+    })
+    const dock = createDockService({
+      initialState: createDockState({ panels: [explorer, editor, preview], root: group }),
+    })
+
+    expect(
+      dock.commitDrop(preview.id, {
+        targetGroupId: group.id,
+        side: "center",
+        beforePanelId: explorer.id,
+      }).ok
+    ).toBe(true)
+
+    const root = dock.state.get().layout.roots.main
+    expect(root?.type).toBe("group")
+    if (root?.type === "group") {
+      expect(root.panelIds).toEqual([preview.id, explorer.id, editor.id])
+      expect(root.activePanelId).toBe(preview.id)
+    }
+  })
+
+  test("inserts a tab before a target tab in another group", () => {
+    const explorer = createPanel("Explorer")
+    const editor = createPanel("Editor")
+    const preview = createPanel("Preview")
+    const sourceGroup = createDockGroup({ panelIds: [preview.id], activePanelId: preview.id })
+    const targetGroup = createDockGroup({
+      panelIds: [explorer.id, editor.id],
+      activePanelId: editor.id,
+    })
+    const split = createDockSplit({
+      axis: "horizontal",
+      leading: sourceGroup,
+      trailing: targetGroup,
+    })
+    const dock = createDockService({
+      initialState: createDockState({ panels: [explorer, editor, preview], root: split }),
+    })
+
+    expect(
+      dock.commitDrop(preview.id, {
+        targetGroupId: targetGroup.id,
+        side: "center",
+        beforePanelId: editor.id,
+      }).ok
+    ).toBe(true)
+
+    const root = dock.state.get().layout.roots.main
+    expect(root?.type).toBe("group")
+    if (root?.type === "group") {
+      expect(root.panelIds).toEqual([explorer.id, preview.id, editor.id])
+      expect(root.activePanelId).toBe(preview.id)
+    }
+  })
+
   test("rejects a drop when removing the source also removes the target group", () => {
     const explorer = createPanel("Explorer")
     const group = createDockGroup({ panelIds: [explorer.id], activePanelId: explorer.id })

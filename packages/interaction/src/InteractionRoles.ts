@@ -19,19 +19,19 @@ export const interactionRoles = [
   "command-boundary",
   "text-input",
   "scroll-region",
-] as const
+] as const;
 
-export type InteractionRole = (typeof interactionRoles)[number]
+export type InteractionRole = (typeof interactionRoles)[number];
 
 export interface InteractionCapabilities {
-  readonly pointer?: boolean | undefined
-  readonly keyboard?: boolean | undefined
-  readonly focus?: boolean | undefined
-  readonly drag?: boolean | undefined
-  readonly drop?: boolean | undefined
+  readonly pointer?: boolean | undefined;
+  readonly keyboard?: boolean | undefined;
+  readonly focus?: boolean | undefined;
+  readonly drag?: boolean | undefined;
+  readonly drop?: boolean | undefined;
 }
 
 export const targetHasRole = (
   roles: ReadonlyArray<InteractionRole>,
-  role: InteractionRole
-): boolean => roles.includes(role)
+  role: InteractionRole,
+): boolean => roles.includes(role);

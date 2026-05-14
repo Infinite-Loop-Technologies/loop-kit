@@ -123,6 +123,7 @@ export interface DockLayout {
 export interface DockPlacement {
   readonly targetGroupId: DockGroupId
   readonly side: DockPlacementSide
+  readonly beforePanelId?: DockPanelId | undefined
   readonly region?: DockLayoutRegion | undefined
 }
 

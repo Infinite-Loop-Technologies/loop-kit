@@ -70,17 +70,40 @@ export const installDomBridge =
 
 const createRawPointerSignal = (event: Event): InteractionRawPointerSignal => {
   const pointerEvent = event as PointerEvent
+  const position = getPointFromClientCoordinates(
+    pointerEvent.clientX ?? 0,
+    pointerEvent.clientY ?? 0
+  )
 
   return {
     pointerId: pointerEvent.pointerId ?? 0,
-    position: getPointFromClientCoordinates(pointerEvent.clientX ?? 0, pointerEvent.clientY ?? 0),
+    position,
     button: pointerEvent.button ?? 0,
     buttons: pointerEvent.buttons ?? 0,
     modifiers: getModifiers(pointerEvent),
-    eventTarget: event.target,
+    eventTarget: getPointerHitTarget(event, position.x, position.y) ?? event.target,
     nativeEvent: event,
   }
 }
+
+const getPointerHitTarget = (event: Event, x: number, y: number): Element | null => {
+  const currentTarget = event.currentTarget
+  const document = isDocumentLike(currentTarget)
+    ? currentTarget
+    : isElementLike(currentTarget)
+      ? currentTarget.ownerDocument
+      : isElementLike(event.target)
+        ? event.target.ownerDocument
+        : null
+
+  return document?.elementFromPoint(x, y) ?? null
+}
+
+const isDocumentLike = (target: EventTarget | null): target is Document =>
+  Boolean(target && "elementFromPoint" in target)
+
+const isElementLike = (target: EventTarget | null): target is Element =>
+  Boolean(target && "ownerDocument" in target)
 
 const createRawKeySignal = (event: Event): InteractionRawKeySignal => {
   const keyboardEvent = event as KeyboardEvent

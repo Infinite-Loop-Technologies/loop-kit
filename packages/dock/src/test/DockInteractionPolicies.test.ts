@@ -108,6 +108,71 @@ describe("Dock interaction policies", () => {
     await dockRuntime.dispose()
   })
 
+  test("dragging a dock tab over another tab reorders by center placement", async () => {
+    const explorer = createPanel("Explorer")
+    const editor = createPanel("Editor")
+    const preview = createPanel("Preview")
+    const group = createDockGroup({
+      panelIds: [explorer.id, editor.id, preview.id],
+      activePanelId: explorer.id,
+    })
+    const dock = createDockService({
+      initialState: createDockState({ panels: [explorer, editor, preview], root: group }),
+    })
+    const dockRuntime = createDockRuntime({ dock })
+    const interaction = createInteractionRuntime()
+    await interaction.install(installDefaultDockInteraction({ dock, runtime: dockRuntime }))
+
+    const sourceTab = interaction.registerTarget({
+      id: "preview-tab" as InteractionTargetId,
+      roles: ["draggable"],
+      data: DockTabTarget.make({ panelId: preview.id, groupId: group.id }),
+    }).value
+    const targetTab = interaction.registerTarget({
+      id: "explorer-tab" as InteractionTargetId,
+      roles: ["draggable"],
+      data: DockTabTarget.make({ panelId: explorer.id, groupId: group.id }),
+    }).value
+
+    interaction.env.signals.dragStart.emit({
+      source: sourceTab,
+      target: sourceTab,
+      pointerId: 1,
+      position: { x: 0, y: 0 },
+      modifiers: noModifiers,
+    })
+    interaction.env.signals.dragMove.emit({
+      source: sourceTab,
+      target: targetTab,
+      pointerId: 1,
+      position: { x: 10, y: 0 },
+      modifiers: noModifiers,
+    })
+    expect(dockRuntime.env.state.get().dragPreview?.placement).toMatchObject({
+      targetGroupId: group.id,
+      side: "center",
+      beforePanelId: explorer.id,
+    })
+
+    interaction.env.signals.dragEnd.emit({
+      source: sourceTab,
+      target: targetTab,
+      pointerId: 1,
+      position: { x: 10, y: 0 },
+      modifiers: noModifiers,
+    })
+
+    const root = dock.state.get().layout.roots.main
+    expect(root?.type).toBe("group")
+    if (root?.type === "group") {
+      expect(root.panelIds).toEqual([preview.id, explorer.id, editor.id])
+      expect(root.activePanelId).toBe(preview.id)
+    }
+
+    await interaction.dispose()
+    await dockRuntime.dispose()
+  })
+
   test("Escape closes the top modal", async () => {
     const panel = createPanel("Alert")
     const modal = createDockModal({

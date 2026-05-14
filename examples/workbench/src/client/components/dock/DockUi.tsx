@@ -25,22 +25,33 @@ export const DockGroupUi = ({ dropRef, header, children }: DockGroupUiProps) => 
 export interface DockTabUiProps {
   readonly refCallback: Ref<HTMLButtonElement>
   readonly active: boolean
+  readonly insertionBefore?: boolean | undefined
   readonly title: string
 }
 
-export const DockTabUi = ({ refCallback, active, title }: DockTabUiProps) => (
-  <button
-    ref={refCallback}
-    type="button"
-    className={cn(
-      "min-w-0 border-r border-border px-3 text-left text-xs font-medium outline-none transition focus:ring-2 focus:ring-ring",
-      active
-        ? "bg-card text-card-foreground"
-        : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-    )}
-  >
-    <span className="block truncate">{title}</span>
-  </button>
+export const DockTabUi = ({
+  refCallback,
+  active,
+  insertionBefore = false,
+  title,
+}: DockTabUiProps) => (
+  <div className="relative flex min-w-0">
+    {insertionBefore ? (
+      <div className="absolute bottom-1 left-0 top-1 z-10 w-1 rounded-full bg-ring" />
+    ) : null}
+    <button
+      ref={refCallback}
+      type="button"
+      className={cn(
+        "min-w-0 border-r border-border px-3 text-left text-xs font-medium outline-none transition focus:ring-2 focus:ring-ring",
+        active
+          ? "bg-card text-card-foreground"
+          : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+      )}
+    >
+      <span className="block truncate">{title}</span>
+    </button>
+  </div>
 )
 
 export interface DockSplitUiProps {

@@ -68,7 +68,14 @@ here; transcripts and stale speculation do not.
   native text selection only after draggable targets cross the drag threshold;
   DockService has a policy-gated `closeWindow`; workbench Dock/Drag labs render
   state-driven ghosts/previews, hide dock dropzones until drag, expose floating
-  window close controls, and include a richer Dock inspector.
+  window close controls, and include a richer Dock inspector. Dock center drops
+  now support ordered tab placement when hovering another tab, and workbench
+  split zones are larger invisible hit targets that only show the active side.
+- Workbench Drag/Drop demos use before-target reorder semantics. The physical
+  demo reflows the dragged row as a live placeholder, the guide-line demo shows
+  an in-flow insertion line before the hovered item, list-end drop targets allow
+  appending after the last item, and Dock tabs render a vertical insertion
+  marker before the hovered tab.
 - `docs/references/architecture/dock-and-interaction.md` is the current
   cross-package Dock/Interaction reference for terminology, policies,
   customization points, capabilities, and gaps.
@@ -85,8 +92,8 @@ here; transcripts and stale speculation do not.
   followups are `prompts/design-system-package-planning.md`,
   `prompts/interaction-shortcut-routing-followup.md`, and
   `prompts/ira-knowledge-base-hardening.md`.
-- `prompts/dock-panel-surface-modes-followup.md` is now unready/superseded by
-  the Dock correctness and workbench DnD/nested-Dock prompts.
+- Superseded finished prompts should live in `prompts/archive/`; do not keep
+  stale prompt shells in active `prompts/`.
 - UI work should read `docs/references/ui-principles.md` before editing. The
   guide captures repo-level UI architecture, semantic-token styling, bounded
   debug surfaces, and future design-system direction.

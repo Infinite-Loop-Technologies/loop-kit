@@ -167,7 +167,7 @@ export const WorkbenchDockDropzoneOverlay = ({
   if (!runtimeState.dragPreview) return null
 
   return (
-    <div className="pointer-events-none absolute inset-2 grid gap-2">
+    <div className="pointer-events-none absolute inset-2 z-10 grid gap-2">
       {groups.map((group) => (
         <div
           key={group.id}
@@ -243,6 +243,12 @@ const WorkbenchDockGroup = ({ node }: { readonly node: DockGroupNode }) => {
                 panelId={panelId}
                 title={panel.title}
                 active={panelId === activePanelId}
+                insertionBefore={
+                  runtimeState.dragPreview?.panelId !== panelId &&
+                  runtimeState.dragPreview?.placement?.targetGroupId === node.id &&
+                  runtimeState.dragPreview.placement.side === "center" &&
+                  runtimeState.dragPreview.placement.beforePanelId === panelId
+                }
               />
             )
           })
@@ -280,14 +286,18 @@ const WorkbenchDockTab = ({
   groupId,
   title,
   active,
+  insertionBefore,
 }: {
   readonly panelId: DockGroupNode["panelIds"][number]
   readonly groupId: DockGroupId
   readonly title: string
   readonly active: boolean
+  readonly insertionBefore: boolean
 }) => {
   const ref = useDockTabTarget<HTMLButtonElement>(panelId, groupId)
-  return <DockTabUi refCallback={ref} active={active} title={title} />
+  return (
+    <DockTabUi refCallback={ref} active={active} insertionBefore={insertionBefore} title={title} />
+  )
 }
 
 const DockSideDropzone = ({
@@ -307,12 +317,12 @@ const DockSideDropzone = ({
     <div
       ref={ref}
       className={cn(
-        "workbench-dropzone pointer-events-auto absolute rounded-md border opacity-45 transition",
+        "workbench-dropzone pointer-events-auto absolute rounded-md border opacity-0",
         active && "workbench-dropzone-active opacity-100",
-        side === "left" && "bottom-8 left-1 top-8 w-8",
-        side === "right" && "bottom-8 right-1 top-8 w-8",
-        side === "top" && "left-10 right-10 top-1 h-8",
-        side === "bottom" && "bottom-1 left-10 right-10 h-8"
+        side === "left" && "bottom-10 left-1 top-12 w-20",
+        side === "right" && "bottom-10 right-1 top-12 w-20",
+        side === "top" && "left-24 right-24 top-12 h-20",
+        side === "bottom" && "bottom-1 left-24 right-24 h-20"
       )}
       aria-label={`Drop ${side}`}
     />

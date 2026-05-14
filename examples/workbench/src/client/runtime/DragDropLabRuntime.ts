@@ -12,6 +12,7 @@ import type { DragDropLabItemId, DragDropLabService } from "../domain/dragDropLa
 
 export type DragDropLabTargetKind =
   | "drag-lab-list"
+  | "drag-lab-list-end"
   | "drag-lab-item"
   | "drag-lab-handle"
   | "drag-lab-zone"
@@ -34,6 +35,7 @@ export interface DragDropLabRuntimeState {
   readonly activeScopeId?: string | undefined
   readonly overItemId?: DragDropLabItemId | undefined
   readonly overScopeId?: string | undefined
+  readonly overListEndScopeId?: string | undefined
   readonly overZoneId?: string | undefined
   readonly pointerPosition?: InteractionPoint | undefined
   readonly focusTargetId?: InteractionTargetId | undefined
@@ -56,6 +58,7 @@ export interface DragDropLabRuntime extends Runtime<DragDropLabRuntimeEnv> {
       | "activeScopeId"
       | "overItemId"
       | "overScopeId"
+      | "overListEndScopeId"
       | "overZoneId"
       | "pointerPosition"
     >
@@ -95,6 +98,7 @@ export const createDragDropLabRuntime = (service: DragDropLabService): DragDropL
         activeScopeId: undefined,
         overItemId: undefined,
         overScopeId: undefined,
+        overListEndScopeId: undefined,
         overZoneId: undefined,
         pointerPosition: undefined,
       }))
@@ -107,6 +111,7 @@ export const createDragDropLabRuntime = (service: DragDropLabService): DragDropL
         activeScopeId: preview.activeScopeId,
         overItemId: preview.overItemId,
         overScopeId: preview.overScopeId,
+        overListEndScopeId: preview.overListEndScopeId,
         overZoneId: preview.overZoneId,
         pointerPosition: preview.pointerPosition,
       }))
@@ -140,6 +145,7 @@ export const installDragDropLabInteractionPolicy =
           activeScopeId: source.scopeId,
           overItemId: source.itemId,
           overScopeId: source.scopeId,
+          overListEndScopeId: undefined,
           overZoneId: undefined,
           pointerPosition: signal.position,
         })
@@ -149,6 +155,7 @@ export const installDragDropLabInteractionPolicy =
       interaction.env.signals.dragMove.subscribe((signal) => {
         const source = getItemTargetData(signal.source)
         const target = getItemTargetData(signal.target)
+        const listEnd = getListEndTargetData(signal.target)
         const zone = getZoneTargetData(signal.target)
         if (!source?.itemId) return
 
@@ -156,16 +163,18 @@ export const installDragDropLabInteractionPolicy =
           activeItemId: source.itemId,
           activeScopeId: source.scopeId,
           overItemId: target?.itemId,
-          overScopeId: target?.scopeId,
+          overScopeId: target?.scopeId ?? listEnd?.scopeId,
+          overListEndScopeId: listEnd?.scopeId,
           overZoneId: zone?.zoneId,
           pointerPosition: signal.position,
         })
-        runtime.pushEvent(`drag over ${target?.itemId ?? zone?.zoneId ?? "none"}`)
+        runtime.pushEvent(`drag over ${target?.itemId ?? listEnd?.kind ?? zone?.zoneId ?? "none"}`)
       }),
 
       interaction.env.signals.dragEnd.subscribe((signal) => {
         const source = getItemTargetData(signal.source)
         const target = getItemTargetData(signal.target)
+        const listEnd = getListEndTargetData(signal.target)
         const zone = getZoneTargetData(signal.target)
 
         if (source?.itemId && target?.itemId) {
@@ -174,6 +183,11 @@ export const installDragDropLabInteractionPolicy =
             changed
               ? `drop ${source.itemId} before ${target.itemId}`
               : `drop ${source.itemId} on itself`
+          )
+        } else if (source?.itemId && listEnd?.scopeId) {
+          const changed = service.reorderItem(source.itemId)
+          runtime.pushEvent(
+            changed ? `drop ${source.itemId} at end` : `drop ${source.itemId} on itself`
           )
         } else if (source?.itemId && zone?.zoneId) {
           runtime.pushEvent(
@@ -240,6 +254,7 @@ export const getDragDropLabTargetData = (
   const kind = (data as { readonly kind: string }).kind
   if (
     kind !== "drag-lab-list" &&
+    kind !== "drag-lab-list-end" &&
     kind !== "drag-lab-item" &&
     kind !== "drag-lab-handle" &&
     kind !== "drag-lab-zone" &&
@@ -263,4 +278,11 @@ const getZoneTargetData = (
 ): DragDropLabTargetData | undefined => {
   const data = getDragDropLabTargetData(target)
   return data?.zoneId ? data : undefined
+}
+
+const getListEndTargetData = (
+  target: InteractionTarget | undefined
+): DragDropLabTargetData | undefined => {
+  const data = getDragDropLabTargetData(target)
+  return data?.kind === "drag-lab-list-end" ? data : undefined
 }

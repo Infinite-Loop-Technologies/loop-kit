@@ -496,7 +496,10 @@ export const createDockService = ({
       if (placement.side === "center" && sourceGroup?.id === placement.targetGroupId) {
         const next = {
           ...current,
-          layout: setGroupActivePanel(current.layout, sourceGroup.id, panelId),
+          layout: setGroupPanels(current.layout, sourceGroup.id, {
+            panelIds: reorderPanelIds(sourceGroup.panelIds, panelId, placement.beforePanelId),
+            activePanelId: panelId,
+          }),
           focusedPanelId: panelId,
           selectedPanelId: panelId,
           history: appendDockHistory(current.history, `Commit drop ${panelId}`),
@@ -583,6 +586,24 @@ const setGroupActivePanel = (
   },
 })
 
+const setGroupPanels = (
+  layout: DockState["layout"],
+  groupId: DockGroupId,
+  update: {
+    readonly panelIds: ReadonlyArray<DockPanelId>
+    readonly activePanelId: DockPanelId
+  }
+): DockState["layout"] => ({
+  ...layout,
+  roots: {
+    main: setGroupPanelsInNode(layout.roots.main, groupId, update),
+    left: setGroupPanelsInNode(layout.roots.left ?? null, groupId, update) ?? undefined,
+    right: setGroupPanelsInNode(layout.roots.right ?? null, groupId, update) ?? undefined,
+    top: setGroupPanelsInNode(layout.roots.top ?? null, groupId, update) ?? undefined,
+    bottom: setGroupPanelsInNode(layout.roots.bottom ?? null, groupId, update) ?? undefined,
+  },
+})
+
 const setGroupActivePanelInNode = (
   node: DockState["layout"]["roots"]["main"],
   groupId: DockGroupId,
@@ -597,4 +618,41 @@ const setGroupActivePanelInNode = (
     leading: setGroupActivePanelInNode(node.leading, groupId, panelId) ?? node.leading,
     trailing: setGroupActivePanelInNode(node.trailing, groupId, panelId) ?? node.trailing,
   }
+}
+
+const setGroupPanelsInNode = (
+  node: DockState["layout"]["roots"]["main"],
+  groupId: DockGroupId,
+  update: {
+    readonly panelIds: ReadonlyArray<DockPanelId>
+    readonly activePanelId: DockPanelId
+  }
+): DockState["layout"]["roots"]["main"] => {
+  if (!node) return null
+  if (node.type === "group") {
+    return node.id === groupId ? { ...node, ...update } : node
+  }
+  return {
+    ...node,
+    leading: setGroupPanelsInNode(node.leading, groupId, update) ?? node.leading,
+    trailing: setGroupPanelsInNode(node.trailing, groupId, update) ?? node.trailing,
+  }
+}
+
+const reorderPanelIds = (
+  panelIds: ReadonlyArray<DockPanelId>,
+  panelId: DockPanelId,
+  beforePanelId: DockPanelId | undefined
+): ReadonlyArray<DockPanelId> => {
+  if (!beforePanelId) return panelIds
+
+  const withoutPanel = panelIds.filter((id) => id !== panelId)
+  if (beforePanelId === panelId) return panelIds
+
+  const beforeIndex = withoutPanel.findIndex((id) => id === beforePanelId)
+  if (beforeIndex < 0) return [...withoutPanel, panelId]
+
+  const next = [...withoutPanel]
+  next.splice(beforeIndex, 0, panelId)
+  return next
 }

@@ -15,16 +15,12 @@ export interface DragDropLabState {
 
 export interface DragDropLabService {
   readonly state: ReturnType<typeof createStore<DragDropLabState>>
-  readonly reorderItem: (sourceId: DragDropLabItemId, targetId: DragDropLabItemId) => boolean
+  readonly reorderItem: (sourceId: DragDropLabItemId, targetId?: DragDropLabItemId) => boolean
   readonly selectItem: (itemId: DragDropLabItemId) => void
   readonly reset: () => void
 }
 
-const item = (
-  id: string,
-  title: string,
-  description: string
-): DragDropLabItem => ({
+const item = (id: string, title: string, description: string): DragDropLabItem => ({
   id: id as DragDropLabItemId,
   title,
   description,
@@ -52,14 +48,16 @@ export const createDragDropLabService = (): DragDropLabService => {
 
       let changed = false
       state.update((current) => {
-        const sourceIndex = current.items.findIndex((item) => item.id === sourceId)
-        const targetIndex = current.items.findIndex((item) => item.id === targetId)
-        if (sourceIndex < 0 || targetIndex < 0) return current
-
-        const nextItems = [...current.items]
-        const [source] = nextItems.splice(sourceIndex, 1)
-        if (!source) return current
+        const nextItems = current.items.filter((item) => item.id !== sourceId)
+        const source = current.items.find((item) => item.id === sourceId)
+        const targetIndex = targetId
+          ? nextItems.findIndex((item) => item.id === targetId)
+          : nextItems.length
+        if (!source || targetIndex < 0) return current
         nextItems.splice(targetIndex, 0, source)
+        if (nextItems.every((item, index) => item.id === current.items[index]?.id)) {
+          return current
+        }
         changed = true
 
         return {
